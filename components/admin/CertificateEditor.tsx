@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   buildAssignmentRequest,
   buildOverrideRequest,
@@ -51,12 +52,17 @@ function parseTemplateContent(draft: Record<CertificateField, string>): Effectiv
 const emptyDraft = Object.fromEntries(fieldLabels.map(([field]) => [field, ''])) as Record<CertificateField, string>;
 
 export const CertificateEditor: React.FC<{ artworks: ArtworkChoice[] }> = ({ artworks }) => {
+  const [searchParams] = useSearchParams();
+  const queryArtworkIds = searchParams.getAll('artworkId');
+  const linkedArtworkId = queryArtworkIds.length === 1 ? queryArtworkIds[0] : '';
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templateName, setTemplateName] = useState('');
   const [draft, setDraft] = useState({ ...emptyDraft });
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [selectedArtworkIds, setSelectedArtworkIds] = useState<string[]>([]);
-  const [overrideArtworkId, setOverrideArtworkId] = useState('');
+  const [selectedArtworkIds, setSelectedArtworkIds] = useState<string[]>(
+    linkedArtworkId ? [linkedArtworkId] : [],
+  );
+  const [overrideArtworkId, setOverrideArtworkId] = useState(linkedArtworkId);
   const [overrideField, setOverrideField] = useState<CertificateField>('materials');
   const [overrideMode, setOverrideMode] = useState<CertificateOverride['mode']>('inherit');
   const [overrideValue, setOverrideValue] = useState('');
@@ -65,6 +71,12 @@ export const CertificateEditor: React.FC<{ artworks: ArtworkChoice[] }> = ({ art
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const assignmentKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!linkedArtworkId) return;
+    setOverrideArtworkId(linkedArtworkId);
+    setSelectedArtworkIds([linkedArtworkId]);
+  }, [linkedArtworkId]);
 
   useEffect(() => {
     certificateAdminApi.listTemplates()

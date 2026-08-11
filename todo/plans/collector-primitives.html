@@ -1,0 +1,2919 @@
+<!--
+THESIS: An interaction spec you touch, not read. Six primitives shown inside the real
+piece page that uses them, refusing the specimen-sheet arrangement that shows parts
+away from the thing they build.
+OWN-WORLD: Espresso grounds (#171310 to #29231c), cream #ede9e2, brass #d4b88a on
+actionable things only. Cormorant 20px+, Lora body, Karla eyebrows. Hairline rules
+at 1px rgba cream. CAD linework: outline only, uniform 1.25 stroke, no fill.
+STORY: The designer taps a row, watches it lift and take the page, and understands
+the flow's signature move in one gesture. Then reads which of the 24 screens use it.
+FIRST VIEWPORT: The phone standing alone on espresso, piece drawing above the title,
+four hairline rows, the brass Unlock pill low. Primary action is the row tap.
+FORM: The walk (structure 2 of 6 derived). concept-seed produced no assignment in
+this environment; chosen deliberately with reason recorded in the session.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish
+review, the verdict, and DESIGN.md
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collector journey, the six primitives</title>
+
+<style>
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url(https://fonts.gstatic.com/s/cormorantgaramond/v16/co3bmX5slCNuHLi8bLeY9MK7whWMhyjornFLsS6V7w.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Lora';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/lora/v35/0QI6MX1D_JOuGQbT0gvTJPa787weuyJGmKxemMeZ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Karla';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/karla/v31/qkBIXvYC6trAT55ZBi1ueQVIjQTD-JqqFENLR7fHGw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+:root{
+  --ground:#171310; --ground-2:#1f1a15; --ground-3:#29231c; --ground-4:#312a21;
+  --cream:#ede9e2; --cream-2:#c4beb4; --cream-3:#8d867c;
+  --brass:#d4b88a; --brass-2:#c4a878; --brass-deep:#5a4a30;
+  --hair:rgba(237,233,226,.13); --hair-soft:rgba(237,233,226,.07);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --body:'Lora',Georgia,serif;
+  --label:'Karla',system-ui,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+
+/* Two axes, never combined into one number.
+   --life  what has been PLACED in it. The light, the words, their presence.
+   --years how long it has been HELD. The ground, the patina, the settling.
+   They are different materials on purpose: a ten year old piece with little
+   written reads old and quiet, a new piece written into deeply reads bright and
+   new, and there is no shared scale on which one beats the other. */
+.screen{--years:0}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--ground); color:var(--cream);
+  font-family:var(--body); font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:2px}
+
+/* ─────────── page frame ─────────── */
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+.masthead{
+  padding:88px 0 0;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,286px);
+  gap:72px;align-items:end
+}
+.masthead .mast-copy{min-width:0}
+.masthead .mast-side{
+  border-left:1px solid var(--hair);padding-left:26px;
+  align-self:end;padding-bottom:6px
+}
+.masthead .mast-side dl{display:grid;gap:14px;font-size:13.5px}
+.masthead .mast-side dt{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cream-3);margin-bottom:3px
+}
+.masthead .mast-side dd{color:var(--cream-2);line-height:1.5}
+@media(max-width:900px){
+  .masthead{grid-template-columns:1fr;gap:38px;align-items:start}
+  .masthead .mast-side{border-left:0;border-top:1px solid var(--hair);
+    padding-left:0;padding-top:24px}
+  .masthead .mast-side dl{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+}
+.masthead .eyebrow{
+  font-family:var(--label);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:22px
+}
+.masthead h1{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(2.4rem,4.6vw,3.9rem);line-height:1.04;
+  letter-spacing:-.02em;color:var(--cream);text-wrap:balance;max-width:15ch
+}
+.masthead p{
+  margin-top:26px;font-size:17px;line-height:1.72;color:var(--cream-2);
+  max-width:56ch
+}
+.masthead .note{margin-top:18px;font-size:15px;color:var(--cream-3);max-width:56ch}
+
+.rule{height:1px;background:var(--hair);margin:72px 0}
+
+/* ─────────── the stage: phone + annotations ─────────── */
+.stage{
+  display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
+  gap:64px;align-items:start
+}
+@media(max-width:900px){.stage{grid-template-columns:1fr;gap:44px}}
+
+.phone-col{position:sticky;top:32px}
+@media(max-width:900px){.phone-col{position:static}}
+
+.phone{
+  width:100%;max-width:340px;aspect-ratio:9/19.5;
+  background:var(--ground-2);
+  border:1px solid var(--hair);
+  border-radius:34px;
+  position:relative;overflow:hidden;
+  box-shadow:0 32px 64px -24px rgba(0,0,0,.7), 0 4px 16px -4px rgba(0,0,0,.5);
+}
+.phone-caption{
+  font-family:var(--label);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cream-3);
+  margin-top:18px;text-align:center
+}
+
+/* the screen itself */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:34px 26px 26px}
+
+/* ── season, hour, and the birthday month ──
+   A tint over the whole ground so the piece belongs to the time it is being
+   looked at. It moves the GROUND ONLY. Brass never shifts, because "brass means
+   you can act" is what keeps every screen legible, and an accent that drifts
+   stops being a signal. --tint-h and --tint-a are set by the date. */
+.screen{--tint-h:32; --tint-a:0}
+.screen::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:hsl(var(--tint-h) 62% 52% / var(--tint-a));
+  mix-blend-mode:soft-light;
+  transition:background 2s var(--ease)
+}
+.screen > *{position:relative;z-index:1}
+
+/* ── the page comes alive ──
+   Nothing asks for anything. What was placed in the piece is simply visible:
+   the ground lifts, the drawing's stroke strengthens, the words surface. A piece
+   with nothing in it is calm and complete; a piece with years in it is lit from
+   within. --life runs 0 to 1 and is set by what has been placed, nothing else. */
+.screen{
+  --life:0;
+  background:
+    radial-gradient(120% 62% at 50% 108%,
+      rgba(212,184,138,calc(var(--life) * .17)) 0%,
+      transparent 62%),
+    linear-gradient(180deg,
+      rgba(41,35,28,calc(var(--years) * .75)) 0%,
+      rgba(41,35,28,calc(var(--years) * .28)) 52%,
+      transparent 100%);
+  transition:background 1.4s var(--ease)
+}
+/* years settle the surface itself: the frame warms and the hairlines soften,
+   the way a held object gains patina. Nothing here is earned or awarded. */
+.screen{
+  --hair:rgba(237,233,226,calc(.13 + var(--years) * .05))
+}
+.screen .head .ul{
+  letter-spacing:calc(.2em + var(--years) * .02em);
+  color:color-mix(in srgb, var(--cream-2) calc(var(--years) * 45%), var(--cream-3))
+}
+.screen .piece-slot path,
+.screen .piece-slot circle{
+  stroke:color-mix(in srgb, var(--cream) calc(var(--life) * 100%), var(--cream-2));
+  stroke-width:calc(1.25px + var(--life) * .45px);
+  transition:stroke .9s var(--ease), stroke-width .9s var(--ease)
+}
+.screen .head .name{
+  transition:text-shadow 1.2s var(--ease);
+  text-shadow:0 0 calc(var(--life) * 26px) rgba(212,184,138,calc(var(--life) * .34))
+}
+/* words placed in the piece surface on the page as it fills */
+.placed{
+  display:none;flex:none;margin-top:14px;text-align:center;
+  font-size:12.5px;line-height:1.7;color:var(--cream-3);font-style:italic;
+  opacity:calc(.35 + var(--life) * .65);
+  transition:opacity 1.2s var(--ease)
+}
+.screen.alive .placed{display:block}
+
+/* ── the piece drawing (CAD, geometry only) ── */
+.piece-slot{
+  display:grid;place-items:center;
+  grid-template-rows:126px;
+  transition:grid-template-rows .62s var(--ease-out), opacity .4s var(--ease);
+  margin-bottom:22px;flex:none
+}
+.piece-slot svg{
+  width:100px;height:100px;overflow:visible;
+  transform-origin:center;
+  transition:transform .62s var(--ease-out)
+}
+.piece-slot path,.piece-slot circle,.piece-slot line,.piece-slot polygon{
+  fill:none;stroke:var(--cream-2);stroke-width:1.25;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke
+}
+/* stroke-draw on entry */
+.draw path,.draw circle,.draw polygon,.draw line{
+  stroke-dasharray:var(--len,420);stroke-dashoffset:var(--len,420);
+  animation:draw 1.5s var(--ease-out) forwards
+}
+.draw path:nth-child(2){animation-delay:.18s}
+.draw path:nth-child(3){animation-delay:.34s}
+.draw circle{animation-delay:.5s}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* promoted: drawing shrinks to anchor */
+.screen.promoted .piece-slot{grid-template-rows:44px;margin-bottom:16px;justify-items:start}
+.screen.promoted .piece-slot svg{transform:scale(.38)}
+
+/* ── the head ── */
+.head{text-align:center;flex:none;transition:opacity .34s var(--ease),transform .5s var(--ease-out)}
+.head .ul{
+  font-family:var(--label);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cream-3);margin-bottom:9px
+}
+.head .name{
+  font-family:var(--serif);font-weight:300;font-size:29px;line-height:1.1;
+  letter-spacing:-.01em;color:var(--cream)
+}
+.head .status{
+  margin-top:11px;font-size:12.5px;color:var(--cream-3);line-height:1.5
+}
+.screen.promoted .head{opacity:0;transform:translateY(-10px);pointer-events:none;
+  height:0;overflow:hidden;margin:0}
+
+/* ── the dream ──
+   The one thing every visitor reads. It shows because it was written, not
+   because a switch was flipped, so it carries no toggle anywhere. The words
+   show; who wrote them stays opt-in like everything else. */
+.dream{
+  flex:none;margin-top:18px;padding:0 2px;text-align:center;
+  opacity:calc(.55 + var(--life) * .45);
+  transition:opacity 1.2s var(--ease)
+}
+.dream p{
+  font-family:var(--serif);font-weight:300;font-size:19px;line-height:1.42;
+  letter-spacing:-.005em;color:var(--cream);text-wrap:balance;
+  text-shadow:0 0 calc(var(--life) * 20px) rgba(212,184,138,calc(var(--life) * .3))
+}
+.dream cite{
+  display:block;margin-top:9px;font-style:normal;
+  font-family:var(--label);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3)
+}
+.dream:empty,.dream[hidden]{display:none}
+/* the capsule lives WITH the dream, because it is the same act said aloud */
+.dream-voice{
+  display:none;margin:10px auto 0;background:none;border:1px solid var(--hair);
+  border-radius:999px;padding:6px 16px;cursor:pointer;
+  font-family:var(--body);font-size:12px;color:var(--cream-3);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.dream-voice:hover{border-color:var(--brass);color:var(--brass)}
+.screen.caretaker .dream-voice{display:inline-block}
+/* deep in, the words become the page's body and the interface recedes */
+.screen.deep .dream p{font-size:22px;line-height:1.38}
+.screen.deep .rows{opacity:.72}
+
+/* ── the rows ── */
+.rows{margin-top:26px;flex:none;position:relative}
+.row{
+  position:relative;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;width:100%;background:none;border:0;
+  padding:14.5px 2px;cursor:pointer;text-align:left;
+  font-family:var(--body);font-size:15.5px;color:var(--cream);
+  border-top:1px solid var(--hair);
+  transition:transform .58s var(--ease-out), opacity .38s var(--ease),
+             color .22s var(--ease), border-color .3s var(--ease);
+}
+.row:last-of-type{border-bottom:1px solid var(--hair)}
+.row .chev{
+  font-family:var(--body);color:var(--cream-3);font-size:15px;
+  transition:transform .3s var(--ease),color .22s var(--ease)
+}
+.row:hover{color:var(--brass)}
+.row:hover .chev{color:var(--brass);transform:translateX(3px)}
+.row:active{transform:scale(.985)}
+
+/* row promotion */
+.screen.promoted .row{opacity:0;transform:translateY(16px);pointer-events:none}
+.screen.promoted .row.is-open{
+  opacity:1;transform:translateY(0);pointer-events:auto;
+  color:var(--cream);border-top-color:transparent;
+  font-family:var(--serif);font-size:25px;font-weight:300;letter-spacing:-.01em;
+  padding:0 2px 15px;border-bottom:1px solid var(--hair)
+}
+.screen.promoted .row.is-open .chev{transform:rotate(90deg);color:var(--cream-3)}
+.screen.promoted .rows{margin-top:0}
+
+/* absolute-collapse the closed rows so they take no space */
+.screen.promoted .row:not(.is-open){position:absolute;left:0;right:0;height:0;
+  padding:0;border:0;overflow:hidden}
+
+.cert-h{
+  margin-top:20px;margin-bottom:2px;
+  font-family:var(--label);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brass)
+}
+
+/* the household: adding someone, and the quiet line inside them */
+.q-person .q-m{color:var(--brass)}
+.q-person .q-quiet{color:var(--cream-3);opacity:.6}
+.addp{
+  width:100%;margin-top:12px;padding:11px 2px;cursor:pointer;
+  background:none;border:1px dashed var(--hair);border-radius:10px;
+  font-family:var(--body);font-size:13.5px;color:var(--cream-3);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.addp:hover{border-color:var(--brass);color:var(--brass)}
+
+/* ── the garden ──
+   A list of questions, not a form. Each is its own door. An unanswered question
+   is waiting, never overdue, so nothing here reads as incomplete. */
+.qlist{display:flex;flex-direction:column;margin-top:4px}
+.q{
+  display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;
+  background:none;border:0;border-top:1px solid var(--hair-soft);
+  padding:12px 2px;cursor:pointer;font-family:var(--body);
+  transition:color .22s var(--ease)
+}
+.q:last-child{border-bottom:1px solid var(--hair-soft)}
+.q-t{font-size:14.5px;color:var(--cream);line-height:1.4}
+.q-b{font-size:12.5px;color:var(--cream-3);line-height:1.6}
+.q-m{
+  font-family:var(--label);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--cream-3);margin-top:2px
+}
+.q-answered .q-m,.q-shared .q-m{color:var(--brass)}
+.q-open .q-t{color:var(--cream-2)}
+.q:hover .q-t{color:var(--brass)}
+.ghint{
+  margin-top:16px;font-size:12.5px;line-height:1.6;color:var(--cream-3);font-style:italic
+}
+
+/* a promoted surface takes the page: the dream and the placed words belong to
+   the piece's own face, not inside a door that has been opened */
+.screen.promoted .dream,
+.screen.promoted .placed{display:none}
+
+/* the garden is the longest surface in the flow: it must scroll inside itself,
+   the way every promoted surface does, rather than pushing past the frame */
+.screen.promoted .opened{flex:1 1 auto;min-height:0;overflow-y:auto}
+.screen.caretaker.promoted .opened{min-height:0}
+
+/* a surface reached from something other than a row carries its own header */
+.ghead{
+  display:none;align-items:center;justify-content:space-between;flex:none;
+  font-family:var(--serif);font-size:25px;font-weight:300;letter-spacing:-.01em;
+  color:var(--cream);padding:0 2px 15px;border-bottom:1px solid var(--hair)
+}
+.screen.promoted .ghead:not([hidden]){display:flex}
+.ghead .chev{transform:rotate(90deg);color:var(--cream-3)}
+
+/* ── the walk: code confirmed, then the four screens ── */
+.screen.walking .piece-slot,
+.screen.walking .head,
+.screen.walking .rows,
+.screen.walking .foot,
+.screen.walking .dream,
+.screen.walking .placed,
+.screen.walking .opened,
+.screen.walking .ghead,
+.screen.walking .backlink,
+.screen.walking .spacer{display:none}
+.walk{
+  display:none;flex:1;min-height:0;
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px 2px
+}
+.screen.walking .walk{display:flex;cursor:pointer}
+.walk-art{height:112px;margin-bottom:30px;display:grid;place-items:center;flex:none}
+.walk-art svg{width:92px;height:92px;overflow:visible}
+.walk-art path,.walk-art circle{
+  fill:none;stroke:var(--cream-2);stroke-width:1.25;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke
+}
+.walk-art.hide{display:none}
+.walk-h{
+  font-family:var(--serif);font-weight:300;font-size:31px;line-height:1.12;
+  letter-spacing:-.015em;color:var(--cream);margin-bottom:18px;text-wrap:balance
+}
+/* #walkB is the container; .walk-b are the paragraphs inside it */
+#walkB{
+  width:100%;display:flex;flex-direction:column;align-items:center;
+  flex:0 1 auto;min-height:0;overflow-y:auto;scrollbar-width:none
+}
+#walkB::-webkit-scrollbar{display:none}
+.walk-b{
+  font-size:15px;line-height:1.7;color:var(--cream-2);max-width:27ch;margin:0 auto
+}
+.walk-b2{margin-top:13px}
+/* choice rows inside the walk: hairline list, never a stack of buttons */
+.walk-rows{margin-top:22px;width:100%;text-align:left}
+.walk-row{
+  display:flex;flex-direction:column;gap:3px;width:100%;
+  background:none;border:0;border-top:1px solid var(--hair);
+  padding:13px 2px;cursor:pointer;text-align:left;font-family:var(--body);
+  transition:color .22s var(--ease)
+}
+.walk-row:last-child{border-bottom:1px solid var(--hair)}
+.walk-row .wr-t{font-size:15px;color:var(--cream)}
+.walk-row .wr-s{font-size:12.5px;color:var(--cream-3);line-height:1.5}
+.walk-row:hover .wr-t{color:var(--brass)}
+.wr-check{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+.wr-check .wr-mark{
+  font-family:var(--label);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--brass);white-space:nowrap
+}
+.wr-check:not(.is-on) .wr-mark{color:var(--cream-3);opacity:.5}
+/* fields: the shape only, this is a spec not a form */
+.walk-eyebrow{
+  font-family:var(--label);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--cream-3);margin-top:22px;width:100%;text-align:left
+}
+.walk-fields{margin-top:14px;width:100%;display:flex;flex-direction:column;gap:10px}
+.wf-row{display:flex;gap:10px}
+.wf{
+  flex:1;min-width:0;border-bottom:1px solid var(--hair);
+  padding:11px 2px;font-size:13.5px;color:var(--cream-3);text-align:left
+}
+/* stacked, one wide: a link is a line you fill, not a tile you pick */
+.walk-tiles{margin-top:20px;width:100%;display:flex;flex-direction:column;gap:8px}
+.wt{
+  width:100%;border:1px solid var(--hair);border-radius:10px;
+  padding:12px 14px;font-size:13px;color:var(--cream-2);text-align:left
+}
+.wt-add{border-style:dashed;color:var(--cream-3)}
+.walk-note{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:12px;line-height:1.6;color:var(--cream-3)
+}
+.walk-why{
+  margin-top:9px;align-self:flex-start;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-style:italic;font-size:13.5px;color:var(--cream-2);
+  padding:4px 2px;transition:color .22s var(--ease)
+}
+.walk-why:hover{color:var(--brass)}
+/* THREE TIERS, named for what they actually do.
+   The middle one must say that a future holder may publish it. Calling it
+   "private" would be a lie, and someone would write a thing they would never
+   have written had they understood. Shining is the default, per the settled
+   model: the piece shines, the person opts in. */
+.tiers{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:18px}
+.tier{
+  display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;
+  padding:11px 13px;cursor:pointer;
+  background:none;border:1px solid var(--hair);border-radius:10px;
+  font-family:var(--body);
+  transition:border-color .25s var(--ease),background .25s var(--ease)
+}
+.tier-t{font-size:13.5px;color:var(--cream-2)}
+.tier-s{font-size:11.5px;color:var(--cream-3);line-height:1.5}
+.tier.is-on{border-color:var(--brass-deep);background:rgba(212,184,138,.05)}
+.tier.is-on .tier-t{color:var(--brass)}
+
+/* the heirs' right. On by default, because the father who never thought about
+   it should leave his words openable to his children: that is the whole reason
+   the piece outlives him. Off is there for the one thing meant to be taken
+   along. Hidden when the tier is Seal it, which already answers this. */
+.heirs{
+  display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;
+  margin-top:12px;padding:9px 2px;cursor:pointer;background:none;border:0;
+  border-top:1px solid var(--hair-soft);font-family:var(--body)
+}
+.heirs-t{font-size:12.5px;color:var(--cream-2)}
+.heirs-s{font-size:11.5px;color:var(--cream-3)}
+.heirs.is-on .heirs-t{color:var(--brass)}
+.heirs[hidden]{display:none}
+.walk-lock{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:11.5px;line-height:1.6;color:var(--cream-3);font-style:italic
+}
+/* a required screen says so, so that leaving is a known choice and not an
+   accident. Registration is binary: incomplete means not registered. The
+   questions were never part of it and never become part of it. */
+.walk-req{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:11.5px;line-height:1.6;color:var(--cream-3);
+  border-top:1px solid var(--hair-soft);padding-top:11px
+}
+
+/* a question screen carries the most of any walk screen: the question, the
+   guidance, the field, three tiers and the heirs line. Its own middle scrolls,
+   the way every long surface in this flow does, and its art steps aside. */
+.walk.tall .walk-art{display:none}
+.walk.tall .walk-h{font-size:25px;margin-bottom:12px}
+.walk.tall{justify-content:flex-start;padding-top:4px}
+.walk.tall .walk-foot{margin-top:16px}
+
+/* the explainer is a sheet, it rises over the screen beneath it */
+.walk.sheet{justify-content:flex-end;padding-bottom:16px}
+
+.walk-foot{margin-top:22px;flex:none;min-height:24px}
+.walk-foot .tlink{margin-top:12px}
+.walk-hint{
+  font-size:12px;color:var(--cream-3);font-style:italic;margin-top:4px
+}
+/* each walk screen enacts its own meaning, once, on entry */
+.walk.enter .walk-art path,.walk.enter .walk-art circle{
+  stroke-dasharray:var(--len,420);stroke-dashoffset:var(--len,420);
+  animation:draw 1.5s var(--ease-out) forwards
+}
+.walk.enter .walk-h,.walk.enter .walk-b{animation:riseIn .5s var(--ease-out) both}
+.walk.enter .walk-b{animation-delay:.1s}
+@keyframes riseIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+/* screen three: the glow swells once */
+.walk.glow .walk-art{animation:swell 1.6s var(--ease) 1}
+@keyframes swell{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(212,184,138,0))}
+  45%{filter:drop-shadow(0 0 18px rgba(212,184,138,.55))}
+}
+/* screen four: the words arrive line by line */
+.walk.written .walk-b{animation:riseIn .55s var(--ease-out) both .35s}
+.walk.written .walk-foot{animation:riseIn .5s var(--ease-out) both .95s}
+
+/* ── the two doors ──
+   A guest is here to look, the caretaker is here to tend, and the page cannot
+   know which arrived. So neither is styled as the primary: two peers, equal
+   weight, differing only in what they say. This is the ONE screen in the flow
+   with two peer actions, and it is bent here because it is the one screen where
+   the system genuinely does not know who is holding the phone. */
+.doors{
+  display:flex;align-items:stretch;justify-content:center;
+  width:100%;margin-top:2px
+}
+.doors[hidden]{display:none}
+.door{
+  flex:1;min-width:0;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-size:14px;color:var(--cream);
+  padding:13px 6px;line-height:1.35;
+  transition:color .22s var(--ease)
+}
+.door:hover{color:var(--brass)}
+.door-sep{width:1px;background:var(--hair);flex:none;margin:8px 0}
+
+/* [hidden] must win over any display rule, everywhere */
+[hidden]{display:none !important}
+
+/* ── ONE PAGE, ONE BODY ──
+   The body of the piece page is identical for everyone who opens it: the piece,
+   its name, its dream, its public rows. It is sized ONCE, here, for the fullest
+   case (a caretaker with every row) so that no relationship reflows it. What
+   differs between a stranger and a caretaker is the FOOT, and rows being
+   APPENDED rather than the layout being swapped. Two layouts wearing one name
+   was the thing this replaces. */
+.screen .piece-slot{grid-template-rows:70px;margin-bottom:10px}
+.screen .piece-slot svg{transform:scale(.58)}
+.screen .head .ul{margin-bottom:5px;font-size:9.5px}
+.screen .head .name{font-size:23px}
+.screen .head .status{margin-top:6px;font-size:11.5px}
+.screen .dream{margin-top:12px}
+.screen .dream p{font-size:16.5px;line-height:1.38}
+.screen .dream cite{margin-top:6px;font-size:9px}
+.screen .rows{margin-top:13px}
+.screen .row{padding:9px 2px;font-size:14px}
+.screen .placed{display:none}
+.screen .spacer{min-height:0;flex:0 1 auto}
+
+/* The caretaker's list is the longest in the system: four public rows plus
+   theirs. The ROWS scroll inside their own band rather than the body being
+   re-sized for them, which is what keeps one body true for everyone.
+   The band FADES at its lower edge so the list is visibly longer than the frame.
+   A row cut mid-word with no sign of more is the no-scroll rule breaking
+   quietly: the page does not move, but the person cannot tell there is more. */
+.rows{overflow-y:auto;min-height:0;scrollbar-width:none}
+.rows::-webkit-scrollbar{display:none}
+.screen.caretaker .rows{
+  flex:1 1 auto;
+  -webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 34px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 calc(100% - 34px),transparent 100%)
+}
+
+/* ── the foot, the only part that reads relationship ──
+   unclaimed: one lit pill, the only bright thing.
+   claimed by someone else: no pill, sign in is the move; the code door is quiet.
+   yours: no pill and no sign in, the light and your doors instead. */
+.screen.claimed .foot > .pill{
+  background:none;border:1px solid var(--hair);color:var(--cream-2);
+  box-shadow:none;font-family:var(--body);font-size:14px;font-weight:400;
+  letter-spacing:0;text-transform:none;min-height:0;padding:9px 4px
+}
+.screen.claimed .foot > .pill:hover{background:none;color:var(--brass);box-shadow:none}
+.screen.claimed #signinLink{color:var(--cream);font-size:15px}
+.screen.claimed .foot{padding-top:8px}
+.screen.claimed .foot > .tlink{padding:6px 4px;font-size:13.5px}
+
+.screen.claimed .foot > .pill{display:block;margin:0 auto 2px}
+/* the account row belongs to the caretaker's page only */
+.care-only{display:none}
+.screen.caretaker .care-only{display:flex}
+
+/* ── promoted content ── */
+.opened{
+  opacity:0;transform:translateY(14px);pointer-events:none;
+  transition:opacity .44s var(--ease) .1s, transform .56s var(--ease-out) .1s;
+  margin-top:20px;overflow-y:auto;flex:1;min-height:0;
+  padding-right:4px
+}
+.screen.promoted .opened{opacity:1;transform:translateY(0);pointer-events:auto}
+.opened::-webkit-scrollbar{width:2px}
+.opened::-webkit-scrollbar-thumb{background:var(--hair);border-radius:2px}
+.opened p{font-size:14.5px;line-height:1.75;color:var(--cream-2);margin-bottom:14px}
+.opened .facts{border-top:1px solid var(--hair-soft);padding-top:14px;margin-top:4px}
+.opened .fact{
+  display:flex;justify-content:space-between;gap:16px;
+  padding:8px 0;font-size:13.5px;border-bottom:1px solid var(--hair-soft)
+}
+.opened .fact dt{color:var(--cream-3);font-family:var(--label);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.opened .fact dd{color:var(--cream-2);text-align:right}
+.opened .empty{color:var(--cream-3);font-style:italic;font-size:14px}
+
+/* ── the spacer + foot ── */
+.spacer{flex:1;min-height:8px}
+.screen.promoted .spacer{display:none}
+
+.foot{flex:none;text-align:center;padding-top:18px;
+  transition:opacity .34s var(--ease)}
+.screen.promoted .foot{opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0}
+.screen.promoted .foot > *{visibility:hidden}
+.screen.caretaker.promoted .foot,
+.screen.caretaker.promoted .foot > *{visibility:visible}
+
+/* ── the brass pill ── */
+.pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:46px;padding:0 44px;border:0;border-radius:999px;
+  background:var(--brass);color:#241d13;
+  font-family:var(--label);font-size:12px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;
+  transition:background .24s var(--ease),transform .22s var(--ease),
+             box-shadow .28s var(--ease);
+  box-shadow:0 6px 22px -8px rgba(212,184,138,.5)
+}
+.pill:hover{background:#e2c99f;box-shadow:0 10px 30px -8px rgba(212,184,138,.62)}
+.pill:active{transform:scale(.97)}
+/* disabled loses brass entirely, because brass is a promise you can act */
+.pill:disabled{
+  background:none;border:1px solid var(--hair);color:var(--cream-3);
+  box-shadow:none;cursor:default
+}
+.pill:disabled:hover{background:none;box-shadow:none}
+
+/* ── the text link ── */
+.tlink{
+  display:inline-block;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-size:14px;color:var(--cream-3);
+  padding:9px 4px;text-decoration:none;
+  transition:color .22s var(--ease)
+}
+.tlink:hover{color:var(--cream-2)}
+.foot .tlink{margin-top:14px}
+
+/* back link inside promoted */
+.backlink{
+  flex:none;padding-top:14px;opacity:0;pointer-events:none;
+  transition:opacity .4s var(--ease) .16s
+}
+.screen.promoted .backlink{opacity:1;pointer-events:auto}
+
+/* ── the code field state ── */
+.codefield{
+  display:none;flex-direction:column;align-items:center;
+  animation:fadeUp .5s var(--ease-out)
+}
+.screen.unlocking .codefield{display:flex}
+/* the Unlock pill STAYS on the code page: it is the second press.
+   Only the resting-page links step aside. */
+/* the Unlock pill STAYS on the code page: it is the second press.
+   Only the resting-page links step aside. */
+.screen.unlocking .foot > .tlink,
+.screen.unlocking .foot > br{display:none}
+.screen.unlocking .foot > .pill{display:none}
+.screen.wrongcode .foot > .pill{display:none}
+/* the code page is its OWN page: everything that is not the field gives way,
+   and sixteen characters over two rows need the room. */
+.screen.unlocking .rows{display:none}
+.screen.unlocking .head .status{display:none}
+.screen.unlocking .head .ul{margin-bottom:6px}
+.screen.unlocking .head .name{font-size:23px}
+.screen.unlocking .dream{display:none}
+.screen.unlocking .placed{display:none}
+.screen.unlocking .piece-slot{grid-template-rows:62px;margin-bottom:12px}
+.screen.unlocking .piece-slot svg{transform:scale(.52)}
+.screen.unlocking .foot{padding-top:0}
+.screen.unlocking .spacer{flex:0 1 auto;min-height:0}
+.screen.unlocking .codefield{margin-top:14px}
+.screen.unlocking .code-help{margin-bottom:6px;font-size:12px}
+.screen.unlocking .code-warn{margin-bottom:2px;font-size:11.5px}
+.screen.unlocking .code-nocode{margin-top:6px}
+.screen.unlocking .code-nocode .tlink{padding:6px 4px;font-size:13px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+:root{--cell:26px}
+/* sixteen characters as two rows of eight. An unbroken run of sixteen is
+   unreadable and unproofable against the underside of a piece; two rows of
+   eight are checkable by eye, and two rows are shorter than four groups. */
+.code-in{
+  display:flex;flex-direction:column;align-items:center;
+  gap:11px;margin-bottom:14px;position:relative;
+  width:100%;flex:none
+}
+.cg{display:flex;gap:4px;flex:none;justify-content:center}
+.cg i{
+  width:var(--cell);flex:none;height:28px;display:flex;align-items:flex-end;
+  justify-content:center;padding-bottom:3px;
+  border-bottom:1px solid var(--hair);
+  font-family:var(--label);font-size:15px;font-style:normal;color:var(--cream);
+  transition:border-color .3s var(--ease)
+}
+.cg i.seated{border-bottom-color:var(--brass)}
+.cg i.seat-in{animation:seat .3s var(--ease-out)}
+.cg i.cursor::after{
+  content:'';display:block;width:9px;height:1px;background:var(--brass);
+  animation:blink 1.1s steps(2,start) infinite
+}
+@keyframes blink{to{opacity:0}}
+/* the real input sits over the whole grid, invisible and text-free */
+.code-in input{
+  position:absolute;inset:0;width:100%;height:100%;
+  background:none;border:0;outline:0;color:transparent;caret-color:transparent;
+  padding:0;cursor:text;-webkit-text-fill-color:transparent;font-size:16px;
+  text-indent:-9999px;overflow:hidden
+}
+@media(max-width:420px){:root{--cell:24px}.code-in{gap:10px}}
+.code-in span{
+  width:32px;height:44px;display:flex;align-items:center;justify-content:center;
+  border-bottom:1px solid var(--hair);
+  font-family:var(--label);font-size:19px;letter-spacing:.05em;
+  color:var(--cream);
+}
+.code-in span.seated{border-bottom-color:var(--brass)}
+.code-in span.seat-in{animation:seat .34s var(--ease-out)}
+@keyframes seat{
+  0%{transform:translateY(-5px);opacity:0}
+  60%{transform:translateY(1.5px);opacity:1}
+  100%{transform:none}
+}
+.code-help{font-size:12.5px;line-height:1.6;color:var(--cream-3);
+  text-align:center;margin-bottom:8px;max-width:28ch}
+.code-warn{font-size:12px;color:var(--cream-3);text-align:center;
+  margin-bottom:4px;max-width:28ch;font-style:italic}
+/* the wrong-code state carries longer copy: give the field room by dropping
+   the spacer above it, the same budget the meter gets */
+.screen.wrongcode .spacer{min-height:0;flex:0 1 auto}
+/* cleared field: one quiet rule, never six orphan dashes */
+.screen.wrongcode .code-in{gap:0;margin-bottom:12px}
+.screen.wrongcode .code-in span{border-bottom-color:var(--hair-soft);height:34px}
+/* the longer copy plus the recovery pair needs the rows to yield */
+.screen.wrongcode .rows{display:none}
+.screen.wrongcode .head{margin-bottom:4px}
+.screen.wrongcode .code-help{margin-bottom:4px}
+/* the recovery is two real buttons, never brass on inert text */
+/* [hidden] must win over display:flex */
+.code-actions[hidden]{display:none}
+.code-actions{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:8px}
+.code-actions .pill{min-height:42px;padding:0 36px}
+.code-nocode{margin-top:10px}
+.screen.wrongcode .code-nocode{display:none}
+
+/* the vault */
+.vault{
+  position:absolute;inset:0;pointer-events:none;z-index:5;
+  display:none
+}
+.screen.vaulting .vault{display:block}
+.vault .half{
+  position:absolute;left:0;right:0;height:50%;
+  background:var(--ground-2);
+  transition:transform 1.15s cubic-bezier(.65,0,.35,1)
+}
+.vault .half.top{top:0;border-bottom:1px solid var(--brass-deep)}
+.vault .half.bot{bottom:0;border-top:1px solid var(--brass-deep)}
+.screen.vaulting .vault .half.top{transform:translateY(-100%)}
+.screen.vaulting .vault .half.bot{transform:translateY(100%)}
+.vault .light{
+  position:absolute;inset:0;opacity:0;
+  background:radial-gradient(ellipse 130% 55% at 50% 50%,
+    rgba(212,184,138,.9) 0%, rgba(196,168,120,.42) 32%,
+    rgba(90,74,48,.18) 58%, transparent 78%);
+  transition:opacity .95s var(--ease) .12s
+}
+.screen.vaulting .vault .light{opacity:1}
+
+/* ── the glow meter ── */
+.meter-wrap{
+  display:none;flex-direction:column;align-items:stretch;gap:0;flex:none;
+  padding-bottom:4px;width:100%
+}
+.screen.caretaker .meter-wrap{display:flex}
+/* the meter is the foot in caretaker mode: give it the room the pill had */
+.screen.caretaker .spacer{min-height:0;flex:0 1 auto}
+.screen.caretaker .foot{padding-top:6px}
+/* home carries seven rows plus the light: the list yields, nothing is cut */
+/* the meter survives promotion: it shrinks to a small lit anchor beside the
+   header, exactly as the drawing does. Screen 23 is meter and rows together. */
+.screen.caretaker.promoted .foot{
+  opacity:1;pointer-events:auto;height:auto;overflow:visible;
+  padding:0;order:-1;margin-bottom:14px
+}
+.screen.caretaker.promoted .meter{height:16px}
+.screen.caretaker.promoted .meter .halo{filter:blur(6px)}
+.screen.caretaker.promoted .ritual-due{
+  margin-top:10px;color:var(--brass);font-size:12.5px;font-style:italic
+}
+.meter-label{display:none}
+.screen.caretaker.promoted .meter-wrap{padding-bottom:0}
+/* with the meter as the anchor, the drawing steps aside */
+.screen.caretaker.promoted .piece-slot{grid-template-rows:0;opacity:0;margin:0}
+.screen.caretaker .foot > .pill,
+.screen.caretaker .foot > .tlink,
+.screen.caretaker .foot > br{display:none}
+/* THE LIGHT HAS TWO PARTS.
+   --life  the long glow. Everything ever placed, and it NEVER fades. Twenty
+           years of love does not decay because this year was quiet.
+   --near  the near light. Brightens when something is placed and dims over
+           months of silence. A piece being tended right now reads awake.
+   So a long-loved piece that is quiet still reads deeply lit, and nobody who
+   was ever devoted ever looks abandoned. The decay is on attention, not love. */
+
+/* the door is a door. The light SHOWS the state; it does not also have to be
+   the only way in, which made one element do two jobs. */
+.feed{
+  margin-top:13px;align-self:center;background:none;border:1px solid var(--hair);
+  border-radius:999px;padding:8px 20px;cursor:pointer;
+  font-family:var(--body);font-size:13px;color:var(--cream-2);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.feed:hover{border-color:var(--brass);color:var(--brass)}
+
+/* a line of light that lengthens, not a number in a ring. It reads as
+   brightness because it IS brightness: no score, no count, no total. */
+.meter{
+  position:relative;width:100%;height:34px;
+  background:none;border:0;cursor:pointer;padding:0;
+  display:grid;place-items:center;
+  transition:transform .3s var(--ease)
+}
+.meter:hover{transform:scaleY(1.12)}
+.meter:active{transform:scaleY(.94)}
+.meter .halo{
+  position:absolute;left:0;right:0;top:50%;height:3px;transform:translateY(-50%);
+  border-radius:99px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(212,184,138,var(--g,.3)) 12%,
+    rgba(212,184,138,var(--g,.3)) 88%,
+    transparent 100%);
+  filter:blur(9px);
+  transition:background .85s var(--ease);
+  animation:breathe 5.5s ease-in-out infinite
+}
+@keyframes breathe{0%,100%{opacity:.72}50%{opacity:1}}
+.meter .bar{
+  position:relative;z-index:1;width:100%;height:1px;
+  background:var(--hair);border-radius:99px;overflow:visible
+}
+.meter .bar-fill{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  height:1.5px;width:var(--w,29%);
+  background:linear-gradient(90deg,var(--brass-2),var(--brass));
+  opacity:calc(.42 + var(--near,1) * .58);
+  border-radius:99px;
+  box-shadow:0 0 10px rgba(212,184,138,.55);
+  /* width, deliberately: scaleX would stretch the glow and the rounded cap
+     with it, so the light would distort instead of lengthen. One element,
+     once a year, is worth the layout pass. */
+  transition:width 1s var(--ease-out), box-shadow .85s var(--ease)
+}
+.ritual-due{
+  margin-top:10px;color:var(--brass);font-size:12.5px;font-style:italic
+}
+.meter-label{
+  margin-top:14px;font-size:12px;color:var(--cream-3);text-align:center;
+  line-height:1.45;align-self:center;max-width:26ch
+}
+/* the jump list: every surface one press away. A designer should never have to
+   walk eleven screens to inspect the twelfth. */
+.jump{align-items:stretch}
+.jgrid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.jgrid .jsec{
+  width:100%;margin-top:6px;
+  font-family:var(--label);font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3);text-align:center
+}
+.jgrid .jsec:first-child{margin-top:0}
+.jgrid button{
+  background:none;border:1px solid var(--hair);color:var(--cream-2);
+  font-family:var(--body);font-size:11.5px;
+  padding:5px 9px;border-radius:999px;cursor:pointer;
+  transition:border-color .2s var(--ease),color .2s var(--ease)
+}
+.jgrid button:hover{border-color:var(--brass);color:var(--brass)}
+
+/* demo controls: outside the phone, they are not part of any screen */
+.controls{
+  margin-top:20px;padding-top:16px;border-top:1px solid var(--hair-soft);
+  display:flex;flex-direction:column;align-items:center;gap:11px
+}
+.ctl-label{
+  font-family:var(--label);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3)
+}
+.meter-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.meter-steps button{
+  background:none;border:1px solid var(--hair);color:var(--cream-3);
+  font-family:var(--label);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;padding:6px 11px;border-radius:999px;cursor:pointer;
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.meter-steps button:hover{border-color:var(--brass);color:var(--brass)}
+
+/* ─────────── annotations column ─────────── */
+.annos{display:flex;flex-direction:column}
+.annos-head{margin-bottom:8px}
+.annos-head h2{
+  font-family:var(--serif);font-weight:300;font-size:34px;line-height:1.12;
+  letter-spacing:-.015em;color:var(--cream)
+}
+.annos-head p{margin-top:14px;font-size:15.5px;color:var(--cream-2);max-width:56ch}
+
+.prim{
+  border-top:1px solid var(--hair);padding:26px 0 26px 22px;
+  position:relative;
+  transition:background .5s var(--ease)
+}
+.prim::before{
+  content:'';position:absolute;left:0;top:26px;bottom:26px;width:1px;
+  background:var(--hair);transition:background .45s var(--ease),box-shadow .45s var(--ease)
+}
+.prim.lit::before{background:var(--brass);box-shadow:0 0 12px rgba(212,184,138,.5)}
+.prim:last-child{border-bottom:1px solid var(--hair)}
+
+.prim .n{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cream-3);
+  transition:color .4s var(--ease)
+}
+.prim.lit .n{color:var(--brass)}
+.prim h3{
+  font-family:var(--serif);font-weight:300;font-size:25px;line-height:1.2;
+  margin:7px 0 12px;color:var(--cream);letter-spacing:-.01em
+}
+.prim .what{font-size:15px;line-height:1.7;color:var(--cream-2);margin-bottom:18px;max-width:54ch}
+.prim dl{display:grid;grid-template-columns:auto 1fr;gap:9px 20px;font-size:13.5px;max-width:54ch}
+.prim dt{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--cream-3);padding-top:3px;white-space:nowrap
+}
+.prim dd{color:var(--cream-2);line-height:1.6}
+.prim .try{
+  margin-top:16px;font-size:13px;color:var(--brass);font-style:italic
+}
+
+/* ─────────── the rule callouts ─────────── */
+.laws{margin-top:0}
+.laws h2{
+  font-family:var(--serif);font-weight:300;font-size:34px;line-height:1.12;
+  letter-spacing:-.015em;margin-bottom:14px
+}
+.laws .lede{font-size:16px;color:var(--cream-2);max-width:60ch;margin-bottom:40px}
+.lawgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:0}
+.law{padding:26px 26px 26px 0;border-top:1px solid var(--hair)}
+.law h4{
+  font-family:var(--serif);font-weight:300;font-size:21px;line-height:1.25;
+  color:var(--cream);margin-bottom:10px
+}
+.law p{font-size:14.5px;line-height:1.68;color:var(--cream-2)}
+.law .open{
+  display:block;margin-top:11px;font-size:12.5px;color:var(--brass);font-style:italic
+}
+
+/* ─────────── assembly table ─────────── */
+.tablewrap{overflow-x:auto;margin-top:34px;padding-bottom:6px}
+.tablewrap::-webkit-scrollbar{height:3px}
+.tablewrap::-webkit-scrollbar-thumb{background:var(--hair);border-radius:3px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+thead th{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--cream-3);font-weight:400;
+  text-align:left;padding:0 14px 13px 0;border-bottom:1px solid var(--hair);
+  white-space:nowrap;vertical-align:bottom
+}
+thead th.num{width:34px}
+tbody td{
+  padding:13px 14px 13px 0;border-bottom:1px solid var(--hair-soft);
+  vertical-align:top;color:var(--cream-2);line-height:1.55
+}
+tbody td.num{font-family:var(--label);font-size:11px;color:var(--cream-3);padding-top:15px}
+tbody td.scr{color:var(--cream);font-family:var(--serif);font-size:20px;
+  font-weight:300;white-space:nowrap;padding-right:26px;letter-spacing:-.005em}
+tbody tr.sect td{
+  border-bottom:1px solid var(--hair);padding-top:30px;
+  font-family:var(--label);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brass)
+}
+tbody tr:hover td{color:var(--cream)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{
+  font-family:var(--label);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--hair);border-radius:999px;
+  color:var(--cream-3);white-space:nowrap
+}
+.chip.b{border-color:var(--brass-deep);color:var(--brass)}
+/* not primitives: named in the note above the table */
+.chip.nonp{border-style:dashed;border-color:var(--hair-soft);color:var(--cream-3)}
+
+.moment{color:var(--cream-3);font-size:13.5px;line-height:1.55;max-width:34ch}
+
+/* ─────────── closing ─────────── */
+.close{padding:0 0 100px}
+.close h2{font-family:var(--serif);font-weight:300;font-size:30px;margin-bottom:16px}
+.close p{font-size:15.5px;color:var(--cream-2);max-width:62ch;margin-bottom:12px}
+.close .q{
+  border-top:1px solid var(--hair);margin-top:30px;padding-top:24px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px
+}
+.close .q div h4{font-family:var(--serif);font-weight:300;font-size:20px;margin-bottom:9px}
+.close .q div p{font-size:14.5px}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.12s!important
+  }
+  .draw path,.draw circle,.draw polygon,.draw line{stroke-dashoffset:0!important}
+}
+
+@media(max-width:640px){
+  .masthead{padding-top:56px}
+  .rule{margin:52px 0}
+  .law{padding-right:0}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-copy">
+      <div class="eyebrow">Adrian Rasmussen · The collector journey</div>
+      <h1>Six primitives, and the twenty four screens they build</h1>
+      <p>The wording for this flow is locked. What was never written down is how any of it
+      moves. Every screen in the journey is assembled from the six behaviors below. Touch
+      them here, then read the table for which screens use which.</p>
+      <p class="note">Nothing here is a finished screen. It is the behavior underneath
+      every screen, so that a designer dressing them has the motion already decided.</p>
+    </div>
+    <div class="mast-side">
+      <dl>
+        <div><dt>Ground</dt><dd>Espresso, dark first. Light follows once dark is locked.</dd></div>
+        <div><dt>Brass</dt><dd>Only on the thing you can act on. Never more than one per screen.</dd></div>
+        <div><dt>Drawings</dt><dd>Outline only, uniform stroke, authored as ordered paths.</dd></div>
+        <div><dt>Scroll</dt><dd>No setup screen ever scrolls. If it would, it splits.</dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ THE STAGE ══════════ -->
+  <section class="stage">
+
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen" id="screen">
+
+          <div class="vault"><div class="half top"></div><div class="half bot"></div><div class="light"></div></div>
+
+          <!-- the CAD drawing -->
+          <div class="piece-slot draw" id="pieceSlot">
+            <svg viewBox="0 0 100 100" aria-label="Earth's Breath, line drawing">
+              <path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>
+              <path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>
+              <path d="M14 50 L86 50 M50 8 L50 92" style="--len:150"/>
+              <circle cx="50" cy="50" r="9" style="--len:57"/>
+            </svg>
+          </div>
+
+          <!-- the head -->
+          <div class="head" id="head">
+            <div class="ul">Universal Language 1</div>
+            <div class="name">Earth&rsquo;s Breath</div>
+            <div class="status">Registered · a light in the Resonant Grid</div>
+          </div>
+
+          <!-- the dream: what a guest reads first. Placed once a year, and
+               placing it IS the choice to show it. Words only, never a name. -->
+          <blockquote class="dream" id="dream">
+            <p id="dreamText"></p>
+            <cite id="dreamCite">placed this year</cite>
+            <button class="dream-voice care-only" id="voiceBtn">Say it out loud</button>
+          </blockquote>
+
+          <!-- the rows -->
+          <div class="rows" id="rows">
+            <button class="row" data-row="story" data-prim="row">
+              <span>The story</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="cert" data-prim="row">
+              <span>The certificate</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="hist" data-prim="row">
+              <span>The history</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="dreams" data-prim="row">
+              <span>The dreams</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="info" data-prim="row">
+              <span>Piece information</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="family" data-prim="row">
+              <span>The people you love</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-walkrow="passfork" data-prim="row">
+              <span>Passing it on</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="account" data-prim="row">
+              <span>Your account</span><span class="chev">&rsaquo;</span>
+            </button>
+          </div>
+
+          <p class="placed" id="placed"></p>
+
+          <!-- the walk: code confirmed, then the four. Tap anywhere advances. -->
+          <div class="walk" id="walk" hidden>
+            <div class="walk-art" id="walkArt">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>
+                <path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>
+                <circle cx="50" cy="50" r="9" style="--len:57"/>
+              </svg>
+            </div>
+            <h2 class="walk-h" id="walkH">The code is true</h2>
+            <p class="walk-b" id="walkB"></p>
+            <div class="walk-foot" id="walkFoot"></div>
+          </div>
+
+          <!-- a header for surfaces with no row of their own (the garden) -->
+          <div class="ghead" id="gardenHead" hidden>
+            <span id="gheadTitle">The garden</span><span class="chev">&rsaquo;</span>
+          </div>
+
+          <!-- promoted content -->
+          <div class="opened" id="opened"></div>
+
+          <div class="backlink" id="backlink">
+            <button class="tlink" data-close>Back to the piece</button>
+          </div>
+
+          <div class="spacer"></div>
+
+          <!-- foot: pill, link, code, meter -->
+          <div class="foot">
+
+            <div class="codefield" id="codefield">
+              <div class="code-in" id="codeIn">
+                <span class="cg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="cg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <input id="codeInput" inputmode="text" autocomplete="off"
+                       spellcheck="false" maxlength="16" aria-label="The code">
+              </div>
+              <p class="code-help" id="codeHelp">Turn the piece over. The code is written on
+              its underside, and only its caretaker can see it.</p>
+              <p class="code-warn" id="codeWarn">Whoever holds the code holds access. Keep
+              it safe.</p>
+              <p class="code-nocode" id="codeNoCode">
+                <button class="tlink" id="noCodeBtn">I don&rsquo;t have a code</button>
+              </p>
+              <p class="code-nocode" id="codeGift">
+                <button class="tlink" id="giftBtn">I am giving this to someone</button>
+              </p>
+              <div class="code-actions" id="codeActions" hidden>
+                <button class="pill" id="tryAgainBtn">Try again</button>
+                <button class="tlink" id="contactBtn">Contact Adrian</button>
+              </div>
+            </div>
+
+            <div class="meter-wrap">
+              <button class="meter" id="meter" aria-label="Open the garden">
+                <span class="halo" id="halo"></span>
+                <span class="bar"><span class="bar-fill" id="mfill"></span></span>
+              </button>
+              <p class="meter-label" id="meterLabel">Seven things placed.</p>
+              <button class="feed" id="feedBtn">Place something in it</button>
+              <button class="tlink ritual-due" id="ritualLink" hidden>The year has turned</button>
+            </div>
+
+            <button class="pill" id="unlockBtn" data-prim="pill">Begin</button>
+            <div class="doors" id="doors" hidden>
+              <button class="door" id="lookDoor">Look through it</button>
+              <span class="door-sep"></span>
+              <button class="door" id="tendDoor">Sign in to tend it</button>
+            </div>
+            <br id="signinBr" hidden>
+            <button class="tlink" id="signinLink" data-prim="link" hidden>Sign in</button>
+            <br>
+            <a class="tlink" href="#" data-prim="link" id="siteLink">Into the artist&rsquo;s website</a>
+          </div>
+
+        </div>
+      </div>
+      <p class="phone-caption" id="phoneCap">Resting state · tap anything</p>
+      <div class="controls">
+        <span class="ctl-label">Who is looking</span>
+        <div class="meter-steps">
+          <button data-arrive="unclaimed">Nobody holds it</button>
+          <button data-arrive="claimed">Someone else holds it</button>
+          <button data-arrive="signedin">Signed in, not yours</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Lately tended · the near light</span>
+        <div class="meter-steps">
+          <button data-near="1">This month</button>
+          <button data-near="0.5">Some months ago</button>
+          <button data-near="0.15">A long while</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Years held · the ground</span>
+        <div class="meter-steps">
+          <button data-years="0">New</button>
+          <button data-years="3">Three</button>
+          <button data-years="7">Seven</button>
+          <button data-years="10">Ten</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Season and hour · the tint</span>
+        <div class="meter-steps">
+          <button data-tint="spring">Spring</button>
+          <button data-tint="summer">Summer</button>
+          <button data-tint="autumn">Autumn</button>
+          <button data-tint="winter">Winter</button>
+          <button data-tint="night">Night</button>
+          <button data-tint="birthday">Birthday month</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Run a state · or type the code yourself</span>
+        <div class="meter-steps">
+          <button id="wrongBtn">A code that is not true · sixteen nines</button>
+          <button id="heldBtn">A piece already held · sixteen twos</button>
+          <button onclick="window.__go('ritual')">The year turns</button>
+        </div>
+      </div>
+      <div class="controls" id="meterCtl" hidden>
+        <span class="ctl-label">Answers placed</span>
+        <div class="meter-steps">
+          <button data-glow="0">None</button>
+          <button data-glow="2">Two</button>
+          <button data-glow="7">Seven</button>
+          <button data-glow="16">Sixteen</button>
+          <button data-glow="24">All</button>
+        </div>
+      </div>
+      <p class="phone-caption" style="margin-top:12px;text-transform:none;
+         letter-spacing:0;font-family:var(--body);font-size:12.5px;font-style:italic">
+        This piece&rsquo;s code is sixteen ones</p>
+      <div class="controls jump">
+        <span class="ctl-label">Go straight to any screen</span>
+        <div class="jgrid" id="jump"></div>
+      </div>
+      <p style="text-align:center;margin-top:10px">
+        <button class="tlink" id="resetBtn" hidden>Back to the door, and run it again</button>
+      </p>
+    </div>
+
+    <!-- ══════════ ANNOTATIONS ══════════ -->
+    <div class="annos">
+      <div class="annos-head">
+        <h2>What each one does</h2>
+        <p>Touch a primitive on the phone and its entry lights. Every behavior below is
+        specified as duration, easing, and its three states, so nothing is left to be
+        guessed at build time.</p>
+      </div>
+
+      <article class="prim" data-p="row">
+        <div class="n">One</div>
+        <h3>The row that opens</h3>
+        <p class="what">The signature move. A hairline row lifts to the top of the page,
+        becomes the header, and its content rises into the space its siblings left. The
+        drawing shrinks and stays, so the piece is never out of sight while you read about
+        it. Nothing navigates. There is no back arrow: the header dropping back into the
+        list is the way out.</p>
+        <dl>
+          <dt>Motion</dt><dd>Row travels up over 580ms, siblings fall and fade over 380ms,
+          content rises at 100ms delay over 440ms. All on an exponential ease out.</dd>
+          <dt>Reverse</dt><dd>Exact inverse. The same object returning to the same slot is
+          what makes the page feel like one surface.</dd>
+          <dt>Loaded</dt><dd>Title as header, content beneath, drawing anchored left.</dd>
+          <dt>Empty</dt><dd>Row still opens. One quiet line: nothing written yet.</dd>
+          <dt>Error</dt><dd>Row opens to the failure with a retry, never a blocked tap.</dd>
+          <dt>Reduced</dt><dd>Crossfade at 120ms, no travel.</dd>
+        </dl>
+        <p class="try">Tap any of the four rows.</p>
+      </article>
+
+      <article class="prim" data-p="pill">
+        <div class="n">Two</div>
+        <h3>The brass pill</h3>
+        <p class="what">The only colored thing on any screen, and never more than one per
+        screen. Brass means you can act on this. That single rule is what buys the flow its
+        clarity: a person scanning a screen has exactly one place to look.</p>
+        <dl>
+          <dt>Motion</dt><dd>Press scales to 97% over 220ms. Its glow lifts on hover. Never
+          bounces, never pulses to attract.</dd>
+          <dt>Loaded</dt><dd>Filled brass, wood-dark label, uppercase Karla at 12px.</dd>
+          <dt>Working</dt><dd>Label holds, brass dims to 70%, input blocks.</dd>
+          <dt>Disabled</dt><dd>Falls to hairline outline. Loses brass entirely, because
+          brass is a promise you can act.</dd>
+          <dt>Arrival</dt><dd>The piece page is one page dressed by relationship, and the
+          pill is how it says which. Unclaimed: a lit <em>Begin</em>, the only bright thing
+          on an otherwise quiet page. Already registered to someone else: no brass at all,
+          the code door drops to a quiet line and Sign in becomes the obvious move.
+          Registered to you: no pill, because there is nothing left to claim.</dd>
+          <dt>Begin, not Unlock</dt><dd>Unlock names the mechanism; Begin names what
+          happens, and it honestly covers both openings, because behind it sits registering
+          it to yourself or leaving sealed words for whoever you bought it for.</dd>
+        </dl>
+        <p class="try">Press Unlock.</p>
+      </article>
+
+      <article class="prim" data-p="link">
+        <div class="n">Three</div>
+        <h3>The plain text link</h3>
+        <p class="what">Every escape, every refusal, every departure. Not now. Skip for
+        now. I don&rsquo;t have a code. Into the artist&rsquo;s website. The contrast between
+        one solid pill and plain text is the entire hierarchy on a screen, which means a
+        link must never look like a row.</p>
+        <dl>
+          <dt>The law</dt><dd>Hairline rows open in place. Text links travel. Anything
+          that leaves this page is a link, never a row.</dd>
+          <dt>Sign in</dt><dd>Also a link, under the pill, and only when the piece is
+          already registered. The daily return is the account; the code claims and
+          transfers, then sleeps. Once signed in as this piece&rsquo;s caretaker the link
+          is gone and Your account is a row.</dd>
+          <dt>Motion</dt><dd>Color only, 220ms. No underline animation, no arrow.</dd>
+          <dt>Placement</dt><dd>Below the pill, never beside it. Vertical stacking is what
+          makes the hierarchy readable at a glance.</dd>
+        </dl>
+        <p class="try">Hover the link under the pill.</p>
+      </article>
+
+      <article class="prim" data-p="code">
+        <div class="n">Four</div>
+        <h3>The code field</h3>
+        <p class="what">Appears once in the entire journey and is the only input that
+        performs. Six characters resolve one at a time like tumblers finding their places,
+        a pause, then one soft seat on the last. Then the vault opens: the ground parts,
+        warm light comes through, and the light carries you to the next screen. No button
+        press after the click. Being carried through is the reward.</p>
+        <dl>
+          <dt>Tumblers</dt><dd>One character every 150ms, each seating with a 5px drop.</dd>
+          <dt>Pause</dt><dd>400ms of stillness after the last. The pause is what makes the
+          opening feel earned rather than automatic.</dd>
+          <dt>Vault</dt><dd>Ground parts over 1150ms on a slow-in-slow-out curve, light
+          blooms behind it. Whole passage two to four seconds. Never longer.</dd>
+          <dt>Wrong</dt><dd>No shake, no red. The field clears and the copy changes to
+          the code is not true, with try again and contact Adrian.</dd>
+          <dt>Reduced</dt><dd>Characters appear at once, vault becomes a clean fade.</dd>
+        </dl>
+        <p class="try">Press Unlock, then watch. This is the one theatrical moment in the
+        flow, and nothing else competes with its scale. The link beneath it runs a code
+        that will not match, so the refusal of shake and red can be seen rather than
+        trusted.</p>
+      </article>
+
+      <article class="prim" data-p="surface">
+        <div class="n">Five</div>
+        <h3>The promoted surface</h3>
+        <p class="what">What a row becomes. Its own scroll, its own three states, the
+        drawing anchored beside its title. This is also every caretaker door inside the
+        piece page: the garden, the video capsule, the account, piece information. One
+        motion vocabulary, used everywhere, so a person learns the gesture once.</p>
+        <dl>
+          <dt>Title</dt><dd>Cormorant 25px, promoted from Lora 15.5px. The type change is
+          how you know it is now a header and not a row.</dd>
+          <dt>Scroll</dt><dd>Only the content scrolls. The header and anchor stay fixed.
+          The page itself never scrolls, which is what protects the no-scroll rule.</dd>
+          <dt>Depth</dt><dd>One level only. A promoted surface never promotes another.</dd>
+        </dl>
+        <p class="try">Open The certificate to see a facts layout, The dreams to see empty.</p>
+      </article>
+
+      <article class="prim" data-p="meter">
+        <div class="n">Six</div>
+        <h3>The glow meter</h3>
+        <p class="what">The only element in the system that changes over years, and the
+        one place the whole page&rsquo;s aliveness is set from. You feel something, you
+        place it in the piece, and the piece glows brighter: cause and effect, never a
+        request. Nothing counts, nothing nags, nothing asks. The page simply becomes more
+        alive as intention accumulates, and that visible aliveness is the whole invitation.
+        Tapping the light opens the garden.</p>
+        <dl>
+          <dt>Form</dt><dd>A line of light that lengthens. No number, no ring, no total,
+          because any of those turn brightness into a score. The line is the light.</dd>
+          <dt>Ramp</dt><dd>Length and glow grow together from a visible floor, so an
+          unanswered piece still looks alive. Reaching full is warmth, not completion.</dd>
+          <dt>Breath</dt><dd>A 5.5 second glow cycle. Slow enough to feel like light
+          rather than a loading state.</dd>
+          <dt>On answer</dt><dd>The line grows over one second, the glow follows at 850ms.
+          Plays once, on return to the page, never on a loop.</dd>
+          <dt>Zero</dt><dd>A short lit line, copy reads: the questions are waiting. Never
+          dark, because an unanswered piece is not a failed one.</dd>
+          <dt>Promoted</dt><dd>Survives. It thins to a quiet lit line above the header, the
+          way the drawing shrinks, so the caretaker page shows meter and rows at once.</dd>
+          <dt>The page</dt><dd>One variable drives everything: the ground lifts from
+          near-black toward warm espresso, the drawing&rsquo;s stroke thickens and brightens,
+          the name gains a faint glow, and words placed in the piece surface beneath it. A
+          piece with nothing in it is calm and complete, never empty; a piece with years in
+          it reads as lit from within. This is public: a guest scanning a loved piece sees
+          that it has been loved.</dd>
+          <dt>Never</dt><dd>A count, a bar, a streak, a badge, or a line asking for
+          anything. The piece is not owed a debt and the caretaker is never behind.</dd>
+        </dl>
+        <p class="try">Tap the light to open the garden, then step the amounts below the phone.</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ LAWS ══════════ -->
+  <section class="laws">
+    <h2>Four rules the primitives depend on</h2>
+    <p class="lede">These are the decisions that keep six behaviors from becoming twenty
+    four inconsistent ones. Each was a real ambiguity in the wording record.</p>
+    <div class="lawgrid">
+      <div class="law">
+        <h4>Rows open, links travel</h4>
+        <p>The five rows on the piece page were not five of a kind. Four open in place and
+        one leaves the site entirely, while looking identical. Into the artist&rsquo;s
+        website is now a text link below the list, not a row.</p>
+        <span class="open">Recommended, open to redirect.</span>
+      </div>
+      <div class="law">
+        <h4>The drawing shrinks, it never leaves</h4>
+        <p>When a row promotes, the piece scales to a small anchor beside the new header.
+        You are never not looking at the piece while reading about the piece, and the
+        header gets weight the type alone could not give it.</p>
+        <span class="open">Recommended, open to redirect.</span>
+      </div>
+      <div class="law">
+        <h4>One theatrical moment</h4>
+        <p>The vault is the only passage over one and a half seconds. Every other payoff
+        is under it, plays once on entry, and can be interrupted by a tap. The screens
+        ship with plain fades first if that is faster; motion layers in after without
+        changing a single line of copy or layout.</p>
+      </div>
+      <div class="law">
+        <h4>Drawings are stroke paths, not assets</h4>
+        <p>Every CAD drawing draws itself, so each one has to be authored as ordered
+        strokes with a drawing sequence, not exported flat. A flat export kills the motion
+        layer quietly, and it is the easiest thing in this whole document to get wrong.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ TABLE ══════════ -->
+  <section>
+    <h2 style="font-family:var(--serif);font-weight:300;font-size:34px;letter-spacing:-.015em;line-height:1.12">
+      The twenty four screens</h2>
+    <p class="lede" style="font-size:16px;color:var(--cream-2);max-width:60ch;margin-top:14px">
+      Every screen in walking order, which primitives assemble it, and the one moment that
+      belongs to it alone. Screens with no moment listed are deliberately still.</p>
+    <p style="font-size:14.5px;color:var(--cream-3);max-width:60ch;margin-top:14px;
+      border-left:1px solid var(--hair);padding-left:16px;line-height:1.65">
+      Two labels in the table are not primitives, and are set in a lighter face to say so.
+      <strong style="font-weight:400;color:var(--cream-2)">Field</strong> is the plain text
+      input on the five gathering screens; it has no motion of its own and inherits whatever
+      the form pattern turns out to be. <strong style="font-weight:400;color:var(--cream-2)">Tap
+      anywhere</strong> is the four introduction screens having no target at all: the whole
+      screen advances. Both are named here so the count of six stays honest.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="num"></th><th>Screen</th><th>Primitives</th><th>Its own moment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sect"><td colspan="4">The door</td></tr>
+          <tr><td class="num">01</td><td class="scr">The piece page</td>
+            <td><div class="chips"><span class="chip">Row</span><span class="chip b">Pill</span><span class="chip">Link</span><span class="chip">Surface</span></div></td>
+            <td class="moment">The drawing draws itself on first arrival, once. Carries two
+            links: into the website, and sign in to your account.</td></tr>
+          <tr><td class="num">02</td><td class="scr">The unlock</td>
+            <td><div class="chips"><span class="chip">Code</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">The pill melts into the field. Tumblers, pause, seat.
+            Carries I don&rsquo;t have a code.</td></tr>
+          <tr><td class="num">03</td><td class="scr">The vault</td>
+            <td><div class="chips"><span class="chip">Code</span></div></td>
+            <td class="moment">The ground parts and light carries you through. The one big one.</td></tr>
+          <tr><td class="num">04</td><td class="scr">The code is not true</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">No shake, no red. The field clears, the copy changes, Try
+            again is the pill and Contact Adrian the link.</td></tr>
+
+          <tr class="sect"><td colspan="4">The threshold</td></tr>
+          <tr><td class="num">05</td><td class="scr">The code is true</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Arrives already lit by the vault. Nothing of its own.</td></tr>
+          <tr><td class="num">06</td><td class="scr">For someone else</td>
+            <td><div class="chips"><span class="chip">Row</span></div></td>
+            <td class="moment">Two rows, no pill. Neutral by construction.</td></tr>
+          <tr><td class="num">07</td><td class="scr">Leave your wishes</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Surface</span></div></td>
+            <td class="moment">Warm. The seal closes over the words once written.</td></tr>
+          <tr><td class="num">08</td><td class="scr">Something was left for you</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">The seal breaks. Shown before anything else, after the vault.</td></tr>
+          <tr><td class="num">09</td><td class="scr">Passing it on</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Grave. Slowest fade in the flow, and no drawing.</td></tr>
+          <tr><td class="num">10</td><td class="scr">A passing begins</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">Patient, never grasping. Continue leads to the thirty days.</td></tr>
+          <tr><td class="num">11</td><td class="scr">We have written to its caretaker</td>
+            <td><div class="chips"><span class="chip">Link</span></div></td>
+            <td class="moment">Still. Thirty days live behind this screen.</td></tr>
+
+          <tr class="sect"><td colspan="4">The four</td></tr>
+          <tr><td class="num">12</td><td class="scr">You felt the pull</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">The line drawing draws itself over 1.5 seconds.</td></tr>
+          <tr><td class="num">13</td><td class="scr">The resonant grid</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">Globe arrives dark. Lights come on one by one, lines weave.</td></tr>
+          <tr><td class="num">14</td><td class="scr">When you focus your love</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">The drawing&rsquo;s glow swells once, softly, then settles.</td></tr>
+          <tr><td class="num">15</td><td class="scr">It carries on</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">Words arrive line by line, like being written. No drawing.</td></tr>
+
+          <tr class="sect"><td colspan="4">The gathering</td></tr>
+          <tr><td class="num">16</td><td class="scr">Sign its record</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Three fields. Never scrolls, so it never grows.</td></tr>
+          <tr><td class="num">17</td><td class="scr">Who you are</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Why we ask opens the same sheet the skip shows.</td></tr>
+          <tr><td class="num">18</td><td class="scr">Where it lives</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Shortest screen in the flow, deliberately. One field.</td></tr>
+          <tr><td class="num">19</td><td class="scr">Your links</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Its own temperature: lighter, fully skippable.</td></tr>
+          <tr><td class="num">20</td><td class="scr">What this is for</td>
+            <td><div class="chips"><span class="chip">Surface</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">A sheet, not a screen. Rises over the one beneath it.</td></tr>
+          <tr><td class="num">21</td><td class="scr">Your piece shines</td>
+            <td><div class="chips"><span class="chip">Row</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Each row carries a lit mark. Unchecking is withholding.</td></tr>
+
+          <tr class="sect"><td colspan="4">Home</td></tr>
+          <tr><td class="num">22</td><td class="scr">You are Light 47</td>
+            <td><div class="chips"><span class="chip">Meter</span></div></td>
+            <td class="moment">Ignition. The light comes on for the first time.</td></tr>
+          <tr><td class="num">23</td><td class="scr">The piece page, warmed</td>
+            <td><div class="chips"><span class="chip">Meter</span><span class="chip">Row</span><span class="chip">Surface</span><span class="chip">Link</span></div></td>
+            <td class="moment">Same page, no Unlock. The meter has taken the pill&rsquo;s place.</td></tr>
+          <tr><td class="num">24</td><td class="scr">Welcome back</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span><span class="chip">Surface</span></div></td>
+            <td class="moment">Nothing. It is a door, and doors do not perform. Reached from
+            the piece page, or from any caretaker door touched while signed out.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section class="close">
+    <h2>What is still open</h2>
+    <p>Two decisions are built here on my recommendation and are the fastest things to
+    redirect. Everything else follows the locked wording record.</p>
+    <div class="q">
+      <div>
+        <h4>The photograph</h4>
+        <p>Built as: shrinks to an anchor and stays. The alternatives are that it collapses
+        away entirely, which gives the most room and the cleanest header but loses the piece
+        while you read about it, or that it holds full size with content scrolling under,
+        which is most reverent but breaks the no scroll rule.</p>
+      </div>
+      <div>
+        <h4>The fifth row</h4>
+        <p>Built as: a text link below the list. The alternatives are that it stays a row
+        with a quiet outbound mark, which needs a mark the no icons rule has to allow, or
+        that it opens in place with a short invitation and a real link inside it, which
+        never sends anyone away by accident at the cost of one extra tap.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen'),
+      opened=document.getElementById('opened'),
+      cap=document.getElementById('phoneCap'),
+      rows=document.getElementById('rows'),
+      unlockBtn=document.getElementById('unlockBtn'),
+      codeIn=document.getElementById('codeIn'),
+      meter=document.getElementById('meter'),
+      mfill=document.getElementById('mfill'),
+      halo=document.getElementById('halo'),
+      resetBtn=document.getElementById('resetBtn'),
+      gardenHead=document.getElementById('gardenHead'),
+      signinLink=document.getElementById('signinLink'),
+      signinBr=document.getElementById('signinBr'),
+      pieceSlot=document.getElementById('pieceSlot');
+
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── annotation lighting ── */
+  var litTimer=null;
+  function clearLit(){
+    document.querySelectorAll('.prim.lit').forEach(function(e){e.classList.remove('lit')});
+  }
+  /* hold: stays lit until the state changes. flash: fades after a beat. */
+  function lite(p,hold){
+    clearTimeout(litTimer); clearLit();
+    var el=document.querySelector('.prim[data-p="'+p+'"]');
+    if(!el) return;
+    el.classList.add('lit');
+    if(!hold) litTimer=setTimeout(clearLit,4200);
+  }
+
+  /* ── content for promoted rows ── */
+  var content={
+    story:'<p>Placeholder. The piece&rsquo;s own story, written by Adrian, shown to '+
+      'everyone who scans it.</p>'+
+      '<p>Earth&rsquo;s Breath was carved from a single piece of claro walnut over '+
+      'eleven months. The grain runs the full length of the form, so the piece reads '+
+      'differently from either side.</p>'+
+      '<p>It is the first of the sixty four. The geometry came before the wood did, and '+
+      'the wood argued with it for most of a year.</p>'+
+      '<p class="ghint">Long copy scrolls inside the surface; the page itself never '+
+      'moves. This is the longest public row, so it sets the scroll behaviour for all '+
+      'of them.</p>',
+    cert:'<p>What anyone who scans the piece can see. The authenticity is public; '+
+      'what was paid is not.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
+      '<div class="fact"><dt>Material</dt><dd>Claro walnut, brass inlay</dd></div>'+
+      '<div class="fact"><dt>Dimensions</dt><dd>420 &times; 420 &times; 90 mm</dd></div>'+
+      '<div class="fact"><dt>Series</dt><dd>Universal Language, 1 of 64</dd></div>'+
+      '<div class="fact"><dt>Registered</dt><dd>Light 47</dd></div>'+
+      '</div>'+
+      '<p class="cert-h">Where it has been</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024</dt><dd>From the studio &middot; Sonoma County</dd></div>'+
+      '<div class="fact"><dt>2031</dt><dd>Passed on &middot; Lisbon</dd></div>'+
+      '<div class="fact"><dt>2038</dt><dd>Sold &middot; Kyoto</dd></div>'+
+      '</div>'+
+      '<p class="ghint">The chain is public: how many hands, when, and where. What each '+
+      'one paid is not, and opens only for whoever holds the piece. Provenance is the '+
+      'sequence; the sums belong to the caretaker.</p>'+
+      '<p class="ghint">Placeholder values. Real per piece materials data is still to '+
+      'come from Adrian; the certificate is empty without it.</p>',
+    hist:'<p>Two entries on the public spine. Names appear only where a caretaker '+
+      'chose to be seen.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024</dt><dd>Released from the studio</dd></div>'+
+      '<div class="fact"><dt>2024</dt><dd>Registered · Sonoma County</dd></div>'+
+      '</div>',
+    dreams:'<p>What other caretakers chose to let shine, as words with no name. This '+
+      'is the room where the grid is felt rather than shown on a map.</p>'+
+      '<div class="qlist">'+
+        Q('shared','\u201cA dream another caretaker placed in their piece.\u201d')+
+        Q('shared','\u201cA second one, from a piece on the other side of the world.\u201d')+
+        Q('shared','\u201cA third, placed years ago and still here.\u201d')+
+      '</div>'+
+      '<p class="ghint">Placeholder dreams. Words only, never a name, never a city '+
+      'alongside them. Their empty state is one quiet line: nothing written yet.</p>',
+    garden:'<p>Place one now, five next month, the rest across years. Nothing here '+
+      'expires and nothing is required.</p>'+
+      '<div class="qlist">'+
+        Q('answered','Why you brought it home',
+          'The answer sits here as it was written, and it can be opened and changed at '+
+          'any time.')+
+        Q('answered','Where it hangs, and what you see past it',
+          'Answered things read as the piece\u2019s own record, never as completed tasks.')+
+        Q('open','What was happening in your life the year it came to you')+
+        Q('open','What you want it to hold for you')+
+        Q('open','Who showed it to you, or how you found it')+
+        Q('shared','What you would tell whoever holds it after you')+
+        Q('open','What has changed since it arrived')+
+        Q('open','What you are grateful for, looking at it today')+
+      '</div>'+
+      '<p class="ghint">Sample questions, and the shape is the point: some can be placed '+
+      'today, some only make sense after years, and some are asked again each birthday so '+
+      'the answer changes as you do. Which is which is a research question Adrian is '+
+      'taking on, into what gratitude and retrospective practices actually work.</p>',
+    account:'<p>Nothing from setting up is frozen. Move house and the light moves with '+
+      'you.</p>'+
+      '<div class="qlist">'+
+        Q('open','Your birth details')+
+        Q('open','Your links')+
+        Q('answered','What shows','Four choices, changeable any day.')+
+      '</div>'+
+      '<p class="ghint">These are add ons, not steps you missed. Your name and where it '+
+      'lives registered the piece; everything here can be placed any day, forever.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Where it lives</dt><dd>Sonoma County</dd></div>'+
+      '<div class="fact"><dt>Your links</dt><dd>Two shown, one hidden</dd></div>'+
+      '<div class="fact"><dt>Name and email</dt><dd>Changeable any day</dd></div>'+
+      '<div class="fact"><dt>Password</dt><dd>Change, or recover by email</dd></div>'+
+      '<div class="fact"><dt>What shows</dt><dd>Five choices, yours</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'A caretaker door reached while signed out goes to sign in, then straight back '+
+      'here. Never a dead end.</p>',
+    signin:'<p>The daily return is through the account, never the code. The code claims '+
+      'and transfers, then sleeps.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Email</dt><dd>you@example.com</dd></div>'+
+      '<div class="fact"><dt>Password</dt><dd>Six dots</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:14px"><span style="color:var(--brass)">Sign in</span></p>'+
+      '<p style="margin-top:10px;font-size:13px;color:var(--cream-3)">'+
+      'I forgot my password. Recovery touches the account only; the record and the piece '+
+      'are never edited by it.</p>',
+    passing:'<p>You are releasing Earth&rsquo;s Breath to its next caretaker. Everything '+
+      'you placed in it stays with the piece forever, as its story. When they accept, '+
+      'your hold ends and theirs begins.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Now</dt><dd>We write to its caretaker</dd></div>'+
+      '<div class="fact"><dt>If they agree</dt><dd>It becomes yours</dd></div>'+
+      '<div class="fact"><dt>If silent</dt><dd>Thirty days, with reminders</dd></div>'+
+      '<div class="fact"><dt>If refused</dt><dd>Adrian steps in, the one human case</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'The code alone never transfers a piece. Silence is never consent.</p>',
+    family:'<p>The people whose love is in this piece. They live on it, named, with '+
+      'their words beside yours.</p>'+
+      '<div class="qlist">'+
+        P('Sara','wife','two things placed \u00b7 both shining','first')+
+        P('Ines','daughter','one waiting for you to pass','second')+
+        P('Tomas','brother','asked again in March',null)+
+      '</div>'+
+      '<button class="addp" data-invite>Add someone</button>'+
+      '<p class="ghint">Being on this list is not a promise of anything. It is an '+
+      'invitation to place your love in the piece, and most people on it will never '+
+      'carry it. Where it goes next is set quietly inside a person, and only you see '+
+      'it.</p>'+
+      '<p class="ghint">Placing love is never ownership: no code, no transfer right, no '+
+      'inheritance. Their words pass through you once before they shine, for typos and '+
+      'judgement, never for permission. A child\u2019s words never carry a name.</p>',
+    video:'<p>Say it out loud instead of writing it. What the piece means, what it is '+
+      'bringing into your life right now, what it is standing for. A capsule with a '+
+      'voice in it.</p>'+
+      '<p>It lives beside the dream and shows with it, so whoever meets the piece can '+
+      'hear you rather than only read you.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Status</dt><dd>Waiting on the cost research</dd></div>'+
+      '<div class="fact"><dt>The bound</dt><dd>The video can always be exported and held. '+
+      'Never the word forever for hosting.</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'The row reads: Record a video, when it is ready. No promise appears in any screen '+
+      'wording until the research lands.</p>',
+    info:'<p>The full record, including the depths only its caretaker sees.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
+      '<div class="fact"><dt>Materials</dt><dd>Claro walnut, brass inlay</dd></div>'+
+      '<div class="fact"><dt>Elements</dt><dd>Earth, air</dd></div>'+
+      '</div>'+
+      '<p class="cert-h">What it has been worth</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024 &middot; from the studio</dt><dd>4,200 &middot; paid</dd></div>'+
+      '<div class="fact"><dt>2031 &middot; passed on</dt><dd>9,000 &middot; part trade, part paid</dd></div>'+
+      '<div class="fact"><dt>2038 &middot; sold</dt><dd>16,500 &middot; paid</dd></div>'+
+      '</div>'+
+      '<p class="ghint">Each line is what the piece was valued at and how it was settled: '+
+      'paid, traded, part traded, or given. A trade has a real value, and forcing it into '+
+      'a number paid would either falsify the ledger or leave a hole in it.</p>'+
+      '<p class="ghint">Declared by whoever passed it on. The record holds what they '+
+      'said; nothing here is confirmed by anyone else.</p>',
+    fork:'<p>Two intentions, separated before either begins.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Giving it as a gift</dt><dd>Leave your wishes with the '+
+      'piece; they are sealed until its new caretaker unlocks it</dd></div>'+
+      '<div class="fact"><dt>Passing on my own piece</dt><dd>Begin handing your '+
+      'caretakership to another</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Four temperatures held deliberately: the fork neutral, the gift warm, the release '+
+      'grave, the receiving patient.</p>'
+  };
+  var titles={story:'The story',cert:'The certificate',hist:'The history',
+    dreams:'The dreams',garden:'The garden',account:'Your account',
+    signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
+    ritual:'The year turns',ritualfamily:'The people you love',question:'A question',
+    person:'Sara',passvalue:'What it was worth',
+    invite:'Ask them onto the piece',invitesent:'The letter is sent',
+    joinletter:'A piece has asked for you',
+    inheritletter:'It has come to you',inheritaccept:'It is yours to carry',
+    passfork:'Passing it on',passname:'It stays in the house',passsell:'What travels',
+    passready:'Let it go',passdone:'It is waiting',
+    inherit:'What he kept',inheritread:'In his own words',
+    joinhello:'You have been added',joinwho:'Who you are',
+    video:'Say it out loud',info:'Piece information',family:'The people you love'};
+
+  /* ── row promotion ── */
+  function openRow(key,btn){
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    if(btn) btn.classList.add('is-open');
+    gardenHead.hidden=!!btn;
+    if(!btn) document.getElementById('gheadTitle').textContent=titles[key]||'';
+    opened.innerHTML=content[key]||'';
+    screen.classList.add('promoted');
+    cap.textContent='Promoted · '+titles[key];
+    lite('row'); setTimeout(function(){lite('surface',true)},900);
+  }
+  function closeRow(){
+    screen.classList.remove('promoted');
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    gardenHead.hidden=true;
+    cap.textContent='Resting state · tap anything';
+    clearTimeout(litTimer); clearLit();
+    setTimeout(function(){ if(!screen.classList.contains('promoted')) opened.innerHTML=''; },620);
+  }
+
+  rows.addEventListener('click',function(e){
+    var btn=e.target.closest('.row'); if(!btn) return;
+    /* some doors open a screen rather than a surface: the passing is a flow */
+    var wr=btn.getAttribute('data-walkrow');
+    if(wr){ startWalk(wr); return; }
+    if(btn.classList.contains('is-open')){ closeRow(); return; }
+    openRow(btn.dataset.row,btn);
+  });
+  document.addEventListener('click',function(e){
+    if(e.target.closest('[data-close]')) closeRow();
+    if(e.target.closest('[data-question]')){
+      screen.classList.remove('promoted');
+      startWalk('question');
+    }
+    if(e.target.closest('[data-person]')){
+      screen.classList.remove('promoted');
+      startWalk('person');
+    }
+    if(e.target.closest('[data-invite]')){
+      screen.classList.remove('promoted');
+      startWalk('invite');
+    }
+  });
+
+  /* ── the code field + vault ── */
+  var CODE='1111111111111111', WRONG='9999999999999999',
+      HELD='2222222222222222', running=false,
+      codeHelp=document.getElementById('codeHelp'),
+      codeWarn=document.getElementById('codeWarn'),
+      codeActions=document.getElementById('codeActions'),
+      wrongBtn=document.getElementById('wrongBtn');
+
+  var HELP='Turn the piece over. The code is written on its underside, and only its '+
+           'caretaker can see it.',
+      WARN='Whoever holds the code holds access. Keep it safe.';
+
+  function runCode(chars, done, label){
+    if(running) return; running=true;
+    lite('pill');
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    codeActions.hidden=true;
+    screen.classList.remove('wrongcode');
+    screen.classList.add('unlocking');
+    unlockBtn.disabled=true;
+    cap.textContent=label;
+    var cells=codeIn.querySelectorAll('.cg i'), i=0;
+    cells.forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
+    setTimeout(function(){ lite('code'); },260);
+
+    if(reduce){
+      cells.forEach(function(c,n){ c.textContent=chars[n]; c.classList.add('seated'); });
+      setTimeout(done,300);
+      return;
+    }
+    /* sixteen tumblers at the six-character pace would run two and a half
+       seconds before the vault even starts, which breaks the two-to-four second
+       bound on the whole passage. They resolve faster and accelerate, so the
+       run reads as one gesture finding its place rather than sixteen events. */
+    (function seat(){
+      if(i>=cells.length){ setTimeout(done,420); return; }
+      cells[i].textContent=chars[i];
+      cells[i].classList.add('seated','seat-in');
+      i++;
+      setTimeout(seat, i<4 ? 90 : (i<10 ? 62 : 44));
+    })();
+  }
+
+  /* TWO PRESSES, per the flow.
+     One: Unlock opens the code page, the field empty and waiting.
+     Two: you enter the code and press Unlock again. Then the tumblers. */
+  var codeInput=document.getElementById('codeInput'), autoTimer=null;
+
+  function openCodePage(){
+    screen.classList.remove('wrongcode');
+    screen.classList.add('unlocking');
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    codeActions.hidden=true;
+    codeInput.value='';
+    paintCode();
+    cap.textContent='The unlock · the field is waiting';
+    lite('code',true);
+    setTimeout(function(){ codeInput.focus(); },260);
+  }
+
+  /* the sixteen cells mirror what is typed */
+  var CODELEN=16;
+  function paintCode(){
+    var v=(codeInput.value||'').toUpperCase(), cells=codeIn.querySelectorAll('.cg i');
+    for(var i=0;i<cells.length;i++){
+      var had=cells[i].textContent;
+      cells[i].textContent=v[i]||'';
+      cells[i].classList.toggle('seated', !!v[i]);
+      cells[i].classList.toggle('cursor', i===v.length && v.length<CODELEN);
+      if(v[i] && !had){
+        cells[i].classList.remove('seat-in'); void cells[i].offsetWidth;
+        cells[i].classList.add('seat-in');
+      }
+    }
+    unlockBtn.disabled = v.length<CODELEN;
+  }
+
+  codeInput.addEventListener('input',function(){
+    codeInput.value=codeInput.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+    paintCode();
+    /* the last character is the press: nothing to confirm, the code is either
+       true or it is not. The pause before it fires is deliberate. At sixteen
+       characters a mistype is likely, and firing the instant the last one lands
+       would reject someone mid-correction, before they had seen what they typed. */
+    clearTimeout(autoTimer);
+    if(codeInput.value.length===CODELEN && !running){
+      autoTimer=setTimeout(function(){
+        if(codeInput.value.length===CODELEN && !running){ codeInput.blur(); submitCode(); }
+      }, 700);
+    }
+  });
+  codeInput.addEventListener('keydown',function(e){
+    if(e.key==='Enter' && codeInput.value.length===CODELEN){
+      e.preventDefault(); clearTimeout(autoTimer); submitCode(); }
+  });
+  codeIn.addEventListener('click',function(){ codeInput.focus(); });
+
+  /* what the code you typed actually opens */
+  function submitCode(){
+    var v=(codeInput.value||'').toUpperCase();
+    if(v.length<CODELEN) return;
+    if(v===HELD){ runCode(v, function(){
+        screen.classList.remove('unlocking'); startWalk('receiving'); running=false;
+      }, 'The unlock · a piece already held'); return; }
+    if(v===CODE){ runCode(v, vault, 'The unlock · tumblers'); return; }
+    runCode(v, wrongCode, 'The unlock · a code that will not match');
+  }
+
+  unlockBtn.addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')){ openCodePage(); return; }
+    submitCode();
+  });
+
+  /* the account door on the resting page: the daily return, no code */
+  signinLink.addEventListener('click',function(){
+    startWalk('welcome');
+  });
+
+  /* the other door behind the same unlock: a piece already held */
+  document.getElementById('heldBtn').addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')) openCodePage();
+    runCode(HELD, function(){
+      screen.classList.remove('unlocking');
+      startWalk('receiving');
+      running=false;
+    }, 'The unlock · a piece already held');
+  });
+
+  /* the gift buyer never has to register anything: the code seals the words */
+  document.getElementById('giftBtn').addEventListener('click',function(){
+    screen.classList.remove('unlocking');
+    startWalk('gift');
+  });
+
+  /* no code: the door for someone who scanned a piece they do not hold */
+  document.getElementById('noCodeBtn').addEventListener('click',function(){
+    codeHelp.textContent='Without the code you can still see everything the piece shows '+
+      'in public. The code lives on its underside, and only its caretaker can see it.';
+    codeWarn.textContent='';
+    cap.textContent='I don\u2019t have a code · the guest stops here, complete';
+    lite('link',true);
+  });
+
+  /* the recovery: real buttons, because brass promises you can act */
+  document.getElementById('tryAgainBtn').addEventListener('click',function(){
+    screen.classList.remove('wrongcode');
+    openCodePage();
+  });
+  document.getElementById('contactBtn').addEventListener('click',function(){
+    codeHelp.textContent='This is where the message to Adrian opens. It is the one '+
+      'genuinely human case in the flow.';
+    cap.textContent='Contact Adrian · the human case';
+  });
+
+  /* the wrong code: no shake, no red. The field clears, the copy changes. */
+  /* the wrong code: no shake, no red. The field clears, the copy changes. */
+  function wrongCode(){
+    codeIn.querySelectorAll('.cg i').forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
+    if(codeInput) codeInput.value='';
+    screen.classList.add('wrongcode');
+    codeHelp.textContent='The code is not true. It did not match this piece. Turn it '+
+      'over and look again; if it still will not open, Adrian will help.';
+    codeWarn.textContent='';
+    codeActions.hidden=false;
+    cap.textContent='The code is not true · no shake, no red';
+    resetBtn.hidden=false;
+    lite('code',true);
+    running=false;
+  }
+
+  wrongBtn.addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')) openCodePage();
+    runCode(WRONG, wrongCode, 'The unlock · a code that will not match');
+  });
+
+  function vault(){
+    cap.textContent='The vault · the one big moment';
+    screen.classList.add('vaulting');
+    setTimeout(function(){
+      screen.classList.remove('vaulting','unlocking');
+      startWalk();
+      running=false;
+    }, reduce?700:2000);
+  }
+
+  /* ── the walk: what the vault actually lands on ──
+     Code confirmed, then the four screens, then Begin. Tap anywhere advances,
+     exactly as the locked record specifies: no skip link, four taps in four
+     seconds still delivers the arc. */
+  var walk=document.getElementById('walk'),
+      walkArt=document.getElementById('walkArt'),
+      walkH=document.getElementById('walkH'),
+      walkB=document.getElementById('walkB'),
+      walkFoot=document.getElementById('walkFoot'),
+      step=null;
+
+  /* Every screen below is VERBATIM from collector-flow-preview.html.
+     Do not paraphrase. `to` names the next screen; a screen with `rows`
+     branches by row index. */
+  var WALK={
+
+    /* ── the threshold ── */
+    codetrue:{ h:'The code is true', art:'piece',
+      b:'Earth’s Breath is real, and it is in your hands. It is one light in the '+
+        'Resonant Grid: a living artwork spread across the world. The next few minutes '+
+        'register it as authentic and as yours, and give it its place.',
+      pill:'Continue', to:'pull',
+      link:'This piece is for someone else', linkTo:'fork',
+      cap:'Code confirmed · first caretaker' },
+
+    fork:{ h:'For someone else', art:'none',
+      rows:[
+        ['Giving it as a gift','leave your wishes with the piece; they are sealed until its new caretaker unlocks it','gift'],
+        ['Passing on my own piece','begin handing your caretakership to another','transfer']
+      ],
+      cap:'The fork · two intentions, separated' },
+
+    gift:{ h:'Leave your wishes with it', art:'none',
+      b:'Write what you wish for the one who will hold this piece. Your words seal into '+
+        'it, greet them the day they make it theirs, and live with the piece forever.',
+      pill:'Seal your wishes', to:'sealed',
+      cap:'The gift · giver’s side · warm' },
+
+    sealed:{ h:'Something was left for you', art:'letter',
+      b:'Whoever gave you this piece placed words inside it, sealed until this moment.',
+      pill:'Open them', to:'pull',
+      cap:'The gift · receiver’s side, right after the vault' },
+
+    transfer:{ h:'Passing it on', art:'none',
+      b:'You are releasing Earth’s Breath to its next caretaker. Everything you '+
+        'placed in it stays with the piece forever, as its story. When they accept, your '+
+        'hold ends and theirs begins.',
+      pill:'Begin the passing', to:'written',
+      link:'Not now', linkTo:'codetrue',
+      cap:'The transfer · grave, never softened' },
+
+    receiving:{ h:'A passing begins', art:'piece',
+      b:'Earth’s Breath is real, and it is in your hands. But it is held by another '+
+        'caretaker, and nothing moves without them. We will ask them to let go; when they '+
+        'do, it becomes yours to carry.',
+      pill:'Continue', to:'written',
+      cap:'The receiving side · patient, never grasping' },
+
+    written:{ h:'We have written to its caretaker', art:'none',
+      b:'Earth’s Breath is registered to someone. They will confirm the letting go. '+
+        'If thirty days pass in silence, with reminders along the way, the piece passes '+
+        'to you and both of you are told.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The passing, resolved · thirty days live here' },
+
+    /* ── the four ── */
+    pull:{ h:'You felt the pull', art:'piece', tap:true, to:'grid',
+      b:'Perhaps it was beauty. Or the story. Or just a feeling beyond words. There was '+
+        'a connection.',
+      cap:'One of four · the drawing draws itself' },
+
+    grid:{ h:'The resonant grid', art:'globe', tap:true, to:'love',
+      b:'The ones who hold these creations feel it too. They weave a grid across the '+
+        'planet. And you are a part of that.',
+      cap:'Two of four · lights come on one by one' },
+
+    love:{ h:'When you focus your love, it grows', art:'piece', tap:true, to:'carries',
+      glow:true,
+      b:'Infuse your love into this art and its light shines brighter. Every time you '+
+        'see it, you will feel everything it holds, and the resonance you have placed '+
+        'within it.',
+      cap:'Three of four · the glow swells once' },
+
+    carries:{ h:'It carries on', art:'none', lines:true,
+      b:'Hundreds of years from now, whoever is fortunate enough to caretake this art '+
+        'will feel the love you have infused it with today. Everything you enter now '+
+        'will live with it forever.',
+      b2:'So take a moment, and write your story.',
+      pill:'Begin', to:'sign',
+      cap:'Four of four · the only screen with no drawing' },
+
+    /* ── the gathering: TWO required, the rest are add ons reachable forever ── */
+    sign:{ h:'Sign its record', art:'none',
+      b:'Earth’s Breath will carry your name from today. Your email is where the '+
+        'piece will write to you.',
+      fields:[['first name','last name'],['email'],['create a password']],
+      note:'One account, and it is not only this piece’s. The same name and password '+
+        'open your readings on Mandala Codes, the ledger, and anything you order from '+
+        'Adrian, already signed in.',
+      pill:'Sign', to:'lives',
+      req:true,
+      cap:'One of two required · one account across everything' },
+
+    born:{ h:'Who you are', art:'none',
+      b:'For the piece’s astrology, and for the ones who will find you through it.',
+      eyebrow:'Born',
+      fields:[['date','time'],['place of birth']],
+      note:'A full reading needs all three. They are never shown to anyone; only what '+
+        'they produce can be, and only if you choose.',
+      pill:'Continue', to:'__home',
+      link:'Skip for now', linkTo:'__home',
+      why:'Why we ask',
+      cap:'An add on · reachable forever, never a gate' },
+
+    lives:{ h:'Where it lives', art:'none',
+      b:'The city Earth’s Breath calls home. Its light shows at city level at most, '+
+        'never an address.',
+      fields:[['city']],
+      note:'If even the city feels close, widen it to the region: the light stays true '+
+        'but cannot be pinpointed.',
+      pill:'Continue', to:'light47',
+      req:true, last:true,
+      cap:'Two of two required · the shortest screen in the flow' },
+
+    links:{ h:'Your links', art:'none',
+      b:'For the people your piece moves, so they can find who holds it. Choose which '+
+        'ones people see.',
+      tiles:['Instagram','X','Your website','+ add another'],
+      pill:'Continue', to:'__home',
+      link:'Skip for now', linkTo:'__home',
+      cap:'An add on · reachable forever, never a gate' },
+
+    explain:{ h:'What this is for', art:'none', sheet:true,
+      b:'Your birthday ties your piece to your astrology, and it lets the piece mark '+
+        'your day: once a year, near your birthday, it asks for a moment with you. Your '+
+        'links are for the people your piece moves, so they can find who holds it. '+
+        'Nothing here is shown without your choice, and everything can be added later.',
+      pill:'Add it now', to:'born',
+      link:'Skip anyway', linkTo:'__home',
+      cap:'The explainer · one sheet, two doors' },
+
+    shows:{ h:'Your piece shines', art:'none',
+      b:'What you place in it glows on the grid as words with no name, and its light '+
+        'shows at city level, never an address. Anything you would rather keep quiet, '+
+        'uncheck.',
+      checks:[
+        'Its light on the map · your city only',
+        'Its words · shown without your name',
+        'Your name · off until you open it',
+        'Your face and links · off until you open them'
+      ],
+      pill:'Keep these choices', to:'__home',
+      link:'Later', linkTo:'__home',
+      cap:'What shows · an add on, changeable any day' },
+
+    /* ── ignition ── */
+    light47:{ h:'You are Light 47', art:'globelit',
+      b:'Earth’s Breath now shines on the Resonant Grid. Its light deepens with '+
+        'everything you place in it, starting whenever you wish.',
+      pill:'See your piece', to:'__home',
+      cap:'Ignition · the light comes on for the first time' },
+
+    /* ── a question, opened ──
+       Every garden question is its own small screen: what it is asking, a little
+       guidance on how to answer it, the field, and the choice. Sharing is the
+       DEFAULT and the button is how you withhold, per the settled privacy model:
+       the piece shines, the person opts in. */
+    question:{ h:'A question, opened', art:'none',
+      b:'The question itself sits here, in the piece\u2019s voice, one line long.',
+      note:'A little guidance on how to answer it: what it is reaching for, and '+
+        'permission to answer it badly. Nothing here is required and nothing expires.',
+      fields:[['your answer']],
+      share:true,
+      pill:'Place it', to:'__garden',
+      link:'Not now', linkTo:'__garden',
+      lock:'Once placed it settles until your birthday, when it opens to be amended, '+
+        'added to, or left as it is. The exact mechanic is still being decided.',
+      cap:'A question opened \u00b7 shared by default, private by choice' },
+
+    /* ── the year turns ──
+       Once a year, near the birthday, one occasion rather than two: the dream
+       opens for changing, and each invited person's words open for theirs.
+       Every person has their OWN birthday window, so the piece asks each of them
+       at their own moment rather than all at the caretaker's. */
+    ritual:{ h:'The year turns', art:'piece',
+      b:'Near your birthday the piece asks once. What it holds for the year ahead '+
+        'is yours to place now, and it will be read by everyone who meets the piece '+
+        'until the next time it asks.',
+      note:'What you write here shows with the piece. There is no switch for it: '+
+        'placing it is the choosing. Your name is not shown unless you have opened it.',
+      fields:[['the one thing it holds this year']],
+      pill:'Place it', to:'ritualfamily',
+      link:'Keep last year\u2019s', linkTo:'__home',
+      cap:'The year turns \u00b7 one occasion, once a year' },
+
+    ritualfamily:{ h:'The people you love', art:'none',
+      b:'Each person you have invited is asked near their own birthday, and each '+
+        'places one thing for the year. Theirs pass through you once before they '+
+        'show, for typos and judgement, never for permission.',
+      rows:[
+        ['Sara \u00b7 waiting for you','\u201cThat it keeps holding the quiet in this house.\u201d','__home'],
+        ['Ines \u00b7 waiting for you','\u201cI hope it is still here when I am big.\u201d \u00b7 shown without her name','__home'],
+        ['Tomas \u00b7 asked in March','his window has not come round yet','__home']
+      ],
+      note:'Anything not passed simply does not show this year. Nothing is lost; it '+
+        'waits. A child\u2019s words never carry a name, whatever is chosen.',
+      cap:'The year turns \u00b7 each person at their own birthday' },
+
+    /* ── THE PASSING ──
+       Two exits that look alike and are not: naming someone is private and can
+       be undone, selling is neither. The fork is first because everything after
+       it differs. */
+    passfork:{ h:'Passing it on', art:'none',
+      b:'Two ways a piece moves, and they are not the same act.',
+      rows:[
+        ['To someone you love','they are already on the piece, and it stays inside the house','passname'],
+        ['To someone buying it','a stranger receives it, and what travels is decided now','passsell']
+      ],
+      link:'Not now', linkTo:'__home',
+      cap:'The passing \u00b7 two exits, one is undoable' },
+
+    passname:{ h:'It stays in the house', art:'piece',
+      b:'They already place their love in this piece, so nothing about it is new to '+
+        'them. What changes is that it becomes theirs to carry.',
+      rows:[
+        ['Sara','wife \u00b7 first in line','passready'],
+        ['Ines','daughter \u00b7 second','passready'],
+        ['Tomas','brother \u00b7 not in line','passready']
+      ],
+      note:'The order is yours and it is private. Nobody on this list is told where they '+
+        'stand, or that they were moved.',
+      cap:'Passing it on \u00b7 the line you already set' },
+
+    passsell:{ h:'What travels with it', art:'none',
+      b:'Everything you let shine stays shining, always. What you kept private travels '+
+        'with the piece, and only whoever holds it can open it.',
+      note:'Anything you sealed stays sealed, from them and from everyone after them. '+
+        'If there is something you meant to let shine first, the garden is still open.',
+      pill:'Continue', to:'passvalue',
+      link:'Back to the garden', linkTo:'__garden',
+      cap:'The passing \u00b7 one line, never a triage' },
+
+    passready:{ h:'Let it go', art:'none',
+      b:'When they accept, your hold ends and theirs begins. Everything you placed in it '+
+        'stays with the piece forever, as its story.',
+      fields:[['their email']],
+      note:'They receive an invitation carrying the proof. Until they accept, nothing '+
+        'has moved and you can stop this at any point.',
+      pill:'Begin the passing', to:'passdone',
+      link:'Not now', linkTo:'__home',
+      cap:'The passing \u00b7 grave, and it does not soften' },
+
+    passdone:{ h:'It is waiting for them', art:'letter',
+      b:'The piece has written to them. When they accept it, you will be told, and this '+
+        'page will no longer be yours.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The passing \u00b7 nothing has moved yet' },
+
+    person:{ h:'Sara', art:'none',
+      b:'Wife. On the piece since 2024, and two of her things are shining.',
+      rows:[
+        ['Approve what is waiting','one thing she wrote, not yet shining','ritualfamily'],
+        ['Where she stands','first in line \u00b7 private to you, and she is not told','person'],
+        ['Take her off the piece','her access ends, and her words stop shining','person']
+      ],
+      note:'Removing someone takes them out of the line as well. Anything of hers that '+
+        'already shines stays shining, because it always does, and her name is on it. '+
+        'She keeps her own copy of what she wrote; it simply leaves the piece.',
+      cap:'One person \u00b7 the line is private, the removal is total' },
+
+    /* ── THE SALE RECORDS ITS VALUE ──
+       The ledger is only provenance if the sequence is public. The sums are the
+       caretaker's, and a trade has a real value that a cash field would falsify. */
+    passvalue:{ h:'What it was worth', art:'none',
+      b:'The piece keeps its own record of what it has been worth. Anyone can see it has '+
+        'changed hands; only whoever holds it sees these numbers.',
+      fields:[['what it was valued at']],
+      rows:[
+        ['Paid','the whole of it in money','passready'],
+        ['Part trade, part paid','both, and the value is the two together','passready'],
+        ['Traded','another work, or something else entirely','passready'],
+        ['Given','no money moved, and it still has a value','passready']
+      ],
+      note:'This is what you declare. Nobody confirms it, and the record says so.',
+      cap:'The ledger \u00b7 the chain is public, the sums are not' },
+
+    /* ── THE INVITATION IS SENT ──
+       The caretaker's side of the collaborator's arrival. */
+    invite:{ h:'Ask them onto the piece', art:'none',
+      b:'They will be able to place their love in it, and nothing else. No code, no '+
+        'transfer, no inheritance.',
+      fields:[['their name'],['what they are to you'],['their email']],
+      note:'They receive a letter from the piece rather than from an app. What they place '+
+        'passes through you once before it shines, for typos and judgement, never for '+
+        'permission.',
+      pill:'Send it', to:'invitesent',
+      link:'Not now', linkTo:'__home',
+      cap:'The invitation \u00b7 the caretaker\u2019s side' },
+
+    invitesent:{ h:'The piece has written to them', art:'letter',
+      b:'When they answer, they appear on the piece and you will be told.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The invitation \u00b7 nothing until they answer' },
+
+    /* ── THE COLLABORATOR ACCEPTS ── */
+    joinletter:{ h:'A piece has asked for you', art:'letter',
+      b:'Sara holds Earth\u2019s Breath, and she has asked you to place your love in it. '+
+        'The piece is hers to carry; what you put in it is yours.',
+      pill:'Open it', to:'joinhello',
+      link:'Not mine', linkTo:'__home',
+      cap:'Arrives by letter \u00b7 the collaborator\u2019s first screen' },
+
+    /* ── THE HEIR ACCEPTS ──
+       Nothing moves without their hand on it, which is why the letter is not
+       enough on its own. */
+    inheritletter:{ h:'Earth\u2019s Breath has come to you', art:'letter',
+      b:'It was his, and he set it to come to you. Nothing has moved yet: it waits for '+
+        'you to take it up.',
+      pill:'Take it up', to:'inheritaccept',
+      link:'Not now', linkTo:'__home',
+      cap:'Arrives by letter \u00b7 nothing has moved yet' },
+
+    inheritaccept:{ h:'It is yours to carry', art:'piece',
+      b:'From today the piece answers to you. Everything he placed in it stays with it, '+
+        'as its story, and what he kept is now yours to open.',
+      pill:'Continue', to:'inherit',
+      cap:'The passing completes \u00b7 by their hand, never by a timer' },
+
+    /* ── THE HEIR ARRIVES ──
+       The emotional payoff of the three tiers. Someone opens what they inherited
+       for the first time and decides what the world learns. */
+    /* reached from the letter the piece sends when a passing completes, never
+       from inside the app: there is no door to it because the person did not
+       have one until the piece became theirs. */
+    inherit:{ h:'What he kept', art:'piece',
+      b:'Earth\u2019s Breath is yours to carry now. He wrote things into it that nobody '+
+        'has read, and they are yours to open.',
+      note:'You can let any of it shine, and once it shines it stays shining. What he '+
+        'sealed is sealed, and you will not see it: that was his to decide, and he did.',
+      pill:'Open what he left', to:'inheritread',
+      link:'Not yet', linkTo:'__home',
+      cap:'The heir arrives \u00b7 what he kept is now readable' },
+
+    inheritread:{ h:'In his own words', art:'none',
+      b:'Three things he kept with the piece. Nobody but you has read them.',
+      rows:[
+        ['\u201cI bought it the week your mother got well.\u201d','1998 \u00b7 he never let this shine','__home'],
+        ['\u201cI have looked at it every morning since.\u201d','2004 \u00b7 he never let this shine','__home'],
+        ['\u201cIf you are reading this it went to you, which is what I wanted.\u201d','2019 \u00b7 he marked this one for you','__home']
+      ],
+      note:'Each of these can be left as it is, or let shine so anyone who meets the '+
+        'piece reads it. Neither is owed.',
+      cap:'The heir reads \u00b7 and decides what the world learns' },
+
+    /* ── THE COLLABORATOR ──
+       Not a stranger, not the caretaker. She places her love in it and nothing
+       else, and the piece asks her at her own birthday. */
+    /* reached from the invitation the caretaker sends, never from inside the
+       app: she has no account and no piece until she accepts. */
+    joinhello:{ h:'You have been added to a piece', art:'piece',
+      b:'Sara has placed Earth\u2019s Breath in your hands to write into. The piece is '+
+        'hers to carry; what you put in it is yours.',
+      note:'You are not registering it and you are not receiving it. You are being asked '+
+        'to add your love to something she holds.',
+      pill:'Begin', to:'joinwho',
+      cap:'A collaborator arrives \u00b7 not a stranger, not the caretaker' },
+
+    joinwho:{ h:'Who you are', art:'none',
+      b:'Your name, so the piece knows whose words these are. Your birthday, so it asks '+
+        'you at your own moment rather than hers.',
+      fields:[['your name'],['born']],
+      note:'This is the whole of it. Where the art lives, what shows, and the record '+
+        'itself belong to whoever carries the piece.',
+      pill:'Place me on it', to:'__home',
+      cap:'A collaborator arrives \u00b7 two things, never five' },
+
+    /* ── returning ── */
+    welcome:{ h:'Welcome back', art:'none',
+      b:'Sign in and every piece you caretake opens to you. No code needed; the code '+
+        'sleeps until a passing.',
+      fields:[['email'],['password']],
+      pill:'Sign in', to:'__home',
+      link:'I forgot my password', linkTo:'forgot',
+      cap:'Signing in again · a returning caretaker' },
+
+    forgot:{ h:'A way back in', art:'none',
+      b:'Enter your email and we will send you a way back in. The reset link arrives by '+
+        'email; the record and the piece are untouched.',
+      fields:[['email']],
+      pill:'Send it', to:'welcome',
+      link:'Back to sign in', linkTo:'welcome',
+      cap:'Recovery · never an edit to history' }
+  };
+
+  var GLOBE='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<circle cx="50" cy="50" r="38" style="--len:239"/>'+
+    '<path d="M50 12 C30 30 30 70 50 88 C70 70 70 30 50 12 Z" style="--len:200"/>'+
+    '<path d="M12 50 L88 50" style="--len:76"/>'+
+    '<path d="M20 30 L80 30 M20 70 L80 70" style="--len:120"/></svg>',
+    GLOBELIT=GLOBE.replace('</svg>',
+      '<circle cx="68" cy="34" r="3.2" class="lit" style="--len:20"/></svg>'),
+    PIECE='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>'+
+    '<path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>'+
+    '<circle cx="50" cy="50" r="9" style="--len:57"/></svg>',
+    LETTER='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<path d="M14 30 L86 30 L86 76 L14 76 Z" style="--len:236"/>'+
+    '<path d="M14 30 L50 56 L86 30" style="--len:88"/>'+
+    '<circle cx="50" cy="56" r="7" style="--len:44"/></svg>';
+
+  var ART={piece:PIECE,globe:GLOBE,globelit:GLOBELIT,letter:LETTER};
+
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  /* a garden question. Three states, and no state is a failure:
+     answered (readable, still editable), open (waiting, never overdue),
+     shared (answered and shining publicly, words with no name). */
+  /* a person on the piece. The succession mark is PRIVATE to the caretaker and
+     sits one tap deeper, inside the person, never on the row: adding someone is
+     warm, and marking them first in line is a will. Those two acts must not
+     share a styling. */
+  function note2(n){
+    return n==='Sara' ? 'on the piece since 2024'
+         : n==='Ines' ? 'added last spring'
+         : 'added last spring';
+  }
+  function P(name,rel,note,line){
+    return '<button class="q q-person" data-person>'+
+      '<span class="wr-t">'+esc(name)+'</span>'+
+      '<span class="q-b">'+esc(rel)+' \u00b7 '+esc(note)+'</span>'+
+      /* deliberately NOT the succession mark: that lives one tap deeper,
+         inside the person, because adding someone is warm and naming them
+         next is a will, and the two must not share a styling. */
+      '<span class="q-m q-quiet">'+esc(note2(name))+'</span>'+
+      '</button>';
+  }
+
+  function Q(state,title,body){
+    var mark = state==='answered' ? 'answered'
+             : state==='shared'   ? 'answered · shining'
+             : 'waiting';
+    return '<button class="q q-'+state+'" data-question>'+
+      '<span class="q-t">'+esc(title)+'</span>'+
+      (body ? '<span class="q-b">'+esc(body)+'</span>' : '')+
+      '<span class="q-m">'+mark+'</span>'+
+      '</button>';
+  }
+
+  function startWalk(key){ screen.classList.add('walking'); renderWalk(key||'codetrue'); }
+
+  function renderWalk(key){
+    var s=WALK[key];
+    if(!s) return;
+    step=key;
+    walk.hidden=false;
+    walkH.textContent=s.h;
+
+    /* body: one or two paragraphs, verbatim */
+    var body='<p class="walk-b">'+esc(s.b)+'</p>';
+    if(s.b2) body+='<p class="walk-b walk-b2">'+esc(s.b2)+'</p>';
+
+    /* the screen's own middle: rows, fields, tiles, checks, or the share choice */
+    var mid='';
+    if(s.rows){
+      mid='<div class="walk-rows">'+s.rows.map(function(r,i){
+        return '<button class="walk-row" data-go="'+r[2]+'">'+
+               '<span class="wr-t">'+esc(r[0])+'</span>'+
+               '<span class="wr-s">'+esc(r[1])+'</span></button>';
+      }).join('')+'</div>';
+    }
+    if(s.eyebrow) mid+='<div class="walk-eyebrow">'+esc(s.eyebrow)+'</div>';
+    if(s.fields){
+      mid+='<div class="walk-fields">'+s.fields.map(function(row){
+        return '<div class="wf-row">'+row.map(function(f){
+          return '<span class="wf">'+esc(f)+'</span>'; }).join('')+'</div>';
+      }).join('')+'</div>';
+    }
+    if(s.tiles){
+      mid+='<div class="walk-tiles">'+s.tiles.map(function(t,i){
+        return '<span class="wt'+(i===s.tiles.length-1?' wt-add':'')+'">'+esc(t)+'</span>';
+      }).join('')+'</div>';
+    }
+    if(s.checks){
+      mid+='<div class="walk-rows">'+s.checks.map(function(c){
+        return '<button class="walk-row wr-check is-on"><span class="wr-t">'+esc(c)+'</span>'+
+               '<span class="wr-mark">shining</span></button>';
+      }).join('')+'</div>';
+    }
+    if(s.note) mid+='<p class="walk-note">'+esc(s.note)+'</p>';
+    if(s.share){
+      mid+='<div class="tiers" id="tiers">'+
+        '<button class="tier is-on" data-tier="shining">'+
+          '<span class="tier-t">Let it shine</span>'+
+          '<span class="tier-s">Anyone who meets the piece reads it, as words with no '+
+          'name. Once it shines it stays shining, always.</span>'+
+        '</button>'+
+        '<button class="tier" data-tier="with">'+
+          '<span class="tier-t">Keep it with the piece</span>'+
+          '<span class="tier-s">It travels with the piece and only whoever holds it can '+
+          'open it. They may choose to let it shine one day.</span>'+
+        '</button>'+
+        '<button class="tier" data-tier="sealed">'+
+          '<span class="tier-t">Seal it</span>'+
+          '<span class="tier-s">Nobody opens it again. Not the next caretaker, not your '+
+          'family, not ever. The piece still holds it.</span>'+
+        '</button>'+
+      '</div>'+
+      '<button class="heirs is-on" id="heirsBtn">'+
+        '<span class="heirs-t">The ones who come after may share this</span>'+
+        '<span class="heirs-s">On, unless you turn it off for this one thing.</span>'+
+      '</button>';
+    }
+    if(s.lock) mid+='<p class="walk-lock">'+esc(s.lock)+'</p>';
+    if(s.req) mid+='<p class="walk-req">Your name and where it lives are what registers '+
+      'the piece. '+(s.last?'This is the last of them.':'One more after this.')+
+      ' Everything else is an add on you can place any day, forever.</p>';
+    if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
+
+    walkB.innerHTML=body+mid;
+
+    /* foot: pill, link, or the tap hint */
+    var foot='';
+    if(s.pill) foot+='<button class="pill" data-go="'+s.to+'">'+esc(s.pill)+'</button>';
+    if(s.link) foot+='<div><button class="tlink" data-go="'+s.linkTo+'">'+esc(s.link)+'</button></div>';
+    if(s.tap) foot+='<p class="walk-hint">tap anywhere to continue</p>';
+    walkFoot.innerHTML=foot;
+
+    if(s.art==='none'){ walkArt.classList.add('hide'); walkArt.innerHTML=''; }
+    else { walkArt.classList.remove('hide'); walkArt.innerHTML=ART[s.art]||PIECE; }
+
+    walk.classList.remove('enter','glow','lines');
+    walk.classList.toggle('sheet', !!s.sheet);
+    walk.classList.toggle('tall', !!s.share);
+    void walk.offsetWidth;
+    walk.classList.add('enter');
+    if(s.glow) walk.classList.add('glow');
+    if(s.lines) walk.classList.add('lines');
+    var tiers=document.getElementById('tiers'),
+        heirs=document.getElementById('heirsBtn');
+    if(tiers) tiers.addEventListener('click',function(e){
+      var t=e.target.closest('[data-tier]'); if(!t) return;
+      tiers.querySelectorAll('.tier').forEach(function(x){x.classList.remove('is-on')});
+      t.classList.add('is-on');
+      var k=t.getAttribute('data-tier');
+      /* sealed already answers the heirs question, so the control goes away
+         rather than sitting there meaning nothing */
+      heirs.hidden = (k==='sealed');
+      cap.textContent = k==='shining'
+        ? 'Shining \u00b7 words with no name, and it stays shining'
+        : k==='with'
+        ? 'With the piece \u00b7 only whoever holds it can open it'
+        : 'Sealed \u00b7 nobody opens it again, not ever';
+    });
+    if(heirs) heirs.addEventListener('click',function(){
+      var on=heirs.classList.toggle('is-on');
+      heirs.querySelector('.heirs-t').textContent = on
+        ? 'The ones who come after may share this'
+        : 'This one goes no further than you';
+      heirs.querySelector('.heirs-s').textContent = on
+        ? 'On, unless you turn it off for this one thing.'
+        : 'Off. It stays with the piece, unopened by anyone after you.';
+      cap.textContent = on
+        ? 'Heirs may share it \u00b7 the default'
+        : 'Heirs may not \u00b7 you take this one with you';
+    });
+
+    cap.textContent=s.cap;
+    lite(s.pill?'pill':(s.rows?'row':'link'));
+    resetBtn.hidden=false;
+  }
+
+  function goWalk(key){
+    if(key==='__home'){ enterHome(); return; }
+    if(key==='__garden'){
+      screen.classList.remove('walking'); walk.hidden=true;
+      screen.classList.add('caretaker');
+      openRow('garden',null);
+      cap.textContent='The garden \u00b7 nothing expires, nothing is required';
+      return;
+    }
+    renderWalk(key);
+  }
+  /* ── the dream ── */
+  var dream=document.getElementById('dream'),
+      dreamText=document.getElementById('dreamText'),
+      dreamCite=document.getElementById('dreamCite');
+  var DREAM='That this house stays a place people arrive at unannounced.';
+  function setDream(on){
+    dream.hidden=!on;
+    if(on){ dreamText.textContent='\u201c'+DREAM+'\u201d';
+      dreamCite.textContent='placed this year \u00b7 opens again near the birthday'; }
+  }
+
+  /* ── years held: the ground, not the light. Never a number on screen. ── */
+  function setYears(y){
+    screen.style.setProperty('--years',(y/10).toFixed(3));
+    screen.classList.toggle('deep', y>=7);
+  }
+  document.querySelectorAll('[data-years]').forEach(function(b){
+    b.addEventListener('click',function(){
+      setYears(parseInt(b.dataset.years,10));
+      cap.textContent=b.dataset.years==='0'
+        ? 'Newly held \u00b7 the ground has not settled yet'
+        : 'Held '+b.dataset.years+' years \u00b7 the surface has settled, the light is separate';
+    });
+  });
+
+  /* ── season, hour, birthday month: the ground only ── */
+  var TINTS={spring:[96,.05],summer:[46,.06],autumn:[24,.08],winter:[212,.05],
+             night:[228,.07],birthday:[34,.13]};
+  document.querySelectorAll('[data-tint]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=TINTS[b.dataset.tint]||[32,0];
+      screen.style.setProperty('--tint-h',t[0]);
+      screen.style.setProperty('--tint-a',t[1]);
+      /* the yearly door only exists in the birthday month */
+      document.getElementById('ritualLink').hidden = (b.dataset.tint!=='birthday');
+      cap.textContent=b.dataset.tint==='birthday'
+        ? 'The birthday month \u00b7 the warmest the piece ever gets'
+        : b.dataset.tint+' \u00b7 the ground shifts, the brass never does';
+    });
+  });
+
+  /* ── the two doors ── */
+  document.getElementById('lookDoor').addEventListener('click',function(){
+    cap.textContent='Look through it \u00b7 a guest sees a complete piece';
+    lite('row',true);
+  });
+  document.getElementById('tendDoor').addEventListener('click',function(){
+    startWalk('welcome');
+  });
+
+  /* ── the three arrival states ──
+     Every visitor lands on this same page. What it shows is decided by
+     the piece's state and by who is looking. */
+  var statusLine=document.querySelector('.head .status');
+  function setArrival(state){
+    screen.classList.remove('claimed');
+    var doors=document.getElementById('doors');
+    if(state==='unclaimed'){
+      unlockBtn.hidden=false;
+      unlockBtn.textContent='Begin';
+      statusLine.textContent='Not yet registered';
+      doors.hidden=true;
+      setDream(false); setYears(0);
+      cap.textContent='Unclaimed \u00b7 one lit thing on the page';
+    } else if(state==='claimed'){
+      screen.classList.add('claimed');
+      unlockBtn.hidden=true;
+      statusLine.textContent='Registered \u00b7 a light in the Resonant Grid';
+      doors.hidden=false;
+      setDream(true); setYears(3);
+      cap.textContent='Registered \u00b7 two doors, neither above the other';
+    } else if(state==='signedin'){
+      /* signed in, but this piece is not theirs. Having an account is not the
+         same as holding this piece, so they see what a stranger sees, minus the
+         sign-in they no longer need. */
+      screen.classList.add('claimed');
+      unlockBtn.hidden=true;
+      statusLine.textContent='Registered \u00b7 a light in the Resonant Grid';
+      doors.hidden=false;
+      document.getElementById('tendDoor').textContent='I hold this piece';
+      setDream(true); setYears(3);
+      cap.textContent='Signed in, not yours \u00b7 an account is not a claim';
+    }
+    if(state!=='signedin') document.getElementById('tendDoor').textContent='Sign in to tend it';
+    setGlow(state==='unclaimed'?0:7);
+  }
+  document.querySelectorAll('[data-arrive]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+      walk.hidden=true; step=null; opened.innerHTML=''; gardenHead.hidden=true;
+      resetBtn.hidden=true; document.getElementById('meterCtl').hidden=true;
+      setArrival(btn.getAttribute('data-arrive'));
+    });
+  });
+
+  /* the jump list, built from the screens that actually exist */
+  var JUMP=[
+    ['The door', [['Unclaimed','@unclaimed'],['Registered','@claimed'],
+      ['Signed in, not yours','@signedin'],['The code page','@code'],
+      ['Wrong code','@wrong']]],
+    ['The threshold', [['The code is true','codetrue'],['For someone else','fork'],
+      ['Leave your wishes','gift'],['Something was left','sealed'],
+      ['Passing it on','transfer'],['A passing begins','receiving'],
+      ['We have written','written']]],
+    ['The four', [['You felt the pull','pull'],['The resonant grid','grid'],
+      ['When you focus your love','love'],['It carries on','carries']]],
+    ['The gathering', [['Sign its record','sign'],['Who you are','born'],
+      ['Where it lives','lives'],['Your links','links'],
+      ['What this is for','explain'],['Your piece shines','shows']]],
+    ['Home', [['You are Light 47','light47'],['Home','@home'],
+      ['The garden','@garden'],['A question','question'],
+      ['The year turns','ritual'],['The people you love','ritualfamily'],
+      ['One person','person'],
+      ['Welcome back','welcome'],['A way back in','forgot']]],
+    ['The passing', [['Two exits','passfork'],['It stays in the house','passname'],
+      ['What travels','passsell'],['What it was worth','passvalue'],
+      ['Let it go','passready'],['It is waiting','passdone']]],
+    ['Asking someone on', [['Ask them onto the piece','invite'],
+      ['The letter is sent','invitesent']]],
+    ['Arriving by letter', [['A piece has asked for you','joinletter'],
+      ['A collaborator arrives','joinhello'],['Who you are (theirs)','joinwho'],
+      ['It has come to you','inheritletter'],['It is yours to carry','inheritaccept'],
+      ['What he kept','inherit'],['In his own words','inheritread']]]
+  ];
+  (function buildJump(){
+    var host=document.getElementById('jump'), html='';
+    JUMP.forEach(function(sec){
+      html+='<span class="jsec">'+sec[0]+'</span>';
+      sec[1].forEach(function(it){
+        html+='<button data-jump="'+it[1]+'">'+it[0]+'</button>';
+      });
+    });
+    host.innerHTML=html;
+    host.addEventListener('click',function(e){
+      var b=e.target.closest('[data-jump]'); if(!b) return;
+      var k=b.getAttribute('data-jump');
+      if(k[0]!=='@'){ window.__go(k); return; }
+      var w=k.slice(1);
+      screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+      walk.hidden=true; step=null; opened.innerHTML=''; gardenHead.hidden=true;
+      resetBtn.hidden=true; document.getElementById('meterCtl').hidden=true;
+      if(w==='unclaimed'||w==='claimed'||w==='signedin'){ setArrival(w); return; }
+      if(w==='code'){ setArrival('unclaimed'); openCodePage(); return; }
+      if(w==='wrong'){ setArrival('unclaimed'); openCodePage(); wrongCode(); return; }
+      if(w==='home'){ setArrival('claimed'); enterHome(); return; }
+      if(w==='garden'){ setArrival('claimed'); enterHome();
+        openRow('garden',null);
+        cap.textContent='The garden \u00b7 opened by the light'; return; }
+    });
+  })();
+
+  /* jump to any screen by name, for review and for testing */
+  window.__go=function(key){
+    screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode');
+    screen.classList.add('walking');
+    goWalk(key);
+  };
+
+  function enterHome(){
+    screen.classList.remove('walking','claimed');
+    walk.hidden=true;
+    /* the two doors are for a page whose owner is unknown. On your own piece
+       there is nothing to claim and nothing to sign into. */
+    document.getElementById('doors').hidden=true;
+    screen.classList.add('caretaker');
+    cap.textContent='Home · the same piece page, now yours';
+    lite('meter',true);
+    resetBtn.hidden=false;
+    document.getElementById('meterCtl').hidden=false;
+  }
+
+  /* a named target wins; otherwise tap anywhere advances, per the locked record */
+  walk.addEventListener('click',function(e){
+    var t=e.target.closest('[data-go]');
+    if(t){ goWalk(t.getAttribute('data-go')); return; }
+    var s=WALK[step];
+    if(s && s.tap && s.to) goWalk(s.to);
+  });
+
+  /* ── the glow meter ── */
+  var TOTAL=24,
+      meterLabel=document.getElementById('meterLabel'),
+      words={0:'No',1:'One',2:'Two',7:'Seven',16:'Sixteen',24:'Twenty four'};
+  /* what has been placed in the piece is simply visible. Nothing asks. */
+  var placed=document.getElementById('placed'),
+      PLACED=[
+        '',
+        '\u201cIt was the first thing I saw that morning.\u201d',
+        '\u201cIt was the first thing I saw that morning.\u201d \u00b7 '+
+          '\u201cThe year everything changed.\u201d',
+        '\u201cIt was the first thing I saw that morning.\u201d \u00b7 '+
+          '\u201cThe year everything changed.\u201d \u00b7 '+
+          '\u201cFor Ines, when she is old enough to hold it.\u201d'
+      ];
+
+  function setNear(v){
+    screen.style.setProperty('--near', v.toFixed(2));
+    var l=document.getElementById('meterLabel');
+    l.innerHTML = v>0.75 ? l.innerHTML.split('<br>')[0]+'<br>Lately tended.'
+      : v>0.35 ? l.innerHTML.split('<br>')[0]+'<br>Quiet for a while.'
+      : l.innerHTML.split('<br>')[0]+'<br>It has been a long while.';
+  }
+  document.querySelectorAll('[data-near]').forEach(function(b){
+    b.addEventListener('click',function(){
+      setNear(parseFloat(b.dataset.near));
+      cap.textContent=b.dataset.near==='1'
+        ? 'Lately tended \u00b7 the near light is up'
+        : 'Quiet a long while \u00b7 the near light dims, the long glow does not';
+    });
+  });
+
+  function setGlow(n){
+    var frac=n/TOTAL;
+    /* the page comes alive in proportion to what is in it */
+    screen.style.setProperty('--life', frac.toFixed(3));
+    screen.classList.toggle('alive', n>0);
+    placed.innerHTML=PLACED[n===0?0:(n<7?1:(n<16?2:3))];
+    /* a visible floor at zero: an unanswered piece is still alive */
+    mfill.style.setProperty('--w', (6 + frac*94).toFixed(1)+'%');
+    halo.style.setProperty('--g', String(0.16 + frac*0.5));
+    meterLabel.innerHTML = n===0
+      ? 'Nothing placed in it yet.<br>The light is waiting.'
+      : (words[n]||n)+' thing'+(n===1?'':'s')+' placed.<br>Lately tended.';
+    lite('meter',true);
+  }
+  /* near the birthday, the piece's one yearly moment has its own quiet door */
+  document.getElementById('ritualLink').addEventListener('click',function(){
+    startWalk('ritual');
+  });
+
+  /* the capsule opens from the dream, because it is the same act said aloud */
+  document.getElementById('voiceBtn').addEventListener('click',function(e){
+    e.stopPropagation();
+    openRow('video',null);
+    cap.textContent='Say it out loud \u00b7 it shows beside the dream';
+    lite('surface',true);
+  });
+
+  /* the door says what you are going in to do */
+  document.getElementById('feedBtn').addEventListener('click',function(){
+    openRow('garden',null);
+    cap.textContent='Place something in it \u00b7 the light follows, it never asks';
+    lite('meter',true);
+  });
+
+  /* the light is still a door, because it is the thing you look at */
+  meter.addEventListener('click',function(){
+    if(screen.classList.contains('promoted')){ closeRow(); return; }
+    openRow('garden',null);
+    cap.textContent='The garden, opened by the light';
+    lite('meter',true);
+  });
+  document.querySelectorAll('[data-glow]').forEach(function(b){
+    b.addEventListener('click',function(){ setGlow(parseInt(b.dataset.glow,10)); });
+  });
+  setGlow(7);
+
+  /* back to the door, so the vault can be watched again */
+  resetBtn.addEventListener('click',function(){
+    screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+    walk.hidden=true; step=null;
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    codeIn.querySelectorAll('.cg i').forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
+    if(codeInput) codeInput.value='';
+    unlockBtn.disabled=false;
+    opened.innerHTML='';
+    gardenHead.hidden=true;
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    resetBtn.hidden=true;
+    document.getElementById('meterCtl').hidden=true;
+    clearTimeout(litTimer); clearLit();
+    cap.textContent='Resting state · tap anything';
+    /* replay the stroke draw */
+    pieceSlot.classList.remove('draw');
+    void pieceSlot.offsetWidth;
+    pieceSlot.classList.add('draw');
+  });
+
+  /* link + drawing */
+  document.getElementById('siteLink').addEventListener('click',function(e){
+    e.preventDefault(); lite('link');
+    cap.textContent='Links travel. Rows open. Never the same treatment.';
+  });
+  document.getElementById('siteLink').addEventListener('mouseenter',function(){lite('link')});
+  unlockBtn.addEventListener('mouseenter',function(){lite('pill')});
+
+  /* replay the drawing when returning to rest */
+  pieceSlot.addEventListener('animationend',function(){},{once:true});
+})();
+</script>

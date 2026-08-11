@@ -19,6 +19,7 @@ import { syncTransferCollectorLetters } from '../../../_lib/collectorLetters.js'
 const REQUEST_FIELDS = new Set([
   'action', 'targetEmail', 'transferKind', 'reason', 'idempotencyKey', 'expectedStewardVersion',
 ]);
+// A sale transfer changes custody only. Verified sale facts and price history stay in collector sales.
 const TRANSFER_KINDS = new Set(['sale', 'gift', 'inheritance', 'artist-rebind']);
 const STEWARD_FIELDS = [
   'keeperUserId', 'claimedAt', 'releasedAt', 'currentDisplayLocation',

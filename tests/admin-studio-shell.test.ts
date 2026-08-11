@@ -45,7 +45,7 @@ describe('admin studio shell', () => {
     assert.match(app, /artworkTitle:\s*string/);
     assert.match(app, /editionLabel:\s*string/);
     assert.match(app, /Register another artwork/);
-    assert.match(app, /!result\s*\?\s*\(/);
+    assert.match(app, /!result\s*&&\s*linkedStatus\s*!==\s*['"]error['"]\s*\?\s*\(/);
   });
 
   it('uses one page and control vocabulary across every admin tool', () => {
@@ -62,25 +62,36 @@ describe('admin studio shell', () => {
     }
   });
 
-  it('makes attention and quick actions the admin home hierarchy', () => {
+  it('makes the item queue and recent relationships the admin home hierarchy', () => {
     const dashboard = source('components/AdminDashboard.tsx');
     assert.match(dashboard, /\/api\/admin\/overview/);
-    assert.match(dashboard, /Needs attention/);
+    assert.match(dashboard, /Work that needs you/);
+    assert.match(dashboard, /Recent artworks/);
+    assert.match(dashboard, /Recent collectors or reconnections/);
+    assert.match(dashboard, /Start new/);
     assert.match(dashboard, /Issue a plate/);
     assert.match(dashboard, /Create invoice/);
     assert.match(dashboard, /Build a viewing/);
-    assert.match(dashboard, /Write a story/);
-    assert.ok(dashboard.indexOf('Needs attention') < dashboard.indexOf('All tools'));
+    assert.ok(dashboard.indexOf('Work that needs you') < dashboard.indexOf('Start new'));
+    assert.doesNotMatch(dashboard, /Quick actions|All tools/);
     assert.doesNotMatch(dashboard, /title:\s*['"]Keystatic['"]/);
     assert.doesNotMatch(dashboard, /fulfillment|shipment/i);
   });
 
   it('connects stable creation links and visible workflow stages', async () => {
-    const { adminMode } = await import('../components/admin/adminMode.ts');
+    const { adminMode, exactAdminPageSelection } = await import('../components/admin/adminMode.ts');
     const { poetryCreatePath } = await import('../components/AdminFileUpload.tsx');
     assert.equal(adminMode(new URLSearchParams('mode=create')), 'create');
     assert.equal(adminMode(new URLSearchParams('mode=issue')), 'issue');
     assert.equal(adminMode(new URLSearchParams('mode=unknown')), null);
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams(), 'invoiceId'), { kind: 'list' });
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('mode=create'), 'invoiceId'), { kind: 'create' });
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('invoiceId=17'), 'invoiceId'), { kind: 'exact', id: 17 });
+    for (const query of [
+      'mode=create&invoiceId=17', 'unexpected=1', 'invoiceId=17&invoiceId=18',
+      'invoiceId=017', 'invoiceId=%2017', 'mode=create&mode=create', 'mode=issue',
+    ]) assert.deepEqual(exactAdminPageSelection(new URLSearchParams(query), 'invoiceId'), { kind: 'invalid' }, query);
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('viewingId=9'), 'viewingId'), { kind: 'exact', id: 9 });
     assert.equal(
       poetryCreatePath('https://files.example/audio.mp3'),
       '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',

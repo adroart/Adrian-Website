@@ -555,16 +555,16 @@ describe('private registry recovery export security', () => {
 });
 
 describe('private studio overview', () => {
-  it('returns only actionable counts from count-only queries', async () => {
-    const counts = [2, 1, 3];
+  it('returns the complete allowlisted item-level work queue', async () => {
     const seen: string[] = [];
     const overviewDb = {
       prepare(sql: string) {
         seen.push(sql);
-        assert.match(sql, /^SELECT COUNT\(\*\) AS count/i);
-        assert.doesNotMatch(sql, /email|ownership_code|public_token|amount|total_cents/i);
-        const count = counts[seen.length - 1];
-        return { async first() { return { count }; } };
+        return {
+          bind() { return this; },
+          async all() { return { results: [] }; },
+          async first() { return null; },
+        };
       },
     };
 
@@ -578,12 +578,14 @@ describe('private studio overview', () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       ok: true,
-      attention: { plates: 2, draftViewings: 1, openInvoices: 3 },
+      queue: { complete: true, items: [] },
+      recentArtworks: [],
+      recentCollectors: [],
     });
-    assert.equal(seen.length, 3);
+    assert.ok(seen.length >= 8);
   });
 
-  it('omits attention data when the installed schema is older', async () => {
+  it('fails closed when the installed schema cannot complete every queue source', async () => {
     const olderDb = {
       prepare() {
         return { async first() { throw new Error('no such table: keeper_pieces'); } };
@@ -595,8 +597,88 @@ describe('private studio overview', () => {
       request: request('/api/admin/overview', 'GET', ORIGIN),
       env: { ...env(), DB: olderDb },
     });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { ok: false, error: 'overview_incomplete' });
+  });
+});
+
+describe('exact admin invoice and viewing selectors', () => {
+  it('loads one older invoice by exact ID and rejects mixed selector queries', async () => {
+    const seen: Array<{ sql: string; bindings: unknown[] }> = [];
+    const row = {
+      id: 999, invoice_number: 'INV-999', public_token: 'invoice-token-999', status: 'draft',
+      client_name: 'Older invoice', client_email: '', client_location: '', job_title: 'Older work',
+      job_description: 'Description', currency: 'USD', line_items_json: '[]',
+      payment_schedule_json: '[]', current_step_index: 0, subtotal_cents: 0,
+      shipping_text: '', total_cents: 0, due_today_cents: 0, payment_preset_id: null,
+      payment_preset_ids_json: '[]', payment_snapshot_json: '{}', payment_options_json: '[]',
+      notes: '', offer_payment_choice: 0, amount_paid_cents: 0,
+      created_at: 1, updated_at: 1, sent_at: null, paid_at: null,
+    };
+    const exactDb = {
+      prepare(sql: string) {
+        const record = { sql, bindings: [] as unknown[] };
+        seen.push(record);
+        return {
+          bind(...values: unknown[]) { record.bindings = values; return this; },
+          async all() { return { results: [row] }; },
+        };
+      },
+    };
+    signIn();
+    const { onRequest } = await import('../functions/api/admin/invoices.js');
+    const response = await onRequest({
+      request: request('/api/admin/invoices?invoiceId=999', 'GET', ORIGIN),
+      env: { ...env(), DB: exactDb },
+    });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true, attention: null });
+    assert.equal((await response.json()).invoices[0].id, 999);
+    assert.match(seen[0].sql, /WHERE id = \?1/);
+    assert.deepEqual(seen[0].bindings, [999]);
+
+    const invalid = await onRequest({
+      request: request('/api/admin/invoices?invoiceId=999&limit=1', 'GET', ORIGIN),
+      env: { ...env(), DB: exactDb },
+    });
+    assert.equal(invalid.status, 400);
+    assert.deepEqual(await invalid.json(), { ok: false, error: 'invalid_query' });
+  });
+
+  it('loads one older viewing by exact ID and rejects mixed selector queries', async () => {
+    const seen: Array<{ sql: string; bindings: unknown[] }> = [];
+    const row = {
+      id: 999, public_token: 'viewing-token-999', status: 'draft',
+      recipient_name: 'Older viewing', client_email: '', intention: '', chart_json: '{}',
+      data_json: '{}', invoice_token: null, created_at: 1, updated_at: 1,
+      sent_at: null, requested_at: null,
+    };
+    const exactDb = {
+      prepare(sql: string) {
+        const record = { sql, bindings: [] as unknown[] };
+        seen.push(record);
+        return {
+          bind(...values: unknown[]) { record.bindings = values; return this; },
+          async all() { return { results: [row] }; },
+        };
+      },
+    };
+    signIn();
+    const { onRequest } = await import('../functions/api/admin/viewings.js');
+    const response = await onRequest({
+      request: request('/api/admin/viewings?viewingId=999', 'GET', ORIGIN),
+      env: { ...env(), DB: exactDb },
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).viewings[0].id, 999);
+    assert.match(seen[0].sql, /WHERE id = \?1/);
+    assert.deepEqual(seen[0].bindings, [999]);
+
+    const invalid = await onRequest({
+      request: request('/api/admin/viewings?viewingId=999&offset=0', 'GET', ORIGIN),
+      env: { ...env(), DB: exactDb },
+    });
+    assert.equal(invalid.status, 400);
+    assert.deepEqual(await invalid.json(), { ok: false, error: 'invalid_query' });
   });
 });
 
@@ -621,6 +703,7 @@ describe('mixed public and private endpoints', () => {
   it('returns private no-store JSON for unsupported methods', async () => {
     signIn();
     const cases = [
+      [(await import('../functions/api/admin/overview.js')).onRequest, '/api/admin/overview'],
       [(await import('../functions/api/admin/invoices.js')).onRequest, '/api/admin/invoices'],
       [(await import('../functions/api/admin/payment-presets.js')).onRequest, '/api/admin/payment-presets'],
       [(await import('../functions/api/admin/viewings.js')).onRequest, '/api/admin/viewings'],
@@ -629,7 +712,9 @@ describe('mixed public and private endpoints', () => {
     ] as const;
 
     for (const [handler, path] of cases) {
-      const response = await handler({ request: request(path, 'OPTIONS'), env: env(), params: {} });
+      const response = await (handler as any)({
+        request: request(path, 'OPTIONS'), env: env(), params: {},
+      });
       assert.equal(response.status, 405);
       assert.equal(response.headers.get('Cache-Control'), 'no-store');
       assert.deepEqual(await response.json(), { ok: false, error: 'method_not_allowed' });

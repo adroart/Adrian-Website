@@ -72,6 +72,36 @@ function publicArtwork(row) {
   };
 }
 
+/** Latest first-bind invitation and bounded public-state activity for one identity. */
+export async function readArtworkInvitationProjection(env, keeperPieceId, now) {
+  if (!keeperPieceId) return { invitation: null, activity: [] };
+  const result = await env.DB.prepare(`
+    SELECT invitation.id, invitation.created_at, invitation.expires_at,
+           invitation.revoked_at, redemption.redeemed_at
+      FROM artwork_invitations invitation
+      LEFT JOIN artwork_invitation_redemptions redemption
+        ON redemption.invitation_id = invitation.id
+     WHERE invitation.keeper_piece_id = ?1
+     ORDER BY invitation.created_at DESC, invitation.id DESC
+     LIMIT 20
+  `).bind(keeperPieceId).all();
+  const rows = result?.results ?? [];
+  const latest = rows[0] ?? null;
+  const invitation = latest ? {
+    state: latest.redeemed_at ? 'redeemed' : latest.revoked_at ? 'revoked'
+      : Date.parse(latest.expires_at) <= Date.parse(now) ? 'expired' : 'available',
+    invitationId: latest.id,
+  } : null;
+  return {
+    invitation,
+    activity: rows.flatMap((row) => [
+      ['invitation_created', row.created_at, 'Caretaker invitation created'],
+      ['invitation_revoked', row.revoked_at, 'Caretaker invitation revoked'],
+      ['invitation_redeemed', row.redeemed_at, 'Caretaker invitation redeemed'],
+    ]),
+  };
+}
+
 async function invitationByToken(env, token) {
   const presented = requiredText(token, 'invitation_not_found', 512);
   const tokenHash = await sha256Hex(presented);

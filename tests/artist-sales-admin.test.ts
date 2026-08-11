@@ -57,18 +57,21 @@ mock.module('../functions/api/_lib/artistSales.js', {
       saleId: 'sale-one', itemIds: ['item-one'], artworkRecordIds: ['record-one'],
       priceEntryIds: [], replayed: false,
     }),
-    listArtistSaleWorkspace: async () => ({
-      sales: [], reconnectionCases: [], artworkRecords: [{
-        artworkRecordId: 'record-one', artworkId: 'UL-100',
-        edition: { kind: 'unique', number: null, size: null },
-        identificationStatus: 'identity_linked', publicCode: 'AR-BCDEFGHJ',
-      }], pagination: {
-        limit: 25, offset: 0,
-        sales: { hasMore: false, nextOffset: null },
-        reconnectionCases: { hasMore: false, nextOffset: null },
-        artworkRecords: { hasMore: false, nextOffset: null },
-      },
-    }),
+    listArtistSaleWorkspace: async (_env: unknown, input: Record<string, unknown>) => {
+      coreCalls.push({ operation: 'listArtistSaleWorkspace', input });
+      return {
+        sales: [], reconnectionCases: [], artworkRecords: [{
+          artworkRecordId: 'record-one', artworkId: 'UL-100',
+          edition: { kind: 'unique', number: null, size: null },
+          identificationStatus: 'identity_linked', publicCode: 'AR-BCDEFGHJ',
+        }], pagination: {
+          limit: 25, offset: 0,
+          sales: { hasMore: false, nextOffset: null },
+          reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
+        },
+      };
+    },
     getArtistSaleDetail: async (_env: unknown, saleId: string) => {
       coreCalls.push({ operation: 'getArtistSaleDetail', input: { saleId } });
       if (detailErrorCode) throw Object.assign(new Error('private detail failure'), {
@@ -390,6 +393,23 @@ describe('private artist sales route modules', () => {
     assert.equal(await modules[3].mediaIdentityId('admin-one', 'upload-key'), first);
     assert.notEqual(await modules[3].mediaIdentityId('admin-two', 'upload-key'), first);
     assert.notEqual(await modules[3].mediaIdentityId('admin-one', 'other-key'), first);
+  });
+
+  it('accepts one exact reconnection selector and rejects mixed or duplicate selectors', async () => {
+    const sales = await import('../functions/api/admin/collector-sales.js');
+    const invoke = (query: string) => sales.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-sales${query}`), env: { DB: {} },
+    });
+    const exact = await invoke('?reconnectionCaseId=case-one');
+    assert.equal(exact.status, 200);
+    assert.deepEqual(coreCalls.at(-1), {
+      operation: 'listArtistSaleWorkspace', input: { reconnectionCaseId: 'case-one' },
+    });
+    for (const query of [
+      '?reconnectionCaseId=case-one&limit=1',
+      '?reconnectionCaseId=case-one&reconnectionCaseId=case-two',
+      '?reconnectionCaseId=bad.id',
+    ]) assert.equal((await invoke(query)).status, 400, query);
   });
 
   it('returns the explicit original/effective detail allowlist and fails corrupt chains closed', async () => {

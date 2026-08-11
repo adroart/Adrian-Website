@@ -7,17 +7,19 @@
 > re-plan. The thinking is done and committed; your job is to execute the next phase and leave
 > the next session able to start cold.
 >
-> **Three documents, and you need all three:**
-> - `the-collector-journey.md` — the spec. What must be true. Read in full, once.
-> - `the-collector-build.md` — the ordered work, phases 0 through 3. Your task list.
-> - this file — how to work, what is already verified, what never to relitigate.
+> **Three working records, and you need all three:**
+> - `the-collector-journey.md`: the original acceptance spec.
+> - `the-collector-build.md`: the ordered work with current status corrections.
+> - this file: how to work, what is verified, and the current migration record.
+>
+> Read `collector-screen-wording.md` and its visual companions first. The August 10 master wins
+> wherever these older records or a locally built screen disagree.
 
 ---
 
 ## Start of session — do this first
 
-1. **Read the three documents above.** The journey spec in full. Do not skim it; it is what the
-   build gets checked against and every build item names the step it serves.
+1. **Read the authority and working records above.** Do not skim the wording master.
 2. **Read `## Progress` at the bottom of this file.** It records what previous sessions landed
    and what the next one should pick up. It is the handoff between sessions.
 3. **Check for parallel sessions.** `git worktree list` and look for live dev processes. If
@@ -100,9 +102,9 @@ Build the complete editing and journey surfaces before asking Adrian for bulk co
 
 1. **Materials, makers, origins, and wording** use reusable templates with per-artwork overrides.
    Missing values remain absent from the public certificate. Adrian adds and tunes the facts later.
-2. **Product behavior uses the ratified conservative defaults:** single-use artwork invitations,
-   one canonical keeper with contributors, equal brightness for registered lights, and optional
-   attached video with no personal or permanent-hosting promise.
+2. **Product behavior uses the August 10 master:** single-use artwork invitations and one canonical
+   caretaker remain. The old equal-brightness default is superseded. Video remains later work with
+   no personal or permanent-hosting promise.
 3. **The aesthetic questions** are already answered. Design work runs in parallel under
    `collector-design-handoff.md` and does not block anything here.
 4. **No historical Atlas import is required.** Adrian confirmed on 2026-08-09 that the Atlas never
@@ -114,7 +116,8 @@ Build the complete editing and journey surfaces before asking Adrian for bulk co
 
 **Work one phase. Stop at its boundary. Report. Do not roll into the next.**
 
-The phases are in `the-collector-build.md`. In short:
+The phases below are the historical work breakdown. The August 10 master and the semantic migration
+table in `## Progress` govern the current implementation status.
 
 - **Phase 0, the merge.** Five items. Freeze mandalacodes ownership writes, import any verified
   historical source chains into a separate preserved envelope, confirm the already-shared profile
@@ -281,11 +284,12 @@ replay defects.
 first-bind seams.** No additional Adrian content is needed for invitation proof, template editing,
 privacy and shared birth onboarding, or dry-run catalog membership.
 
-**2026-08-09: Phase 1 items 1.2 through 1.8 are complete locally and have not been deployed.** The
-public arrival is now a complete artwork record without a sign-in wall or timed gate. A collector
-can enter through a neutral registration door, read the opening promise, sign in, prove the artwork
-with either its Ownership Code or a single-use invitation, choose privacy, review or skip shared
-birth information, see the effective certificate facts, and complete the journey. Invitation proof
+**2026-08-09: Phase 1 items 1.2 through 1.8 produced local infrastructure and an older presentation,
+and were not deployed.** Under that older model, the public arrival represented an artwork record
+without a sign-in wall or timed gate. A collector could enter through a neutral registration door,
+read the opening promise, sign in, prove the artwork with either its Ownership Code or a single-use
+invitation, choose privacy, review or skip shared birth information, see the effective certificate
+facts, and finish that older journey. Invitation proof
 is restricted to its intended verified recipient, expires or revokes safely, cannot be reused, and
 does not enter public history, browser storage, or the page address.
 The token remains editable while an invitation is inspected, then freezes during irreversible
@@ -320,7 +324,7 @@ also remains an Adrian input before the later sale door can be connected.
 yearly-ritual experience behind the closed launch flag. Do not seed production or enable the
 journey before the production-copy preflight succeeds.
 
-**2026-08-10: Phase 2 is complete locally and has not been deployed.** A current keeper can create
+**2026-08-10: Phase 2 produced local data and scheduling foundations and was not deployed.** A current keeper can create
 one dream in the exact self, family, community, or planet scope, keep it private, share it
 anonymously, or attribute it only when adult and name consent remain current. Edits, sharing,
 revocation, transfer closure, and yearly ritual actions are request-bound, replay-safe, and tied to
@@ -449,3 +453,29 @@ Attributed contributor material is not part of the implemented access work. Its 
 remains blocked on Adrian's decision, and no material editor, upload path, public projection, or
 ceremony integration has been built. Optional video, warning delivery, and the commerce-triggered
 sale door also remain separate.
+
+**2026-08-10: active collector branch truth pass.** At the start of this pass, the collector source
+worktree was clean at `d5b10fa1cf7a05577c72a1a87e51f017b5e82b99`. That is the final collector
+commit copied into this integration branch. Its recorded full baseline passed 740 unit tests and 98 Playwright tests, with 10
+intentional skips. The verified-sales workspace, certificate resolver, media authorization and
+integrity checks, and their regression coverage were reviewed as finished active work. The launch
+flag remains off, no production migration or seed was run, and no collector surface was deployed.
+
+The locally built Phase 1 and Phase 2 presentations do not establish completion against the August
+10 master. The migration from local implementation to the settled collector experience is:
+
+| Disposition | Surfaces | Current meaning |
+|---|---|---|
+| Reuse | Identity; invitations; governed claim and transfer; certificate resolver; verified sales; media integrity; recovery | Durable canonical seams. Integrate them without adding a second writer or store. |
+| Adapt | Public projections; dream persistence; letters scheduling; field data | Retain valid data and service boundaries, then align their projections and behavior with the master. |
+| Replace | Old Register-or-Dream fork; combined privacy and birth flow; legacy keeper panels; equal-brightness semantics where they conflict with the master | Existing presentation is superseded and is not acceptance evidence. |
+| Later | Garden; household; collaborators; heirs; gift wishes; passing UI; video | Do not count these as built or include them in the current integration. |
+
+**Next:** integrate the reusable collector foundation without launching it, then replace or adapt one
+master-defined surface at a time. Production rollout remains a separate approval and verification
+stage.
+
+**2026-08-12: reconciliation note.** The truth pass above was written on the admin-integration
+branch before the Phase 3.1 contributor-access work landed; this unified branch now carries both.
+The contributor-access acceptance (2026-08-11 entry) and the admin workspace integration are merged
+into one line of history. Integration of the master-defined surfaces continues from here.

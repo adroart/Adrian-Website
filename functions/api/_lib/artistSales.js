@@ -169,6 +169,45 @@ async function all(env, sql, ...values) {
   return rows(await env.DB.prepare(sql).bind(...values).all());
 }
 
+/** Resolve one private artwork record from exactly one stable workspace selector. */
+export async function readArtistArtworkRecordProjection(env, selector) {
+  if (selector.artistArtworkRecordId) {
+    return first(env, `SELECT id, artwork_id, edition_json, keeper_piece_id,
+      identification_status, created_at, updated_at FROM artist_artwork_records WHERE id = ?1`,
+    selector.artistArtworkRecordId);
+  }
+  const column = selector.keeperPieceId ? 'keeper_piece_id'
+    : selector.artworkId ? 'artwork_id' : null;
+  const value = selector.keeperPieceId ?? selector.artworkId ?? null;
+  if (!column) return [];
+  return all(env, `SELECT id, artwork_id, edition_json, keeper_piece_id,
+    identification_status, created_at, updated_at FROM artist_artwork_records
+    WHERE ${column} = ?1 ORDER BY id LIMIT 2`, value);
+}
+
+/** Latest verified sale plus bounded artist-owned activity for one artwork record. */
+export async function readVerifiedSaleProjection(env, artworkRecordId) {
+  if (!artworkRecordId) return { sale: null, activity: [] };
+  const [sales, events] = await Promise.all([
+    all(env, `SELECT sale.id, sale.recorded_at FROM artist_verified_sale_items item
+      JOIN artist_verified_sales sale ON sale.id = item.sale_id
+      WHERE item.artwork_record_id = ?1 ORDER BY sale.recorded_at DESC, sale.id DESC LIMIT 20`,
+    artworkRecordId),
+    all(env, `SELECT action, created_at FROM artist_artwork_record_events
+      WHERE artwork_record_id = ?1 ORDER BY created_at DESC, id DESC LIMIT 20`, artworkRecordId),
+  ]);
+  return {
+    sale: sales[0] ? { state: 'verified', verifiedSaleId: sales[0].id } : null,
+    activity: [
+      ...sales.map((row) => ['sale_verified', row.recorded_at, 'Sale verified']),
+      ...events.map((row) => ['identity_changed', row.created_at,
+        row.action === 'identity_linked' ? 'Permanent identity linked'
+          : row.action === 'identified' ? 'Artwork identified'
+            : 'Artwork identification corrected']),
+    ],
+  };
+}
+
 function requireAtomic(env) {
   if (!env?.DB || typeof env.DB.prepare !== 'function' || typeof env.DB.batch !== 'function') {
     throw codedError('atomic_write_unavailable');
@@ -1204,8 +1243,11 @@ export async function getArtistSaleDetail(env, saleIdValue) {
 
 export async function listArtistSaleWorkspace(env, rawFilters = {}) {
   if (!env?.DB || !exactKeys(rawFilters, [], [
-    'caseStatus', 'search', 'identificationStatus', 'limit', 'offset',
+    'caseStatus', 'search', 'identificationStatus', 'limit', 'offset', 'reconnectionCaseId',
   ])) {
+    throw codedError('invalid_request');
+  }
+  if (rawFilters.reconnectionCaseId !== undefined && Object.keys(rawFilters).length !== 1) {
     throw codedError('invalid_request');
   }
   const limit = rawFilters.limit === undefined ? 25 : rawFilters.limit;
@@ -1220,14 +1262,18 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
       : normalizedText(rawFilters.search, LIMITS.search).toLowerCase(),
     identificationStatus: rawFilters.identificationStatus === undefined ? null
       : normalizedText(rawFilters.identificationStatus, 30),
+    reconnectionCaseId: rawFilters.reconnectionCaseId === undefined ? null
+      : normalizedId(rawFilters.reconnectionCaseId),
   };
+  if (filters.reconnectionCaseId !== null
+    && filters.reconnectionCaseId !== rawFilters.reconnectionCaseId) throw codedError('invalid_request');
   if (filters.caseStatus && !CASE_STATUSES.includes(filters.caseStatus)) throw codedError('invalid_request');
   if (filters.identificationStatus && !IDENTIFICATION_STATUSES.has(filters.identificationStatus)) {
     throw codedError('invalid_request');
   }
   const searchPattern = filters.search ? `%${filters.search}%` : null;
   const pageSize = limit + 1;
-  const saleRows = await all(env, `
+  const saleRows = filters.reconnectionCaseId ? [] : await all(env, `
     WITH ranked_events AS (
       SELECT sale_id, sequence, after_json,
              ROW_NUMBER() OVER (
@@ -1321,16 +1367,17 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
            || coalesce(reconnect.private_context, '')
          ) LIKE ?3
        )
+       AND (?4 IS NULL OR reconnect.id = ?4)
      ORDER BY reconnect.created_at DESC, reconnect.id DESC
-     LIMIT ?4 OFFSET ?5
-  `, filters.caseStatus, filters.search, searchPattern, pageSize, offset);
+     LIMIT ?5 OFFSET ?6
+  `, filters.caseStatus, filters.search, searchPattern, filters.reconnectionCaseId, pageSize, offset);
   const caseHasMore = caseRows.length > limit;
   const reconnectionCases = caseRows.slice(0, limit).map((row) => ({
       reconnectionCaseId: row.id, recipientEmail: row.recipient_email,
       recipientName: row.recipient_name, privateContext: row.private_context,
       status: row.effective_status, createdAt: row.created_at,
     }));
-  const artworkRecordRows = await all(env, `
+  const artworkRecordRows = filters.reconnectionCaseId ? [] : await all(env, `
     SELECT record.id, record.artwork_id, record.edition_json,
            record.identification_status, piece.public_code
       FROM artist_artwork_records record

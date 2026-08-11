@@ -24,6 +24,36 @@ function registrationError(code) {
   return error;
 }
 
+/** Read one registered identity and its caretaker/activity projection without mutation. */
+export async function readRegisteredArtworkIdentity(env, keeperPieceId) {
+  if (!keeperPieceId) return null;
+  const row = await env.DB.prepare(`
+    SELECT id, piece_id, edition_number, keeper_user_id, registered_at, claimed_at, released_at,
+           public_code, plate_status, backup_status, backup_reference, backup_sha256,
+           ownership_code_key_version, front_svg_sha256, back_svg_sha256,
+           identity_backup_status, identity_backup_reference, identity_backup_sha256,
+           registration_status, plate_generated_at, plate_activated_at
+      FROM keeper_pieces WHERE id = ?1
+  `).bind(keeperPieceId).first();
+  if (!row) return null;
+  let caretaker;
+  if (row.keeper_user_id && row.claimed_at && row.released_at === null) caretaker = 'active';
+  else if (!row.keeper_user_id && !row.claimed_at && row.released_at === null) caretaker = 'unclaimed';
+  else if (!row.keeper_user_id && row.claimed_at && row.released_at) caretaker = 'released';
+  else throw registrationError('workspace_data_corrupt');
+  return {
+    row,
+    caretaker,
+    activity: [
+      ['identity_registered', row.registered_at, 'Permanent identity registered'],
+      ['caretaker_claimed', row.claimed_at, 'Caretaker connected'],
+      ['caretaker_released', row.released_at, 'Caretaker released'],
+      ['plate_generated', row.plate_generated_at, 'Plate generated'],
+      ['plate_activated', row.plate_activated_at, 'Plate activated'],
+    ],
+  };
+}
+
 function exactKeys(value, keys) {
   return value && typeof value === 'object' && !Array.isArray(value)
     && Object.keys(value).sort().join('\0') === [...keys].sort().join('\0');

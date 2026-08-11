@@ -9,6 +9,27 @@ export type MaintenanceAcquisitionType =
   | 'inheritance'
   | 'other';
 
+export const MAINTENANCE_CUSTODY_ACQUISITION_TYPES = [
+  'retained', 'loan', 'consignment', 'gift', 'inheritance', 'other',
+] as const;
+export type MaintenanceCustodyAcquisitionType =
+  typeof MAINTENANCE_CUSTODY_ACQUISITION_TYPES[number];
+export const DEFAULT_MAINTENANCE_ACQUISITION_TYPE: MaintenanceCustodyAcquisitionType = 'retained';
+
+type MaintenanceAcquisitionTypeCarrier = { acquisitionType: MaintenanceAcquisitionType };
+
+export function isLegacySaleAcquisition<T extends MaintenanceAcquisitionTypeCarrier>(
+  acquisition: T,
+): acquisition is T & { acquisitionType: 'sale' } {
+  return acquisition.acquisitionType === 'sale';
+}
+
+export function canCorrectMaintenanceAcquisition<T extends MaintenanceAcquisitionTypeCarrier>(
+  acquisition: T,
+): acquisition is T & { acquisitionType: MaintenanceCustodyAcquisitionType } {
+  return !isLegacySaleAcquisition(acquisition);
+}
+
 /**
  * Current tender currencies and standard display digits from Unicode CLDR 48.0.0.
  * Source: cldr-json/cldr-core/supplemental/currencyData.json, current region entries
@@ -44,6 +65,12 @@ export type MaintenanceSearchFilters = {
   editionNumber?: number;
 };
 
+export type LegacyAcquisitionSalesContext = {
+  acquisitionId: string;
+  artworkId: string;
+  keeperPieceId: string;
+};
+
 export type MaintenanceListItem = {
   id: string;
   artworkId: string;
@@ -54,7 +81,7 @@ export type MaintenanceListItem = {
 };
 
 export type MaintenanceAcquisitionInput = {
-  acquisitionType: MaintenanceAcquisitionType;
+  acquisitionType: MaintenanceCustodyAcquisitionType;
   acquiredAt: string | null;
   amountMinor: number | null;
   currency: string | null;
@@ -64,7 +91,8 @@ export type MaintenanceAcquisitionInput = {
   publicProvenance: string | null;
 };
 
-export type MaintenanceAcquisition = MaintenanceAcquisitionInput & {
+export type MaintenanceAcquisition = Omit<MaintenanceAcquisitionInput, 'acquisitionType'> & {
+  acquisitionType: MaintenanceAcquisitionType;
   acquisitionId: string;
   keeperPieceId: string;
   recordVersion: number;
@@ -277,6 +305,17 @@ export function buildMaintenanceSearchPath(filters: MaintenanceSearchFilters = {
   }
   const query = params.toString();
   return `/api/admin/maintenance${query ? `?${query}` : ''}`;
+}
+
+/** Carry only stable record identity into the verified-sales workspace. */
+export function buildLegacyAcquisitionSalesPath(
+  context: LegacyAcquisitionSalesContext,
+): string {
+  const params = new URLSearchParams({ source: 'legacy_acquisition' });
+  appendText(params, 'acquisitionId', context.acquisitionId);
+  appendText(params, 'artworkId', context.artworkId);
+  appendText(params, 'keeperPieceId', context.keeperPieceId);
+  return `/admin/collector-sales?${params.toString()}`;
 }
 
 async function readMaintenanceJson<T>(response: Response): Promise<T> {

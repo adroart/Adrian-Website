@@ -17,7 +17,7 @@
  * is the in-wizard second factor.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
@@ -161,6 +161,11 @@ function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
 }
 
 const AdminPlateWizard: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const appliedDeepLinkRef = useRef('');
   // Access + data
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -358,6 +363,21 @@ const AdminPlateWizard: React.FC = () => {
     setStageIndex(plateWizardStageIndex(target));
     setStarted(true);
   };
+
+  useEffect(() => {
+    if (!linkedKeeperPieceId || loading || appliedDeepLinkRef.current === linkedKeeperPieceId) return;
+    const row = rows.find((candidate) => candidate.id === linkedKeeperPieceId);
+    appliedDeepLinkRef.current = linkedKeeperPieceId;
+    if (!row) {
+      setLoadError('The linked physical artwork was not found in the plate registry.');
+      return;
+    }
+    if (!plateWizardStageForPiece(snapshotOf(row))) {
+      navigate(`/admin/pieces?${new URLSearchParams({ keeperPieceId: row.id })}`, { replace: true });
+      return;
+    }
+    resumePiece(row);
+  }, [linkedKeeperPieceId, loading, navigate, rows]);
 
   const downloadLedger = async () => {
     setStepError('');
@@ -828,6 +848,7 @@ const AdminPlateWizard: React.FC = () => {
               <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()}>Download offline ledger</button>
               <button type="button" className={quietButtonClass} onClick={() => void syncDrive()}>Sync to Google Drive</button>
               <button type="button" className={quietButtonClass} onClick={goToChoose}>Back to start</button>
+              {piece && <Link to={`/admin/artworks/${encodeURIComponent(piece.pieceId)}?${new URLSearchParams({ instance: piece.id })}`} className={quietButtonClass}>Open artwork</Link>}
               <Link to="/admin/pieces" className={quietButtonClass}>Open the full desk</Link>
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mt-4" role="status">{driveStatus}</p>}

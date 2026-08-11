@@ -8,49 +8,61 @@ import {
   AdminSection,
 } from './admin/AdminPage';
 
-type AdminAttention = {
-  plates: number;
-  draftViewings: number;
-  openInvoices: number;
-};
-
-type AttentionItem = {
-  key: keyof AdminAttention;
-  label: string;
-  singular: string;
+type WorkItem = {
+  domain: string;
+  title: string;
+  state: string;
+  signal: string;
+  actionLabel: string;
   href: string;
 };
 
-const ATTENTION_ITEMS: AttentionItem[] = [
-  { key: 'plates', label: 'Plates need preparation', singular: 'plate needs preparation', href: '/admin/pieces' },
-  { key: 'draftViewings', label: 'Viewings remain in draft', singular: 'viewing remains in draft', href: '/admin/viewings' },
-  { key: 'openInvoices', label: 'Invoices remain open', singular: 'invoice remains open', href: '/admin/invoices' },
-];
+type RecentItem = { title: string; signal: string; href: string };
 
-const QUICK_ACTIONS = [
+type AdminOverview = {
+  queue: { complete: true; items: WorkItem[] };
+  recentArtworks: RecentItem[];
+  recentCollectors: RecentItem[];
+};
+
+const START_NEW = [
   { label: 'Issue a plate', description: 'Guided, start to finish', href: '/admin/pieces/wizard' },
   { label: 'Create invoice', description: 'Price and send new work', href: '/admin/invoices?mode=create' },
   { label: 'Build a viewing', description: 'Prepare a collector presentation', href: '/admin/viewings?mode=create' },
-  { label: 'Write a story', description: 'Open the Stories editor', href: '/keystatic/collections/stories/create' },
-  { label: 'Publish a poem', description: 'Create text with optional audio', href: '/admin/poetry?mode=create' },
-  { label: 'Upload media', description: 'Add audio or a document', href: '/admin/files' },
 ];
 
-const ALL_TOOLS = [
-  { label: 'Registry and plates', href: '/admin/pieces' },
-  { label: 'Maintenance', href: '/admin/maintenance' },
-  { label: 'Private viewings', href: '/admin/viewings' },
-  { label: 'Artwork stories', href: '/admin/book' },
-  { label: 'Stories', href: '/keystatic' },
-  { label: 'Poetry', href: '/admin/poetry' },
-  { label: 'Media', href: '/admin/files' },
-  { label: 'Pricing', href: '/admin/pricing' },
-  { label: 'Invoices', href: '/admin/invoices' },
-];
+function isOverview(value: unknown): value is AdminOverview {
+  if (!value || typeof value !== 'object') return false;
+  const overview = value as Partial<AdminOverview>;
+  return overview.queue?.complete === true
+    && Array.isArray(overview.queue.items)
+    && Array.isArray(overview.recentArtworks)
+    && Array.isArray(overview.recentCollectors);
+}
+
+const stateText = (value: string) => value.replaceAll('_', ' ');
+
+const RecentList: React.FC<{ items: RecentItem[]; empty: string }> = ({ items, empty }) => (
+  items.length === 0
+    ? <p className="font-sans text-sm text-wood-600">{empty}</p>
+    : (
+      <div className="border-t border-wood-200">
+        {items.map(item => (
+          <Link
+            to={item.href}
+            key={`${item.href}:${item.title}`}
+            className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-wood-200 py-3 font-sans text-sm text-wood-800 transition-colors hover:bg-paper-100"
+          >
+            <span className="min-w-0">{item.title}</span>
+            <span className="text-xs text-wood-500">{item.signal}</span>
+          </Link>
+        ))}
+      </div>
+    )
+);
 
 const AdminDashboard: React.FC = () => {
-  const [attention, setAttention] = useState<AdminAttention | null>(null);
-  const [overviewAvailable, setOverviewAvailable] = useState(true);
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -60,11 +72,12 @@ const AdminDashboard: React.FC = () => {
     try {
       const response = await fetch('/api/admin/overview', { cache: 'no-store', signal });
       if (!response.ok) throw new Error('overview unavailable');
-      const data = await response.json();
-      setAttention(data.attention ?? null);
-      setOverviewAvailable(data.attention !== null);
+      const data: unknown = await response.json();
+      if (!isOverview(data)) throw new Error('overview incomplete');
+      setOverview(data);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
+      setOverview(null);
       setFailed(true);
     } finally {
       if (!signal?.aborted) setLoading(false);
@@ -77,64 +90,70 @@ const AdminDashboard: React.FC = () => {
     return () => controller.abort();
   }, [loadOverview]);
 
-  const visibleAttention = attention
-    ? ATTENTION_ITEMS.filter(item => attention[item.key] > 0)
-    : [];
-
   return (
     <AdminPage width="medium">
       <AdminPageHeader
         eyebrow="Private studio"
         title="Studio overview"
-        description="The work that needs you, followed by the actions you use most."
+        description="The exact work waiting for you, followed by the relationships you touched most recently."
       />
 
-      {overviewAvailable && (
-        <AdminSection title="Needs attention" description="Live counts from the private studio ledger.">
-          {loading && <p className="admin-dashboard-loading" role="status">Checking the studio…</p>}
-          {failed && (
-            <AdminAlert tone="warning" live>
-              <p>The overview could not be refreshed.</p>
-              <button type="button" onClick={() => void loadOverview()}>Try again</button>
-            </AdminAlert>
-          )}
-          {!loading && !failed && visibleAttention.length === 0 && (
-            <AdminEmptyState
-              title="Nothing is waiting"
-              description="The current plate, viewing, and invoice queues are clear."
-            />
-          )}
-          {!loading && !failed && visibleAttention.length > 0 && (
-            <div className="admin-attention-list">
-              {visibleAttention.map(item => {
-                const count = attention?.[item.key] || 0;
-                return (
-                  <Link to={item.href} key={item.key} className="admin-attention-row">
-                    <span className="admin-attention-count">{count}</span>
-                    <span>{count === 1 ? item.singular : item.label}</span>
-                    <span aria-hidden="true">Open</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </AdminSection>
+      <AdminSection title="Work that needs you" description="One next step for each item in the private studio ledger.">
+        {loading && <p className="admin-dashboard-loading" role="status">Checking the studio…</p>}
+        {failed && (
+          <AdminAlert tone="warning" live>
+            <p>The complete work queue could not be checked. Nothing has been marked clear.</p>
+            <button type="button" onClick={() => void loadOverview()}>Try again</button>
+          </AdminAlert>
+        )}
+        {!loading && !failed && overview?.queue.items.length === 0 && (
+          <AdminEmptyState
+            title="Nothing is waiting"
+            description="Every supported studio source was checked and no actionable work was found."
+          />
+        )}
+        {!loading && !failed && overview && overview.queue.items.length > 0 && (
+          <div className="border-t border-wood-200">
+            {overview.queue.items.map(item => (
+              <Link
+                to={item.href}
+                key={`${item.domain}:${item.href}:${item.state}`}
+                className="grid min-h-16 grid-cols-1 gap-2 border-b border-wood-200 py-4 text-wood-800 transition-colors hover:bg-paper-100 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4"
+              >
+                <span className="min-w-0">
+                  <strong className="block font-serif text-lg text-wood-900">{item.title}</strong>
+                  <span className="block font-sans text-xs text-wood-600">
+                    {stateText(item.state)} · {item.signal}
+                  </span>
+                </span>
+                <span className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-wood-500">
+                  {item.actionLabel}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </AdminSection>
+
+      {!loading && !failed && overview && (
+        <div className="grid gap-8 md:grid-cols-2">
+          <AdminSection title="Recent artworks">
+            <RecentList items={overview.recentArtworks} empty="No recently registered artwork yet." />
+          </AdminSection>
+          <AdminSection title="Recent collectors or reconnections">
+            <RecentList items={overview.recentCollectors} empty="No recent reconnection work yet." />
+          </AdminSection>
+        </div>
       )}
 
-      <AdminSection title="Quick actions" description="Begin the work without searching through tools.">
+      <AdminSection title="Start new" description="Begin the small set of workflows you create most often.">
         <div className="admin-quick-actions">
-          {QUICK_ACTIONS.map(action => (
+          {START_NEW.map(action => (
             <Link to={action.href} key={action.label} className="admin-action-card">
               <strong>{action.label}</strong>
               <span>{action.description}</span>
             </Link>
           ))}
-        </div>
-      </AdminSection>
-
-      <AdminSection title="All tools">
-        <div className="admin-tool-links">
-          {ALL_TOOLS.map(tool => <Link to={tool.href} key={tool.label}>{tool.label}</Link>)}
         </div>
       </AdminSection>
     </AdminPage>

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection } from './AdminPage';
 import {
   beginInvitationCreateAttempt,
@@ -15,8 +16,28 @@ const inputClass = 'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const buttonClass = 'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors';
 
+export function reconcileInvitationAttemptForKeeper(
+  current: InvitationCreateAttempt | null,
+  linkedKeeperPieceId: string,
+): InvitationCreateAttempt | null {
+  return current?.request.keeperPieceId === linkedKeeperPieceId ? current : null;
+}
+
+export function findAvailableInvitationForKeeper(
+  invitations: AdminInvitation[],
+  linkedKeeperPieceId: string,
+): AdminInvitation | null {
+  if (!linkedKeeperPieceId) return null;
+  return invitations.find((invitation) => (
+    invitation.keeperPieceId === linkedKeeperPieceId && invitation.status === 'available'
+  )) ?? null;
+}
+
 export const ArtworkInvitations: React.FC = () => {
-  const [keeperPieceId, setKeeperPieceId] = useState('');
+  const [searchParams] = useSearchParams();
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const [keeperPieceId, setKeeperPieceId] = useState(linkedKeeperPieceId);
   const [email, setEmail] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [attempt, setAttempt] = useState<InvitationCreateAttempt | null>(null);
@@ -24,6 +45,13 @@ export const ArtworkInvitations: React.FC = () => {
   const [rows, setRows] = useState<AdminInvitation[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const invitationRows = useRef(new Map<string, HTMLElement>());
+  const linkedInvitation = findAvailableInvitationForKeeper(rows, linkedKeeperPieceId);
+
+  useEffect(() => {
+    setKeeperPieceId(linkedKeeperPieceId);
+    setAttempt((current) => reconcileInvitationAttemptForKeeper(current, linkedKeeperPieceId));
+  }, [linkedKeeperPieceId]);
 
   const load = useCallback(async () => {
     try {
@@ -34,6 +62,14 @@ export const ArtworkInvitations: React.FC = () => {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    if (!linkedInvitation) return;
+    const frame = requestAnimationFrame(() => {
+      invitationRows.current.get(linkedInvitation.invitationId)?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [linkedInvitation?.invitationId]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -125,12 +161,30 @@ export const ArtworkInvitations: React.FC = () => {
         ) : (
           <div className="divide-y divide-wood-200 border-y border-wood-200">
             {rows.map((row) => (
-              <article key={row.invitationId} className="py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <article
+                key={row.invitationId}
+                ref={(element) => {
+                  if (element) invitationRows.current.set(row.invitationId, element);
+                  else invitationRows.current.delete(row.invitationId);
+                }}
+                tabIndex={linkedInvitation?.invitationId === row.invitationId ? -1 : undefined}
+                aria-current={linkedInvitation?.invitationId === row.invitationId ? 'true' : undefined}
+                className={`py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 outline-none ${
+                  linkedInvitation?.invitationId === row.invitationId
+                    ? 'border-l-2 border-bronze-500 pl-4 bg-bronze-50/40'
+                    : ''
+                }`}
+              >
                 <div>
                   <p className="font-serif text-xl text-wood-900">{row.artwork.title}</p>
                   <p className="font-sans text-sm text-wood-600 mt-1">
                     {row.intendedRecipientEmail} · {row.status} · expires {new Date(row.expiresAt).toLocaleDateString()}
                   </p>
+                  {linkedInvitation?.invitationId === row.invitationId && (
+                    <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 mt-2">
+                      Selected for this registered piece
+                    </p>
+                  )}
                 </div>
                 {row.status === 'available' && (
                   <button type="button" disabled={busy} onClick={() => void revoke(row.invitationId)} className={buttonClass}>

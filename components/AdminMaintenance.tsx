@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AdminAlert,
   AdminEmptyState,
@@ -11,11 +12,16 @@ import {
   beginMaintenancePlateActionAttempt,
   beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
+  buildLegacyAcquisitionSalesPath,
+  canCorrectMaintenanceAcquisition,
   createMaintenanceRequestGate,
+  DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
   discardMaintenanceSaveAttempt,
   formatMaintenanceCurrencyAmount,
   getMaintenanceDetail,
+  isLegacySaleAcquisition,
   MAINTENANCE_CURRENCY_CODES,
+  MAINTENANCE_CUSTODY_ACQUISITION_TYPES,
   maintenanceCurrencyAmountToDraft,
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
@@ -27,7 +33,7 @@ import {
   shouldRetainMaintenanceSaveAttempt,
   type MaintenanceAcquisition,
   type MaintenanceAcquisitionInput,
-  type MaintenanceAcquisitionType,
+  type MaintenanceCustodyAcquisitionType,
   type MaintenanceListItem,
   type MaintenancePieceDetail,
   type MaintenancePlateAction,
@@ -53,7 +59,7 @@ type SearchDraft = {
 };
 
 type AcquisitionDraft = {
-  acquisitionType: MaintenanceAcquisitionType;
+  acquisitionType: MaintenanceCustodyAcquisitionType;
   acquiredAt: string;
   amount: string;
   currency: string;
@@ -112,7 +118,7 @@ const EMPTY_SEARCH: SearchDraft = {
 };
 
 const EMPTY_ACQUISITION: AcquisitionDraft = {
-  acquisitionType: 'sale',
+  acquisitionType: DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
   acquiredAt: '',
   amount: '',
   currency: '',
@@ -141,15 +147,13 @@ const provenanceTypes: Array<{ value: MaintenanceProvenanceType; label: string }
   { value: 'note', label: 'Note' },
 ];
 
-const acquisitionTypes: Array<{ value: MaintenanceAcquisitionType; label: string }> = [
-  { value: 'sale', label: 'Sale' },
-  { value: 'gift', label: 'Gift' },
-  { value: 'retained', label: 'Retained' },
-  { value: 'loan', label: 'Loan' },
-  { value: 'consignment', label: 'Consignment' },
-  { value: 'inheritance', label: 'Inheritance' },
-  { value: 'other', label: 'Other' },
-];
+const acquisitionTypeLabels: Record<MaintenanceCustodyAcquisitionType, string> = {
+  retained: 'Retained', loan: 'Loan', consignment: 'Consignment',
+  gift: 'Gift', inheritance: 'Inheritance', other: 'Other',
+};
+const acquisitionTypes = MAINTENANCE_CUSTODY_ACQUISITION_TYPES.map(value => ({
+  value, label: acquisitionTypeLabels[value],
+}));
 
 const inputClass = 'maintenance-input';
 const labelClass = 'maintenance-label';
@@ -162,6 +166,8 @@ function messageFor(error: unknown, fallback: string): string {
     registry_locked: 'Private registry access expired. Unlock it again before saving.',
     idempotency_conflict: 'That save could not be safely retried. Review the current record and try again.',
     version_conflict: 'This record changed after you opened it.',
+    verified_sale_required: 'Record sales in the verified-sales workspace.',
+    legacy_sale_read_only: 'Legacy sale records stay read-only. Continue in verified sales.',
   };
   return messages[error.message] || fallback;
 }
@@ -181,7 +187,9 @@ function displayEdition(number: number, size: number | null): string {
   return `${number} of ${size}`;
 }
 
-function displayPrivateAmount(acquisition: MaintenanceAcquisitionInput): string {
+function displayPrivateAmount(
+  acquisition: Pick<MaintenanceAcquisitionInput, 'amountMinor' | 'currency'>,
+): string {
   if (acquisition.amountMinor === null || !acquisition.currency) return 'Not recorded';
   try {
     return formatMaintenanceCurrencyAmount(acquisition.amountMinor, acquisition.currency);
@@ -204,7 +212,9 @@ function downloadText(filename: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-function draftFromAcquisition(acquisition?: MaintenanceAcquisition): AcquisitionDraft {
+function draftFromAcquisition(
+  acquisition?: MaintenanceAcquisition & { acquisitionType: MaintenanceCustodyAcquisitionType },
+): AcquisitionDraft {
   if (!acquisition) return { ...EMPTY_ACQUISITION };
   const amountDraft = maintenanceCurrencyAmountToDraft(acquisition.amountMinor, acquisition.currency);
   return {
@@ -287,7 +297,9 @@ const DefinitionList: React.FC<{ items: Array<[string, React.ReactNode]> }> = ({
   </dl>
 );
 
-const AcquisitionSnapshot: React.FC<{ acquisition: MaintenanceAcquisitionInput | null }> = ({ acquisition }) => {
+const AcquisitionSnapshot: React.FC<{
+  acquisition: MaintenanceAcquisitionInput | MaintenanceAcquisition | null;
+}> = ({ acquisition }) => {
   if (!acquisition) return <p className="maintenance-muted">No prior acquisition record.</p>;
   return (
     <DefinitionList items={[
@@ -344,7 +356,14 @@ const ProvenanceSnapshot: React.FC<{
 };
 
 const AdminMaintenance: React.FC = () => {
-  const [searchDraft, setSearchDraft] = useState<SearchDraft>(EMPTY_SEARCH);
+  const [searchParams] = useSearchParams();
+  const queryArtworkIds = searchParams.getAll('artworkId');
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedArtworkId = queryArtworkIds.length === 1 ? queryArtworkIds[0] : '';
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const [searchDraft, setSearchDraft] = useState<SearchDraft>({
+    ...EMPTY_SEARCH, artworkId: linkedArtworkId,
+  });
   const [results, setResults] = useState<MaintenanceListItem[]>([]);
   const [searching, setSearching] = useState(true);
   const [searchError, setSearchError] = useState('');
@@ -445,6 +464,10 @@ const AdminMaintenance: React.FC = () => {
   const transitionBusy = saving || stewardSaving || plateSaving || provenanceSaving
     || Boolean(replacementPackage) || Boolean(ambiguousAttempt);
 
+  const guardMaintenanceNavigation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (transitionBusy || !clearMaintenanceAttempts()) event.preventDefault();
+  };
+
   useEffect(() => {
     if (!ambiguousAttempt) return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
@@ -499,13 +522,22 @@ const AdminMaintenance: React.FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadSearch({}, controller.signal);
+    setSearchDraft((current) => ({ ...current, artworkId: linkedArtworkId }));
+    void loadSearch(linkedArtworkId ? { artworkId: linkedArtworkId } : {}, controller.signal);
+    if (linkedKeeperPieceId) {
+      void loadDetail(linkedKeeperPieceId, controller.signal).then((detail) => {
+        if (linkedArtworkId && detail.public.artworkId !== linkedArtworkId) {
+          setSelected(null);
+          setDetailError('The linked physical record does not match this artwork ID.');
+        }
+      }).catch(() => undefined);
+    }
     void fetch('/api/admin/registry-unlock', { cache: 'no-store', signal: controller.signal })
       .then(response => response.json())
       .then(data => setRegistryUnlocked(data?.ok === true && data?.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
     return () => controller.abort();
-  }, [loadSearch]);
+  }, [loadDetail, loadSearch, linkedArtworkId, linkedKeeperPieceId]);
 
   useEffect(() => {
     if (review) reasonRef.current?.focus();
@@ -592,6 +624,13 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
+    let nextDraft: AcquisitionDraft;
+    if (acquisition) {
+      if (!canCorrectMaintenanceAcquisition(acquisition)) return;
+      nextDraft = draftFromAcquisition(acquisition);
+    } else {
+      nextDraft = draftFromAcquisition();
+    }
     if (!clearMaintenanceAttempts()) return;
     setStewardEditor(null);
     setStewardReview(null);
@@ -600,7 +639,7 @@ const AdminMaintenance: React.FC = () => {
     setProvenanceEditor(undefined);
     setProvenanceReview(null);
     setEditor(acquisition);
-    setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
+    setAcquisitionDraft(nextDraft);
     setReview(null);
     setReason('');
     setFormError('');
@@ -1302,6 +1341,17 @@ const AdminMaintenance: React.FC = () => {
             <h2>{selected.public.title}</h2>
             <p>{selected.acquisitions.length} acquisition record{selected.acquisitions.length === 1 ? '' : 's'} · record version {selected.physical.recordVersion}</p>
           </div>
+          <div className="maintenance-section-actions">
+            <Link
+              className={quietButtonClass}
+              aria-disabled={transitionBusy || undefined}
+              tabIndex={transitionBusy ? -1 : undefined}
+              to={`/admin/artworks/${encodeURIComponent(selected.public.artworkId)}?${new URLSearchParams({ instance: selected.id })}`}
+              onClick={guardMaintenanceNavigation}
+            >
+              Open artwork
+            </Link>
+          </div>
 
           <AdminSection title="Current public truth">
             <DefinitionList items={[
@@ -1493,17 +1543,33 @@ const AdminMaintenance: React.FC = () => {
               <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)} disabled={transitionBusy}>Record acquisition</button>
             </div>
             {selected.acquisitions.length === 0 ? (
-              <AdminEmptyState title="No acquisition recorded" description="Record a sale, gift, retained work, loan, or other acquisition event." />
+              <AdminEmptyState title="No acquisition recorded" description="Record retained work, a loan, consignment, gift, inheritance, or other custody event." />
             ) : (
               <div className="maintenance-acquisitions">
                 {selected.acquisitions.map(acquisition => (
                   <article key={acquisition.acquisitionId} className="maintenance-acquisition-row">
                     <div>
-                      <strong>{acquisition.acquisitionType}</strong>
+                      <strong>{isLegacySaleAcquisition(acquisition) ? 'Legacy sale record' : acquisition.acquisitionType}</strong>
                       <span>{displayDate(acquisition.acquiredAt)} · {displayPrivateAmount(acquisition)}</span>
                       {acquisition.acquirerReference && <span>Reference: {acquisition.acquirerReference}</span>}
                     </div>
-                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={transitionBusy} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
+                    {isLegacySaleAcquisition(acquisition) ? (
+                      <Link
+                        className={quietButtonClass}
+                        aria-disabled={transitionBusy || undefined}
+                        tabIndex={transitionBusy ? -1 : undefined}
+                        onClick={guardMaintenanceNavigation}
+                        to={buildLegacyAcquisitionSalesPath({
+                          acquisitionId: acquisition.acquisitionId,
+                          artworkId: selected.public.artworkId,
+                          keeperPieceId: acquisition.keeperPieceId,
+                        })}
+                      >
+                        Open verified sales
+                      </Link>
+                    ) : (
+                      <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={transitionBusy} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
+                    )}
                   </article>
                 ))}
               </div>
@@ -1516,7 +1582,7 @@ const AdminMaintenance: React.FC = () => {
                 <div className="maintenance-form-grid">
                   <label htmlFor="maintenance-acquisition-type">
                     <span className={labelClass}>Acquisition type</span>
-                    <select id="maintenance-acquisition-type" className={inputClass} value={acquisitionDraft.acquisitionType} onChange={event => setAcquisitionDraft(draft => ({ ...draft, acquisitionType: event.target.value as MaintenanceAcquisitionType }))}>
+                    <select id="maintenance-acquisition-type" className={inputClass} value={acquisitionDraft.acquisitionType} onChange={event => setAcquisitionDraft(draft => ({ ...draft, acquisitionType: event.target.value as MaintenanceCustodyAcquisitionType }))}>
                       {acquisitionTypes.map(type => <option value={type.value} key={type.value}>{type.label}</option>)}
                     </select>
                   </label>
