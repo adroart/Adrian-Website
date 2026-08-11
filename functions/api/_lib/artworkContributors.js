@@ -225,12 +225,9 @@ export async function inviteArtworkContributor(env, input) {
   const requestedVersion = input?.stewardVersion === undefined
     ? null
     : nonnegativeInteger(input.stewardVersion, 'invalid_steward_version');
-  if (Date.parse(expiresAt) <= Date.parse(invitedAt)) {
-    throw contributorError('invalid_contributor_expiry');
-  }
   const requestFingerprint = await fingerprint([
     'invite', keeperPieceId, keeperUserId, requestedVersion,
-    recipientEmail, invitedAt, expiresAt,
+    recipientEmail, expiresAt,
   ]);
   const replay = await env.DB.prepare(
     `SELECT id, request_fingerprint
@@ -241,6 +238,9 @@ export async function inviteArtworkContributor(env, input) {
       throw contributorError('contributor_idempotency_conflict');
     }
     return { invitationId: replay.id, status: 'replay' };
+  }
+  if (Date.parse(expiresAt) <= Date.parse(invitedAt)) {
+    throw contributorError('invalid_contributor_expiry');
   }
   const authority = await requireKeeperAuthority(env, {
     keeperPieceId,
@@ -436,7 +436,7 @@ export async function acceptArtworkContributorInvitation(env, input) {
   const idempotencyKey = requiredText(input?.idempotencyKey, 'idempotency_key_required');
   const { invitation, tokenHash, account } = await invitationByProof(env, input || {});
   const requestFingerprint = await fingerprint([
-    'accept', invitation.id, tokenHash, account.userId, acceptedAt,
+    'accept', invitation.id, tokenHash, account.userId,
   ]);
   const replay = await env.DB.prepare(
     `SELECT invitation_id, request_fingerprint
@@ -561,7 +561,7 @@ export async function listArtworkContributors(env, input) {
       authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
     ).all(),
     env.DB.prepare(
-    `SELECT contributor_user_id, granted_at
+    `SELECT invitation_id, granted_at
        FROM artwork_contributor_current_access
       WHERE keeper_piece_id = ?1
         AND keeper_user_id = ?2
@@ -586,7 +586,7 @@ export async function listArtworkContributors(env, input) {
             : 'available',
     })),
     contributors: (contributorResult?.results || []).map((row) => ({
-      contributorUserId: row.contributor_user_id,
+      accessId: row.invitation_id,
       grantedAt: row.granted_at,
       status: 'active',
     })),
@@ -684,17 +684,20 @@ export async function revokeArtworkContributor(env, input) {
   const contributorUserId = typeof input?.contributorUserId === 'string'
     ? requiredText(input.contributorUserId, 'invalid_contributor_user_id')
     : null;
-  if ((invitationId === null) === (contributorUserId === null)) {
+  const accessId = typeof input?.accessId === 'string'
+    ? requiredText(input.accessId, 'invalid_contributor_access_id')
+    : null;
+  if ([invitationId, contributorUserId, accessId].filter(Boolean).length !== 1) {
     throw contributorError('exact_contributor_revocation_target_required');
   }
   const requestedVersion = input?.stewardVersion === undefined
     ? null
     : nonnegativeInteger(input.stewardVersion, 'invalid_steward_version');
   const kind = invitationId ? 'invitation' : 'access';
-  const target = invitationId || contributorUserId;
+  const target = invitationId || accessId || contributorUserId;
   const requestFingerprint = await fingerprint([
     'revoke', kind, keeperPieceId, keeperUserId, requestedVersion,
-    target, revokedAt,
+    target,
   ]);
   const replay = await revocationReplay(env, idempotencyKey);
   if (replay) {
@@ -744,9 +747,10 @@ export async function revokeArtworkContributor(env, input) {
   const access = await env.DB.prepare(
     `SELECT invitation_id FROM artwork_contributor_current_access
       WHERE keeper_piece_id = ?1 AND keeper_user_id = ?2
-        AND steward_version = ?3 AND contributor_user_id = ?4`,
+        AND steward_version = ?3
+        AND ${accessId ? 'invitation_id' : 'contributor_user_id'} = ?4`,
   ).bind(
-    keeperPieceId, keeperUserId, authority.stewardVersion, contributorUserId,
+    keeperPieceId, keeperUserId, authority.stewardVersion, accessId || contributorUserId,
   ).first();
   if (!access) throw contributorError('contributor_access_not_found');
   const status = await insertRevocation(env, {

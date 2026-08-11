@@ -351,6 +351,32 @@ describe('artwork contributor access foundation', () => {
     } finally { database.close(); }
   });
 
+  it('replays exact mutations when only the server recording time changes', async () => {
+    const { database, env } = fixture();
+    try {
+      const invitation = await inviteArtworkContributor(env, inviteInput());
+      assert.equal((await inviteArtworkContributor(env, inviteInput({
+        invitedAt: '2026-08-18T10:00:00.000Z',
+      }))).status, 'replay');
+      assert.equal((await acceptArtworkContributorInvitation(env, acceptInput(
+        invitation.token,
+      ))).status, 'accepted');
+      assert.equal((await acceptArtworkContributorInvitation(env, acceptInput(
+        invitation.token,
+        { acceptedAt: '2026-08-10T11:05:00.000Z' },
+      ))).status, 'replay');
+      const revoke = {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        accessId: invitation.invitationId,
+        idempotencyKey: 'revoke-time-replay', revokedAt: '2026-08-10T12:00:00.000Z',
+      };
+      assert.equal((await revokeArtworkContributor(env, revoke)).status, 'revoked');
+      assert.equal((await revokeArtworkContributor(env, {
+        ...revoke, revokedAt: '2026-08-10T12:05:00.000Z',
+      })).status, 'replay');
+    } finally { database.close(); }
+  });
+
   it('types recipient deverification between invitation resolution and insertion', async () => {
     const { database, env } = fixture();
     try {
@@ -538,14 +564,14 @@ describe('artwork contributor access foundation', () => {
           status: 'accepted',
         }],
         contributors: [{
-          contributorUserId: 'contributor-one',
+          accessId: invitation.invitationId,
           grantedAt: acceptedAt,
           status: 'active',
         }],
       });
       const revoked = await revokeArtworkContributor(env, {
         keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
-        contributorUserId: 'contributor-one', idempotencyKey: 'revoke-access',
+        accessId: invitation.invitationId, idempotencyKey: 'revoke-access',
         revokedAt: '2026-08-10T12:00:00.000Z',
       });
       assert.equal(revoked.status, 'revoked');
