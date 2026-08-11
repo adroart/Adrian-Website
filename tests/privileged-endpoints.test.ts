@@ -555,16 +555,16 @@ describe('private registry recovery export security', () => {
 });
 
 describe('private studio overview', () => {
-  it('returns only actionable counts from count-only queries', async () => {
-    const counts = [2, 1, 3];
+  it('returns the complete allowlisted item-level work queue', async () => {
     const seen: string[] = [];
     const overviewDb = {
       prepare(sql: string) {
         seen.push(sql);
-        assert.match(sql, /^SELECT COUNT\(\*\) AS count/i);
-        assert.doesNotMatch(sql, /email|ownership_code|public_token|amount|total_cents/i);
-        const count = counts[seen.length - 1];
-        return { async first() { return { count }; } };
+        return {
+          bind() { return this; },
+          async all() { return { results: [] }; },
+          async first() { return null; },
+        };
       },
     };
 
@@ -578,12 +578,14 @@ describe('private studio overview', () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       ok: true,
-      attention: { plates: 2, draftViewings: 1, openInvoices: 3 },
+      queue: { complete: true, items: [] },
+      recentArtworks: [],
+      recentCollectors: [],
     });
-    assert.equal(seen.length, 3);
+    assert.ok(seen.length >= 8);
   });
 
-  it('omits attention data when the installed schema is older', async () => {
+  it('fails closed when the installed schema cannot complete every queue source', async () => {
     const olderDb = {
       prepare() {
         return { async first() { throw new Error('no such table: keeper_pieces'); } };
@@ -595,8 +597,8 @@ describe('private studio overview', () => {
       request: request('/api/admin/overview', 'GET', ORIGIN),
       env: { ...env(), DB: olderDb },
     });
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true, attention: null });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { ok: false, error: 'overview_incomplete' });
   });
 });
 
@@ -621,6 +623,7 @@ describe('mixed public and private endpoints', () => {
   it('returns private no-store JSON for unsupported methods', async () => {
     signIn();
     const cases = [
+      [(await import('../functions/api/admin/overview.js')).onRequest, '/api/admin/overview'],
       [(await import('../functions/api/admin/invoices.js')).onRequest, '/api/admin/invoices'],
       [(await import('../functions/api/admin/payment-presets.js')).onRequest, '/api/admin/payment-presets'],
       [(await import('../functions/api/admin/viewings.js')).onRequest, '/api/admin/viewings'],
@@ -629,7 +632,9 @@ describe('mixed public and private endpoints', () => {
     ] as const;
 
     for (const [handler, path] of cases) {
-      const response = await handler({ request: request(path, 'OPTIONS'), env: env(), params: {} });
+      const response = await (handler as any)({
+        request: request(path, 'OPTIONS'), env: env(), params: {},
+      });
       assert.equal(response.status, 405);
       assert.equal(response.headers.get('Cache-Control'), 'no-store');
       assert.deepEqual(await response.json(), { ok: false, error: 'method_not_allowed' });

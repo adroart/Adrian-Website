@@ -45,7 +45,7 @@ describe('admin studio shell', () => {
     assert.match(app, /artworkTitle:\s*string/);
     assert.match(app, /editionLabel:\s*string/);
     assert.match(app, /Register another artwork/);
-    assert.match(app, /!result\s*\?\s*\(/);
+    assert.match(app, /!result\s*&&\s*linkedStatus\s*!==\s*['"]error['"]\s*\?\s*\(/);
   });
 
   it('uses one page and control vocabulary across every admin tool', () => {
@@ -62,15 +62,18 @@ describe('admin studio shell', () => {
     }
   });
 
-  it('makes attention and quick actions the admin home hierarchy', () => {
+  it('makes the item queue and recent relationships the admin home hierarchy', () => {
     const dashboard = source('components/AdminDashboard.tsx');
     assert.match(dashboard, /\/api\/admin\/overview/);
-    assert.match(dashboard, /Needs attention/);
+    assert.match(dashboard, /Work that needs you/);
+    assert.match(dashboard, /Recent artworks/);
+    assert.match(dashboard, /Recent collectors or reconnections/);
+    assert.match(dashboard, /Start new/);
     assert.match(dashboard, /Issue a plate/);
     assert.match(dashboard, /Create invoice/);
     assert.match(dashboard, /Build a viewing/);
-    assert.match(dashboard, /Write a story/);
-    assert.ok(dashboard.indexOf('Needs attention') < dashboard.indexOf('All tools'));
+    assert.ok(dashboard.indexOf('Work that needs you') < dashboard.indexOf('Start new'));
+    assert.doesNotMatch(dashboard, /Quick actions|All tools/);
     assert.doesNotMatch(dashboard, /title:\s*['"]Keystatic['"]/);
     assert.doesNotMatch(dashboard, /fulfillment|shipment/i);
   });

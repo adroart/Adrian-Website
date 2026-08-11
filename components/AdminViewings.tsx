@@ -16,7 +16,7 @@
  * engine, with the artifact preview inline. Persistence + token delivery + the
  * invoice handoff are the following pass (they reuse the invoice plumbing).
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { adminMode } from './admin/adminMode';
@@ -137,6 +137,12 @@ const STATUS_LABEL: Record<string, string> = {
 
 const AdminViewings: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const viewingIdValues = searchParams.getAll('viewingId');
+  const hasViewingSelector = viewingIdValues.length > 0;
+  const linkedViewingId = viewingIdValues.length === 1 && /^\d+$/.test(viewingIdValues[0])
+    && Number.isSafeInteger(Number(viewingIdValues[0])) && Number(viewingIdValues[0]) > 0
+    ? Number(viewingIdValues[0]) : null;
+  const selectedFromUrlRef = useRef<number | null>(null);
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [rows, setRows] = useState<ViewingRow[]>([]);
   const [listLoading, setListLoading] = useState(false);
@@ -221,6 +227,33 @@ const AdminViewings: React.FC = () => {
     if (data.recommendation?.closing) setClosing(data.recommendation.closing);
     setView('editor');
   };
+
+  useEffect(() => {
+    if (listLoading) return;
+    if (linkedViewingId !== null) {
+      const row = rows.find(item => item.id === linkedViewingId);
+      if (row) {
+        selectedFromUrlRef.current = linkedViewingId;
+        openExisting(row);
+      } else {
+        selectedFromUrlRef.current = null;
+        resetEditor();
+        setView('list');
+        setError('The requested viewing was not found.');
+      }
+      return;
+    }
+    if (hasViewingSelector) {
+      selectedFromUrlRef.current = null;
+      resetEditor();
+      setView('list');
+      setError('The viewing link is not valid.');
+    } else if (selectedFromUrlRef.current !== null) {
+      selectedFromUrlRef.current = null;
+      resetEditor();
+      setView('list');
+    }
+  }, [hasViewingSelector, linkedViewingId, listLoading, rows]);
 
   const viewingStage = shareUrl ? 3 : showPreview ? 2 : pieces.length > 0 ? 1 : 0;
   const viewingStages = ['Intake', 'Curate', 'Preview', 'Send'];

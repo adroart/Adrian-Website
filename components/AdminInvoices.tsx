@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { adminMode } from './admin/adminMode';
@@ -116,6 +116,12 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
 const AdminInvoices: React.FC = () => {
   const [searchParams] = useSearchParams();
   const creatingFromShortcut = adminMode(searchParams) === 'create';
+  const invoiceIdValues = searchParams.getAll('invoiceId');
+  const hasInvoiceSelector = invoiceIdValues.length > 0;
+  const linkedInvoiceId = invoiceIdValues.length === 1 && /^\d+$/.test(invoiceIdValues[0])
+    && Number.isSafeInteger(Number(invoiceIdValues[0])) && Number(invoiceIdValues[0]) > 0
+    ? Number(invoiceIdValues[0]) : null;
+  const selectedFromUrlRef = useRef<number | null>(null);
   const [presets, setPresets] = useState<PaymentPreset[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [draft, setDraft] = useState<InvoiceDraft>(EMPTY_DRAFT);
@@ -143,7 +149,7 @@ const AdminInvoices: React.FC = () => {
     try {
       const [presetData, invoiceData] = await Promise.all([
         fetch('/api/admin/payment-presets').then(res => readJson<{ ok: boolean; presets: PaymentPreset[] }>(res)),
-        fetch('/api/admin/invoices?limit=30').then(res => readJson<{ ok: boolean; invoices: Invoice[] }>(res)),
+        fetch('/api/admin/invoices?limit=100').then(res => readJson<{ ok: boolean; invoices: Invoice[] }>(res)),
       ]);
       const nextPresets = sortPaymentPresets(presetData.presets || []);
       setPresets(nextPresets);
@@ -359,6 +365,30 @@ const AdminInvoices: React.FC = () => {
     setDraft(invoiceToDraft(invoice));
     setMessage(null);
   };
+
+  useEffect(() => {
+    if (loading) return;
+    if (linkedInvoiceId !== null) {
+      const invoice = invoices.find(item => item.id === linkedInvoiceId);
+      if (invoice) {
+        selectedFromUrlRef.current = linkedInvoiceId;
+        editInvoice(invoice);
+      } else {
+        selectedFromUrlRef.current = null;
+        resetForm();
+        setMessage({ type: 'err', text: 'The requested invoice was not found.' });
+      }
+      return;
+    }
+    if (hasInvoiceSelector) {
+      selectedFromUrlRef.current = null;
+      resetForm();
+      setMessage({ type: 'err', text: 'The invoice link is not valid.' });
+    } else if (selectedFromUrlRef.current !== null) {
+      selectedFromUrlRef.current = null;
+      resetForm();
+    }
+  }, [hasInvoiceSelector, invoices, linkedInvoiceId, loading]);
 
   const markPaid = async (invoice: Invoice) => {
     const paidSoFar = invoice.amountPaidCents || 0;

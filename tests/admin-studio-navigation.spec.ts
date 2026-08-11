@@ -30,7 +30,11 @@ test('admin shell is keyboard reachable and has no serious accessibility violati
     contentType: 'application/json',
     body: JSON.stringify({
       ok: true,
-      attention: { plates: 2, draftViewings: 1, openInvoices: 1 },
+      queue: { complete: true, items: [{
+        domain: 'invoice', title: 'INV-12 · Sculpture', state: 'open', signal: 'Today',
+        actionLabel: 'Open invoice', href: '/admin/invoices?invoiceId=12',
+      }] },
+      recentArtworks: [], recentCollectors: [],
     }),
   }));
   await page.goto('/admin');
@@ -50,12 +54,105 @@ test('mobile admin menu fits the viewport and closes after navigation', async ({
   await page.route('/api/admin/overview', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ ok: true, attention: null }),
+    body: JSON.stringify({
+      ok: true, queue: { complete: true, items: [] }, recentArtworks: [], recentCollectors: [],
+    }),
   }));
   await page.goto('/admin');
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('navigation', { name: 'Admin navigation' }).getByRole('link', { name: 'Pricing' }).click();
   await expect(page.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'false');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+});
+
+test('admin work queue shows exact actions and never reports clear work on an incomplete response', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  let complete = true;
+  await page.route('/api/admin/overview', route => route.fulfill({
+    status: complete ? 200 : 503,
+    contentType: 'application/json',
+    body: JSON.stringify(complete ? {
+      ok: true,
+      queue: { complete: true, items: [{
+        domain: 'invoice', title: 'INV-OPEN · Commission', state: 'open',
+        signal: 'Today', actionLabel: 'Open invoice', href: '/admin/invoices?invoiceId=2',
+      }] },
+      recentArtworks: [{
+        title: 'Artwork UL-100', signal: 'Today',
+        href: '/admin/artworks/UL-100?instance=keeper-100',
+      }],
+      recentCollectors: [],
+    } : { ok: false, error: 'overview_incomplete' }),
+  }));
+
+  await page.goto('/admin');
+  await expect(page.getByRole('heading', { name: 'Work that needs you' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /INV-OPEN/ })).toHaveAttribute(
+    'href', '/admin/invoices?invoiceId=2',
+  );
+  await expect(page.getByRole('heading', { name: 'Recent artworks' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Recent collectors or reconnections' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Start new' })).toBeVisible();
+  await expect(page.getByText('Nothing is waiting')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+
+  complete = false;
+  await page.reload();
+  await expect(page.getByText(/complete work queue could not be checked/i)).toBeVisible();
+  await expect(page.getByText('Nothing is waiting')).toHaveCount(0);
+});
+
+test('invoice and viewing work links select the exact record on fresh load and URL change', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/payment-presets', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, presets: [] }),
+  }));
+  const invoice = (id: number, clientName: string) => ({
+    id, invoiceNumber: `INV-${id}`, publicToken: `invoice-token-${id}`,
+    publicUrlPath: `/invoice/invoice-token-${id}`, status: 'sent', clientName,
+    clientEmail: '', clientLocation: '', jobTitle: `Work ${id}`, jobDescription: `Description ${id}`,
+    currency: 'USD', lineItems: [{ description: `Work ${id}`, terms: '', amountCents: 10000 }],
+    paymentSchedule: [{ label: 'Full payment', description: '', amountCents: 10000, dueTiming: 'Now' }],
+    currentStepIndex: 0, subtotalCents: 10000, shippingText: '', totalCents: 10000,
+    dueTodayCents: 10000, paymentPresetId: null, paymentPresetIds: [], paymentSnapshot: {},
+    paymentOptions: [], notes: '', amountPaidCents: 0,
+  });
+  await page.route('**/api/admin/invoices?**', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, invoices: [invoice(2, 'Noah'), invoice(3, 'Aya')] }),
+  }));
+  const viewing = (id: number, recipientName: string) => ({
+    id, publicToken: `viewing-token-${id}`, publicUrlPath: `/viewing/viewing-token-${id}`,
+    status: 'draft', recipientName, intention: `Intention ${id}`, chart: {},
+    data: { pieces: [], recommendation: { picks: [], closing: 'Closing' } },
+    invoiceToken: null, createdAt: 1,
+  });
+  await page.route('/api/admin/viewings', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, viewings: [viewing(11, 'Sofia'), viewing(12, 'Ilan')] }),
+  }));
+
+  await page.goto('/admin/invoices?invoiceId=2');
+  await expect(page.getByLabel('Client name')).toHaveValue('Noah');
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/invoices?invoiceId=3');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByLabel('Client name')).toHaveValue('Aya');
+
+  await page.goto('/admin/viewings?viewingId=11');
+  await expect(page.getByRole('heading', { name: 'Editing · Sofia' })).toBeVisible();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/viewings?viewingId=12');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('heading', { name: 'Editing · Ilan' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 
@@ -69,7 +166,9 @@ test('admin artwork navigation exposes registration, invitations, certificates, 
   await page.route('/api/admin/overview', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ ok: true, attention: null }),
+    body: JSON.stringify({
+      ok: true, queue: { complete: true, items: [] }, recentArtworks: [], recentCollectors: [],
+    }),
   }));
   await page.route('/api/admin/registry-unlock', async route => route.fulfill({
     status: route.request().postDataJSON()?.secret === 'local-development-secret' ? 200 : 401,
