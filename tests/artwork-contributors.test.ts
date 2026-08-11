@@ -565,6 +565,7 @@ describe('artwork contributor access foundation', () => {
         }],
         contributors: [{
           accessId: invitation.invitationId,
+          recipientEmail: 'contributor@example.com',
           grantedAt: acceptedAt,
           status: 'active',
         }],

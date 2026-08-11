@@ -561,12 +561,15 @@ export async function listArtworkContributors(env, input) {
       authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
     ).all(),
     env.DB.prepare(
-    `SELECT invitation_id, granted_at
-       FROM artwork_contributor_current_access
-      WHERE keeper_piece_id = ?1
-        AND keeper_user_id = ?2
-        AND steward_version = ?3
-      ORDER BY granted_at, contributor_user_id`,
+    `SELECT access.invitation_id, access.granted_at,
+            invitation.intended_recipient_email AS recipient_email
+       FROM artwork_contributor_current_access AS access
+       JOIN artwork_contributor_invitations AS invitation
+         ON invitation.id = access.invitation_id
+      WHERE access.keeper_piece_id = ?1
+        AND access.keeper_user_id = ?2
+        AND access.steward_version = ?3
+      ORDER BY access.granted_at, access.contributor_user_id`,
   ).bind(
     authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
     ).all(),
@@ -587,6 +590,7 @@ export async function listArtworkContributors(env, input) {
     })),
     contributors: (contributorResult?.results || []).map((row) => ({
       accessId: row.invitation_id,
+      recipientEmail: row.recipient_email,
       grantedAt: row.granted_at,
       status: 'active',
     })),

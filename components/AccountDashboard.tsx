@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import AccountLayout from './account/AccountLayout';
 import { useAccount } from '../lib/account/useAccount';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 const AccountDashboard: React.FC = () => {
   const { email } = useAccount();
@@ -60,6 +61,23 @@ const AccountDashboard: React.FC = () => {
             Gather oracle cards, artworks, and products into named groupings.
           </p>
         </Link>
+
+        {LAUNCH_FLAGS.livingLegacy && (
+          <Link
+            to="/account/contributor-access"
+            className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors sm:col-span-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+          >
+            <div className="font-label text-[11px] uppercase tracking-[0.28em] text-bronze-600 mb-3">
+              Contributor access
+            </div>
+            <div className="font-display text-xl text-wood-900 mb-1">
+              Accept an artwork invitation
+            </div>
+            <p className="font-serif text-base text-wood-700">
+              Privately inspect a one-time invitation and accept access to its exact artwork.
+            </p>
+          </Link>
+        )}
       </div>
     </AccountLayout>
   );

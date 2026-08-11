@@ -3,7 +3,8 @@
  *
  * GET  ?publicCode=AR-...
  *   Tells the signed-in user their relationship to this piece:
- *     { ok: true, kept: boolean, byYou: boolean, currentDisplayLocation?: string }
+ *     { ok: true, kept: boolean, byYou: boolean, contributor: boolean,
+ *       currentDisplayLocation?: string }
  *   - kept:  does a governed steward record exist at all (any user)?
  *   - byYou: is the signed-in user the active steward?
  *   currentDisplayLocation is returned only to the piece's own steward.
@@ -73,13 +74,21 @@ async function handleGet(context, auth) {
     .bind(publicCode)
     .first();
 
-  if (!row) return json({ ok: true, kept: false, byYou: false });
+  if (!row) return json({ ok: true, kept: false, byYou: false, contributor: false });
   if (!hasExactStoredIdentity(row, publicCode)) {
     return json({ ok: false, error: 'identity_integrity_error' }, 409);
   }
 
   const kept = Boolean(row.keeper_user_id);
   const byYou = kept && !row.released_at && row.keeper_user_id === auth.userId;
+  const contributorRow = await env.DB.prepare(
+    `SELECT EXISTS (
+       SELECT 1
+         FROM artwork_contributor_current_access
+        WHERE keeper_piece_id = ?1 AND contributor_user_id = ?2
+     ) AS is_contributor`,
+  ).bind(row.id, auth.userId).first();
+  const contributor = !byYou && Number(contributorRow?.is_contributor) === 1;
   let stewardHistory = [];
   if (byYou) {
     const historyRows = await env.DB.prepare(
@@ -94,6 +103,7 @@ async function handleGet(context, auth) {
     ok: true,
     kept,
     byYou,
+    contributor,
     // Display location is the steward's own data; only surface it to them.
     ...(byYou ? {
       keeperPieceId: row.id,

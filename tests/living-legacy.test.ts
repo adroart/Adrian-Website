@@ -3145,6 +3145,9 @@ describe('steward status and display location by public identity', () => {
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) {
               return params[0] === row.public_code ? row : null;
             }
+            if (/FROM artwork_contributor_current_access/i.test(normalized)) {
+              return { is_contributor: 0 };
+            }
             throw new Error(`unexpected status first: ${normalized}`);
           },
           async run() { throw new Error(`unexpected status run: ${normalized}`); },
@@ -3160,7 +3163,9 @@ describe('steward status and display location by public identity', () => {
         env: { DB },
       });
       assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { ok: true, kept: false, byYou: false });
+      assert.deepEqual(await response.json(), {
+        ok: true, kept: false, byYou: false, contributor: false,
+      });
       assert.ok(seen.some((entry) => entry.params[0] === row.public_code));
       assert.equal(seen.some((entry) => entry.params.includes(row.piece_id)), false);
 
@@ -3171,7 +3176,9 @@ describe('steward status and display location by public identity', () => {
         env: { DB },
       });
       assert.equal(released.status, 200);
-      assert.deepEqual(await released.json(), { ok: true, kept: true, byYou: false });
+      assert.deepEqual(await released.json(), {
+        ok: true, kept: true, byYou: false, contributor: false,
+      });
     } finally {
       CURRENT_AUTH = null;
       LAUNCH_FLAGS.livingLegacy = wasOn;
@@ -3198,6 +3205,9 @@ describe('steward status and display location by public identity', () => {
               return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
+            if (/FROM artwork_contributor_current_access/i.test(normalized)) {
+              return { is_contributor: 0 };
+            }
             throw new Error(`unexpected steward-history first: ${normalized}`);
           },
           async all() {
@@ -3227,6 +3237,7 @@ describe('steward status and display location by public identity', () => {
         ok: true,
         kept: true,
         byYou: true,
+        contributor: false,
         keeperPieceId: row.id,
         currentDisplayLocation: 'Ubud studio',
         stewardHistory: [{
@@ -3242,7 +3253,9 @@ describe('steward status and display location by public identity', () => {
         request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
         env: { DB },
       });
-      assert.deepEqual(await outsider.json(), { ok: true, kept: true, byYou: false });
+      assert.deepEqual(await outsider.json(), {
+        ok: true, kept: true, byYou: false, contributor: false,
+      });
       assert.equal(historyReads, 1);
     } finally {
       CURRENT_AUTH = null;

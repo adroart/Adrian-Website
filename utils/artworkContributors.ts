@@ -54,6 +54,7 @@ export type ContributorInvitation = Readonly<{
 
 export type ActiveArtworkContributor = Readonly<{
   accessId: string;
+  recipientEmail: string;
   grantedAt: string;
   status: 'active';
 }>;
@@ -90,6 +91,13 @@ export class ArtworkContributorRequestError extends Error {
   constructor(public status: number, public code: string) {
     super(code);
   }
+}
+
+export function isContributorMutationOutcomeAmbiguous(error: unknown): boolean {
+  if (!(error instanceof ArtworkContributorRequestError)) return true;
+  return error.status === 0
+    || error.status >= 500
+    || error.code === 'invalid_contributor_response';
 }
 
 function exactKeys(value: Record<string, unknown>, expected: string[]) {
@@ -135,8 +143,9 @@ function parseInvitation(value: unknown): ContributorInvitation {
 
 function parseContributor(value: unknown): ActiveArtworkContributor {
   if (!record(value)
-    || !exactKeys(value, ['accessId', 'grantedAt', 'status'])
+    || !exactKeys(value, ['accessId', 'recipientEmail', 'grantedAt', 'status'])
     || !text(value.accessId, 128)
+    || !text(value.recipientEmail, 254)
     || !instant(value.grantedAt)
     || value.status !== 'active') return invalidResponse();
   return value as ActiveArtworkContributor;
@@ -246,9 +255,11 @@ export function beginContributorAcceptAttempt(
 
 export async function loadArtworkContributors(
   keeperPieceId: string,
+  signal?: AbortSignal,
 ): Promise<ArtworkContributorList> {
   const payload = await contributorRequest(
     `/api/keeper/contributors?keeperPieceId=${encodeURIComponent(keeperPieceId.trim())}`,
+    { signal },
   );
   if (!record(payload)
     || !exactKeys(payload, ['ok', 'invitations', 'contributors'])
@@ -263,9 +274,10 @@ export async function loadArtworkContributors(
 
 export async function createArtworkContributorInvitation(
   request: ContributorInviteRequest,
+  signal?: AbortSignal,
 ): Promise<ContributorInviteResult> {
   const payload = await contributorRequest('/api/keeper/contributors', {
-    method: 'POST', body: JSON.stringify(request),
+    method: 'POST', body: JSON.stringify(request), signal,
   });
   if (!record(payload) || payload.ok !== true || !text(payload.invitationId, 128)) {
     return invalidResponse();
@@ -290,9 +302,10 @@ export function clearContributorInvitationToken(
 
 export async function inspectArtworkContributorInvitation(
   token: string,
+  signal?: AbortSignal,
 ): Promise<ContributorInvitationInspection> {
   const payload = await contributorRequest('/api/contributor-invitations', {
-    method: 'POST', body: JSON.stringify({ action: 'inspect', token }),
+    method: 'POST', body: JSON.stringify({ action: 'inspect', token }), signal,
   });
   if (!record(payload)
     || !exactKeys(payload, ['ok', 'invitationId', 'artwork', 'status'])
@@ -310,17 +323,19 @@ export async function inspectArtworkContributorInvitation(
 
 export async function acceptArtworkContributorInvitation(
   request: ContributorAcceptRequest,
+  signal?: AbortSignal,
 ): Promise<ContributorMutationResult> {
   return parseMutation(await contributorRequest('/api/contributor-invitations', {
-    method: 'POST', body: JSON.stringify(request),
+    method: 'POST', body: JSON.stringify(request), signal,
   }), ['accepted', 'replay']);
 }
 
 export async function revokeArtworkContributor(
   request: ContributorRevokeRequest,
+  signal?: AbortSignal,
 ): Promise<ContributorMutationResult> {
   return parseMutation(await contributorRequest('/api/keeper/contributors', {
-    method: 'POST', body: JSON.stringify(request),
+    method: 'POST', body: JSON.stringify(request), signal,
   }), ['revoked', 'replay']);
 }
 

@@ -332,8 +332,9 @@ describe('protected artwork contributor API boundary', () => {
       });
       const activeList = await activeResponse.json() as any;
       assert.deepEqual(Object.keys(activeList.contributors[0]).sort(), [
-        'accessId', 'grantedAt', 'status',
+        'accessId', 'grantedAt', 'recipientEmail', 'status',
       ]);
+      assert.equal(activeList.contributors[0].recipientEmail, 'contributor@example.com');
       assert.doesNotMatch(JSON.stringify(activeList.contributors), /contributor-one/);
 
       const revoked = await keeperEndpoint({
