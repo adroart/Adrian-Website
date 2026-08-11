@@ -217,7 +217,7 @@ describe('registry maintenance mutation security matrix', () => {
       body: {
         idempotencyKey: 'security-create-acquisition',
         reason: 'Verify mutation authorization.',
-        acquisition: { acquisitionType: 'sale' },
+        acquisition: { acquisitionType: 'gift' },
       },
       allowedStatus: 503,
       load: async () => (await import('../functions/api/admin/maintenance/[id]/acquisitions.js')).onRequest,
@@ -231,7 +231,7 @@ describe('registry maintenance mutation security matrix', () => {
         idempotencyKey: 'security-correct-acquisition',
         reason: 'Verify mutation authorization.',
         expectedVersion: 1,
-        acquisition: { acquisitionType: 'sale' },
+        acquisition: { acquisitionType: 'gift' },
       },
       allowedStatus: 404,
       load: async () => (await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js')).onRequest,
