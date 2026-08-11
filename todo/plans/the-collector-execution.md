@@ -392,3 +392,60 @@ capture is deliberately deferred; the current path keeps that relationship perso
 delivery remain unbuilt. The commerce-triggered sale door is also still separate: this completed
 foundation records artist-verified sales and reconnections, but it does not yet turn a new checkout
 into an automatic registration invitation. Stop here at the verified-sales boundary.
+
+**2026-08-11: Phase 3.1 contributor access, API, UI, recovery, and integrated acceptance are complete
+locally, and nothing has been deployed.** A current canonical keeper can invite a verified account
+with a single-use, artwork-specific proof, inspect pending invitations, and revoke pending or active
+access. The recipient can inspect and accept only while signed in as the exact verified account.
+Proof stays in memory, plaintext is returned only on first creation, and persistence keeps only its
+SHA-256 hash.
+Contributor identity, email, authentication identifiers, proof hashes, idempotency digests, and
+free text do not enter public lineage, public registry identity, the certificate, the artwork
+ledger, the offline issuance ledger, or an unauthenticated response.
+
+Contributor access is structurally separate from keeper authority. It grants no transfer,
+recovery, contested-claim, contributor-invitation, private-price, privacy, dream, ritual, or letter
+authority. A committed transfer removes both pending invitations and active access immediately. A
+failed transfer preserves access, and transferring the artwork back does not revive an older grant.
+Outside keeper-only contributor management, the exact signed-in recipient can see only an opaque
+invitation identifier, safe artwork identity, and proof status. A signed-in artwork relationship
+check returns only that account's own contributor boolean.
+
+Encrypted recovery advanced to schema v7. Its archive includes every contributor invitation,
+acceptance, grant, and revocation with exact Better Auth closure, and older archives upgrade without
+inventing contributor access. Migration 034's operational triggers are suspended during historical
+insertion, recreated with exact SQL parity, and leave the transient rate and reservation tables
+empty. Restore accepts eleven same-hour invitations for one keeper and rolls back if recreated
+trigger SQL is missing or altered. The focused acceptance gate passed 339 tests, the recovery and
+operational-trigger subset passed 7 tests, the complete unit gate passed 830 tests, and the
+contributor journeys passed all 4 desktop and 390 px mobile cases.
+Typecheck, the production build, and clean-diff checks also passed. No production database or
+storage was read or changed, `livingLegacy` remains false, and no deployment was performed.
+
+The first review's account-email enumeration P2 is repaired. Missing, unverified, and ambiguous
+recipient accounts now share one opaque response, and a persistent keeper-scoped ten-attempt hourly
+bucket bounds probes across isolates, recipient changes, and idempotency-key changes. Migration 034
+stores keeper and window counters plus private idempotency reservation metadata, but no recipient,
+artwork, proof, or token data. It is transient security state, separate from the encrypted schema-v7
+business recovery boundary.
+
+The final replay repair combines the durable generation lease with versioned HMAC-SHA-256 derivation.
+Synchronized exact requests, delayed post-refresh takeover, a crash after derivation, and active-key
+rotation all converge on the same logical proof and invitation identifier. Server invitation
+material creation uses no random-value or UUID calls. Active reservations remain token-free and do
+not charge quota; completed replay is token-free; only a created result returns plaintext. Missing,
+invalid, or failed key material fails closed before recipient lookup or quota mutation, and a failed
+elected derivation releases its reservation for stable retry. A frozen old key version is preserved
+across rotation and fails closed without destructive cleanup if its key is unavailable.
+
+Fresh independent security/spec and code-quality reviews both pass with zero P1 or P2 findings.
+They independently verified deterministic proof and identifier derivation, key rotation and failure
+cleanup, replay secrecy, zero server RNG and UUID calls, durable rate limiting, recipient opacity,
+recovery exclusion and trigger parity, public privacy, transfer invalidation, authority separation,
+and `livingLegacy = false`. Phase 3.1 private contributor-access acceptance is complete. The launch
+flag remains false because contributor material and launch authorization are separate.
+
+Attributed contributor material is not part of the implemented access work. Its content shape
+remains blocked on Adrian's decision, and no material editor, upload path, public projection, or
+ceremony integration has been built. Optional video, warning delivery, and the commerce-triggered
+sale door also remain separate.

@@ -130,6 +130,31 @@ Contributors may add attributed material but cannot transfer, recover, or invite
 They are removed on transfer unless invited again. Organization ownership is deferred. Heirs stay
 hints that never auto-bind. *Serves step 13.*
 
+- [x] Private access foundation and keeper-only invitation authority.
+- [x] Authenticated contributor and keeper API acceptance. Core proof handling is one-time and
+  memory-only, recipient account states are opaque, and the keeper-scoped rate limit is durable.
+  Versioned HMAC derivation produces one stable proof and invitation identifier across synchronized
+  races, delayed lease takeover, post-derivation retry, and key rotation. Only the proof hash
+  persists, plaintext is returned once, replay and in-progress are token-free, and server material
+  generation uses no RNG or UUID calls. Missing, invalid, or failed keys fail closed without account
+  lookup, quota mutation, or proof persistence, and an elected derivation failure releases its lease.
+- [x] Contributor and keeper UI on desktop and 390 px mobile.
+- [x] Encrypted recovery schema v7, clean restore, older-archive upgrades, and migration 034
+  operational-state isolation. Restore suspends the operational triggers, accepts more than ten
+  same-hour historical invitations, recreates the exact canonical triggers, rolls back on parity
+  drift, and leaves transient rate and reservation tables empty.
+- [x] Integrated authority, privacy, public-projection, replay, recovery, and transfer acceptance.
+  Product gates and fresh independent security/spec and code-quality reviews pass with no P1 or P2.
+- [ ] Attributed contributor material. Blocked on Adrian's content-shape decision; no material,
+  upload, public projection, dream, ritual, letter, privacy, price, claim, recovery, invitation, or
+  ownership authority is granted by the implemented access foundation.
+
+The implemented access boundary remains behind `LAUNCH_FLAGS.livingLegacy = false` and has not been
+deployed. A successful transfer invalidates invitations and active access immediately. A failed
+transfer leaves access unchanged, and a later return to the former keeper does not revive it. The
+launch flag remains false because this acceptance completes only the private access boundary, not
+contributor material or launch authorization.
+
 **3.2 Optional video.** Begin with one keeper upload in private storage, explicit export and
 deletion, and separate consent before public testimonial display. No permanence promise and no
 paid expansion in the first release. The honest frame governs: a record you can always export and
