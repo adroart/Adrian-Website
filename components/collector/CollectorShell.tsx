@@ -278,6 +278,28 @@ const CollectorShell: React.FC = () => {
   const [placed, setPlaced] = useState(7);
   const [near, setNear] = useState(1);
   const [marks, setMarks] = useState(MARKS_DEFAULT);
+  /* Where the review has been. The design deliberately gives the flow no global
+     back: the four advance on a tap and nothing behind them is meant to be
+     revisited. So back lives in the harness, under the phone, and it restores
+     who was looking as well as which surface, because the two travel together. */
+  const [trail, setTrail] = useState<{ view: View; relationship: Relationship }[]>([]);
+
+  /** go somewhere, and remember where we were */
+  const visit = (next: View, who?: Relationship) => {
+    setTrail(t => [...t, { view, relationship }].slice(-60));
+    if (who) setRelationship(who);
+    setView(next);
+  };
+
+  /* the pop reads the trail from the closure rather than from inside the
+     updater: a state updater must be pure, and StrictMode runs it twice */
+  const back = () => {
+    const last = trail[trail.length - 1];
+    if (!last) return;
+    setTrail(t => t.slice(0, -1));
+    setView(last.view);
+    setRelationship(last.relationship);
+  };
 
   /* a screen can be reached directly, so a look can be shared as a link and a
      test can land on one surface without walking to it */
@@ -294,22 +316,32 @@ const CollectorShell: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowLeft') back();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   const go = (key: string) => {
     if (key === '__home') {
       setRelationship('yours');
-      setView({ kind: 'piece' });
+      visit({ kind: 'piece' });
       return;
     }
     if (key === '__garden') {
       setRelationship('yours');
-      setView({ kind: 'room', key: 'garden' });
+      visit({ kind: 'room', key: 'garden' });
       return;
     }
     if (key === '__code') {
-      setView({ kind: 'code' });
+      visit({ kind: 'code' });
       return;
     }
-    if (key in WALK) setView({ kind: 'walk', key: key as keyof typeof WALK });
+    if (key in WALK) visit({ kind: 'walk', key: key as keyof typeof WALK });
   };
 
   const caption =
@@ -344,28 +376,28 @@ const CollectorShell: React.FC = () => {
           relationship={relationship}
           placed={placed}
           near={near}
-          onBegin={() => setView({ kind: 'code' })}
-          onSignIn={() => setView({ kind: 'walk', key: 'welcome' })}
+          onBegin={() => visit({ kind: 'code' })}
+          onSignIn={() => visit({ kind: 'walk', key: 'welcome' })}
           onWalk={go}
         />
       )}
       {view.kind === 'code' && (
         <CodePage
-          onTrue={() => setView({ kind: 'walk', key: 'codetrue' })}
-          onNoCode={() => setView({ kind: 'state', key: 'account' })}
-          onGift={() => setView({ kind: 'walk', key: 'gift' })}
-          onBack={() => setView({ kind: 'piece' })}
+          onTrue={() => visit({ kind: 'walk', key: 'codetrue' })}
+          onNoCode={() => visit({ kind: 'state', key: 'account' })}
+          onGift={() => visit({ kind: 'walk', key: 'gift' })}
+          onBack={() => visit({ kind: 'piece' })}
         />
       )}
       {view.kind === 'walk' && <WalkScreen screen={WALK[view.key]} onGo={go} />}
       {view.kind === 'room' && (
-        <Room room={view.key} onClose={() => setView({ kind: 'piece' })} onWalk={go} />
+        <Room room={view.key} onClose={() => visit({ kind: 'piece' })} onWalk={go} />
       )}
       {view.kind === 'state' && (
-        <StateScreen state={view.key} onBack={() => setView({ kind: 'piece' })} />
+        <StateScreen state={view.key} onBack={() => visit({ kind: 'piece' })} />
       )}
       {view.kind === 'letter' && (
-        <LetterScreen letter={view.key} onBack={() => setView({ kind: 'piece' })} />
+        <LetterScreen letter={view.key} onBack={() => visit({ kind: 'piece' })} />
       )}
     </>
   );
@@ -398,10 +430,56 @@ const CollectorShell: React.FC = () => {
           {screen}
         </div>
 
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            marginTop: 16,
+            minHeight: 30,
+          }}
+        >
+          <button
+            type="button"
+            onClick={back}
+            disabled={!trail.length}
+            title="Left arrow key"
+            style={{
+              border: `1px solid ${trail.length ? C.hairStrong : 'transparent'}`,
+              borderRadius: 999,
+              padding: '6px 15px',
+              background: 'none',
+              fontFamily: F.body,
+              fontSize: 12.5,
+              color: trail.length ? C.inkBody : 'transparent',
+              cursor: trail.length ? 'pointer' : 'default',
+            }}
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            onClick={() => visit({ kind: 'piece' }, 'unclaimed')}
+            style={{
+              border: `1px solid ${C.hairStrong}`,
+              borderRadius: 999,
+              padding: '6px 15px',
+              background: 'none',
+              fontFamily: F.body,
+              fontSize: 12.5,
+              color: C.inkQuiet,
+              cursor: 'pointer',
+            }}
+          >
+            Start over at the door
+          </button>
+        </div>
+
         <p
           className="collector-caption"
           style={{
-            margin: '16px 0 0',
+            margin: '14px 0 0',
             fontFamily: F.label,
             fontSize: 10,
             letterSpacing: '.18em',
@@ -432,24 +510,22 @@ const CollectorShell: React.FC = () => {
 
         <ReviewPanel notes={notes} source={source} />
 
-        <Flows onStart={next => { if (next.kind === 'room') setRelationship('yours'); if (next.kind === 'piece') setRelationship('unclaimed'); setView(next); }} />
+        <Flows
+          onStart={next =>
+            visit(next, next.kind === 'room' ? 'yours' : next.kind === 'piece' ? 'unclaimed' : undefined)
+          }
+        />
 
         <Controls
           relationship={relationship}
-          setRelationship={r => {
-            setRelationship(r);
-            setView({ kind: 'piece' });
-          }}
+          setRelationship={r => visit({ kind: 'piece' }, r)}
           placed={placed}
           setPlaced={setPlaced}
           near={near}
           setNear={setNear}
           marks={marks}
           setMarks={setMarks}
-          onJump={next => {
-            if (next.kind === 'room') setRelationship('yours');
-            setView(next);
-          }}
+          onJump={next => visit(next, next.kind === 'room' ? 'yours' : undefined)}
         />
       </div>
     </div>

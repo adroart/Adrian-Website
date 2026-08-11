@@ -221,11 +221,16 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
   }
 
   /* unclaimed: a lit Begin, the only bright thing on the page. No sign-in link,
-     because nobody has an account for an unregistered piece. */
+     because nobody has an account for an unregistered piece.
+
+     It is the SAME object as every other brass button in the flow, per card
+     24f: the studies are deleted, this is the button, and every screen uses
+     it. Being the only bright thing on a quiet page is what makes it read as
+     the arrival, not being wider than everything else. */
   if (relationship === 'unclaimed') {
     return (
       <div style={{ position: 'relative', flex: 'none', paddingTop: 22, display: 'flex', justifyContent: 'center' }}>
-        <Brass full lifted onClick={onBegin}>
+        <Brass lifted onClick={onBegin}>
           {COPY.page.begin}
         </Brass>
       </div>
