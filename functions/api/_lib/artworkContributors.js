@@ -50,8 +50,85 @@ function bytesToBase64url(bytes) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function createToken() {
-  return bytesToBase64url(crypto.getRandomValues(new Uint8Array(32)));
+function contributorInvitationCryptoUnavailable() {
+  throw contributorError('contributor_invitation_crypto_unavailable');
+}
+
+function canonicalContributorInvitationKeyVersion(value) {
+  if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) {
+    contributorInvitationCryptoUnavailable();
+  }
+  const version = Number(value);
+  if (!Number.isSafeInteger(version) || version < 1 || String(version) !== value) {
+    contributorInvitationCryptoUnavailable();
+  }
+  return value;
+}
+
+function strictBase64Bytes(value) {
+  if (typeof value !== 'string'
+    || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
+    contributorInvitationCryptoUnavailable();
+  }
+  try {
+    const binary = atob(value);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    let canonical = '';
+    for (const byte of bytes) canonical += String.fromCharCode(byte);
+    if (btoa(canonical) !== value || bytes.byteLength !== 32) {
+      contributorInvitationCryptoUnavailable();
+    }
+    return bytes;
+  } catch (error) {
+    if (error?.isArtworkContributorError) throw error;
+    contributorInvitationCryptoUnavailable();
+  }
+}
+
+async function contributorInvitationKey(env, frozenVersion = null) {
+  const keyVersion = canonicalContributorInvitationKeyVersion(
+    frozenVersion ?? env.CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION,
+  );
+  const bytes = strictBase64Bytes(env[`CONTRIBUTOR_INVITATION_KEY_V${keyVersion}`]);
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw', bytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+    );
+    return { keyVersion, key };
+  } catch {
+    contributorInvitationCryptoUnavailable();
+  }
+}
+
+function deterministicInvitationUuid(bytes) {
+  const uuid = bytes.slice(0, 16);
+  uuid[6] = (uuid[6] & 0x0f) | 0x40;
+  uuid[8] = (uuid[8] & 0x3f) | 0x80;
+  const hex = [...uuid].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}`
+    + `-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+async function deriveContributorInvitationMaterial(key, {
+  keyVersion, idempotencyKey, requestFingerprint, keeperUserId,
+}) {
+  const derive = async (label) => new Uint8Array(await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(JSON.stringify([
+      'artwork-contributor-invitation', '1', label, keyVersion,
+      idempotencyKey, requestFingerprint, keeperUserId,
+    ])),
+  ));
+  try {
+    const [proof, id] = await Promise.all([derive('proof'), derive('invitation-id')]);
+    return {
+      token: bytesToBase64url(proof),
+      invitationId: `aci-${deterministicInvitationUuid(id)}`,
+    };
+  } catch {
+    contributorInvitationCryptoUnavailable();
+  }
 }
 
 async function sha256Hex(value) {
@@ -208,26 +285,41 @@ async function reserveContributorInvite(env, {
   const leaseExpiresAt = new Date(
     Date.parse(leaseAt) + CONTRIBUTOR_INVITE_RESERVATION_LEASE_MS,
   ).toISOString();
-  const inserted = await env.DB.prepare(
-    `INSERT INTO artwork_contributor_invite_reservations
-       (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
-        reservation_status, reserved_at, lease_expires_at)
-     VALUES (?1, ?2, ?3, 1, 'reserved', ?4, ?5)
-     ON CONFLICT(idempotency_key) DO NOTHING`,
-  ).bind(
-    idempotencyKey, requestFingerprint, keeperUserId, recordedAt, leaseExpiresAt,
-  ).run();
-  if (Number(inserted?.meta?.changes) === 1) {
-    return { kind: 'winner', leaseGeneration: 1 };
-  }
-
   let reservation = await env.DB.prepare(
     `SELECT idempotency_key, request_fingerprint, keeper_user_id,
-            lease_generation, reservation_status, lease_expires_at,
+            key_version, lease_generation, reservation_status, lease_expires_at,
             completed_invitation_id
        FROM artwork_contributor_invite_reservations
       WHERE idempotency_key = ?1`,
   ).bind(idempotencyKey).first();
+  if (!reservation) {
+    const activeKey = await contributorInvitationKey(env);
+    const inserted = await env.DB.prepare(
+      `INSERT INTO artwork_contributor_invite_reservations
+         (idempotency_key, request_fingerprint, keeper_user_id, key_version,
+          lease_generation, reservation_status, reserved_at, lease_expires_at)
+       VALUES (?1, ?2, ?3, ?4, 1, 'reserved', ?5, ?6)
+       ON CONFLICT(idempotency_key) DO NOTHING`,
+    ).bind(
+      idempotencyKey, requestFingerprint, keeperUserId, activeKey.keyVersion,
+      recordedAt, leaseExpiresAt,
+    ).run();
+    if (Number(inserted?.meta?.changes) === 1) {
+      return {
+        kind: 'winner',
+        keyVersion: activeKey.keyVersion,
+        key: activeKey.key,
+        leaseGeneration: 1,
+      };
+    }
+    reservation = await env.DB.prepare(
+      `SELECT idempotency_key, request_fingerprint, keeper_user_id,
+              key_version, lease_generation, reservation_status, lease_expires_at,
+              completed_invitation_id
+         FROM artwork_contributor_invite_reservations
+        WHERE idempotency_key = ?1`,
+    ).bind(idempotencyKey).first();
+  }
   if (!reservation) {
     throw contributorError('contributor_invite_in_progress', { retryAfter: 1 });
   }
@@ -249,6 +341,7 @@ async function reserveContributorInvite(env, {
     });
   }
 
+  const frozenKey = await contributorInvitationKey(env, reservation.key_version);
   const priorGeneration = Number(reservation.lease_generation);
   const takenOver = await env.DB.prepare(
     `UPDATE artwork_contributor_invite_reservations
@@ -266,11 +359,16 @@ async function reserveContributorInvite(env, {
     priorGeneration, leaseAt,
   ).run();
   if (Number(takenOver?.meta?.changes) === 1) {
-    return { kind: 'winner', leaseGeneration: priorGeneration + 1 };
+    return {
+      kind: 'winner',
+      keyVersion: frozenKey.keyVersion,
+      key: frozenKey.key,
+      leaseGeneration: priorGeneration + 1,
+    };
   }
   reservation = await env.DB.prepare(
     `SELECT idempotency_key, request_fingerprint, keeper_user_id,
-            lease_generation, reservation_status, lease_expires_at,
+            key_version, lease_generation, reservation_status, lease_expires_at,
             completed_invitation_id
        FROM artwork_contributor_invite_reservations
       WHERE idempotency_key = ?1`,
@@ -289,7 +387,7 @@ async function reserveContributorInvite(env, {
 async function currentContributorInviteReservation(env, identity, at) {
   const reservation = await env.DB.prepare(
     `SELECT idempotency_key, request_fingerprint, keeper_user_id,
-            lease_generation, reservation_status, lease_expires_at,
+            key_version, lease_generation, reservation_status, lease_expires_at,
             completed_invitation_id
        FROM artwork_contributor_invite_reservations
       WHERE idempotency_key = ?1`,
@@ -522,6 +620,7 @@ export async function inviteArtworkContributor(env, input) {
     idempotencyKey,
     requestFingerprint,
     keeperUserId,
+    keyVersion: reservation.keyVersion,
     leaseGeneration: reservation.leaseGeneration,
   };
   let recipientUserId;
@@ -551,9 +650,20 @@ export async function inviteArtworkContributor(env, input) {
     env, reservationIdentity, contributorInviteNow(env),
   );
   if (refreshed.kind === 'replay') return refreshed.result;
-  const token = createToken();
-  const invitationId = `aci-${crypto.randomUUID()}`;
-  const tokenHash = await sha256Hex(token);
+  let token;
+  let invitationId;
+  let tokenHash;
+  try {
+    ({ token, invitationId } = await deriveContributorInvitationMaterial(
+      reservation.key,
+      reservationIdentity,
+    ));
+    tokenHash = await sha256Hex(token);
+  } catch (error) {
+    await releaseContributorInviteReservation(env, reservationIdentity);
+    if (error?.isArtworkContributorError) throw error;
+    contributorInvitationCryptoUnavailable();
+  }
   let inserted;
   try {
     inserted = await env.DB.prepare(
@@ -569,6 +679,7 @@ export async function inviteArtworkContributor(env, input) {
             ON reservation.idempotency_key = ?8
            AND reservation.request_fingerprint = ?9
            AND reservation.keeper_user_id = ?3
+           AND reservation.key_version = ?14
            AND reservation.lease_generation = ?12
            AND reservation.reservation_status = 'reserved'
            AND julianday(reservation.lease_expires_at) > julianday(?13)
@@ -587,7 +698,7 @@ export async function inviteArtworkContributor(env, input) {
       invitationId, keeperPieceId, keeperUserId, authority.stewardVersion,
       recipientUserId, recipientEmail, tokenHash, idempotencyKey,
       requestFingerprint, invitedAt, expiresAt, reservation.leaseGeneration,
-      refreshed.checkedAt,
+      refreshed.checkedAt, reservation.keyVersion,
     ).run();
   } catch (error) {
     const raced = await env.DB.prepare(

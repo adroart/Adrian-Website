@@ -56,6 +56,7 @@ function statusFor(code) {
   ].includes(code)) return 409;
   if (code === 'contributor_invite_rate_limited') return 429;
   if (code === 'contributor_invite_in_progress') return 409;
+  if (code === 'contributor_invitation_crypto_unavailable') return 503;
   if (code === 'contributor_db_required') return 503;
   return 500;
 }

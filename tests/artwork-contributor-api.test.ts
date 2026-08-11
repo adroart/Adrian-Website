@@ -78,6 +78,7 @@ const migrations = [
   '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
 ].map((name) => readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8')).join('\n');
+const contributorInvitationKeyV1 = Buffer.alloc(32, 41).toString('base64');
 
 function fixture() {
   const database = new DatabaseSync(':memory:');
@@ -116,7 +117,15 @@ function fixture() {
       return statement;
     },
   };
-  return { database, env: { DB }, prepares: () => prepares };
+  return {
+    database,
+    env: {
+      DB,
+      CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION: '1',
+      CONTRIBUTOR_INVITATION_KEY_V1: contributorInvitationKeyV1,
+    },
+    prepares: () => prepares,
+  };
 }
 
 const validInvite = {
@@ -439,12 +448,53 @@ describe('protected artwork contributor API boundary', () => {
     }
     assert.deepEqual(outcomes, Array.from({ length: 3 }, () => ({
       status: 409,
-      databaseStatements: 8,
+      databaseStatements: 9,
       headers: [
         ['cache-control', 'no-store'],
         ['content-type', 'application/json'],
       ],
       body: { ok: false, error: 'contributor_recipient_not_available' },
+    })));
+  });
+
+  it('fails unavailable invitation crypto before account lookup with one opaque 503 projection', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const outcomes = [];
+    for (const [index, email] of [
+      'contributor@example.com',
+      'missing@example.com',
+      'unverified@example.com',
+      'twin@example.com',
+    ].entries()) {
+      const target = fixture();
+      try {
+        delete (target.env as any).CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION;
+        const response = await keeperEndpoint({
+          request: request('/api/keeper/contributors', 'POST', {
+            ...validInvite,
+            intendedRecipientEmail: email,
+            idempotencyKey: `missing-contributor-key-${index}`,
+          }),
+          env: target.env,
+        });
+        const body = await response.json();
+        outcomes.push({ status: response.status, statements: target.prepares(), body });
+        assert.equal(JSON.stringify(body).includes('token'), false);
+        assert.equal(target.database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_reservations',
+        ).get().n, 0);
+        assert.equal(target.database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
+        assert.equal(target.database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+        ).get().n, 0);
+      } finally { target.database.close(); }
+    }
+    assert.deepEqual(outcomes, Array.from({ length: 4 }, () => ({
+      status: 503,
+      statements: outcomes[0]?.statements,
+      body: { ok: false, error: 'contributor_invitation_crypto_unavailable' },
     })));
   });
 
@@ -538,9 +588,9 @@ describe('protected artwork contributor API boundary', () => {
       const now = new Date();
       target.database.prepare(
         `INSERT INTO artwork_contributor_invite_reservations
-          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+          (idempotency_key, request_fingerprint, keeper_user_id, key_version, lease_generation,
            reservation_status, reserved_at, lease_expires_at)
-         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+         VALUES (?, ?, 'keeper-one', '1', 1, 'reserved', ?, ?)`,
       ).run(
         validInvite.idempotencyKey,
         await inviteFingerprint(validInvite),
@@ -556,7 +606,7 @@ describe('protected artwork contributor API boundary', () => {
       assert.deepEqual(body, { ok: false, error: 'contributor_invite_in_progress' });
       assert.match(response.headers.get('Retry-After') || '', /^(?:[1-9]|[12][0-9]|30)$/);
       assert.equal(JSON.stringify(body).includes('token'), false);
-      assert.equal(target.prepares() - before, 5);
+      assert.equal(target.prepares() - before, 4);
       assert.equal(target.database.prepare(
         'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
       ).get().n, 0);

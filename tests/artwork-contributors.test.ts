@@ -43,6 +43,8 @@ const migrationsThroughContributors = [
 const invitedAt = '2026-08-10T10:00:00.000Z';
 const acceptedAt = '2026-08-10T11:00:00.000Z';
 const expiresAt = '2026-08-17T10:00:00.000Z';
+const contributorInvitationKeyV1 = Buffer.alloc(32, 41).toString('base64');
+const contributorInvitationKeyV2 = Buffer.alloc(32, 73).toString('base64');
 const verifiedContributor = {
   userId: 'contributor-one',
   verifiedEmail: 'contributor@example.com',
@@ -106,6 +108,9 @@ function fixture(initialContributorInviteNow = new Date().toISOString()) {
   const env = {
     DB,
     CONTRIBUTOR_INVITE_NOW: () => contributorInviteNow,
+    CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION: '1',
+    CONTRIBUTOR_INVITATION_KEY_V1: contributorInvitationKeyV1,
+    CONTRIBUTOR_INVITATION_KEY_V2: contributorInvitationKeyV2,
   };
   return {
     database,
@@ -135,12 +140,55 @@ async function inviteRequestFingerprint(overrides: Record<string, unknown> = {})
   return Buffer.from(digest).toString('hex');
 }
 
+async function expectedInviteMaterial({
+  key = contributorInvitationKeyV1,
+  keyVersion = '1',
+  idempotencyKey,
+  requestFingerprint,
+}: {
+  key?: string;
+  keyVersion?: string;
+  idempotencyKey: string;
+  requestFingerprint: string;
+}) {
+  const binary = atob(key);
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    Uint8Array.from(binary, (character) => character.charCodeAt(0)),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const derive = async (label: string) => new Uint8Array(await crypto.subtle.sign(
+    'HMAC',
+    cryptoKey,
+    new TextEncoder().encode(JSON.stringify([
+      'artwork-contributor-invitation', '1', label, keyVersion,
+      idempotencyKey, requestFingerprint, 'keeper-one',
+    ])),
+  ));
+  const proof = await derive('proof');
+  const idBytes = (await derive('invitation-id')).slice(0, 16);
+  idBytes[6] = (idBytes[6] & 0x0f) | 0x40;
+  idBytes[8] = (idBytes[8] & 0x3f) | 0x80;
+  const hex = [...idBytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const invitationId = `aci-${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  const token = Buffer.from(proof).toString('base64url');
+  return { invitationId, token, tokenHash: await inviteRequestTokenHash(token) };
+}
+
+async function inviteRequestTokenHash(token: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return Buffer.from(digest).toString('hex');
+}
+
 function ensureInviteReservationTable(database: DatabaseSync) {
   database.exec(`
     CREATE TABLE IF NOT EXISTS artwork_contributor_invite_reservations (
       idempotency_key TEXT PRIMARY KEY,
       request_fingerprint TEXT NOT NULL,
       keeper_user_id TEXT NOT NULL,
+      key_version TEXT NOT NULL DEFAULT '1',
       lease_generation INTEGER NOT NULL,
       reservation_status TEXT NOT NULL,
       reserved_at TEXT NOT NULL,
@@ -149,6 +197,12 @@ function ensureInviteReservationTable(database: DatabaseSync) {
       completed_at TEXT
     );
   `);
+  const columns = database.prepare(
+    "SELECT name FROM pragma_table_info('artwork_contributor_invite_reservations')",
+  ).all().map((row) => row.name);
+  if (!columns.includes('key_version')) {
+    database.exec("ALTER TABLE artwork_contributor_invite_reservations ADD COLUMN key_version TEXT NOT NULL DEFAULT '1';");
+  }
 }
 
 function interceptNextRun(
@@ -222,6 +276,40 @@ function pauseNextFirst(
     return statement;
   };
   return { reached, release: () => releaseGate?.() };
+}
+
+function pauseNextRun(
+  env: ReturnType<typeof fixture>['env'],
+  sqlFragment: string,
+  afterRun = false,
+) {
+  const originalPrepare = env.DB.prepare.bind(env.DB);
+  let intercepted = false;
+  let markReached: (() => void) | undefined;
+  let releaseGate: (() => void) | undefined;
+  let capturedValues: SQLInputValue[] = [];
+  const reached = new Promise<void>((resolve) => { markReached = resolve; });
+  const gate = new Promise<void>((resolve) => { releaseGate = resolve; });
+  env.DB.prepare = (sql: string) => {
+    const statement = originalPrepare(sql);
+    if (!intercepted && sql.includes(sqlFragment)) {
+      const originalRun = statement.run.bind(statement);
+      statement.run = async () => {
+        intercepted = true;
+        capturedValues = [...statement.values];
+        const result = afterRun ? originalRun() : null;
+        markReached?.();
+        await gate;
+        return result || originalRun();
+      };
+    }
+    return statement;
+  };
+  return {
+    reached,
+    release: () => releaseGate?.(),
+    values: () => capturedValues,
+  };
 }
 
 function acceptInput(token: string, overrides: Record<string, unknown> = {}) {
@@ -421,7 +509,7 @@ describe('artwork contributor access foundation', () => {
         "SELECT name FROM pragma_table_info('artwork_contributor_invite_reservations') ORDER BY cid",
       ).all().map((row) => row.name);
       assert.deepEqual(reservationColumns, [
-        'idempotency_key', 'request_fingerprint', 'keeper_user_id', 'lease_generation',
+        'idempotency_key', 'request_fingerprint', 'keeper_user_id', 'key_version', 'lease_generation',
         'reservation_status', 'reserved_at', 'lease_expires_at',
         'completed_invitation_id', 'completed_at',
       ]);
@@ -553,8 +641,8 @@ describe('artwork contributor access foundation', () => {
         `SELECT COUNT(*) AS invitations, COUNT(DISTINCT token_hash) AS proofs
            FROM artwork_contributor_invitations`,
       ).get() }, { invitations: 1, proofs: 1 });
-      assert.equal(tokenGenerations, 1);
-      assert.equal(invitationIdGenerations, 1);
+      assert.equal(tokenGenerations, 0);
+      assert.equal(invitationIdGenerations, 0);
     } finally {
       getRandomValues.mock.restore();
       randomUUID.mock.restore();
@@ -581,9 +669,9 @@ describe('artwork contributor access foundation', () => {
       ensureInviteReservationTable(database);
       database.prepare(
         `INSERT INTO artwork_contributor_invite_reservations
-          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+          (idempotency_key, request_fingerprint, keeper_user_id, key_version, lease_generation,
            reservation_status, reserved_at, lease_expires_at)
-         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+         VALUES (?, ?, 'keeper-one', '1', 1, 'reserved', ?, ?)`,
       ).run(
         'invite-active-reservation',
         await inviteRequestFingerprint({ idempotencyKey: 'invite-active-reservation' }),
@@ -635,9 +723,9 @@ describe('artwork contributor access foundation', () => {
       ensureInviteReservationTable(database);
       database.prepare(
         `INSERT INTO artwork_contributor_invite_reservations
-          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+          (idempotency_key, request_fingerprint, keeper_user_id, key_version, lease_generation,
            reservation_status, reserved_at, lease_expires_at)
-         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+         VALUES (?, ?, 'keeper-one', '1', 1, 'reserved', ?, ?)`,
       ).run(
         'invite-expired-reservation',
         await inviteRequestFingerprint({ idempotencyKey: 'invite-expired-reservation' }),
@@ -675,8 +763,8 @@ describe('artwork contributor access foundation', () => {
       assert.equal(database.prepare(
         'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
       ).get().attempt_count, 1);
-      assert.equal(tokenGenerations, 1);
-      assert.equal(invitationIdGenerations, 1);
+      assert.equal(tokenGenerations, 0);
+      assert.equal(invitationIdGenerations, 0);
     } finally {
       getRandomValues.mock.restore();
       randomUUID.mock.restore();
@@ -684,7 +772,7 @@ describe('artwork contributor access foundation', () => {
     }
   });
 
-  it('fences a paused stale owner before proof generation after lease takeover', async () => {
+  it('derives one logical proof and id when a refreshed owner stalls through takeover', async () => {
     const initialLeaseAt = new Date().toISOString();
     const { database, env, setContributorInviteNow } = fixture(initialLeaseAt);
     const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
@@ -700,7 +788,7 @@ describe('artwork contributor access foundation', () => {
       return originalRandomUUID();
     });
     try {
-      const paused = pauseNextFirst(env, 'SELECT\n       EXISTS (');
+      const paused = pauseNextRun(env, 'SET lease_expires_at = ?5', true);
       const staleOwner = inviteArtworkContributor(env, inviteInput({
         idempotencyKey: 'invite-stale-owner-takeover',
       }));
@@ -717,8 +805,8 @@ describe('artwork contributor access foundation', () => {
         invitationId: takeover.invitationId,
         status: 'replay',
       });
-      assert.equal(tokenGenerations, 1);
-      assert.equal(invitationIdGenerations, 1);
+      assert.equal(tokenGenerations, 0);
+      assert.equal(invitationIdGenerations, 0);
       assert.equal(database.prepare(
         'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
       ).get().n, 1);
@@ -730,6 +818,183 @@ describe('artwork contributor access foundation', () => {
       randomUUID.mock.restore();
       database.close();
     }
+  });
+
+  it('reuses the same logical proof and id after a post-derivation owner crash', async () => {
+    const initialLeaseAt = new Date().toISOString();
+    const { database, env, setContributorInviteNow } = fixture(initialLeaseAt);
+    const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
+    const originalRandomUUID = crypto.randomUUID.bind(crypto);
+    let tokenGenerations = 0;
+    let invitationIdGenerations = 0;
+    const getRandomValues = mock.method(crypto, 'getRandomValues', ((array: Uint8Array) => {
+      tokenGenerations += 1;
+      return originalGetRandomValues(array);
+    }) as typeof crypto.getRandomValues);
+    const randomUUID = mock.method(crypto, 'randomUUID', () => {
+      invitationIdGenerations += 1;
+      return originalRandomUUID();
+    });
+    try {
+      const idempotencyKey = 'invite-post-derivation-takeover';
+      const expected = await expectedInviteMaterial({
+        idempotencyKey,
+        requestFingerprint: await inviteRequestFingerprint({ idempotencyKey }),
+      });
+      const paused = pauseNextRun(env, 'INSERT INTO artwork_contributor_invitations');
+      const staleOwner = inviteArtworkContributor(env, inviteInput({ idempotencyKey }));
+      await paused.reached;
+      assert.equal(paused.values()[0], expected.invitationId);
+      assert.equal(paused.values()[6], expected.tokenHash);
+      setContributorInviteNow(new Date(Date.parse(initialLeaseAt) + 31_000).toISOString());
+      const takeover = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey,
+        invitedAt: '2026-08-10T10:00:31.000Z',
+      }));
+      assert.deepEqual(takeover, {
+        invitationId: expected.invitationId,
+        token: expected.token,
+        status: 'created',
+      });
+      paused.release();
+      assert.deepEqual(await staleOwner, {
+        invitationId: expected.invitationId,
+        status: 'replay',
+      });
+      assert.equal(tokenGenerations, 0);
+      assert.equal(invitationIdGenerations, 0);
+      assert.deepEqual({ ...database.prepare(
+        'SELECT id, token_hash FROM artwork_contributor_invitations',
+      ).get() }, { id: expected.invitationId, token_hash: expected.tokenHash });
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 1);
+    } finally {
+      getRandomValues.mock.restore();
+      randomUUID.mock.restore();
+      database.close();
+    }
+  });
+
+  it('freezes the reservation key version across active-key rotation and takeover', async () => {
+    const initialLeaseAt = new Date().toISOString();
+    const { database, env, setContributorInviteNow } = fixture(initialLeaseAt);
+    try {
+      const idempotencyKey = 'invite-key-rotation-takeover';
+      const requestFingerprint = await inviteRequestFingerprint({ idempotencyKey });
+      const expectedV1 = await expectedInviteMaterial({ idempotencyKey, requestFingerprint });
+      const paused = pauseNextFirst(env, 'SELECT\n       EXISTS (');
+      const originalOwner = inviteArtworkContributor(env, inviteInput({ idempotencyKey }));
+      await paused.reached;
+      assert.equal(database.prepare(
+        `SELECT key_version FROM artwork_contributor_invite_reservations
+          WHERE idempotency_key = ?`,
+      ).get(idempotencyKey)?.key_version, '1');
+      env.CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION = '2';
+      setContributorInviteNow(new Date(Date.parse(initialLeaseAt) + 31_000).toISOString());
+      const takeover = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey,
+        invitedAt: '2026-08-10T10:00:31.000Z',
+      }));
+      assert.deepEqual(takeover, {
+        invitationId: expectedV1.invitationId,
+        token: expectedV1.token,
+        status: 'created',
+      });
+      paused.release();
+      assert.deepEqual(await originalOwner, {
+        invitationId: expectedV1.invitationId,
+        status: 'replay',
+      });
+      assert.equal(database.prepare(
+        `SELECT key_version FROM artwork_contributor_invite_reservations
+          WHERE idempotency_key = ?`,
+      ).get(idempotencyKey)?.key_version, '1');
+    } finally { database.close(); }
+  });
+
+  it('fails unavailable invitation keys before recipient lookup, charge, or proof persistence', async () => {
+    for (const [index, configure] of [
+      (env: ReturnType<typeof fixture>['env']) => { delete (env as any).CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION; },
+      (env: ReturnType<typeof fixture>['env']) => { env.CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION = '01'; },
+      (env: ReturnType<typeof fixture>['env']) => { env.CONTRIBUTOR_INVITATION_KEY_V1 = 'not-base64'; },
+      (env: ReturnType<typeof fixture>['env']) => { env.CONTRIBUTOR_INVITATION_KEY_V1 = Buffer.alloc(31).toString('base64'); },
+    ].entries()) {
+      const { database, env } = fixture();
+      try {
+        configure(env);
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          idempotencyKey: `invite-bad-key-${index}`,
+        })), 'contributor_invitation_crypto_unavailable');
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_reservations',
+        ).get().n, 0);
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+        ).get().n, 0);
+      } finally { database.close(); }
+    }
+  });
+
+  it('releases the elected lease when HMAC derivation fails so retries stay stable', async () => {
+    const { database, env } = fixture();
+    const sign = mock.method(crypto.subtle, 'sign', async () => {
+      throw new Error('private hmac provider failure');
+    });
+    try {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          idempotencyKey: 'invite-hmac-runtime-failure',
+        })), 'contributor_invitation_crypto_unavailable');
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_reservations',
+        ).get().n, 0);
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+        ).get().n, 0);
+      }
+    } finally {
+      sign.mock.restore();
+      database.close();
+    }
+  });
+
+  it('fails closed when a frozen old reservation key is unavailable after rotation', async () => {
+    const { database, env } = fixture();
+    try {
+      ensureInviteReservationTable(database);
+      const idempotencyKey = 'invite-missing-frozen-key';
+      database.prepare(
+        `INSERT INTO artwork_contributor_invite_reservations
+          (idempotency_key, request_fingerprint, keeper_user_id, key_version,
+           lease_generation, reservation_status, reserved_at, lease_expires_at)
+         VALUES (?, ?, 'keeper-one', '1', 1, 'reserved', ?, ?)`,
+      ).run(
+        idempotencyKey,
+        await inviteRequestFingerprint({ idempotencyKey }),
+        '2026-08-10T09:59:00.000Z',
+        '2026-08-10T09:59:30.000Z',
+      );
+      env.CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION = '2';
+      delete (env as any).CONTRIBUTOR_INVITATION_KEY_V1;
+      await expectCode(inviteArtworkContributor(env, inviteInput({ idempotencyKey })),
+        'contributor_invitation_crypto_unavailable');
+      assert.equal(database.prepare(
+        'SELECT lease_generation FROM artwork_contributor_invite_reservations',
+      ).get().lease_generation, 1);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+      ).get().n, 0);
+    } finally { database.close(); }
   });
 
   it('replays a loser that reaches preflight only after the boundary winner commits', async () => {
@@ -818,6 +1083,8 @@ describe('artwork contributor access foundation', () => {
           idempotencyKey: `invite-replay-limit-${index}`,
         })), 'contributor_recipient_not_available');
       }
+      delete (env as any).CONTRIBUTOR_INVITATION_ACTIVE_KEY_VERSION;
+      delete (env as any).CONTRIBUTOR_INVITATION_KEY_V1;
       assert.deepEqual(await inviteArtworkContributor(env, inviteInput()), {
         invitationId: created.invitationId,
         status: 'replay',

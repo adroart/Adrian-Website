@@ -40,6 +40,13 @@ CREATE TABLE artwork_contributor_invite_reservations (
   ),
   keeper_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT
     CHECK (length(trim(keeper_user_id)) BETWEEN 1 AND 128),
+  key_version TEXT NOT NULL CHECK (
+    length(key_version) BETWEEN 1 AND 16
+    AND key_version NOT GLOB '*[^0-9]*'
+    AND key_version NOT GLOB '0*'
+    AND CAST(key_version AS INTEGER) BETWEEN 1 AND 9007199254740991
+    AND CAST(CAST(key_version AS INTEGER) AS TEXT) = key_version
+  ),
   lease_generation INTEGER NOT NULL CHECK (
     typeof(lease_generation) = 'integer' AND lease_generation >= 1
   ),
