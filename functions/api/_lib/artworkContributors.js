@@ -116,6 +116,104 @@ async function resolveRecipient(env, email) {
   return accounts[0].id;
 }
 
+async function contributorRelationshipState(env, {
+  keeperPieceId, keeperUserId, stewardVersion, recipientUserId, at,
+}) {
+  const state = await env.DB.prepare(
+    `SELECT
+       EXISTS (
+         SELECT 1
+           FROM artwork_contributor_current_access AS access
+          WHERE access.keeper_piece_id = ?1
+            AND access.keeper_user_id = ?2
+            AND access.steward_version = ?3
+            AND access.contributor_user_id = ?4
+       ) AS is_active,
+       EXISTS (
+         SELECT 1
+           FROM artwork_contributor_invitations AS invitation
+           JOIN keeper_pieces AS current_piece
+             ON current_piece.id = invitation.keeper_piece_id
+            AND current_piece.keeper_user_id = invitation.keeper_user_id
+            AND current_piece.steward_version = invitation.steward_version
+            AND current_piece.claimed_at IS NOT NULL
+            AND current_piece.released_at IS NULL
+           JOIN user AS recipient
+             ON recipient.id = invitation.intended_recipient_user_id
+            AND recipient.emailVerified = 1
+           LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
+             ON acceptance.invitation_id = invitation.id
+           LEFT JOIN artwork_contributor_revocations AS invitation_revocation
+             ON invitation_revocation.invitation_id = invitation.id
+            AND invitation_revocation.revocation_kind = 'invitation'
+          WHERE invitation.keeper_piece_id = ?1
+            AND invitation.keeper_user_id = ?2
+            AND invitation.steward_version = ?3
+            AND invitation.intended_recipient_user_id = ?4
+            AND acceptance.invitation_id IS NULL
+            AND invitation_revocation.invitation_id IS NULL
+            AND julianday(invitation.expires_at) > julianday(?5)
+            AND NOT EXISTS (
+              SELECT 1
+                FROM artwork_contributor_access_grants AS prior_grant
+                JOIN artwork_contributor_revocations AS prior_revocation
+                  ON prior_revocation.invitation_id = prior_grant.invitation_id
+                 AND prior_revocation.revocation_kind = 'access'
+               WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+                 AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+                 AND prior_grant.keeper_user_id = invitation.keeper_user_id
+                 AND prior_grant.steward_version = invitation.steward_version
+                 AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+            )
+       ) AS is_invited`,
+  ).bind(
+    keeperPieceId, keeperUserId, stewardVersion, recipientUserId, at,
+  ).first();
+  if (Number(state?.is_active) === 1) return 'active';
+  if (Number(state?.is_invited) === 1) return 'invited';
+  return null;
+}
+
+function throwRelationshipConflict(state, invitation = false) {
+  if (state === 'active') {
+    throw contributorError(invitation
+      ? 'contributor_invitation_already_active'
+      : 'contributor_already_active');
+  }
+  if (state === 'invited') throw contributorError('contributor_already_invited');
+}
+
+function databaseErrorIncludes(error, message) {
+  let current = error;
+  for (let depth = 0; current && depth < 4; depth += 1) {
+    if (String(current?.message || current).includes(message)) return true;
+    current = current?.cause;
+  }
+  return false;
+}
+
+async function reclassifyInvitationInsertFailure(env, {
+  keeperPieceId, keeperUserId, stewardVersion, recipientUserId, recipientEmail,
+}) {
+  const currentEpoch = await env.DB.prepare(
+    `SELECT 1 AS is_current
+       FROM keeper_pieces
+      WHERE id = ?1 AND keeper_user_id = ?2 AND steward_version = ?3
+        AND claimed_at IS NOT NULL AND released_at IS NULL`,
+  ).bind(keeperPieceId, keeperUserId, stewardVersion).first();
+  if (!currentEpoch) throw contributorError('stale_keeper_authority');
+  const recipient = await env.DB.prepare(
+    `SELECT email, emailVerified FROM user WHERE id = ?1`,
+  ).bind(recipientUserId).first();
+  if (!recipient) throw contributorError('contributor_recipient_not_found');
+  if (Number(recipient.emailVerified) !== 1) {
+    throw contributorError('contributor_recipient_unverified');
+  }
+  if (String(recipient.email).trim().toLowerCase() !== recipientEmail) {
+    throw contributorError('contributor_recipient_not_found');
+  }
+}
+
 export async function inviteArtworkContributor(env, input) {
   requireDb(env);
   const keeperPieceId = requiredText(input?.keeperPieceId, 'invalid_keeper_piece_id');
@@ -124,19 +222,15 @@ export async function inviteArtworkContributor(env, input) {
   const idempotencyKey = requiredText(input?.idempotencyKey, 'idempotency_key_required');
   const invitedAt = isoInstant(input?.invitedAt, 'invalid_invited_at');
   const expiresAt = isoInstant(input?.expiresAt, 'invalid_contributor_expiry');
+  const requestedVersion = input?.stewardVersion === undefined
+    ? null
+    : nonnegativeInteger(input.stewardVersion, 'invalid_steward_version');
   if (Date.parse(expiresAt) <= Date.parse(invitedAt)) {
     throw contributorError('invalid_contributor_expiry');
   }
-  const authority = await requireKeeperAuthority(env, {
-    keeperPieceId,
-    userId: keeperUserId,
-    ...(input?.stewardVersion === undefined ? {} : { stewardVersion: input.stewardVersion }),
-  });
-  const recipientUserId = await resolveRecipient(env, recipientEmail);
-  if (recipientUserId === keeperUserId) throw contributorError('contributor_cannot_be_keeper');
   const requestFingerprint = await fingerprint([
-    'invite', keeperPieceId, keeperUserId, authority.stewardVersion,
-    recipientUserId, invitedAt, expiresAt,
+    'invite', keeperPieceId, keeperUserId, requestedVersion,
+    recipientEmail, invitedAt, expiresAt,
   ]);
   const replay = await env.DB.prepare(
     `SELECT id, request_fingerprint
@@ -148,6 +242,21 @@ export async function inviteArtworkContributor(env, input) {
     }
     return { invitationId: replay.id, status: 'replay' };
   }
+  const authority = await requireKeeperAuthority(env, {
+    keeperPieceId,
+    userId: keeperUserId,
+    ...(requestedVersion === null ? {} : { stewardVersion: requestedVersion }),
+  });
+  const recipientUserId = await resolveRecipient(env, recipientEmail);
+  if (recipientUserId === keeperUserId) throw contributorError('contributor_cannot_be_keeper');
+
+  throwRelationshipConflict(await contributorRelationshipState(env, {
+    keeperPieceId,
+    keeperUserId,
+    stewardVersion: authority.stewardVersion,
+    recipientUserId,
+    at: invitedAt,
+  }));
 
   const token = createToken();
   const tokenHash = await sha256Hex(token);
@@ -157,12 +266,12 @@ export async function inviteArtworkContributor(env, input) {
     inserted = await env.DB.prepare(
       `INSERT INTO artwork_contributor_invitations
          (id, keeper_piece_id, keeper_user_id, steward_version,
-          intended_recipient_user_id, token_hash, idempotency_key,
-          request_fingerprint, invited_at, expires_at)
+          intended_recipient_user_id, intended_recipient_email, token_hash,
+          idempotency_key, request_fingerprint, invited_at, expires_at)
        SELECT ?1, piece.id, piece.keeper_user_id, piece.steward_version,
-              ?5, ?6, ?7, ?8, ?9, ?10
+              ?5, ?6, ?7, ?8, ?9, ?10, ?11
          FROM keeper_pieces AS piece
-         JOIN user AS recipient ON recipient.id = ?5 AND recipient.emailVerified = 1
+          JOIN user AS recipient ON recipient.id = ?5 AND recipient.emailVerified = 1
         WHERE piece.id = ?2
           AND piece.keeper_user_id = ?3
           AND piece.steward_version = ?4
@@ -171,8 +280,8 @@ export async function inviteArtworkContributor(env, input) {
           AND piece.keeper_user_id <> recipient.id`,
     ).bind(
       invitationId, keeperPieceId, keeperUserId, authority.stewardVersion,
-      recipientUserId, tokenHash, idempotencyKey, requestFingerprint,
-      invitedAt, expiresAt,
+      recipientUserId, recipientEmail, tokenHash, idempotencyKey,
+      requestFingerprint, invitedAt, expiresAt,
     ).run();
   } catch (error) {
     const raced = await env.DB.prepare(
@@ -183,9 +292,38 @@ export async function inviteArtworkContributor(env, input) {
       return { invitationId: raced.id, status: 'replay' };
     }
     if (raced) throw contributorError('contributor_idempotency_conflict');
+    await reclassifyInvitationInsertFailure(env, {
+      keeperPieceId,
+      keeperUserId,
+      stewardVersion: authority.stewardVersion,
+      recipientUserId,
+      recipientEmail,
+    });
+    if (databaseErrorIncludes(error, 'contributor already active')) {
+      throw contributorError('contributor_already_active');
+    }
+    if (databaseErrorIncludes(error, 'contributor already invited')) {
+      throw contributorError('contributor_already_invited');
+    }
+    throwRelationshipConflict(await contributorRelationshipState(env, {
+      keeperPieceId,
+      keeperUserId,
+      stewardVersion: authority.stewardVersion,
+      recipientUserId,
+      at: invitedAt,
+    }));
     throw error;
   }
-  if (Number(inserted?.meta?.changes) !== 1) throw contributorError('stale_keeper_authority');
+  if (Number(inserted?.meta?.changes) !== 1) {
+    await reclassifyInvitationInsertFailure(env, {
+      keeperPieceId,
+      keeperUserId,
+      stewardVersion: authority.stewardVersion,
+      recipientUserId,
+      recipientEmail,
+    });
+    throw contributorError('stale_keeper_authority');
+  }
   return { invitationId, token, status: 'created' };
 }
 
@@ -207,6 +345,15 @@ async function invitationByProof(env, { token, claimant }) {
             acceptance.accepted_by_user_id,
             acceptance.idempotency_key AS acceptance_idempotency_key,
             acceptance.request_fingerprint AS acceptance_request_fingerprint,
+            EXISTS (
+              SELECT 1
+                FROM artwork_contributor_current_access AS access
+               WHERE access.keeper_piece_id = invitation.keeper_piece_id
+                 AND access.contributor_user_id = invitation.intended_recipient_user_id
+                 AND access.keeper_user_id = invitation.keeper_user_id
+                 AND access.steward_version = invitation.steward_version
+                 AND access.invitation_id <> invitation.id
+            ) AS relationship_active,
             EXISTS (
               SELECT 1 FROM artwork_claim_requests AS claim
                WHERE claim.keeper_piece_id = invitation.keeper_piece_id
@@ -251,6 +398,7 @@ function invitationStatus(invitation, at) {
     || invitation.released_at
   ) return 'stale';
   if (Number(invitation.relationship_revoked) === 1) return 'revoked';
+  if (Number(invitation.relationship_active) === 1) return 'already_active';
   if (Number(invitation.has_pending_claim) === 1) return 'claim_pending';
   return 'available';
 }
@@ -331,6 +479,20 @@ export async function acceptArtworkContributorInvitation(env, input) {
     if (raced?.invitation_id === invitation.id) {
       throw contributorError('contributor_invitation_used');
     }
+    try {
+      const latest = await invitationByProof(env, input || {});
+      const latestStatus = invitationStatus(latest.invitation, acceptedAt);
+      if (latestStatus !== 'available') {
+        throw contributorError(`contributor_invitation_${latestStatus}`);
+      }
+    } catch (classificationError) {
+      if (classificationError?.isArtworkContributorError) throw classificationError;
+      throw error;
+    }
+    if (
+      databaseErrorIncludes(error, 'contributor invitation is not available')
+      || databaseErrorIncludes(error, 'contributor access grant lacks accepted proof')
+    ) throw contributorError('contributor_invitation_not_available');
     throw error;
   }
   return { invitationId: invitation.id, status: 'accepted' };
@@ -364,7 +526,8 @@ export async function listArtworkContributors(env, input) {
   const at = isoInstant(input?.at, 'invalid_inspection_time');
   const [invitationResult, contributorResult] = await Promise.all([
     env.DB.prepare(
-      `SELECT invitation.id, invitation.invited_at, invitation.expires_at,
+      `SELECT invitation.id, invitation.intended_recipient_email AS recipient_email,
+              invitation.invited_at, invitation.expires_at,
               acceptance.accepted_at, invitation_revocation.revoked_at,
               EXISTS (
                 SELECT 1
@@ -393,7 +556,7 @@ export async function listArtworkContributors(env, input) {
         WHERE invitation.keeper_piece_id = ?1
           AND invitation.keeper_user_id = ?2
           AND invitation.steward_version = ?3
-        ORDER BY invitation.invited_at, invitation.id`,
+        ORDER BY invitation.invited_at, invitation.intended_recipient_email, invitation.id`,
     ).bind(
       authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
     ).all(),
@@ -411,6 +574,7 @@ export async function listArtworkContributors(env, input) {
   return {
     invitations: (invitationResult?.results || []).map((row) => ({
       invitationId: row.id,
+      recipientEmail: row.recipient_email,
       invitedAt: row.invited_at,
       expiresAt: row.expires_at,
       status: row.accepted_at
@@ -447,6 +611,7 @@ async function revocationForTarget(env, kind, invitationId) {
 async function insertRevocation(env, {
   kind,
   invitationId,
+  keeperPieceId,
   keeperUserId,
   stewardVersion,
   idempotencyKey,
@@ -478,6 +643,31 @@ async function insertRevocation(env, {
         ? 'contributor_invitation_revoked'
         : 'contributor_access_not_found');
     }
+    const currentEpoch = await env.DB.prepare(
+      `SELECT 1 AS is_current
+         FROM keeper_pieces
+        WHERE id = ?1 AND keeper_user_id = ?2 AND steward_version = ?3
+          AND claimed_at IS NOT NULL AND released_at IS NULL`,
+    ).bind(keeperPieceId, keeperUserId, stewardVersion).first();
+    if (!currentEpoch) throw contributorError('stale_keeper_authority');
+    if (kind === 'invitation') {
+      const latest = await env.DB.prepare(
+        `SELECT acceptance.accepted_at, invitation.expires_at
+           FROM artwork_contributor_invitations AS invitation
+           LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
+             ON acceptance.invitation_id = invitation.id
+          WHERE invitation.id = ?1`,
+      ).bind(invitationId).first();
+      if (latest?.accepted_at) throw contributorError('contributor_invitation_used');
+      if (latest && Date.parse(latest.expires_at) <= Date.parse(revokedAt)) {
+        throw contributorError('contributor_invitation_expired');
+      }
+      if (databaseErrorIncludes(error, 'contributor invitation cannot be revoked')) {
+        throw contributorError('contributor_invitation_not_available');
+      }
+    } else if (databaseErrorIncludes(error, 'contributor access cannot be revoked')) {
+      throw contributorError('contributor_access_not_found');
+    }
     throw error;
   }
 }
@@ -497,15 +687,13 @@ export async function revokeArtworkContributor(env, input) {
   if ((invitationId === null) === (contributorUserId === null)) {
     throw contributorError('exact_contributor_revocation_target_required');
   }
-  const authority = await requireKeeperAuthority(env, {
-    keeperPieceId,
-    userId: keeperUserId,
-    ...(input?.stewardVersion === undefined ? {} : { stewardVersion: input.stewardVersion }),
-  });
+  const requestedVersion = input?.stewardVersion === undefined
+    ? null
+    : nonnegativeInteger(input.stewardVersion, 'invalid_steward_version');
   const kind = invitationId ? 'invitation' : 'access';
   const target = invitationId || contributorUserId;
   const requestFingerprint = await fingerprint([
-    'revoke', kind, keeperPieceId, keeperUserId, authority.stewardVersion,
+    'revoke', kind, keeperPieceId, keeperUserId, requestedVersion,
     target, revokedAt,
   ]);
   const replay = await revocationReplay(env, idempotencyKey);
@@ -515,6 +703,11 @@ export async function revokeArtworkContributor(env, input) {
     }
     return { invitationId: replay.invitation_id, status: 'replay' };
   }
+  const authority = await requireKeeperAuthority(env, {
+    keeperPieceId,
+    userId: keeperUserId,
+    ...(requestedVersion === null ? {} : { stewardVersion: requestedVersion }),
+  });
 
   if (invitationId) {
     const invitation = await env.DB.prepare(
@@ -541,7 +734,7 @@ export async function revokeArtworkContributor(env, input) {
       throw contributorError('contributor_invitation_expired');
     }
     const status = await insertRevocation(env, {
-      kind, invitationId, keeperUserId,
+      kind, invitationId, keeperPieceId, keeperUserId,
       stewardVersion: authority.stewardVersion,
       idempotencyKey, requestFingerprint, revokedAt,
     });
@@ -557,7 +750,7 @@ export async function revokeArtworkContributor(env, input) {
   ).first();
   if (!access) throw contributorError('contributor_access_not_found');
   const status = await insertRevocation(env, {
-    kind, invitationId: access.invitation_id, keeperUserId,
+    kind, invitationId: access.invitation_id, keeperPieceId, keeperUserId,
     stewardVersion: authority.stewardVersion,
     idempotencyKey, requestFingerprint, revokedAt,
   });

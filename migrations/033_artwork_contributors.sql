@@ -17,6 +17,10 @@ CREATE TABLE artwork_contributor_invitations (
   ),
   intended_recipient_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT
     CHECK (length(trim(intended_recipient_user_id)) BETWEEN 1 AND 128),
+  intended_recipient_email TEXT NOT NULL CHECK (
+    length(trim(intended_recipient_email)) BETWEEN 3 AND 254
+    AND intended_recipient_email = lower(trim(intended_recipient_email))
+  ),
   token_hash TEXT NOT NULL UNIQUE CHECK (
     length(token_hash) = 64
     AND token_hash = lower(token_hash)
@@ -148,8 +152,45 @@ BEGIN
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND recipient.emailVerified = 1
+       AND lower(recipient.email) = NEW.intended_recipient_email
        AND recipient.id <> piece.keeper_user_id
   ) THEN RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM artwork_contributor_current_access AS access
+     WHERE access.keeper_piece_id = NEW.keeper_piece_id
+       AND access.keeper_user_id = NEW.keeper_user_id
+       AND access.steward_version = NEW.steward_version
+       AND access.contributor_user_id = NEW.intended_recipient_user_id
+  ) THEN RAISE(ABORT, 'contributor already active') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM artwork_contributor_invitations AS invitation
+      LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
+        ON acceptance.invitation_id = invitation.id
+      LEFT JOIN artwork_contributor_revocations AS invitation_revocation
+        ON invitation_revocation.invitation_id = invitation.id
+       AND invitation_revocation.revocation_kind = 'invitation'
+     WHERE invitation.keeper_piece_id = NEW.keeper_piece_id
+       AND invitation.keeper_user_id = NEW.keeper_user_id
+       AND invitation.steward_version = NEW.steward_version
+       AND invitation.intended_recipient_user_id = NEW.intended_recipient_user_id
+       AND acceptance.invitation_id IS NULL
+       AND invitation_revocation.invitation_id IS NULL
+       AND julianday(invitation.expires_at) > julianday(NEW.invited_at)
+       AND NOT EXISTS (
+         SELECT 1
+           FROM artwork_contributor_access_grants AS prior_grant
+           JOIN artwork_contributor_revocations AS prior_revocation
+             ON prior_revocation.invitation_id = prior_grant.invitation_id
+            AND prior_revocation.revocation_kind = 'access'
+          WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+            AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+            AND prior_grant.keeper_user_id = invitation.keeper_user_id
+            AND prior_grant.steward_version = invitation.steward_version
+            AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+       )
+  ) THEN RAISE(ABORT, 'contributor already invited') END;
 END;
 
 CREATE TRIGGER artwork_contributor_invitation_accept_guard

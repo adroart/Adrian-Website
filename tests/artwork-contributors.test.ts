@@ -116,6 +116,27 @@ function inviteInput(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function interceptNextRun(
+  env: ReturnType<typeof fixture>['env'],
+  sqlFragment: string,
+  beforeRun: () => void,
+) {
+  const originalPrepare = env.DB.prepare.bind(env.DB);
+  let intercepted = false;
+  env.DB.prepare = (sql: string) => {
+    const statement = originalPrepare(sql);
+    if (!intercepted && sql.includes(sqlFragment)) {
+      const originalRun = statement.run.bind(statement);
+      statement.run = () => {
+        intercepted = true;
+        beforeRun();
+        return originalRun();
+      };
+    }
+    return statement;
+  };
+}
+
 function acceptInput(token: string, overrides: Record<string, unknown> = {}) {
   return {
     token,
@@ -241,11 +262,13 @@ describe('artwork contributor access foundation', () => {
         assert.throws(() => database.prepare(`
           INSERT INTO artwork_contributor_invitations
             (id, keeper_piece_id, keeper_user_id, steward_version,
-             intended_recipient_user_id, token_hash, idempotency_key,
+             intended_recipient_user_id, intended_recipient_email,
+             token_hash, idempotency_key,
              request_fingerprint, invited_at, expires_at)
-          VALUES (?, 'kp-one', ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, 'kp-one', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           id, keeper, version, recipient,
+          recipient === 'unverified-one' ? 'unverified@example.com' : 'contributor@example.com',
           String(version + 3).repeat(64).slice(0, 64), `forged-${id}`,
           String(version + 6).repeat(64).slice(0, 64), invitedAt, expiresAt,
         ), /current keeper|verified recipient/i);
@@ -304,6 +327,67 @@ describe('artwork contributor access foundation', () => {
       await expectCode(inviteArtworkContributor(env, inviteInput({
         intendedRecipientEmail: 'second@example.com',
       })), 'contributor_idempotency_conflict');
+    } finally { database.close(); }
+  });
+
+  it('replays a lost invitation success from immutable request facts after email change and transfer', async () => {
+    const { database, env } = fixture();
+    try {
+      const created = await inviteArtworkContributor(env, inviteInput());
+      database.prepare(
+        "UPDATE user SET email = 'changed@example.com' WHERE id = 'contributor-one'",
+      ).run();
+      canonicalTransfer(database, {
+        suffix: 'invite-replay-away', from: 'keeper-one', to: 'keeper-next', version: 0,
+        previousHash: null, hash: '9'.repeat(64),
+      });
+      assert.deepEqual(await inviteArtworkContributor(env, inviteInput()), {
+        invitationId: created.invitationId,
+        status: 'replay',
+      });
+      assert.equal(database.prepare(
+        'SELECT intended_recipient_email FROM artwork_contributor_invitations WHERE id = ?',
+      ).get(created.invitationId).intended_recipient_email, 'contributor@example.com');
+    } finally { database.close(); }
+  });
+
+  it('types recipient deverification between invitation resolution and insertion', async () => {
+    const { database, env } = fixture();
+    try {
+      interceptNextRun(
+        env,
+        'INSERT INTO artwork_contributor_invitations',
+        () => database.prepare(
+          "UPDATE user SET emailVerified = 0 WHERE id = 'contributor-one'",
+        ).run(),
+      );
+      await expectCode(
+        inviteArtworkContributor(env, inviteInput()),
+        'contributor_recipient_unverified',
+      );
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+    } finally { database.close(); }
+  });
+
+  it('types recipient email mutation between invitation resolution and insertion', async () => {
+    const { database, env } = fixture();
+    try {
+      interceptNextRun(
+        env,
+        'INSERT INTO artwork_contributor_invitations',
+        () => database.prepare(
+          "UPDATE user SET email = 'changed@example.com' WHERE id = 'contributor-one'",
+        ).run(),
+      );
+      await expectCode(
+        inviteArtworkContributor(env, inviteInput()),
+        'contributor_recipient_not_found',
+      );
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
     } finally { database.close(); }
   });
 
@@ -448,6 +532,7 @@ describe('artwork contributor access foundation', () => {
       }), {
         invitations: [{
           invitationId: invitation.invitationId,
+          recipientEmail: 'contributor@example.com',
           invitedAt,
           expiresAt,
           status: 'accepted',
@@ -487,10 +572,11 @@ describe('artwork contributor access foundation', () => {
           ? 'safe-id'
           : invitation.invitationId,
       })), [{
-        invitationId: 'safe-id', invitedAt, expiresAt, status: 'available',
+        invitationId: 'safe-id', recipientEmail: 'contributor@example.com',
+        invitedAt, expiresAt, status: 'available',
       }]);
       assert.deepEqual(Object.keys(before.invitations[0]).sort(), [
-        'expiresAt', 'invitationId', 'invitedAt', 'status',
+        'expiresAt', 'invitationId', 'invitedAt', 'recipientEmail', 'status',
       ]);
 
       await revokeArtworkContributor(env, {
@@ -504,6 +590,159 @@ describe('artwork contributor access foundation', () => {
       });
       assert.equal(after.invitations[0].status, 'revoked');
     } finally { database.close(); }
+  });
+
+  it('lists normalized recipients so one of several pending invitations can be targeted', async () => {
+    const { database, env } = fixture();
+    try {
+      await inviteArtworkContributor(env, inviteInput());
+      await inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'SECOND@EXAMPLE.COM',
+        idempotencyKey: 'invite-second-recipient',
+      }));
+      const before = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one', at: acceptedAt,
+      });
+      assert.deepEqual(before.invitations.map((row: Record<string, unknown>) => ({
+        recipientEmail: row.recipientEmail,
+        status: row.status,
+      })), [
+        { recipientEmail: 'contributor@example.com', status: 'available' },
+        { recipientEmail: 'second@example.com', status: 'available' },
+      ]);
+      const target = before.invitations.find(
+        (row: Record<string, unknown>) => row.recipientEmail === 'second@example.com',
+      );
+      await revokeArtworkContributor(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        invitationId: target.invitationId,
+        idempotencyKey: 'revoke-second-recipient', revokedAt: acceptedAt,
+      });
+      const after = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        at: '2026-08-10T12:00:00.000Z',
+      });
+      assert.deepEqual(after.invitations.map((row: Record<string, unknown>) => ({
+        recipientEmail: row.recipientEmail,
+        status: row.status,
+      })), [
+        { recipientEmail: 'contributor@example.com', status: 'available' },
+        { recipientEmail: 'second@example.com', status: 'revoked' },
+      ]);
+    } finally { database.close(); }
+  });
+
+  it('lists the immutable invitation-time recipient email, not a later account address', async () => {
+    const { database, env } = fixture();
+    try {
+      await inviteArtworkContributor(env, inviteInput());
+      database.prepare(
+        "UPDATE user SET email = 'changed@example.com' WHERE id = 'contributor-one'",
+      ).run();
+      const result = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one', at: acceptedAt,
+      });
+      assert.equal(result.invitations[0].recipientEmail, 'contributor@example.com');
+    } finally { database.close(); }
+  });
+
+  it('types duplicate pending and active invitation attempts while preserving exact replay', async () => {
+    const { database, env } = fixture();
+    try {
+      const first = await inviteArtworkContributor(env, inviteInput());
+      assert.equal((await inviteArtworkContributor(env, inviteInput())).status, 'replay');
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-duplicate-pending',
+        invitedAt: '2026-08-10T10:05:00.000Z',
+      })), 'contributor_already_invited');
+      await acceptArtworkContributorInvitation(env, acceptInput(first.token));
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-duplicate-active',
+        invitedAt: '2026-08-10T12:00:00.000Z',
+      })), 'contributor_already_active');
+    } finally { database.close(); }
+  });
+
+  it('serializes different-key invitation races into one creation and one typed rejection', async () => {
+    const { database, env } = fixture();
+    try {
+      const outcomes = await Promise.allSettled([
+        inviteArtworkContributor(env, inviteInput({ idempotencyKey: 'invite-race-a' })),
+        inviteArtworkContributor(env, inviteInput({ idempotencyKey: 'invite-race-b' })),
+      ]);
+      assert.equal(outcomes.filter((outcome) => outcome.status === 'fulfilled').length, 1);
+      const rejection = outcomes.find((outcome) => outcome.status === 'rejected');
+      assert.equal(rejection?.reason?.code, 'contributor_already_invited');
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+    } finally { database.close(); }
+  });
+
+  it('classifies a legacy second proof as terminal after another proof creates access', async () => {
+    const { database, env } = fixture();
+    try {
+      const first = await inviteArtworkContributor(env, inviteInput());
+      database.exec('DROP TRIGGER artwork_contributor_invitation_insert_guard;');
+      const secondToken = 'B'.repeat(43);
+      database.prepare(`
+        INSERT INTO artwork_contributor_invitations
+          (id, keeper_piece_id, keeper_user_id, steward_version,
+           intended_recipient_user_id, intended_recipient_email,
+           token_hash, idempotency_key,
+           request_fingerprint, invited_at, expires_at)
+        VALUES ('aci-00000000-0000-4000-8000-000000000099', 'kp-one',
+          'keeper-one', 0, 'contributor-one', 'contributor@example.com',
+          ?, 'legacy-second-proof', ?, ?, ?)
+      `).run(
+        await sha256Hex(secondToken), '7'.repeat(64),
+        '2026-08-10T10:05:00.000Z', expiresAt,
+      );
+      await acceptArtworkContributorInvitation(env, acceptInput(first.token));
+      const inspection = await inspectArtworkContributorInvitation(env, {
+        token: secondToken,
+        claimant: verifiedContributor,
+        inspectedAt: '2026-08-10T12:00:00.000Z',
+      });
+      assert.equal(inspection.status, 'already_active');
+      await expectCode(acceptArtworkContributorInvitation(env, acceptInput(secondToken, {
+        idempotencyKey: 'accept-legacy-second',
+        acceptedAt: '2026-08-10T12:00:00.000Z',
+      })), 'contributor_invitation_already_active');
+    } finally { database.close(); }
+  });
+
+  it('types recipient deverification and stewardship transfer races during acceptance', async () => {
+    const deverified = fixture();
+    try {
+      const created = await inviteArtworkContributor(deverified.env, inviteInput());
+      interceptNextRun(
+        deverified.env,
+        'INSERT INTO artwork_contributor_invitation_acceptances',
+        () => deverified.database.prepare(
+          "UPDATE user SET emailVerified = 0 WHERE id = 'contributor-one'",
+        ).run(),
+      );
+      await expectCode(acceptArtworkContributorInvitation(
+        deverified.env, acceptInput(created.token),
+      ), 'contributor_invitation_not_available');
+    } finally { deverified.database.close(); }
+
+    const transferred = fixture();
+    try {
+      const created = await inviteArtworkContributor(transferred.env, inviteInput());
+      interceptNextRun(
+        transferred.env,
+        'INSERT INTO artwork_contributor_invitation_acceptances',
+        () => canonicalTransfer(transferred.database, {
+          suffix: 'accept-race-away', from: 'keeper-one', to: 'keeper-next', version: 0,
+          previousHash: null, hash: '8'.repeat(64),
+        }),
+      );
+      await expectCode(acceptArtworkContributorInvitation(
+        transferred.env, acceptInput(created.token),
+      ), 'contributor_invitation_stale');
+    } finally { transferred.database.close(); }
   });
 
   it('keeps expired invitations stably expired and rejects app and database revocation', async () => {
@@ -563,17 +802,28 @@ describe('artwork contributor access foundation', () => {
     const { database, env } = fixture();
     try {
       const first = await inviteArtworkContributor(env, inviteInput());
-      const second = await inviteArtworkContributor(env, inviteInput({
-        idempotencyKey: 'invite-contributor-second-proof',
-        invitedAt: '2026-08-10T10:05:00.000Z',
-      }));
+      database.exec('DROP TRIGGER artwork_contributor_invitation_insert_guard;');
+      const secondToken = 'C'.repeat(43);
+      database.prepare(`
+        INSERT INTO artwork_contributor_invitations
+          (id, keeper_piece_id, keeper_user_id, steward_version,
+           intended_recipient_user_id, intended_recipient_email,
+           token_hash, idempotency_key,
+           request_fingerprint, invited_at, expires_at)
+        VALUES ('aci-00000000-0000-4000-8000-000000000098', 'kp-one',
+          'keeper-one', 0, 'contributor-one', 'contributor@example.com',
+          ?, 'legacy-revocation-proof', ?, ?, ?)
+      `).run(
+        await sha256Hex(secondToken), '6'.repeat(64),
+        '2026-08-10T10:05:00.000Z', expiresAt,
+      );
       await acceptArtworkContributorInvitation(env, acceptInput(first.token));
       await revokeArtworkContributor(env, {
         keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
         contributorUserId: 'contributor-one', idempotencyKey: 'revoke-first-grant',
         revokedAt: '2026-08-10T12:00:00.000Z',
       });
-      await expectCode(acceptArtworkContributorInvitation(env, acceptInput(second.token, {
+      await expectCode(acceptArtworkContributorInvitation(env, acceptInput(secondToken, {
         idempotencyKey: 'accept-second-old-proof',
         acceptedAt: '2026-08-10T13:00:00.000Z',
       })), 'contributor_invitation_revoked');
@@ -610,6 +860,42 @@ describe('artwork contributor access foundation', () => {
         VALUES ('invitation', ?, 'keeper-one', 0, 'same-global-revoke-key', ?, ?)
       `).run(pendingInvitation.invitationId, '9'.repeat(64), acceptedAt), /unique/i);
     } finally { database.close(); }
+  });
+
+  it('replays revocation after transfer and types a transfer racing a new revocation', async () => {
+    const replayed = fixture();
+    try {
+      const invitation = await inviteArtworkContributor(replayed.env, inviteInput());
+      const request = {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        invitationId: invitation.invitationId,
+        idempotencyKey: 'revoke-lost-response', revokedAt: acceptedAt,
+      };
+      assert.equal((await revokeArtworkContributor(replayed.env, request)).status, 'revoked');
+      canonicalTransfer(replayed.database, {
+        suffix: 'revoke-replay-away', from: 'keeper-one', to: 'keeper-next', version: 0,
+        previousHash: null, hash: '7'.repeat(64),
+      });
+      assert.equal((await revokeArtworkContributor(replayed.env, request)).status, 'replay');
+    } finally { replayed.database.close(); }
+
+    const raced = fixture();
+    try {
+      const invitation = await inviteArtworkContributor(raced.env, inviteInput());
+      interceptNextRun(
+        raced.env,
+        'INSERT INTO artwork_contributor_revocations',
+        () => canonicalTransfer(raced.database, {
+          suffix: 'revoke-race-away', from: 'keeper-one', to: 'keeper-next', version: 0,
+          previousHash: null, hash: '6'.repeat(64),
+        }),
+      );
+      await expectCode(revokeArtworkContributor(raced.env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        invitationId: invitation.invitationId,
+        idempotencyKey: 'revoke-transfer-race', revokedAt: acceptedAt,
+      }), 'stale_keeper_authority');
+    } finally { raced.database.close(); }
   });
 
   it('invalidates pending and active access on transfer, preserves failed transfer, and never revives on return', async () => {
