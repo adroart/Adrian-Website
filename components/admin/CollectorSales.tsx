@@ -40,6 +40,12 @@ type StartMode = 'records' | 'reconnection' | 'sale';
 type WithoutKey<T> = T extends unknown ? Omit<T, 'idempotencyKey'> : never;
 type RecordSelection = { kind: 'sale' | 'reconnection'; id: string };
 type LegacySaleTarget = { acquisitionId: string; artworkId: string; keeperPieceId: string };
+type LegacyLinkCompletion = {
+  saleId: string;
+  artworkRecordId: string;
+  expectedVersion: number;
+  attempt: FrozenArtistSaleAttempt<Extract<ArtistSaleDetailMutation, { action: 'linkIdentity' }>> | null;
+};
 type ReconnectionStatus = ArtistSaleWorkspaceResponse['reconnectionCases'][number]['status'];
 type ArtworkDraft = {
   rowId: string;
@@ -264,6 +270,7 @@ const CollectorSales: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [linkedTargetLoading, setLinkedTargetLoading] = useState(false);
   const [legacyTarget, setLegacyTarget] = useState<LegacySaleTarget | null>(null);
+  const [legacyLinkCompletion, setLegacyLinkCompletion] = useState<LegacyLinkCompletion | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | ReconnectionStatus>('all');
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
@@ -332,6 +339,7 @@ const CollectorSales: React.FC = () => {
     setDetail(null);
     setDetailLoadError('');
     setLegacyTarget(null);
+    setLegacyLinkCompletion(null);
     setMode('records');
     setLinkedTargetLoading(true);
     void loadArtworkWorkspace({
@@ -361,6 +369,7 @@ const CollectorSales: React.FC = () => {
     setDetail(null);
     setDetailLoadError('');
     setLegacyTarget(null);
+    setLegacyLinkCompletion(null);
     setMode('records');
     setLinkedTargetLoading(true);
     void getMaintenanceDetail(legacyKeeperPieceId!, controller.signal).then((piece) => {
@@ -499,7 +508,7 @@ const CollectorSales: React.FC = () => {
   const resetSale = () => {
     setPrecision('unknown'); setOccurrenceValue(''); setBuyerEmail(''); setTotalAmount('');
     setTotalCurrency('USD'); setPrivateReference(''); setPrivateNotes(''); setLinkedCaseId('');
-    setArtworks([emptyArtwork()]); setSaleAttempt(null);
+    setArtworks([emptyArtwork()]); setSaleAttempt(null); setLegacyLinkCompletion(null);
   };
 
   const saveReconnection = async (addAnother: boolean) => {
@@ -531,7 +540,64 @@ const CollectorSales: React.FC = () => {
     } finally { setBusy(''); }
   };
 
+  const completeLegacyRelationship = async (completion: LegacyLinkCompletion) => {
+    if (!legacyTarget) return false;
+    const attempt = beginArtistSaleAttempt(completion.attempt, {
+      action: 'linkIdentity',
+      artworkRecordId: completion.artworkRecordId,
+      keeperPieceId: legacyTarget.keeperPieceId,
+      expectedVersion: completion.expectedVersion,
+    });
+    const pending = { ...completion, attempt };
+    setLegacyLinkCompletion(pending);
+    setBusy('legacy-link');
+    setActionError('');
+    try {
+      const value = await jsonRequest(`/api/admin/collector-sales/${encodeURIComponent(completion.saleId)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attempt.request),
+      });
+      const linked = parseArtistSaleMutationResponse(value).result;
+      if (!('identificationStatus' in linked)
+        || linked.artworkRecordId !== completion.artworkRecordId
+        || linked.keeperPieceId !== legacyTarget.keeperPieceId
+        || linked.identificationStatus !== 'identity_linked') {
+        throw new Error('legacy_identity_link_mismatch');
+      }
+      const completed = await loadArtworkWorkspace({
+        artworkId: legacyTarget.artworkId,
+        keeperPieceId: legacyTarget.keeperPieceId,
+        artistArtworkRecordId: completion.artworkRecordId,
+      });
+      if (completed.salesRecord?.state !== 'identity_linked'
+        || completed.salesRecord.artworkRecordId !== completion.artworkRecordId
+        || completed.identity?.keeperPieceId !== legacyTarget.keeperPieceId
+        || completed.nextAction?.href.includes('source=legacy_acquisition')) {
+        throw new Error('legacy_relationship_incomplete');
+      }
+      setLegacyLinkCompletion(null);
+      setNotice(`Legacy sale verified and linked to ${legacyTarget.keeperPieceId}.`);
+      await loadWorkspace();
+      setMode('records');
+      setSelection({ kind: 'sale', id: completion.saleId });
+      return true;
+    } catch (error) {
+      const retained = error instanceof WorkspaceRequestError
+        ? finishArtistSaleAttempt(attempt, { kind: 'http', status: error.status })
+        : attempt;
+      setLegacyLinkCompletion({ ...completion, attempt: retained });
+      setActionError('The verified sale exists, but its exact physical identity link is not confirmed. Retry the unchanged identity link before creating anything else.');
+      return false;
+    } finally {
+      setBusy('');
+    }
+  };
+
   const saveSale = async (addAnother: boolean) => {
+    if (legacyLinkCompletion) {
+      await completeLegacyRelationship(legacyLinkCompletion);
+      return;
+    }
     setBusy('sale'); setActionError(''); setNotice('');
     let usedAttempt = saleAttempt;
     try {
@@ -561,6 +627,27 @@ const CollectorSales: React.FC = () => {
       const parsed = parseArtistSaleMutationResponse(value).result;
       if (!('saleId' in parsed) || !('artworkRecordIds' in parsed)) throw new Error('invalid_response');
       setSaleAttempt(finishArtistSaleAttempt(attempt, { kind: 'success' }));
+      if (legacyTarget) {
+        if (parsed.artworkRecordIds.length !== 1) throw new Error('legacy_sale_fragment_mismatch');
+        const detailValue = await jsonRequest(`/api/admin/collector-sales/${encodeURIComponent(parsed.saleId)}`);
+        const createdDetail = parseArtistSaleDetailResponse(detailValue);
+        const createdItem = createdDetail.items.find((item) => (
+          item.artworkRecordId === parsed.artworkRecordIds[0]
+        ));
+        if (!createdItem || createdItem.artworkId !== legacyTarget.artworkId
+          || createdItem.keeperPieceId !== null || createdItem.identificationStatus !== 'identified') {
+          throw new Error('legacy_sale_fragment_mismatch');
+        }
+        const completion: LegacyLinkCompletion = {
+          saleId: parsed.saleId,
+          artworkRecordId: createdItem.artworkRecordId,
+          expectedVersion: createdItem.recordVersion,
+          attempt: null,
+        };
+        setLegacyLinkCompletion(completion);
+        await completeLegacyRelationship(completion);
+        return;
+      }
       await loadWorkspace();
       setNotice('Verified sale saved.');
       if (addAnother) { resetSale(); setMode('sale'); }
@@ -709,6 +796,11 @@ const CollectorSales: React.FC = () => {
                 Legacy acquisition {legacyTarget.acquisitionId} · exact artwork {legacyTarget.artworkId} · physical identity {legacyTarget.keeperPieceId}
               </AdminAlert>
             )}
+            {legacyLinkCompletion && (
+              <AdminAlert tone="warning">
+                The verified sale fragment already exists. Only its frozen exact identity link can be retried here.
+              </AdminAlert>
+            )}
             <fieldset className="space-y-3" disabled={Boolean(saleAttempt)}>
               <legend className="font-serif text-xl text-wood-900">When did the sale occur?</legend>
               <div className="grid gap-2 sm:grid-cols-4">
@@ -747,7 +839,7 @@ const CollectorSales: React.FC = () => {
             {!legacyTarget && <button type="button" className={buttonSecondary} disabled={Boolean(saleAttempt)} onClick={() => setArtworks(current => [...current, emptyArtwork(current.length)])}>Add another artwork</button>}
             {saleAttempt && <AdminAlert tone="warning">This exact request and key are frozen after an uncertain response. Retry without editing, or cancel only after checking the records.</AdminAlert>}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button className={buttonPrimary} disabled={busy === 'sale'} type="submit">{saleAttempt ? 'Retry exact sale' : 'Save verified sale'}</button>
+              <button className={buttonPrimary} disabled={Boolean(busy)} type="submit">{legacyLinkCompletion ? 'Retry identity link' : saleAttempt ? 'Retry exact sale' : 'Save verified sale'}</button>
               {!legacyTarget && <button className={buttonSecondary} disabled={Boolean(saleAttempt) || busy === 'sale'} type="button" onClick={() => void saveSale(true)}>Save and add another</button>}
               {saleAttempt && <button className={buttonSecondary} type="button" onClick={() => { setSaleAttempt(null); setActionError('Attempt cancelled. Check the record list before saving again.'); }}>Cancel frozen attempt</button>}
               {!legacyTarget && <button className={buttonSecondary} type="button" onClick={() => setMode('records')}>Back to records</button>}

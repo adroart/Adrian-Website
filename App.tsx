@@ -63,6 +63,14 @@ import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
 import { FULL_ARCHIVE } from './data/mockData';
 import { loadArtworkWorkspace } from './utils/artworkWorkspace';
+import {
+  beginArtistSaleAttempt,
+  finishArtistSaleAttempt,
+  parseArtistSaleDetailResponse,
+  parseArtistSaleMutationResponse,
+  type FrozenArtistSaleAttempt,
+  type LinkArtistSaleIdentityRequest,
+} from './utils/artistSales';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -235,6 +243,14 @@ function AdminArtworkRegistration() {
   const [linkedStatus, setLinkedStatus] = useState<'generic' | 'loading' | 'ready' | 'error'>(
     hasExactLinkedSelector ? 'loading' : hasLinkedSelector ? 'error' : 'generic',
   );
+  const [linkedTarget, setLinkedTarget] = useState<{
+    saleId: string;
+    artworkRecordId: string;
+    expectedVersion: number;
+  } | null>(null);
+  const [relationshipLinked, setRelationshipLinked] = useState(false);
+  const [linkPending, setLinkPending] = useState(false);
+  const linkAttemptRef = useRef<FrozenArtistSaleAttempt<LinkArtistSaleIdentityRequest> | null>(null);
   const linkedStatusRef = useRef<HTMLDivElement>(null);
   const [artworkId, setArtworkId] = useState(linkedArtworkId || FULL_ARCHIVE[0]?.id || '');
   const [editionKind, setEditionKind] = useState<'' | 'unique' | 'numbered'>('');
@@ -256,6 +272,10 @@ function AdminArtworkRegistration() {
 
   useEffect(() => {
     setResult(null);
+    setLinkedTarget(null);
+    setRelationshipLinked(false);
+    setLinkPending(false);
+    linkAttemptRef.current = null;
     attemptKey.current = null;
     if (!hasExactLinkedSelector) {
       setLinkedStatus(hasLinkedSelector ? 'error' : 'generic');
@@ -268,14 +288,31 @@ function AdminArtworkRegistration() {
     void loadArtworkWorkspace({
       artworkId: linkedArtworkId,
       artistArtworkRecordId: linkedRecordId,
-    }, controller.signal).then((workspace) => {
+    }, controller.signal).then(async (workspace) => {
       if (controller.signal.aborted) return;
+      const saleId = workspace.sale?.verifiedSaleId;
       if (workspace.catalog?.artworkId !== linkedArtworkId
         || workspace.salesRecord?.artworkRecordId !== linkedRecordId
         || workspace.salesRecord.state !== 'identified'
-        || workspace.identity !== null) {
+        || workspace.identity !== null || !saleId) {
         throw new Error('registration_target_mismatch');
       }
+      const response = await fetch(`/api/admin/collector-sales/${encodeURIComponent(saleId)}`, {
+        cache: 'no-store', signal: controller.signal,
+      });
+      const value = await response.json().catch(() => null);
+      if (!response.ok) throw new Error('registration_target_unavailable');
+      const detail = parseArtistSaleDetailResponse(value);
+      const item = detail.items.find((candidate) => candidate.artworkRecordId === linkedRecordId);
+      if (!item || item.artworkId !== linkedArtworkId || item.identificationStatus !== 'identified'
+        || !item.edition || item.keeperPieceId !== null) {
+        throw new Error('registration_target_mismatch');
+      }
+      setEditionKind(item.edition.kind);
+      setEditionNumber(item.edition.kind === 'numbered' ? String(item.edition.number) : '1');
+      setEditionSize(item.edition.kind === 'numbered' && item.edition.size
+        ? String(item.edition.size) : '');
+      setLinkedTarget({ saleId, artworkRecordId: linkedRecordId, expectedVersion: item.recordVersion });
       setLinkedStatus('ready');
     }).catch((caught: unknown) => {
       if (controller.signal.aborted
@@ -303,6 +340,60 @@ function AdminArtworkRegistration() {
       setError('The private registry could not be unlocked.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const completeLinkedRegistration = async (keeperPieceId: string): Promise<boolean> => {
+    if (!linkedTarget) return true;
+    const attempt = beginArtistSaleAttempt(linkAttemptRef.current, {
+      action: 'linkIdentity',
+      artworkRecordId: linkedTarget.artworkRecordId,
+      keeperPieceId,
+      expectedVersion: linkedTarget.expectedVersion,
+    });
+    linkAttemptRef.current = attempt;
+    setLinkPending(true);
+    try {
+      const response = await fetch(`/api/admin/collector-sales/${encodeURIComponent(linkedTarget.saleId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attempt.request),
+      });
+      const value = await response.json().catch(() => null);
+      if (!response.ok) {
+        linkAttemptRef.current = finishArtistSaleAttempt(attempt, { kind: 'http', status: response.status });
+        throw Object.assign(new Error('identity_link_failed'), { status: response.status });
+      }
+      const mutation = parseArtistSaleMutationResponse(value).result;
+      if (!('identificationStatus' in mutation)
+        || mutation.artworkRecordId !== linkedTarget.artworkRecordId
+        || mutation.keeperPieceId !== keeperPieceId
+        || mutation.identificationStatus !== 'identity_linked') {
+        throw new Error('identity_link_mismatch');
+      }
+      const completed = await loadArtworkWorkspace({
+        artworkId: linkedArtworkId,
+        keeperPieceId,
+        artistArtworkRecordId: linkedRecordId,
+      });
+      if (completed.salesRecord?.state !== 'identity_linked'
+        || completed.salesRecord.artworkRecordId !== linkedRecordId
+        || completed.identity?.keeperPieceId !== keeperPieceId
+        || completed.nextAction?.href.includes('/admin/registrations')) {
+        throw new Error('identity_link_incomplete');
+      }
+      linkAttemptRef.current = finishArtistSaleAttempt(attempt, { kind: 'success' });
+      setRelationshipLinked(true);
+      setError('');
+      return true;
+    } catch (caught) {
+      if (!(caught && typeof caught === 'object' && 'status' in caught)) {
+        linkAttemptRef.current = attempt;
+      }
+      setError('The identity was registered, but its exact sales relationship is not yet confirmed. Retry the same identity link before leaving.');
+      return false;
+    } finally {
+      setLinkPending(false);
     }
   };
 
@@ -345,6 +436,7 @@ function AdminArtworkRegistration() {
         keeperPieceId: body.keeperPieceId,
       });
       attemptKey.current = null;
+      await completeLinkedRegistration(body.keeperPieceId);
     } catch {
       setError('This artwork could not be registered. The same attempt can be retried safely.');
     } finally {
@@ -415,13 +507,13 @@ function AdminArtworkRegistration() {
           </label>
           <fieldset className="space-y-3">
             <legend className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition</legend>
-            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" checked={editionKind === 'unique'} onChange={() => { setEditionKind('unique'); attemptKey.current = null; }} /> Unique work</label>
-            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" checked={editionKind === 'numbered'} onChange={() => { setEditionKind('numbered'); attemptKey.current = null; }} /> Numbered edition</label>
+            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" disabled={linkedStatus === 'ready'} checked={editionKind === 'unique'} onChange={() => { setEditionKind('unique'); attemptKey.current = null; }} /> Unique work</label>
+            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" disabled={linkedStatus === 'ready'} checked={editionKind === 'numbered'} onChange={() => { setEditionKind('numbered'); attemptKey.current = null; }} /> Numbered edition</label>
           </fieldset>
           {editionKind === 'numbered' && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Number<input type="number" min="1" required value={editionNumber} onChange={(event) => { setEditionNumber(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
-              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition size, optional<input type="number" min={editionNumber || '1'} value={editionSize} onChange={(event) => { setEditionSize(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
+              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Number<input type="number" min="1" required disabled={linkedStatus === 'ready'} value={editionNumber} onChange={(event) => { setEditionNumber(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
+              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition size, optional<input type="number" min={editionNumber || '1'} disabled={linkedStatus === 'ready'} value={editionSize} onChange={(event) => { setEditionSize(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
             </div>
           )}
           <button type="submit" disabled={busy || !editionKind || linkedStatus === 'loading'} className="collector-button-primary">{busy ? 'Registering' : 'Register artwork'}</button>
@@ -437,6 +529,17 @@ function AdminArtworkRegistration() {
           <p className="font-sans text-sm text-wood-700">Edition: <strong>{result.editionLabel}</strong></p>
           <p className="font-sans text-sm text-wood-700">Public code: <strong>{result.publicCode}</strong></p>
           <p className="font-sans text-sm text-wood-700">Invitation reference: <strong>{result.keeperPieceId}</strong></p>
+          {linkedTarget && relationshipLinked && (
+            <p className="font-sans text-sm text-wood-700" role="status">Sales record linked to {result.keeperPieceId}.</p>
+          )}
+          {linkedTarget && !relationshipLinked && (
+            <div className="admin-alert admin-alert-error" role="alert">
+              <p>The exact sales relationship is not confirmed yet.</p>
+              <button type="button" disabled={linkPending} className="collector-button-secondary" onClick={() => void completeLinkedRegistration(result.keeperPieceId)}>
+                {linkPending ? 'Linking identity' : 'Retry identity link'}
+              </button>
+            </div>
+          )}
           {result.ownershipCode ? (
             <>
               <p className="font-sans text-sm text-wood-700">Copy the Ownership Code now. It cannot be shown here again.</p>
@@ -447,14 +550,19 @@ function AdminArtworkRegistration() {
           ) : (
             <>
               <p className="font-sans text-sm text-wood-600">The identity is ready. Plate preparation remains optional.</p>
-              <p>
-                <Link
-                  className="collector-button-secondary"
-                  to={`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({ instance: result.keeperPieceId })}`}
-                >
-                  Open artwork
-                </Link>
-              </p>
+              {(!linkedTarget || relationshipLinked) && (
+                <p>
+                  <Link
+                    className="collector-button-secondary"
+                    to={`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({
+                      instance: result.keeperPieceId,
+                      ...(linkedTarget ? { record: linkedTarget.artworkRecordId } : {}),
+                    })}`}
+                  >
+                    Open artwork
+                  </Link>
+                </p>
+              )}
               {linkedStatus === 'generic' && <button type="button" className="collector-button-secondary" onClick={resetRegistration}>Register another artwork</button>}
             </>
           )}

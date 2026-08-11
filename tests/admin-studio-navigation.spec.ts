@@ -259,7 +259,10 @@ test('artwork workspace focuses missing and conflicting exact identity states', 
 });
 
 test('registration nextAction verifies and locks the exact catalog sales record', async ({ page }) => {
-  let registrationBody: Record<string, unknown> | null = null;
+  const workspaceSelectors: Array<Record<string, string>> = [];
+  const registrationBodies: Array<Record<string, unknown>> = [];
+  const linkBodies: Array<Record<string, unknown>> = [];
+  let relationshipLinked = false;
   await page.route('/api/admin/verify', route => route.fulfill({
     status: 200, contentType: 'application/json',
     body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
@@ -269,33 +272,86 @@ test('registration nextAction verifies and locks the exact catalog sales record'
   }));
   await page.route('**/api/admin/artwork-workspace**', route => {
     const query = new URL(route.request().url()).searchParams;
-    expect(Object.fromEntries(query)).toEqual({
-      artworkId: 'UL-100', artistArtworkRecordId: 'record-identified',
-    });
+    workspaceSelectors.push(Object.fromEntries(query));
     return route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({
         ok: true,
         workspace: {
           catalog: { artworkId: 'UL-100', title: 'Art of Living' },
-          salesRecord: { artworkRecordId: 'record-identified', state: 'identified' },
-          identity: null,
+          salesRecord: {
+            artworkRecordId: 'record-identified',
+            state: relationshipLinked ? 'identity_linked' : 'identified',
+          },
+          identity: relationshipLinked
+            ? { keeperPieceId: 'keeper-created', publicCode: 'AR-BCDEFGHJ', state: 'registered' }
+            : null,
           certificate: { state: 'complete', missingFields: [] },
-          invitation: null, caretaker: { state: 'not_registered' }, plate: null,
+          invitation: null,
+          caretaker: { state: relationshipLinked ? 'unclaimed' : 'not_registered' },
+          plate: relationshipLinked ? { state: 'legacy', recoveryState: 'not_required' } : null,
           sale: { state: 'verified', verifiedSaleId: 'sale-identified' },
-          nextAction: null, activity: [],
+          nextAction: relationshipLinked ? null : {
+            label: 'Register artwork identity',
+            href: '/admin/registrations?artworkId=UL-100&artistArtworkRecordId=record-identified',
+            reason: 'This exact artwork is identified but has no permanent identity.',
+          },
+          activity: [],
         },
       }),
     });
   });
   await page.route('/api/admin/registrations', async route => {
-    registrationBody = route.request().postDataJSON();
+    registrationBodies.push(route.request().postDataJSON());
     return route.fulfill({
       status: 201, contentType: 'application/json',
       body: JSON.stringify({
         ok: true, keeperPieceId: 'keeper-created', publicCode: 'AR-BCDEFGHJ',
         ownershipCode: 'BCDE-FGHJ-KMNP-QRST', codeAccess: 'created',
         registrationStatus: 'registered', backupStatus: 'verified',
+      }),
+    });
+  });
+  await page.route('**/api/admin/collector-sales/sale-identified', async route => {
+    const sale = {
+      saleId: 'sale-identified', reconnectionCaseId: null,
+      occurrence: { precision: 'year', value: '2024' }, buyerEmail: null,
+      total: null, privateReference: null, privateNotes: null,
+      recordedAt: '2026-08-10T12:00:00.000Z', sequence: 0,
+    };
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON();
+      linkBodies.push(body);
+      if (linkBodies.length === 1) {
+        return route.fulfill({
+          status: 503, contentType: 'application/json',
+          body: JSON.stringify({ ok: false, error: 'test_ambiguous_link' }),
+        });
+      }
+      relationshipLinked = true;
+      return route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          result: {
+            artworkRecordId: 'record-identified', identificationStatus: 'identity_linked',
+            artworkId: 'UL-100', edition: { kind: 'unique', number: null, size: null },
+            keeperPieceId: 'keeper-created', recordVersion: 4, replayed: false,
+          },
+        }),
+      });
+    }
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true, sale, originalSale: sale, effectiveSale: sale, corrections: [],
+        items: [{
+          saleItemId: 'item-identified', artworkRecordId: 'record-identified',
+          artworkId: 'UL-100', edition: { kind: 'unique', number: null, size: null },
+          keeperPieceId: null, identificationStatus: 'identified', recordVersion: 3,
+          price: null, priceEntries: [], ledgerEntries: [],
+        }],
+        events: [],
       }),
     });
   });
@@ -306,26 +362,61 @@ test('registration nextAction verifies and locks the exact catalog sales record'
   await page.getByRole('button', { name: 'Unlock registry' }).click();
   await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveValue('UL-100');
   await expect(page.getByRole('combobox', { name: 'Artwork' })).toBeDisabled();
-  await page.getByLabel('Unique work').check();
+  await expect(page.getByLabel('Unique work')).toBeChecked();
+  await expect(page.getByLabel('Unique work')).toBeDisabled();
   await page.getByRole('button', { name: 'Register artwork' }).click();
-  expect(registrationBody).toMatchObject({ artworkId: 'UL-100', edition: { kind: 'unique' } });
+  await expect(page.getByText(/identity was registered, but its exact sales relationship is not yet confirmed/i)).toBeVisible();
+  expect(registrationBodies).toHaveLength(1);
+  expect(linkBodies).toHaveLength(1);
+  await page.getByRole('button', { name: 'Retry identity link' }).click();
+  await expect(page.getByText('Sales record linked to keeper-created.')).toBeVisible();
+  expect(registrationBodies).toHaveLength(1);
+  expect(registrationBodies[0]).toMatchObject({ artworkId: 'UL-100', edition: { kind: 'unique' } });
+  expect(linkBodies).toHaveLength(2);
+  expect(linkBodies[0]).toMatchObject({
+    action: 'linkIdentity', artworkRecordId: 'record-identified',
+    keeperPieceId: 'keeper-created', expectedVersion: 3,
+    idempotencyKey: expect.any(String),
+  });
+  expect(linkBodies[1]).toEqual(linkBodies[0]);
+  expect(workspaceSelectors).toEqual([
+    { artworkId: 'UL-100', artistArtworkRecordId: 'record-identified' },
+    {
+      artworkId: 'UL-100', keeperPieceId: 'keeper-created',
+      artistArtworkRecordId: 'record-identified',
+    },
+  ]);
   await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Dismiss Ownership Code' }).click();
-  await expect(page.getByRole('link', { name: 'Open artwork' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
+    'href', '/admin/artworks/UL-100?instance=keeper-created&record=record-identified',
+  );
   await expect(page.getByRole('button', { name: 'Register another artwork' })).toHaveCount(0);
+  expect(registrationBodies).toHaveLength(1);
+  expect(linkBodies).toHaveLength(2);
 });
 
 test('legacy sale nextAction verifies and locks the exact acquisition artwork', async ({ page }) => {
-  let submitted: Record<string, any> | null = null;
+  const createBodies: Array<Record<string, any>> = [];
+  const linkBodies: Array<Record<string, unknown>> = [];
+  const workspaceSelectors: Array<Record<string, string>> = [];
+  let relationshipLinked = false;
   await page.route('/api/admin/verify', route => route.fulfill({
     status: 200, contentType: 'application/json',
     body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
   }));
   await page.route('/api/admin/collector-sales', async route => {
     if (route.request().method() === 'POST') {
-      submitted = route.request().postDataJSON();
+      createBodies.push(route.request().postDataJSON());
       return route.fulfill({
-        status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'test_stop' }),
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          result: {
+            saleId: 'sale-legacy', itemIds: ['item-legacy'],
+            artworkRecordIds: ['record-legacy'], priceEntryIds: ['price-legacy'], replayed: false,
+          },
+        }),
       });
     }
     return route.fulfill({
@@ -336,6 +427,66 @@ test('legacy sale nextAction verifies and locks the exact acquisition artwork', 
           limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
           reconnectionCases: { hasMore: false, nextOffset: null },
+        },
+      }),
+    });
+  });
+  await page.route('**/api/admin/collector-sales/sale-legacy', async route => {
+    const sale = {
+      saleId: 'sale-legacy', reconnectionCaseId: null,
+      occurrence: { precision: 'exact', value: '2019-05-04' }, buyerEmail: null,
+      total: { amountMinor: 32500, currency: 'USD' },
+      privateReference: 'private legacy reference', privateNotes: 'legacy note',
+      recordedAt: '2026-08-10T12:00:00.000Z', sequence: 0,
+    };
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON();
+      linkBodies.push(body);
+      relationshipLinked = true;
+      return route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          result: {
+            artworkRecordId: 'record-legacy', identificationStatus: 'identity_linked',
+            artworkId: 'UL-100', edition: { kind: 'numbered', number: 4, size: 64 },
+            keeperPieceId: 'keeper-legacy', recordVersion: 2, replayed: false,
+          },
+        }),
+      });
+    }
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true, sale, originalSale: sale, effectiveSale: sale, corrections: [],
+        items: [{
+          saleItemId: 'item-legacy', artworkRecordId: 'record-legacy', artworkId: 'UL-100',
+          edition: { kind: 'numbered', number: 4, size: 64 },
+          keeperPieceId: relationshipLinked ? 'keeper-legacy' : null,
+          identificationStatus: relationshipLinked ? 'identity_linked' : 'identified',
+          recordVersion: relationshipLinked ? 2 : 1,
+          price: { amountMinor: 32500, currency: 'USD' },
+          priceEntries: [], ledgerEntries: [],
+        }],
+        events: [],
+      }),
+    });
+  });
+  await page.route('**/api/admin/artwork-workspace**', route => {
+    workspaceSelectors.push(Object.fromEntries(new URL(route.request().url()).searchParams));
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        workspace: {
+          catalog: { artworkId: 'UL-100', title: 'Legacy work' },
+          salesRecord: { artworkRecordId: 'record-legacy', state: 'identity_linked' },
+          identity: { keeperPieceId: 'keeper-legacy', publicCode: 'AR-LEGACY01', state: 'registered' },
+          certificate: { state: 'complete', missingFields: [] }, invitation: null,
+          caretaker: { state: 'unclaimed' },
+          plate: { state: 'legacy', recoveryState: 'not_required' },
+          sale: { state: 'verified', verifiedSaleId: 'sale-legacy' },
+          nextAction: null, activity: [],
         },
       }),
     });
@@ -376,11 +527,24 @@ test('legacy sale nextAction verifies and locks the exact acquisition artwork', 
   await expect(page.getByRole('button', { name: 'Save and add another' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Back to records' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Save verified sale' }).click();
-  await expect.poll(() => submitted).not.toBeNull();
-  expect(submitted?.artworks).toHaveLength(1);
-  expect(submitted?.artworks[0]).toMatchObject({
+  await expect(page.getByText('Legacy sale verified and linked to keeper-legacy.')).toBeVisible();
+  expect(createBodies).toHaveLength(1);
+  expect(createBodies[0].artworks).toHaveLength(1);
+  expect(createBodies[0].artworks[0]).toMatchObject({
     artworkId: 'UL-100', edition: { kind: 'numbered', number: 4, size: 64 },
   });
+  expect(linkBodies).toHaveLength(1);
+  expect(linkBodies[0]).toMatchObject({
+    action: 'linkIdentity', artworkRecordId: 'record-legacy',
+    keeperPieceId: 'keeper-legacy', expectedVersion: 1,
+    idempotencyKey: expect.any(String),
+  });
+  expect(workspaceSelectors).toEqual([{
+    artworkId: 'UL-100', keeperPieceId: 'keeper-legacy',
+    artistArtworkRecordId: 'record-legacy',
+  }]);
+  expect(createBodies).toHaveLength(1);
+  expect(linkBodies).toHaveLength(1);
 });
 
 test('verified sales deep link opens the exact artwork record on a fresh load', async ({ page }) => {
