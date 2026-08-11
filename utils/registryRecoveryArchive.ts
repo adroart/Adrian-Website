@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 6 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 7 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -129,7 +129,8 @@ export const REGISTRY_RECOVERY_V5_TABLES = [
   'artwork_transfer_receipts',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+/** The exact schema-v6 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V6_TABLES = [
   ...REGISTRY_RECOVERY_V5_TABLES,
   'artist_reconnection_cases',
   'artist_reconnection_events',
@@ -141,6 +142,14 @@ export const REGISTRY_RECOVERY_TABLES = [
   'artist_artwork_media',
   'artist_artwork_ledger_entries',
   'artist_artwork_price_entries',
+] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V6_TABLES,
+  'artwork_contributor_invitations',
+  'artwork_contributor_revocations',
+  'artwork_contributor_invitation_acceptances',
+  'artwork_contributor_access_grants',
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -363,6 +372,23 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'id', 'artwork_record_id', 'sale_item_id', 'amount_minor', 'currency',
     'occurred_on', 'occurrence_precision', 'recorded_at',
   ],
+  artwork_contributor_invitations: [
+    'id', 'keeper_piece_id', 'keeper_user_id', 'steward_version',
+    'intended_recipient_user_id', 'intended_recipient_email', 'token_hash',
+    'idempotency_key', 'request_fingerprint', 'invited_at', 'expires_at',
+  ],
+  artwork_contributor_revocations: [
+    'revocation_kind', 'invitation_id', 'revoked_by_keeper_user_id',
+    'steward_version', 'idempotency_key', 'request_fingerprint', 'revoked_at',
+  ],
+  artwork_contributor_invitation_acceptances: [
+    'invitation_id', 'accepted_by_user_id', 'presented_token_hash',
+    'idempotency_key', 'request_fingerprint', 'accepted_at',
+  ],
+  artwork_contributor_access_grants: [
+    'invitation_id', 'keeper_piece_id', 'contributor_user_id', 'keeper_user_id',
+    'steward_version', 'granted_at',
+  ],
 };
 
 export type PrivateRecoveryPayload = {
@@ -374,7 +400,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -402,7 +428,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -513,6 +539,9 @@ export const REGISTRY_RECOVERY_ORDER_COLUMNS: Record<RegistryRecoveryTable, read
   collector_dream_mutations: ['id'],
   collector_dream_rituals: ['id'],
   collector_letters: ['id'],
+  artwork_contributor_revocations: ['revocation_kind', 'invitation_id'],
+  artwork_contributor_invitation_acceptances: ['invitation_id'],
+  artwork_contributor_access_grants: ['invitation_id'],
 };
 
 export type RegistryRecoveryOrderColumnType = 'text' | 'number' | 'dynamic';
@@ -534,6 +563,7 @@ export const REGISTRY_RECOVERY_ORDER_COLUMN_TYPES: Record<
   artwork_provenance_entries: ['dynamic'],
   registry_maintenance_events: ['dynamic'],
   registry_recovery_qualifications: ['dynamic'],
+  artwork_contributor_revocations: ['text', 'text'],
 };
 
 function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[] {
@@ -542,6 +572,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 3) return REGISTRY_RECOVERY_V3_TABLES;
   if (schemaVersion === 4) return REGISTRY_RECOVERY_V4_TABLES;
   if (schemaVersion === 5) return REGISTRY_RECOVERY_V5_TABLES;
+  if (schemaVersion === 6) return REGISTRY_RECOVERY_V6_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -612,7 +643,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -726,16 +757,22 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         collector_dream_rituals: [],
         collector_letters: [],
       } : {}),
-      artist_reconnection_cases: [],
-      artist_artwork_records: [],
-      artist_verified_sales: [],
-      artist_reconnection_events: [],
-      artist_artwork_record_events: [],
-      artist_verified_sale_events: [],
-      artist_verified_sale_items: [],
-      artist_artwork_media: [],
-      artist_artwork_ledger_entries: [],
-      artist_artwork_price_entries: [],
+      ...(payload.schemaVersion < 6 ? {
+        artist_reconnection_cases: [],
+        artist_artwork_records: [],
+        artist_verified_sales: [],
+        artist_reconnection_events: [],
+        artist_artwork_record_events: [],
+        artist_verified_sale_events: [],
+        artist_verified_sale_items: [],
+        artist_artwork_media: [],
+        artist_artwork_ledger_entries: [],
+        artist_artwork_price_entries: [],
+      } : {}),
+      artwork_contributor_invitations: [],
+      artwork_contributor_revocations: [],
+      artwork_contributor_invitation_acceptances: [],
+      artwork_contributor_access_grants: [],
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -756,7 +793,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -1519,6 +1556,182 @@ BEGIN
   ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
 END;`;
 
+const CONTRIBUTOR_RESTORE_TRIGGER_SQL = [
+  `CREATE TRIGGER artwork_contributor_invitation_insert_guard
+BEFORE INSERT ON artwork_contributor_invitations
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1
+      FROM keeper_pieces AS piece
+      JOIN user AS recipient ON recipient.id = NEW.intended_recipient_user_id
+     WHERE piece.id = NEW.keeper_piece_id
+       AND piece.keeper_user_id = NEW.keeper_user_id
+       AND piece.steward_version = NEW.steward_version
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND recipient.emailVerified = 1
+       AND lower(recipient.email) = NEW.intended_recipient_email
+       AND recipient.id <> piece.keeper_user_id
+  ) THEN RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM artwork_contributor_current_access AS access
+     WHERE access.keeper_piece_id = NEW.keeper_piece_id
+       AND access.keeper_user_id = NEW.keeper_user_id
+       AND access.steward_version = NEW.steward_version
+       AND access.contributor_user_id = NEW.intended_recipient_user_id
+  ) THEN RAISE(ABORT, 'contributor already active') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM artwork_contributor_invitations AS invitation
+      LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
+        ON acceptance.invitation_id = invitation.id
+      LEFT JOIN artwork_contributor_revocations AS invitation_revocation
+        ON invitation_revocation.invitation_id = invitation.id
+       AND invitation_revocation.revocation_kind = 'invitation'
+     WHERE invitation.keeper_piece_id = NEW.keeper_piece_id
+       AND invitation.keeper_user_id = NEW.keeper_user_id
+       AND invitation.steward_version = NEW.steward_version
+       AND invitation.intended_recipient_user_id = NEW.intended_recipient_user_id
+       AND acceptance.invitation_id IS NULL
+       AND invitation_revocation.invitation_id IS NULL
+       AND julianday(invitation.expires_at) > julianday(NEW.invited_at)
+       AND NOT EXISTS (
+         SELECT 1
+           FROM artwork_contributor_access_grants AS prior_grant
+           JOIN artwork_contributor_revocations AS prior_revocation
+             ON prior_revocation.invitation_id = prior_grant.invitation_id
+            AND prior_revocation.revocation_kind = 'access'
+          WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+            AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+            AND prior_grant.keeper_user_id = invitation.keeper_user_id
+            AND prior_grant.steward_version = invitation.steward_version
+            AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+       )
+  ) THEN RAISE(ABORT, 'contributor already invited') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_invitation_accept_guard
+BEFORE INSERT ON artwork_contributor_invitation_acceptances
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1
+      FROM artwork_contributor_invitations AS invitation
+      JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
+      JOIN user AS recipient ON recipient.id = invitation.intended_recipient_user_id
+      LEFT JOIN artwork_contributor_revocations AS revocation
+        ON revocation.invitation_id = invitation.id
+       AND revocation.revocation_kind = 'invitation'
+     WHERE invitation.id = NEW.invitation_id
+       AND invitation.intended_recipient_user_id = NEW.accepted_by_user_id
+       AND invitation.token_hash = NEW.presented_token_hash
+       AND piece.keeper_user_id = invitation.keeper_user_id
+       AND piece.steward_version = invitation.steward_version
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND recipient.emailVerified = 1
+       AND revocation.invitation_id IS NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM artwork_claim_requests AS claim
+          WHERE claim.keeper_piece_id = invitation.keeper_piece_id
+            AND claim.requester_user_id = NEW.accepted_by_user_id
+            AND claim.status = 'pending'
+       )
+       AND NOT EXISTS (
+         SELECT 1
+           FROM artwork_contributor_access_grants AS prior_grant
+           JOIN artwork_contributor_revocations AS prior_revocation
+             ON prior_revocation.invitation_id = prior_grant.invitation_id
+            AND prior_revocation.revocation_kind = 'access'
+          WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+            AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+            AND prior_grant.keeper_user_id = invitation.keeper_user_id
+            AND prior_grant.steward_version = invitation.steward_version
+            AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+       )
+       AND julianday(invitation.invited_at) <= julianday(NEW.accepted_at)
+       AND julianday(invitation.expires_at) > julianday(NEW.accepted_at)
+  ) THEN RAISE(ABORT, 'contributor invitation is not available') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_invitation_accept_grant
+AFTER INSERT ON artwork_contributor_invitation_acceptances
+BEGIN
+  INSERT INTO artwork_contributor_access_grants
+    (invitation_id, keeper_piece_id, contributor_user_id, keeper_user_id,
+     steward_version, granted_at)
+  SELECT invitation.id, invitation.keeper_piece_id,
+         invitation.intended_recipient_user_id, invitation.keeper_user_id,
+         invitation.steward_version, NEW.accepted_at
+    FROM artwork_contributor_invitations AS invitation
+   WHERE invitation.id = NEW.invitation_id;
+END;`,
+  `CREATE TRIGGER artwork_contributor_grant_guard
+BEFORE INSERT ON artwork_contributor_access_grants
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1
+      FROM artwork_contributor_invitation_acceptances AS acceptance
+      JOIN artwork_contributor_invitations AS invitation
+        ON invitation.id = acceptance.invitation_id
+     WHERE acceptance.invitation_id = NEW.invitation_id
+       AND invitation.keeper_piece_id = NEW.keeper_piece_id
+       AND invitation.intended_recipient_user_id = NEW.contributor_user_id
+       AND invitation.keeper_user_id = NEW.keeper_user_id
+       AND invitation.steward_version = NEW.steward_version
+       AND acceptance.accepted_at = NEW.granted_at
+       AND NOT EXISTS (
+         SELECT 1 FROM artwork_contributor_current_access AS current_access
+          WHERE current_access.keeper_piece_id = NEW.keeper_piece_id
+            AND current_access.contributor_user_id = NEW.contributor_user_id
+       )
+  ) THEN RAISE(ABORT, 'contributor access grant lacks accepted proof') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_invitation_revoke_guard
+BEFORE INSERT ON artwork_contributor_revocations
+WHEN NEW.revocation_kind = 'invitation'
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1
+      FROM artwork_contributor_invitations AS invitation
+      JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
+     WHERE invitation.id = NEW.invitation_id
+       AND invitation.keeper_user_id = NEW.revoked_by_keeper_user_id
+       AND invitation.steward_version = NEW.steward_version
+       AND piece.keeper_user_id = invitation.keeper_user_id
+       AND piece.steward_version = invitation.steward_version
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND julianday(NEW.revoked_at) >= julianday(invitation.invited_at)
+       AND julianday(NEW.revoked_at) < julianday(invitation.expires_at)
+       AND NOT EXISTS (
+         SELECT 1 FROM artwork_contributor_invitation_acceptances AS acceptance
+          WHERE acceptance.invitation_id = invitation.id
+       )
+  ) THEN RAISE(ABORT, 'contributor invitation cannot be revoked') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_access_revoke_guard
+BEFORE INSERT ON artwork_contributor_revocations
+WHEN NEW.revocation_kind = 'access'
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1
+      FROM artwork_contributor_current_access AS access
+     WHERE access.invitation_id = NEW.invitation_id
+       AND access.keeper_user_id = NEW.revoked_by_keeper_user_id
+       AND access.steward_version = NEW.steward_version
+       AND julianday(NEW.revoked_at) >= julianday(access.granted_at)
+  ) THEN RAISE(ABORT, 'contributor access cannot be revoked') END;
+END;`,
+] as const;
+
+const CONTRIBUTOR_RESTORE_TRIGGER_NAMES = [
+  'artwork_contributor_invitation_insert_guard',
+  'artwork_contributor_invitation_accept_guard',
+  'artwork_contributor_invitation_accept_grant',
+  'artwork_contributor_grant_guard',
+  'artwork_contributor_invitation_revoke_guard',
+  'artwork_contributor_access_revoke_guard',
+] as const;
+
 /**
  * Generate offline-only SQL after the encrypted artifact has been fully
  * authenticated. Every insert is guarded, conflict-failing and transactional.
@@ -1552,8 +1765,14 @@ function buildRegistryRestoreSqlInternal(
         `EXISTS (SELECT 1 FROM ${sqlIdentifier(table)} LIMIT 1)`).join(' OR ')
       + ` BEGIN SELECT RAISE(ROLLBACK, 'registry_recovery_target_not_empty'); END;`,
     `CREATE TEMP TRIGGER ${completionTrigger} BEFORE INSERT ON ${completionTable} WHEN `
-      + REGISTRY_RECOVERY_TABLES.map((table) =>
-        `(SELECT COUNT(*) FROM ${sqlIdentifier(table)}) <> ${payload.tables[table].length}`).join(' OR ')
+      + [
+        ...REGISTRY_RECOVERY_TABLES.map((table) =>
+          `(SELECT COUNT(*) FROM ${sqlIdentifier(table)}) <> ${payload.tables[table].length}`),
+        ...CONTRIBUTOR_RESTORE_TRIGGER_NAMES.map((trigger, index) =>
+          `NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'trigger' `
+          + `AND name = ${sqlValue(trigger)} `
+          + `AND sql = ${sqlValue(CONTRIBUTOR_RESTORE_TRIGGER_SQL[index].slice(0, -1))})`),
+      ].join(' OR ')
       + ` BEGIN SELECT RAISE(ROLLBACK, 'registry_recovery_incomplete_restore'); END;`,
     'BEGIN IMMEDIATE;',
     `INSERT INTO ${guardTable} (token) VALUES (1);`,
@@ -1646,6 +1865,16 @@ function buildRegistryRestoreSqlInternal(
     'artist_verified_sale_items', 'artist_artwork_media',
     'artist_artwork_ledger_entries', 'artist_artwork_price_entries',
   ]);
+  for (const trigger of CONTRIBUTOR_RESTORE_TRIGGER_NAMES) {
+    statements.push(`DROP TRIGGER ${trigger};`);
+  }
+  insertTables([
+    'artwork_contributor_invitations',
+    'artwork_contributor_invitation_acceptances',
+    'artwork_contributor_access_grants',
+    'artwork_contributor_revocations',
+  ]);
+  statements.push(...CONTRIBUTOR_RESTORE_TRIGGER_SQL);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);

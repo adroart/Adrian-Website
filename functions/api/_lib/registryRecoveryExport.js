@@ -75,6 +75,18 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
     WHERE uploaded_by_user_id IS NOT NULL
   UNION SELECT created_by_user_id FROM artist_artwork_ledger_entries
     WHERE created_by_user_id IS NOT NULL
+  UNION SELECT keeper_user_id FROM artwork_contributor_invitations
+    WHERE keeper_user_id IS NOT NULL
+  UNION SELECT intended_recipient_user_id FROM artwork_contributor_invitations
+    WHERE intended_recipient_user_id IS NOT NULL
+  UNION SELECT revoked_by_keeper_user_id FROM artwork_contributor_revocations
+    WHERE revoked_by_keeper_user_id IS NOT NULL
+  UNION SELECT accepted_by_user_id FROM artwork_contributor_invitation_acceptances
+    WHERE accepted_by_user_id IS NOT NULL
+  UNION SELECT contributor_user_id FROM artwork_contributor_access_grants
+    WHERE contributor_user_id IS NOT NULL
+  UNION SELECT keeper_user_id FROM artwork_contributor_access_grants
+    WHERE keeper_user_id IS NOT NULL
   UNION SELECT bridge.auth_user_id FROM users AS bridge
     WHERE bridge.id IN (
       SELECT user_id FROM collector_person_privacy
@@ -232,6 +244,20 @@ function collectReferencedAuthUserIds(tables) {
   ]) {
     for (const row of tables[table]) {
       if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const [table, fields] of [
+    ['artwork_contributor_invitations', [
+      'keeper_user_id', 'intended_recipient_user_id',
+    ]],
+    ['artwork_contributor_revocations', ['revoked_by_keeper_user_id']],
+    ['artwork_contributor_invitation_acceptances', ['accepted_by_user_id']],
+    ['artwork_contributor_access_grants', ['contributor_user_id', 'keeper_user_id']],
+  ]) {
+    for (const row of tables[table]) {
+      for (const field of fields) {
+        if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+      }
     }
   }
   for (const event of tables.artist_verified_sale_events) {

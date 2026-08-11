@@ -28,7 +28,10 @@ import {
   REGISTRY_RECOVERY_V3_TABLES,
   REGISTRY_RECOVERY_V4_TABLES,
   REGISTRY_RECOVERY_V5_TABLES,
+  REGISTRY_RECOVERY_V6_TABLES,
   REGISTRY_RECOVERY_COLUMNS,
+  REGISTRY_RECOVERY_ORDER_COLUMNS,
+  REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
 } from '../utils/registryRecoveryArchive';
 
 const readMigration = (name: string) =>
@@ -62,7 +65,8 @@ const phase1Migrations = `${readMigration('025_artwork_registration.sql')}
 const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 \n${readMigration('030_collector_field.sql')}\n${readMigration('031_collector_letters.sql')}`;
 const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
-\n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}`;
+\n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
+\n${readMigration('033_artwork_contributors.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -83,7 +87,8 @@ async function encryptLegacyPayload(payload: any) {
     : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES
       : payload.schemaVersion === 3 ? REGISTRY_RECOVERY_V3_TABLES
         : payload.schemaVersion === 4 ? REGISTRY_RECOVERY_V4_TABLES
-          : REGISTRY_RECOVERY_V5_TABLES;
+          : payload.schemaVersion === 5 ? REGISTRY_RECOVERY_V5_TABLES
+            : REGISTRY_RECOVERY_V6_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -821,6 +826,99 @@ function appendSecondTransfer(database: DatabaseSync) {
   `);
 }
 
+const contributorUsers = [
+  ['contributor-pending', 'pending-contributor@example.com'],
+  ['contributor-accepted', 'accepted-contributor@example.com'],
+  ['contributor-revoked', 'revoked-contributor@example.com'],
+  ['contributor-expired', 'expired-contributor@example.com'],
+  ['contributor-invite-revoked', 'invitation-revoked@example.com'],
+  ['contributor-old-epoch', 'old-epoch-contributor@example.com'],
+] as const;
+
+function seedContributorRecovery(database: DatabaseSync) {
+  for (const [id, email] of contributorUsers) {
+    database.prepare(
+      `INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+       VALUES (?, ?, ?, 1, 1, 1)`,
+    ).run(id, id, email);
+    database.prepare(
+      `INSERT INTO account
+        (id, userId, accountId, providerId, password, createdAt, updatedAt)
+       VALUES (?, ?, ?, 'credential', ?, 1, 1)`,
+    ).run(`acct-${id}`, id, id, `password-${id}`);
+  }
+  database.exec(`
+    INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
+    VALUES ('UL-200', 'Contributor Recovery', 'Universal Language', NULL, '${exportedAt}');
+    INSERT INTO keeper_pieces
+      (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
+       registered_at, claimed_at, lineage_head_hash, lineage_event_count)
+    VALUES
+      ('kp-contributor', 'UL-200', 0, 'steward-current', '${'7'.repeat(64)}',
+       '${exportedAt}', '${exportedAt}', '${'8'.repeat(64)}', 0);
+
+    INSERT INTO artwork_contributor_invitations
+      (id, keeper_piece_id, keeper_user_id, steward_version,
+       intended_recipient_user_id, intended_recipient_email, token_hash,
+       idempotency_key, request_fingerprint, invited_at, expires_at)
+    VALUES
+      ('aci-00000000-0000-4000-8000-000000000001', 'kp-contributor',
+       'steward-current', 0, 'contributor-pending', 'pending-contributor@example.com',
+       '${'1'.repeat(64)}', 'contributor-pending', '${'a'.repeat(64)}',
+       '2026-07-31T04:00:00.000Z', '2026-09-01T04:00:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000002', 'kp-contributor',
+       'steward-current', 0, 'contributor-expired', 'expired-contributor@example.com',
+       '${'2'.repeat(64)}', 'contributor-expired', '${'b'.repeat(64)}',
+       '2026-07-01T04:00:00.000Z', '2026-07-02T04:00:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000003', 'kp-contributor',
+       'steward-current', 0, 'contributor-invite-revoked',
+       'invitation-revoked@example.com', '${'3'.repeat(64)}',
+       'contributor-invitation-revoked', '${'c'.repeat(64)}',
+       '2026-07-31T05:00:00.000Z', '2026-09-01T05:00:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000004', 'kp-contributor',
+       'steward-current', 0, 'contributor-accepted', 'accepted-contributor@example.com',
+       '${'4'.repeat(64)}', 'contributor-accepted', '${'d'.repeat(64)}',
+       '2026-07-31T06:00:00.000Z', '2026-09-01T06:00:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000005', 'kp-contributor',
+       'steward-current', 0, 'contributor-revoked', 'revoked-contributor@example.com',
+       '${'5'.repeat(64)}', 'contributor-access-revoked', '${'e'.repeat(64)}',
+       '2026-07-31T07:00:00.000Z', '2026-09-01T07:00:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000006', 'kp-recovery',
+       'steward-current', 1, 'contributor-old-epoch', 'old-epoch-contributor@example.com',
+       '${'6'.repeat(64)}', 'contributor-old-epoch', '${'f'.repeat(64)}',
+       '2026-07-31T08:00:00.000Z', '2026-09-01T08:00:00.000Z');
+
+    INSERT INTO artwork_contributor_revocations
+      (revocation_kind, invitation_id, revoked_by_keeper_user_id, steward_version,
+       idempotency_key, request_fingerprint, revoked_at)
+    VALUES
+      ('invitation', 'aci-00000000-0000-4000-8000-000000000003',
+       'steward-current', 0, 'revoke-contributor-invitation', '${'9'.repeat(64)}',
+       '2026-07-31T05:30:00.000Z');
+    INSERT INTO artwork_contributor_invitation_acceptances
+      (invitation_id, accepted_by_user_id, presented_token_hash,
+       idempotency_key, request_fingerprint, accepted_at)
+    VALUES
+      ('aci-00000000-0000-4000-8000-000000000004', 'contributor-accepted',
+       '${'4'.repeat(64)}', 'accept-contributor-active', '${'0'.repeat(64)}',
+       '2026-07-31T06:30:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000005', 'contributor-revoked',
+       '${'5'.repeat(64)}', 'accept-contributor-revoked', '${'1'.repeat(64)}',
+       '2026-07-31T07:30:00.000Z'),
+      ('aci-00000000-0000-4000-8000-000000000006', 'contributor-old-epoch',
+       '${'6'.repeat(64)}', 'accept-contributor-old-epoch', '${'2'.repeat(64)}',
+       '2026-07-31T08:30:00.000Z');
+    INSERT INTO artwork_contributor_revocations
+      (revocation_kind, invitation_id, revoked_by_keeper_user_id, steward_version,
+       idempotency_key, request_fingerprint, revoked_at)
+    VALUES
+      ('access', 'aci-00000000-0000-4000-8000-000000000005',
+       'steward-current', 0, 'revoke-contributor-access', '${'3'.repeat(64)}',
+       '2026-07-31T08:00:00.000Z');
+  `);
+  appendSecondTransfer(database);
+}
+
 function tableCount(database: DatabaseSync, table: string) {
   return Number((database.prepare(`SELECT COUNT(*) AS count FROM "${table}"`).get() as any).count);
 }
@@ -922,8 +1020,46 @@ describe('registry-only legacy fulfillment migration', () => {
 });
 
 describe('private registry recovery export', () => {
+  it('freezes the schema-v6 manifest and adds every migration 033 private table in schema v7', () => {
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 7);
+    assert.deepEqual(REGISTRY_RECOVERY_V6_TABLES.slice(-10), [
+      'artist_reconnection_cases',
+      'artist_reconnection_events',
+      'artist_artwork_records',
+      'artist_artwork_record_events',
+      'artist_verified_sales',
+      'artist_verified_sale_events',
+      'artist_verified_sale_items',
+      'artist_artwork_media',
+      'artist_artwork_ledger_entries',
+      'artist_artwork_price_entries',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-4), [
+      'artwork_contributor_invitations',
+      'artwork_contributor_revocations',
+      'artwork_contributor_invitation_acceptances',
+      'artwork_contributor_access_grants',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_contributor_invitations, [
+      'id', 'keeper_piece_id', 'keeper_user_id', 'steward_version',
+      'intended_recipient_user_id', 'intended_recipient_email', 'token_hash',
+      'idempotency_key', 'request_fingerprint', 'invited_at', 'expires_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_contributor_revocations, [
+      'revocation_kind', 'invitation_id', 'revoked_by_keeper_user_id',
+      'steward_version', 'idempotency_key', 'request_fingerprint', 'revoked_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_contributor_invitation_acceptances, [
+      'invitation_id', 'accepted_by_user_id', 'presented_token_hash',
+      'idempotency_key', 'request_fingerprint', 'accepted_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_contributor_access_grants, [
+      'invitation_id', 'keeper_piece_id', 'contributor_user_id', 'keeper_user_id',
+      'steward_version', 'granted_at',
+    ]);
+  });
+
   it('freezes the schema-v5 manifest and adds all private sale tables in schema v6', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 6);
     assert.deepEqual(REGISTRY_RECOVERY_V5_TABLES, [
       'user', 'account', 'users', 'profiles', 'registry_artworks',
       'registry_catalog_membership', 'keeper_pieces', 'artwork_claim_requests',
@@ -942,7 +1078,7 @@ describe('private registry recovery export', () => {
       'collector_person_privacy', 'collector_piece_privacy',
       'collector_consent_history', 'artwork_transfer_receipts',
     ]);
-    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-10), [
+    assert.deepEqual(REGISTRY_RECOVERY_V6_TABLES.slice(-10), [
       'artist_reconnection_cases',
       'artist_reconnection_events',
       'artist_artwork_records',
@@ -1025,10 +1161,28 @@ describe('private registry recovery export', () => {
     try {
       database.exec('PRAGMA foreign_keys = ON;');
       database.exec(registryMigrations);
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-10)) {
+      for (const table of REGISTRY_RECOVERY_V6_TABLES.slice(-10)) {
         assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
           .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
       }
+    } finally {
+      database.close();
+    }
+  });
+
+  it('archives every schema-v7 contributor column exactly as migration 033 defines it', () => {
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+      assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.artwork_contributor_revocations,
+        ['revocation_kind', 'invitation_id']);
+      assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.artwork_contributor_revocations,
+        ['text', 'text']);
     } finally {
       database.close();
     }
@@ -1064,6 +1218,42 @@ describe('private registry recovery export', () => {
     assert.equal(batchCalls, 1);
     const payload = await decryptPrivateRecoveryExport(archive, { key: exportKey, keyId: exportKeyId });
     assert.equal(Object.values(payload.tables).every((rows) => rows.length === 0), true);
+  });
+
+  it('exports every contributor state with exact Better Auth closure and no unrelated account', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      seedCompleteRegistry(database);
+      seedContributorRecovery(database);
+
+      const archive = await buildPrivateRecoveryExport({
+        ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      assert.equal(payload.tables.artwork_contributor_invitations.length, 6);
+      assert.deepEqual(payload.tables.artwork_contributor_revocations.map((row: any) => [
+        row.revocation_kind, row.invitation_id,
+      ]), [
+        ['access', 'aci-00000000-0000-4000-8000-000000000005'],
+        ['invitation', 'aci-00000000-0000-4000-8000-000000000003'],
+      ]);
+      assert.equal(payload.tables.artwork_contributor_invitation_acceptances.length, 3);
+      assert.equal(payload.tables.artwork_contributor_access_grants.length, 3);
+      assert.deepEqual(contributorUsers.map(([id]) => id).filter((id) =>
+        !payload.tables.user.some((row: any) => row.id === id)), []);
+      assert.deepEqual(contributorUsers.map(([id]) => id).filter((id) =>
+        !payload.tables.account.some((row: any) => row.userId === id)), []);
+      assert.equal(payload.tables.user.some((row: any) => row.id === 'unrelated-user'), false);
+      assert.equal(payload.tables.account.some((row: any) => row.userId === 'unrelated-user'), false);
+    } finally {
+      database.close();
+    }
   });
 
   it('exports a complete verified sale boundary with exact actor closure and private media metadata', async () => {
@@ -1302,12 +1492,174 @@ describe('private registry recovery export', () => {
     };
     const ledger = await buildLedgerFile({ DB });
     assert.equal(seen.length, 4);
-    assert.doesNotMatch(seen.join('\n'), /artwork_acquisitions|artwork_claim_evidence|keeper_intentions|registry_maintenance_events|\buser\b|\baccount\b/i);
+    assert.doesNotMatch(seen.join('\n'), /artwork_acquisitions|artwork_claim_evidence|keeper_intentions|registry_maintenance_events|artwork_contributor|\buser\b|\baccount\b/i);
     assert.doesNotMatch(ledger.body, /amount_minor|private_notes|verified_email|keeper_user_id|current_display_location/i);
+    assert.doesNotMatch(ledger.body, /contributor-(?:pending|accepted|revoked|old-epoch)/i);
   });
 });
 
 describe('clean-only private registry restore', () => {
+  it('restores exact contributor lifecycle and epoch state with live SQL parity', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedContributorRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const liveObjects = [
+        ['view', 'artwork_contributor_current_access'],
+        ['trigger', 'artwork_contributor_invitation_insert_guard'],
+        ['trigger', 'artwork_contributor_invitation_accept_guard'],
+        ['trigger', 'artwork_contributor_invitation_accept_grant'],
+        ['trigger', 'artwork_contributor_grant_guard'],
+        ['trigger', 'artwork_contributor_invitation_revoke_guard'],
+        ['trigger', 'artwork_contributor_access_revoke_guard'],
+      ] as const;
+      const normalize = (sql: unknown) => String(sql).replace(/\s+/g, ' ').trim();
+      const beforeSql = new Map(liveObjects.map(([type, name]) => [name, normalize(
+        target.database.prepare(
+          'SELECT sql FROM sqlite_master WHERE type = ? AND name = ?',
+        ).get(type, name)?.sql,
+      )]));
+
+      target.database.exec(buildRegistryRestoreSql(payload));
+
+      assert.deepEqual(target.database.prepare(
+        `SELECT invitation_id, contributor_user_id, keeper_user_id, steward_version
+           FROM artwork_contributor_current_access ORDER BY invitation_id`,
+      ).all().map((row: any) => ({ ...row })), [{
+        invitation_id: 'aci-00000000-0000-4000-8000-000000000004',
+        contributor_user_id: 'contributor-accepted',
+        keeper_user_id: 'steward-current',
+        steward_version: 0,
+      }]);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invitations'), 6);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invitation_acceptances'), 3);
+      assert.equal(tableCount(target.database, 'artwork_contributor_access_grants'), 3);
+      assert.equal(tableCount(target.database, 'artwork_contributor_revocations'), 2);
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
+      for (const [type, name] of liveObjects) {
+        assert.equal(normalize(target.database.prepare(
+          'SELECT sql FROM sqlite_master WHERE type = ? AND name = ?',
+        ).get(type, name)?.sql), beforeSql.get(name), name);
+      }
+
+      const restoredArchive = await buildPrivateRecoveryExport({
+        ...target.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const restored = await decryptPrivateRecoveryExport(restoredArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(canonicalRecoveryJson(restored.tables[table]),
+          canonicalRecoveryJson(payload.tables[table]), table);
+      }
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('treats contributor tables as clean-target and completion-count boundaries', async () => {
+    const source = createSqliteD1();
+    const occupiedTarget = createSqliteD1();
+    const incompleteTarget = createSqliteD1();
+    const guardlessTarget = createSqliteD1();
+    const mismatchedGuardTarget = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      occupiedTarget.database.exec(registryMigrations);
+      incompleteTarget.database.exec(registryMigrations);
+      guardlessTarget.database.exec(registryMigrations);
+      mismatchedGuardTarget.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedContributorRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const sql = buildRegistryRestoreSql(payload);
+
+      occupiedTarget.database.exec(`
+        PRAGMA foreign_keys = OFF;
+        DROP TRIGGER artwork_contributor_invitation_insert_guard;
+        INSERT INTO artwork_contributor_invitations
+          (id, keeper_piece_id, keeper_user_id, steward_version,
+           intended_recipient_user_id, intended_recipient_email, token_hash,
+           idempotency_key, request_fingerprint, invited_at, expires_at)
+        VALUES
+          ('aci-ffffffff-ffff-4fff-8fff-ffffffffffff', 'missing-piece', 'missing-keeper',
+           0, 'missing-recipient', 'missing@example.com', '${'f'.repeat(64)}',
+           'occupied-contributor-target', '${'e'.repeat(64)}',
+           '2026-07-31T04:00:00.000Z', '2026-09-01T04:00:00.000Z');
+        PRAGMA foreign_keys = ON;
+      `);
+      assert.throws(() => occupiedTarget.database.exec(sql),
+        /registry_recovery_target_not_empty/i);
+      assert.equal(tableCount(occupiedTarget.database, 'artwork_contributor_invitations'), 1);
+      assert.equal(tableCount(occupiedTarget.database, 'user'), 0);
+
+      const contributorInsert = sql.split('\n').find((line) =>
+        line.startsWith('INSERT INTO "artwork_contributor_invitations"'));
+      assert.ok(contributorInsert);
+      assert.throws(() => incompleteTarget.database.exec(
+        sql.replace(contributorInsert, ''),
+      ), /registry_recovery_incomplete_restore/i);
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(tableCount(incompleteTarget.database, table), 0, table);
+      }
+
+      const triggerMarker = 'CREATE TRIGGER artwork_contributor_access_revoke_guard';
+      const triggerStart = sql.lastIndexOf(triggerMarker);
+      assert.notEqual(triggerStart, -1);
+      const guardlessSql = `${sql.slice(0, triggerStart)}${sql.slice(triggerStart).replace(
+        triggerMarker, 'CREATE TRIGGER omitted_artwork_contributor_access_revoke_guard',
+      )}`;
+      assert.notEqual(guardlessSql, sql);
+      assert.throws(() => guardlessTarget.database.exec(guardlessSql),
+        /registry_recovery_incomplete_restore/i);
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(tableCount(guardlessTarget.database, table), 0, table);
+      }
+      assert.ok(guardlessTarget.database.prepare(
+        `SELECT 1 FROM sqlite_master
+          WHERE type = 'trigger' AND name = 'artwork_contributor_access_revoke_guard'`,
+      ).get());
+
+      const mismatchedGuardSql = `${sql.slice(0, triggerStart)}${sql.slice(triggerStart).replace(
+        "'contributor access cannot be revoked'",
+        "'corrupted contributor access guard'",
+      )}`;
+      assert.notEqual(mismatchedGuardSql, sql);
+      assert.throws(() => mismatchedGuardTarget.database.exec(mismatchedGuardSql),
+        /registry_recovery_incomplete_restore/i);
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(tableCount(mismatchedGuardTarget.database, table), 0, table);
+      }
+    } finally {
+      source.database.close();
+      occupiedTarget.database.close();
+      incompleteTarget.database.close();
+      guardlessTarget.database.close();
+      mismatchedGuardTarget.database.close();
+    }
+  });
+
   it('decrypts and upgrades a valid schema v1 archive with empty source-chain tables', async () => {
     const source = createSqliteD1();
     const target = createSqliteD1();
@@ -1563,6 +1915,45 @@ describe('clean-only private registry restore', () => {
     }
   });
 
+  it('decrypts schema v6 without changing any sale row or digest input', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const v6Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 6,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V6_TABLES.map((name) => [
+          name, current.tables[name],
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v6Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      for (const table of REGISTRY_RECOVERY_V6_TABLES) {
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v6Payload.tables[table]), table);
+      }
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+        assert.deepEqual(upgraded.tables[table], [], table);
+      }
+    } finally {
+      source.database.close();
+    }
+  });
+
   it('restores the exact grandfathered registration shape created by migration 025', async () => {
     const source = createSqliteD1();
     const target = createSqliteD1();
@@ -1592,6 +1983,7 @@ describe('clean-only private registry restore', () => {
       source.database.exec(phase1Migrations);
       source.database.exec(phase2Migrations);
       source.database.exec(readMigration('032_artist_verified_sales.sql'));
+      source.database.exec(readMigration('033_artwork_contributors.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference
@@ -2113,8 +2505,8 @@ describe('clean-only private registry restore', () => {
       writeFileSync(archivePath, JSON.stringify(archive));
       writeFileSync(keyPath, `${exportKeyId}\n${exportKey}\n`);
 
-      const restored = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const restored = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, sqlPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.equal(restored.status, 0, restored.stderr);
@@ -2122,20 +2514,20 @@ describe('clean-only private registry restore', () => {
       assert.match(readFileSync(sqlPath, 'utf8'), /registry_recovery_target_not_empty/i);
       assert.equal(statSync(sqlPath).mode & 0o777, 0o600);
 
-      const noOutput = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql', archivePath, keyPath,
+      const noOutput = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql', archivePath, keyPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(noOutput.status, 0);
       assert.doesNotMatch(noOutput.stdout, /private acquisition note|current-password-hash/);
 
-      const overwrite = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql', archivePath, keyPath, sqlPath,
+      const overwrite = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql', archivePath, keyPath, sqlPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(overwrite.status, 0);
       assert.match(overwrite.stderr, /refusing.*existing|already exists/i);
 
-      const legacy = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'to-sql', archivePath,
+      const legacy = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'to-sql', archivePath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(legacy.status, 0);
       assert.doesNotMatch(legacy.stderr, /wrangler d1 execute adrian-website --remote/i);
@@ -2143,8 +2535,8 @@ describe('clean-only private registry restore', () => {
       const tampered = structuredClone(archive) as any;
       tampered.ciphertext = `${tampered.ciphertext.slice(0, -2)}AA`;
       writeFileSync(archivePath, JSON.stringify(tampered));
-      const refused = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const refused = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, join(directory, 'refused.sql'),
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(refused.status, 0);
@@ -2190,16 +2582,16 @@ describe('clean-only private registry restore', () => {
       }));
 
       const missingOutput = join(directory, 'missing-media.sql');
-      const missing = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const missing = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, missingOutput,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(missing.status, 0);
       assert.equal(existsSync(missingOutput), false);
 
       const validOutput = join(directory, 'media-restore.sql');
-      const valid = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const valid = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, validOutput,
         '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
@@ -2210,8 +2602,8 @@ describe('clean-only private registry restore', () => {
 
       writeFileSync(join(mediaRoot, 'record-linked', 'evidence.webp'), 'HELLO WORLD');
       const mismatchOutput = join(directory, 'mismatch.sql');
-      const mismatch = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const mismatch = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, mismatchOutput,
         '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
@@ -2227,8 +2619,8 @@ describe('clean-only private registry restore', () => {
         }],
       }));
       const traversalOutput = join(directory, 'traversal.sql');
-      const traversal = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+      const traversal = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
         archivePath, keyPath, traversalOutput,
         '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
