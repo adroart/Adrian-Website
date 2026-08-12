@@ -1,8 +1,29 @@
 export const MAINTENANCE_REASON_MAX = 500;
 export const MAINTENANCE_IDEMPOTENCY_KEY_MAX = 128;
 
+/** Legacy sale candidate and bounded maintenance activity for one registered identity. */
+export async function readMaintenanceWorkspaceProjection(env, keeperPieceId) {
+  if (!keeperPieceId) return { legacySale: null, activity: [] };
+  const [legacy, events] = await Promise.all([
+    env.DB.prepare(`SELECT id FROM artwork_acquisitions
+      WHERE keeper_piece_id = ?1 AND acquisition_type = 'sale'
+      ORDER BY COALESCE(acquired_at, created_at) DESC, id DESC LIMIT 1`)
+      .bind(keeperPieceId).first(),
+    env.DB.prepare(`SELECT event_type, created_at FROM registry_maintenance_events
+      WHERE keeper_piece_id = ?1 AND outcome = 'succeeded'
+      ORDER BY created_at DESC, id DESC LIMIT 20`).bind(keeperPieceId).all(),
+  ]);
+  return {
+    legacySale: legacy ? { state: 'legacy_candidate', acquisitionId: legacy.id } : null,
+    activity: (events?.results ?? []).map((event) => [
+      'maintenance_recorded', event.created_at,
+      event.event_type === 'artwork_registered'
+        ? 'Artwork registration recorded' : 'Registry maintenance recorded',
+    ]),
+  };
+}
+
 const ACQUISITION_TYPES = new Set([
-  'sale',
   'gift',
   'retained',
   'loan',
@@ -364,6 +385,10 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
   const before = normalizeEventSnapshot(eventType, event?.before);
   const after = normalizeEventSnapshot(eventType, event?.after);
   if (!isPlainRecord(before) || !isPlainRecord(after)) return null;
+  if (normalizedTarget.targetType === 'acquisition'
+    && before.acquisitionType === 'sale') {
+    return { error: 'legacy_sale_read_only' };
+  }
 
   const expectedSnapshotKeys = [...policy.identityFields, ...changeKeys];
   if (!sameKeys(Object.keys(before), expectedSnapshotKeys)
@@ -599,6 +624,9 @@ export function normalizeAcquisitionInput(input) {
   const acquisitionType = typeof input.acquisitionType === 'string'
     ? input.acquisitionType.trim().toLowerCase()
     : '';
+  if (acquisitionType === 'sale') {
+    return { ok: false, error: 'verified_sale_required' };
+  }
   if (!ACQUISITION_TYPES.has(acquisitionType)) {
     return { ok: false, error: 'invalid_acquisition_type' };
   }
@@ -871,15 +899,18 @@ async function resolveMaintenanceIdempotency(env, event, fallback) {
 
 /**
  * Run one optimistic mutation and its succeeded maintenance event in a
- * single D1 batch. The helper owns the target allowlist, version increment and
- * optimistic WHERE guard. The event SELECT sees SQLite changes() from that
- * mutation, so a zero-row conflict cannot append a success event.
+ * single D1 batch. Most callers use the generated versioned mutation. A
+ * structurally guarded workflow may instead supply a final gateway statement
+ * whose database trigger performs and verifies the mutation atomically.
  */
 export async function commitMaintenanceMutation(env, {
   target,
   changes,
   event,
   expectedVersion,
+  beforeStatements = [],
+  afterStatements = [],
+  gatewayStatement = null,
 }) {
   if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
     return { ok: false, error: 'invalid_expected_version' };
@@ -911,24 +942,31 @@ export async function commitMaintenanceMutation(env, {
     );
     boundEvent = { ...event, id: eventId, mutationFingerprint };
     const normalizedEvent = normalizeEventDetails(boundEvent, eventId);
-    mutationStatement = buildVersionedMutationStatement(
-      env,
-      normalizedTarget,
-      expectedVersion,
-      validatedEvent.beforeValues,
-      validatedEvent.contextGuard,
-    );
+    if (!gatewayStatement) {
+      mutationStatement = buildVersionedMutationStatement(
+        env,
+        normalizedTarget,
+        expectedVersion,
+        validatedEvent.beforeValues,
+        validatedEvent.contextGuard,
+      );
+    }
     eventStatement = prepareMaintenanceEventStatement(env, normalizedEvent);
   } catch {
     return { ok: false, error: 'invalid_maintenance_event' };
   }
 
   try {
-    const [mutationResult, eventResult] = await env.DB.batch([
-      mutationStatement,
-      eventStatement,
-    ]);
-    const mutationChanges = mutationResult?.meta?.changes;
+    const statements = gatewayStatement
+      ? [...beforeStatements, eventStatement, ...afterStatements, gatewayStatement]
+      : [...beforeStatements, mutationStatement, eventStatement, ...afterStatements];
+    const results = await env.DB.batch(statements);
+    const mutationResult = gatewayStatement
+      ? results.at(-1)
+      : results[beforeStatements.length];
+    const eventResult = gatewayStatement
+      ? results[beforeStatements.length]
+      : results[beforeStatements.length + 1];
     const eventChanges = eventResult?.meta?.changes;
     if (mutationResult?.success !== true || eventResult?.success !== true) {
       return resolveMaintenanceIdempotency(
@@ -937,7 +975,7 @@ export async function commitMaintenanceMutation(env, {
         { ok: false, error: 'maintenance_write_failed' },
       );
     }
-    if (mutationChanges !== 1) {
+    if (!gatewayStatement && mutationResult?.meta?.changes !== 1) {
       return resolveMaintenanceIdempotency(
         env,
         boundEvent,

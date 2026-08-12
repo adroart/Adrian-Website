@@ -1,5 +1,4 @@
-import { resolveArtwork } from './artworkCatalog.js';
-import { jsonResponse } from './admin.js';
+import { constantTimeEqual, jsonResponse } from './admin.js';
 import {
   genKeeperPieceId,
   hashRecoveryCode,
@@ -8,8 +7,6 @@ import {
 } from './keeper.js';
 import {
   buildLineageEvent,
-  lineageAnchorStatement,
-  lineageStatement,
 } from './lineage.js';
 import {
   backupPlateEnvelope,
@@ -26,21 +23,9 @@ import { generateRecoveryCode } from '../../../utils/recoveryCode.ts';
 
 const MAX_ISSUANCE_KEY_LENGTH = 128;
 const MAX_EDITION_NUMBER = 9999;
-const PUBLIC_CODE_ATTEMPTS = 8;
 
 function isSchemaMissing(error) {
   return isMissingTableError(error) || /no such column/i.test(String(error?.message || ''));
-}
-
-function editionConstraintResponse(error) {
-  const message = String(error?.message || '');
-  if (/keeper_piece_edition_kind_conflict/i.test(message)) {
-    return jsonResponse({ ok: false, error: 'artwork_edition_kind_conflict' }, 409);
-  }
-  if (/keeper_piece_edition_range_violation/i.test(message)) {
-    return jsonResponse({ ok: false, error: 'invalid_edition_number' }, 400);
-  }
-  return null;
 }
 
 function validateBasicInput(body) {
@@ -70,23 +55,6 @@ function validateBasicInput(body) {
     requestedEditionKind,
     uniqueConfirmed: body?.uniqueConfirmed === true,
   };
-}
-
-async function validateNewIssuance(env, basic) {
-  const artwork = await resolveArtwork(env, basic.pieceId);
-  if (!artwork) return { error: 'unknown_artwork' };
-  const editionKind = artwork.editionKind;
-  if (editionKind === 'unspecified') return { error: 'edition_metadata_required' };
-  if (basic.requestedEditionKind && basic.requestedEditionKind !== editionKind) {
-    return { error: 'invalid_edition_kind' };
-  }
-  if (editionKind === 'unique') {
-    if (basic.editionNumber !== 0) return { error: 'invalid_edition_number' };
-    if (!basic.uniqueConfirmed) return { error: 'unique_confirmation_required' };
-  } else if (basic.editionNumber < 1 || basic.editionNumber > artwork.editionSize) {
-    return { error: 'invalid_edition_number' };
-  }
-  return { ...basic, editionKind };
 }
 
 export function registryPlateCryptoConfigured(env) {
@@ -304,14 +272,310 @@ async function replayIssuedPackage(row, input, env) {
   return jsonResponse(withBackupOutcome(await packageFromStoredRegistryPlate(row, env), backup));
 }
 
-async function findEditionKindConflict(env, input) {
-  const comparison = input.editionKind === 'unique' ? '> 0' : '= 0';
+function optionalPlateInput(input) {
+  const keeperPieceId = typeof input?.keeperPieceId === 'string'
+    ? input.keeperPieceId.trim()
+    : '';
+  const idempotencyKey = typeof input?.idempotencyKey === 'string'
+    ? input.idempotencyKey.trim()
+    : '';
+  const userId = typeof input?.authorization?.userId === 'string'
+    ? input.authorization.userId.trim()
+    : '';
+  const email = typeof input?.authorization?.email === 'string'
+    ? input.authorization.email.trim().toLowerCase()
+    : '';
+  const unlockExpiresAt = input?.authorization?.registryUnlockExpiresAt;
+  if (!keeperPieceId || keeperPieceId.length > 128) return { error: 'invalid_keeper_piece_id' };
+  if (!idempotencyKey || idempotencyKey.length > 128) {
+    return { error: 'invalid_idempotency_key' };
+  }
+  if (!userId || userId.length > 128 || !email || email.length > 254) {
+    return { error: 'invalid_administrator_identity' };
+  }
+  if (!Number.isSafeInteger(unlockExpiresAt) || unlockExpiresAt <= Math.floor(Date.now() / 1000)) {
+    return { error: 'registry_unlock_required' };
+  }
+  const preparedAtProvided = input.preparedAt !== undefined;
+  const preparedAt = !preparedAtProvided
+    ? new Date().toISOString()
+    : typeof input.preparedAt === 'string'
+      ? input.preparedAt.trim()
+      : '';
+  const parsedPreparedAt = new Date(preparedAt);
+  if (!preparedAt || Number.isNaN(parsedPreparedAt.getTime())) return { error: 'invalid_prepared_at' };
+  return {
+    keeperPieceId,
+    idempotencyKey,
+    authorization: { userId, email, registryUnlockExpiresAt: unlockExpiresAt },
+    preparedAt: parsedPreparedAt.toISOString(),
+    preparedAtProvided,
+  };
+}
+
+async function optionalPlateFingerprint(input) {
+  const bytes = new TextEncoder().encode(JSON.stringify({
+    action: 'prepare_optional_plate',
+    keeperPieceId: input.keeperPieceId,
+    idempotencyKey: input.idempotencyKey,
+    administratorUserId: input.authorization.userId,
+    administratorEmail: input.authorization.email,
+    preparedAt: input.preparedAtProvided ? input.preparedAt : null,
+  }));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function findPlatePreparationEvent(env, idempotencyKey) {
   return env.DB.prepare(
-    `SELECT id FROM keeper_pieces
-      WHERE piece_id = ?1 AND edition_number ${comparison}
-        AND plate_status NOT IN ('void', 'superseded')
-      LIMIT 1`,
-  ).bind(input.pieceId).first();
+    `SELECT id, idempotency_key, event_type, keeper_piece_id, artwork_id,
+            administrator_user_id, administrator_email, reason, before_json,
+            after_json, outcome, related_record_id, mutation_fingerprint,
+            created_at
+       FROM registry_maintenance_events
+      WHERE idempotency_key = ?1`,
+  ).bind(idempotencyKey).first();
+}
+
+function parseExactPlateSnapshot(value) {
+  try {
+    const parsed = JSON.parse(value);
+    const keys = [
+      'keeperPieceId', 'artworkId', 'plateStatus', 'plateGeneratedAt',
+      'frontSha256', 'undersideSha256', 'backupStatus', 'backupReference',
+      'backupSha256', 'recordVersion',
+    ];
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)
+      || Object.keys(parsed).length !== keys.length
+      || Object.keys(parsed).some((key) => !keys.includes(key))) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function replayOptionalPlate(env, existing, input, fingerprint) {
+  if (!existing) return null;
+  if (existing.idempotency_key !== input.idempotencyKey
+    || existing.event_type !== 'plate_prepared'
+    || existing.keeper_piece_id !== input.keeperPieceId
+    || existing.administrator_user_id !== input.authorization.userId
+    || existing.administrator_email !== input.authorization.email
+    || existing.outcome !== 'succeeded'
+    || existing.related_record_id !== input.keeperPieceId
+    || existing.mutation_fingerprint !== fingerprint) {
+    return { ok: false, error: 'idempotency_conflict' };
+  }
+  const before = parseExactPlateSnapshot(existing.before_json);
+  const after = parseExactPlateSnapshot(existing.after_json);
+  if (!before || !after || before.keeperPieceId !== input.keeperPieceId
+    || before.plateStatus !== 'legacy' || after.plateStatus !== 'generated'
+    || after.recordVersion !== before.recordVersion + 1
+    || existing.artwork_id !== after.artworkId) {
+    return { ok: false, error: 'idempotency_conflict' };
+  }
+  const row = await env.DB.prepare('SELECT * FROM keeper_pieces WHERE id = ?1')
+    .bind(input.keeperPieceId).first();
+  if (!row || row.registration_status !== 'registered' || row.plate_status !== 'generated'
+    || row.piece_id !== after.artworkId || row.plate_generated_at !== after.plateGeneratedAt
+    || row.front_svg_sha256 !== after.frontSha256
+    || row.back_svg_sha256 !== after.undersideSha256
+    || row.backup_status !== 'verified' || row.backup_reference !== after.backupReference
+    || row.backup_sha256 !== after.backupSha256 || !plateBackupIsVerified(row)) {
+    return { ok: false, error: 'plate_preparation_state_mismatch' };
+  }
+  try {
+    const plate = await packageFromStoredRegistryPlate(row, env);
+    return {
+      ...plate,
+      replayed: true,
+      eventId: existing.id,
+      generatedAt: row.plate_generated_at,
+      backupStatus: 'verified',
+    };
+  } catch {
+    return { ok: false, error: 'plate_preparation_failed' };
+  }
+}
+
+function platePreparationEventStatement(env, {
+  input, row, plate, backup, fingerprint, eventId,
+}) {
+  const before = JSON.stringify({
+    keeperPieceId: row.id,
+    artworkId: row.piece_id,
+    plateStatus: row.plate_status,
+    plateGeneratedAt: row.plate_generated_at,
+    frontSha256: row.front_svg_sha256,
+    undersideSha256: row.back_svg_sha256,
+    backupStatus: row.backup_status,
+    backupReference: row.backup_reference,
+    backupSha256: row.backup_sha256,
+    recordVersion: row.record_version,
+  });
+  const after = JSON.stringify({
+    keeperPieceId: row.id,
+    artworkId: row.piece_id,
+    plateStatus: 'generated',
+    plateGeneratedAt: input.preparedAt,
+    frontSha256: plate.frontSha256,
+    undersideSha256: plate.undersideSha256,
+    backupStatus: 'verified',
+    backupReference: backup.reference,
+    backupSha256: backup.sha256,
+    recordVersion: row.record_version + 1,
+  });
+  return env.DB.prepare(
+    `INSERT INTO registry_maintenance_events
+       (id, idempotency_key, event_type, keeper_piece_id, artwork_id,
+        administrator_user_id, administrator_email, reason, before_json,
+        after_json, outcome, related_record_id, mutation_fingerprint, created_at)
+     SELECT ?1, ?2, 'plate_prepared', ?3, ?4, ?5, ?6, ?7, ?8, ?9,
+            'succeeded', ?3, ?10, ?11
+      WHERE changes() = 1`,
+  ).bind(
+    eventId,
+    input.idempotencyKey,
+    row.id,
+    row.piece_id,
+    input.authorization.userId,
+    input.authorization.email,
+    'Prepare optional physical artwork plate.',
+    before,
+    after,
+    fingerprint,
+    input.preparedAt,
+  );
+}
+
+/** Add optional physical fabrication to an already registered identity. */
+export async function prepareOptionalPlate(env, rawInput) {
+  const input = optionalPlateInput(rawInput);
+  if (input.error) return { ok: false, error: input.error };
+  if (!registryPlateCryptoConfigured(env)) {
+    return { ok: false, error: 'ownership_code_crypto_not_configured' };
+  }
+  if (typeof env?.DB?.batch !== 'function') {
+    return { ok: false, error: 'atomic_write_unavailable' };
+  }
+  const fingerprint = await optionalPlateFingerprint(input);
+  try {
+    const existing = await findPlatePreparationEvent(env, input.idempotencyKey);
+    const replay = await replayOptionalPlate(env, existing, input, fingerprint);
+    if (replay) return replay;
+
+    const row = await env.DB.prepare('SELECT * FROM keeper_pieces WHERE id = ?1')
+      .bind(input.keeperPieceId).first();
+    if (!row) return { ok: false, error: 'keeper_piece_not_found' };
+    if (row.registration_status !== 'registered') {
+      return { ok: false, error: 'artwork_not_registered' };
+    }
+    if (row.plate_status !== 'legacy' || row.plate_generated_at !== null
+      || row.front_svg_sha256 !== null || row.back_svg_sha256 !== null) {
+      return { ok: false, error: 'plate_identity_locked' };
+    }
+    const expectedIdentityReference = `identities/${row.public_code}/${row.identity_backup_sha256}.json`;
+    if (row.identity_backup_status !== 'verified'
+      || row.identity_backup_reference !== expectedIdentityReference
+      || !/^[0-9a-f]{64}$/.test(row.identity_backup_sha256 || '')) {
+      return { ok: false, error: 'identity_backup_not_verified' };
+    }
+
+    const ownershipCode = await decryptOwnershipCode(
+      envelopeFromRow(row),
+      {
+        publicCode: row.public_code,
+        pieceId: row.piece_id,
+        editionNumber: row.edition_number,
+      },
+      env,
+    );
+    const verifier = await hashRecoveryCode(ownershipCode);
+    if (!constantTimeEqual(verifier, row.recovery_code_hash)) {
+      return { ok: false, error: 'ownership_code_verifier_mismatch' };
+    }
+    const plate = await buildArtworkPlatePackage({
+      publicCode: row.public_code,
+      ownershipCode,
+      artworkId: row.piece_id,
+      editionNumber: row.edition_number,
+      generatedAt: input.preparedAt,
+    });
+    const plateRow = {
+      ...row,
+      plate_generated_at: input.preparedAt,
+      front_svg_sha256: plate.frontSha256,
+      back_svg_sha256: plate.undersideSha256,
+    };
+    const backup = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, plateRow);
+    if (backup.status !== 'verified') return { ok: false, error: 'plate_backup_failed' };
+
+    const update = env.DB.prepare(
+      `UPDATE keeper_pieces
+          SET plate_status = 'generated', plate_generated_at = ?1,
+              front_svg_sha256 = ?2, back_svg_sha256 = ?3,
+              backup_status = 'verified', backup_reference = ?4,
+              backup_sha256 = ?5, backup_at = ?1
+        WHERE id = ?6 AND registration_status = 'registered'
+          AND plate_status = 'legacy' AND plate_generated_at IS NULL
+          AND front_svg_sha256 IS NULL AND back_svg_sha256 IS NULL
+          AND record_version = ?7 AND public_code = ?8 AND issuance_key = ?9
+          AND recovery_code_hash = ?10 AND ownership_code_ciphertext = ?11
+          AND ownership_code_nonce = ?12 AND ownership_code_key_version = ?13
+          AND keeper_user_id IS ?14 AND lineage_head_hash IS ?15
+          AND lineage_event_count = ?16 AND identity_backup_status = 'verified'
+          AND identity_backup_reference = ?17 AND identity_backup_sha256 = ?18`,
+    ).bind(
+      input.preparedAt,
+      plate.frontSha256,
+      plate.undersideSha256,
+      backup.reference,
+      backup.sha256,
+      row.id,
+      row.record_version,
+      row.public_code,
+      row.issuance_key,
+      row.recovery_code_hash,
+      row.ownership_code_ciphertext,
+      row.ownership_code_nonce,
+      row.ownership_code_key_version,
+      row.keeper_user_id,
+      row.lineage_head_hash,
+      row.lineage_event_count,
+      row.identity_backup_reference,
+      row.identity_backup_sha256,
+    );
+    const eventId = `rme-${crypto.randomUUID()}`;
+    const event = platePreparationEventStatement(env, {
+      input, row, plate, backup, fingerprint, eventId,
+    });
+    const results = await env.DB.batch([update, event]);
+    if (results?.[0]?.meta?.changes !== 1 || results?.[1]?.meta?.changes !== 1) {
+      const raced = await findPlatePreparationEvent(env, input.idempotencyKey);
+      const replay = await replayOptionalPlate(env, raced, input, fingerprint);
+      if (replay) return replay;
+      return { ok: false, error: 'plate_preparation_conflict' };
+    }
+    return {
+      ok: true,
+      replayed: false,
+      eventId,
+      ownershipCode,
+      ...plate,
+      generatedAt: input.preparedAt,
+      backupStatus: 'verified',
+    };
+  } catch (error) {
+    try {
+      const raced = await findPlatePreparationEvent(env, input.idempotencyKey);
+      const replay = await replayOptionalPlate(env, raced, input, fingerprint);
+      if (replay) return replay;
+    } catch {
+      // Preserve the safe failure below.
+    }
+    if (isSchemaMissing(error)) return { ok: false, error: 'registry_migration_required' };
+    return { ok: false, error: 'plate_preparation_failed' };
+  }
 }
 
 export async function issueRegistryPlate(request, env) {
@@ -330,66 +594,9 @@ export async function issueRegistryPlate(request, env) {
   try {
     const replay = await findByIssuanceKey(env, basic.issuanceKey);
     if (replay) return replayIssuedPackage(replay, basic, env);
-    const input = await validateNewIssuance(env, basic);
-    if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
-    if (await findEditionKindConflict(env, input)) {
-      return jsonResponse({ ok: false, error: 'artwork_edition_kind_conflict' }, 409);
-    }
-    const duplicate = await env.DB.prepare(
-      `SELECT id FROM keeper_pieces
-        WHERE piece_id = ?1 AND edition_number = ?2
-          AND plate_status NOT IN ('void', 'superseded')`,
-    ).bind(input.pieceId, input.editionNumber).first();
-    if (duplicate) return jsonResponse({ ok: false, error: 'artwork_edition_already_issued' }, 409);
-
-    for (let attempt = 0; attempt < PUBLIC_CODE_ATTEMPTS; attempt += 1) {
-      const candidate = await createRegistryPlateCandidate(env, input);
-      try {
-        if (typeof env.DB.batch !== 'function') throw new Error('atomic write unavailable');
-        await env.DB.batch([
-          registryPlateInsertStatement(env, candidate),
-          lineageStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
-          lineageAnchorStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
-        ]);
-      } catch (error) {
-        const editionConstraint = editionConstraintResponse(error);
-        if (editionConstraint) return editionConstraint;
-        if (/public_code/i.test(String(error?.message || '')) && /unique/i.test(String(error?.message || ''))) {
-          continue;
-        }
-        if (/unique/i.test(String(error?.message || ''))) {
-          const concurrentReplay = await findByIssuanceKey(env, input.issuanceKey);
-          if (concurrentReplay) return replayIssuedPackage(concurrentReplay, input, env);
-          return jsonResponse({ ok: false, error: 'issuance_conflict' }, 409);
-        }
-        throw error;
-      }
-      const row = {
-        id: candidate.id,
-        public_code: candidate.publicCode,
-        piece_id: candidate.pieceId,
-        edition_number: candidate.editionNumber,
-        plate_generated_at: candidate.generatedAt,
-        ownership_code_ciphertext: candidate.envelope.ciphertext,
-        ownership_code_nonce: candidate.envelope.nonce,
-        ownership_code_key_version: candidate.envelope.keyVersion,
-        backup_status: 'pending',
-      };
-      const backup = await backupRegistryPlate(env, row);
-      return jsonResponse(
-        withBackupOutcome({ ok: true, ownershipCode: candidate.ownershipCode, ...candidate.plate }, backup),
-        201,
-      );
-    }
-    return jsonResponse({ ok: false, error: 'public_code_collision' }, 503);
+    return jsonResponse({ ok: false, error: 'artwork_registration_required' }, 409);
   } catch (error) {
     if (isSchemaMissing(error)) return migrationNotApplied();
-    const editionConstraint = editionConstraintResponse(error);
-    if (editionConstraint) return editionConstraint;
-    if (error?.code === 'artwork_edition_metadata_conflict'
-      || error?.code === 'invalid_stored_edition_metadata') {
-      return jsonResponse({ ok: false, error: error.code }, 500);
-    }
     return jsonResponse({ ok: false, error: 'issuance_failed' }, 500);
   }
 }

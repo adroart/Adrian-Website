@@ -55,7 +55,7 @@ export async function onRequest(context) {
 
   // Look up the user by stripe_customer_id first, then fall back to email
   // matching. user_id stays null for guest checkouts; later /api/orders/claim
-  // or the Clerk user.created webhook will attach them.
+  // or the account sync path will attach them.
   let userId = null;
   if (s.customer) {
     const u = await env.DB

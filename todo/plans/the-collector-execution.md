@@ -7,17 +7,19 @@
 > re-plan. The thinking is done and committed; your job is to execute the next phase and leave
 > the next session able to start cold.
 >
-> **Three documents, and you need all three:**
-> - `the-collector-journey.md` — the spec. What must be true. Read in full, once.
-> - `the-collector-build.md` — the ordered work, phases 0 through 3. Your task list.
-> - this file — how to work, what is already verified, what never to relitigate.
+> **Three working records, and you need all three:**
+> - `the-collector-journey.md`: the original acceptance spec.
+> - `the-collector-build.md`: the ordered work with current status corrections.
+> - this file: how to work, what is verified, and the current migration record.
+>
+> Read `collector-screen-wording.md` and its visual companions first. The August 10 master wins
+> wherever these older records or a locally built screen disagree.
 
 ---
 
 ## Start of session — do this first
 
-1. **Read the three documents above.** The journey spec in full. Do not skim it; it is what the
-   build gets checked against and every build item names the step it serves.
+1. **Read the authority and working records above.** Do not skim the wording master.
 2. **Read `## Progress` at the bottom of this file.** It records what previous sessions landed
    and what the next one should pick up. It is the handoff between sessions.
 3. **Check for parallel sessions.** `git worktree list` and look for live dev processes. If
@@ -38,27 +40,32 @@ record. The ceremony layer — four privacy rings, the dream, letters from the p
 Founding Lights ordinals — rehomes here from mandalacodes. The reasoning that overturned the
 earlier opposite decision is in the journey spec. Do not reopen it.
 
-**There are two complete ownership systems, both live, neither referencing the other.** This is
-the single most important fact in the build.
+**There are two ownership implementations, but the audited storage is not two populated live
+systems.** This is the corrected ground truth from the Phase 0 audit.
 - Here: `keeper_pieces` with a hash chain enforced by database triggers (migration 013 raises
   ABORT on UPDATE and DELETE), encrypted ownership codes with versioned keys, `AR-XXXXXXXX`
   public codes, and a dependency on commerce that migration 022 deliberately severed.
 - On mandalacodes: the Atlas — hash chain in R2 JSON, `StewardRecord`s, letters, consent rings,
-  claim requests.
+  claim requests. Its configured ledger object was absent and its public Atlas response was empty
+  on 2026-08-09. No authoritative export containing the planned 18 pieces was found.
+
+Both deployments already bind to the same account database. The collision is therefore two sets
+of ownership code and two possible writers, not two account databases that need to be combined.
 
 **Auth ground truth.** Adrian-Website is on self-hosted Better Auth, not Clerk. Migration
 completed July 2026. `users.clerk_user_id`, `getUserByClerkId`, `upsertUser({clerkUserId})`, and
 `atlas_inscriptions.author_clerk_id` are stale Clerk-era names now carrying Better Auth ids.
 `TODO.md` and `CLAUDE.md` both still claim Clerk and are wrong.
 
-**Zero real collectors. Zero production artwork identities.** Confirmed in migration 013's header
-(production audited with zero `keeper_pieces` rows), in `better-auth-migration.md`, and in the
-identity direction. The migration window is open and this is why the merge is cheap now.
+**Preserve the small live registry exactly.** A read-only production audit on 2026-08-09 found one
+keeper piece with one lineage event, alongside four account rows and two profile rows. The older
+zero-row statement was stale. Phase 0 must not replace or rewrite that history.
 
 **The catalog already holds everything.** 173 pieces across five series in `data/mockData.ts`:
 64 Universal Language, 42 Mandala, 34 Light Codes, 21 Objects, 12 Signature. `series` and
 `category` on the `Artwork` type are free-form strings. All-artwork-filterable-by-series needs no
-data model change. Only 18 pieces exist in the mandalacodes ledger, and no non-UL work at all.
+data model change. The earlier plan expected 18 mandalacodes pieces, all from the UL work, but the
+current configured ledger and local recovery copies do not contain an authoritative export.
 
 **`CLAUDE.md` is wrong about the architecture.** It claims "No backend, all data lives in
 mockData.ts." There are 88 function files and 24 migrations. Fix it when you touch it.
@@ -89,19 +96,19 @@ risks that were specifically closed.
 
 ---
 
-## Blocked on Adrian — skip, list, never guess
+## Adrian inputs do not block implementation
 
-Three things only Adrian can answer. Do not build around them, do not invent placeholder answers,
-and do not let them stall anything else. Skip the item, note it in `## Progress`, continue.
+Build the complete editing and journey surfaces before asking Adrian for bulk content entry.
 
-1. **The materials data** — wood species, stones, makers, manufacture location, per piece. The
-   `artwork_provenance_entries` table exists with typed entries and visibility flags. It is empty.
-   Blocks the certificate (journey step 6, build item 1.5).
-2. **Four design calls** — what video actually promises, whether a spouse is a holder or a
-   contributor, what makes a light brighter without being gameable, and what the invitation
-   carries as proof for a collector with no printed code. Block build items 3.2, 3.1, 2.4, 1.2.
+1. **Materials, makers, origins, and wording** use reusable templates with per-artwork overrides.
+   Missing values remain absent from the public certificate. Adrian adds and tunes the facts later.
+2. **Product behavior uses the August 10 master:** single-use artwork invitations and one canonical
+   caretaker remain. The old equal-brightness default is superseded. Video remains later work with
+   no personal or permanent-hosting promise.
 3. **The aesthetic questions** are already answered. Design work runs in parallel under
    `collector-design-handoff.md` and does not block anything here.
+4. **No historical Atlas import is required.** Adrian confirmed on 2026-08-09 that the Atlas never
+   began. The empty live object and backups are the expected state, not lost provenance.
 
 ---
 
@@ -109,15 +116,17 @@ and do not let them stall anything else. Skip the item, note it in `## Progress`
 
 **Work one phase. Stop at its boundary. Report. Do not roll into the next.**
 
-The phases are in `the-collector-build.md`. In short:
+The phases below are the historical work breakdown. The August 10 master and the semantic migration
+table in `## Progress` govern the current implementation status.
 
-- **Phase 0 — the merge.** Five items. Freeze the mandalacodes ledger, migrate its 18 pieces
-  here, collapse the duplicated birth-details storage into one row on the person, point
-  mandalacodes at this registry as a reader, rename the stale login column. **This blocks
-  everything else** — until it lands, two systems claim to own who holds a piece.
-- **Phase 1 — the walkable registration.** Eight items. Reframe registration around the artwork
-  rather than the plate, build the invitation door, the opening screen, arrival, the certificate,
-  the privacy screen, birth details at onboarding, and seed the missing pieces.
+- **Phase 0, the merge.** Five items. Freeze mandalacodes ownership writes, import any verified
+  historical source chains into a separate preserved envelope, confirm the already-shared profile
+  row, point mandalacodes at this registry as a reader, rename the stale login column. **This blocks
+  everything else** until one system is the only writer for who holds a piece.
+- **Phase 1, the walkable registration.** One ownership-integrity preflight, then eight journey
+  items. Repair transfer and contested-claim paths, reframe registration around the artwork rather
+  than the plate, build the invitation door, the opening screen, arrival, the certificate, the
+  privacy screen, birth details at onboarding, and seed catalog membership.
 - **Phase 2 — the piece becomes alive.** Six items. The dream, the globe and ordinals, a way in
   that is not the hexagram ring, brightness, letters, the yearly ritual.
 - **Phase 3 — what only exists on paper.** Four items. Co-holding, video, warning delivery, the
@@ -132,10 +141,13 @@ systems in the first place.
 
 ---
 
-## The chain migrates cleanly
+## The source chain is preserved separately
 
-Chain identity is content-based — SHA-256 over canonicalized event JSON, with no domain or bucket
-in the hash. Nothing invalidates on relocation.
+The source hashes remain valid because they are content-based SHA-256 values over canonicalized
+source event JSON. They cannot be inserted as this site's native lineage events, however, because
+the two systems hash different envelopes and allow different event vocabularies. Phase 0 keeps the
+verified source events in their own append-only evidence chain linked to the local keeper record.
+It never recomputes or disguises them as native history.
 
 The one real cost is the public mirror, whose tamper-evidence is a commit history rather than the
 chain itself. Either carry that repository along unchanged, or record honestly that the trust
@@ -149,9 +161,8 @@ before it. One paragraph of documentation, not an engineering problem.
 **State how you will verify before writing the code, not after.** Both typechecks must exit 0.
 
 **For anything touching the chain, the ownership state machine, or the migration: hand the
-finished diff to a second model** via the `codex:rescue` skill before declaring it done. A
-different model has different blind spots. A silent bug in a provenance system is expensive and
-may not surface for years.
+finished diff to a fresh second model before declaring it done.** A different model has different
+blind spots. A silent bug in a provenance system is expensive and may not surface for years.
 
 **Never claim work is complete without running the check and reading its output.** Evidence before
 assertions.
@@ -193,4 +204,278 @@ written, committed, and pushed. Four survey agents established the ground truth 
 The two-ownership-systems collision was found and the placement decision ratified. Design work is
 staged separately and runs in parallel.
 
-**Next session picks up: Phase 0, item 0.1.** Nothing is blocked on Adrian for Phase 0.
+**2026-08-09: Phase 0 implementation stopped at its boundary.** Mandalacodes ownership writes are
+frozen and its Atlas surfaces now read the canonical registry. This site has an additive source
+history envelope, a fail-closed and replay-safe import path, a verified public reader, private
+recovery support, and a rolling login-name compatibility change that keeps both deployments safe
+during rollout. The existing keeper record and lineage event are preserved. The already-shared
+profile storage was verified rather than duplicated again.
+
+No historical import was performed. The configured legacy ledger object, public Atlas, and recovery
+copies are empty because the Atlas never began. Adrian confirmed this on 2026-08-09. Phase 0 correctly
+creates no historical records; the fail-closed import path remains only as a safeguard.
+
+Verification passed on both projects: focused provenance and compatibility tests, each full unit
+suite, each typecheck, each production build, and clean-diff checks. Independent reviews found and
+closed privacy, replay, semantic-integrity, old-backup compatibility, read-side mutation, rollout,
+and truthful-empty-state defects before the boundary report.
+
+**2026-08-09: Adrian closed the final Phase 0 question.** There is no missing Atlas export because
+the project had not begun. Materials, makers, origins, and wording will be editable through reusable
+templates with individual artwork overrides and can be filled gradually after the interface exists.
+
+**2026-08-09: Adrian approved the hybrid multi-agent execution design.** Independent leaf modules
+may build in parallel behind closed launch flags. Ownership mutation, migrations, recovery
+registration, parent-route integration, and production rollout remain single-owner seams. The
+approved design and Phase 1 work packets are recorded beside this file.
+
+The repository-wide audit corrected one more statement before implementation. Administrator
+transfer does not yet append the promised public transfer event, administrator reset can make a
+previously claimed piece directly bearer-bindable, and contested claims still call the frozen
+legacy writer. Phase 1 begins with item 1.0 to repair those paths. This does not reopen Phase 0's
+placement decision.
+
+**Next session begins Phase 1, item 1.0.** Then item 1.1 publishes the artwork-registration seam
+that the parallel invitation, certificate, privacy, and birth lanes consume. Perform a reviewed
+canary and restore rehearsal before any production write.
+
+**2026-08-09: Phase 1 item 1.0 is complete locally and has not been deployed.** A previously
+claimed artwork can no longer return to bearer binding or change keeper through an unaudited
+update. Governed transfer now records its private evidence, advances keeper state and public
+lineage together, clears the prior display location, and replays without duplication even if the
+recipient's account email later changes. Public transfer history contains only random
+transfer-scoped references and the transfer kind.
+
+Contested claims now stay in the canonical registry, preserve the current keeper, remain private,
+and wait for human resolution. Encrypted recovery carries the claim queue and complete transfer
+evidence, retains support for older archives, and has been tested across two successive transfers.
+
+Verification passed with 455 unit tests, typecheck, the production build, and the complete browser
+suite with 58 passes and 10 intentional skips. Focused ownership, privacy, migration, and recovery
+checks passed. Independent specification, security, and final re-review found and closed raw state
+mutation, partial transaction, private-data, stale retry, damaged migration, and multi-transfer
+restore defects.
+
+The damage detector and migration guard are built and tested. Before any production migration,
+run the detector against a fresh read-only database copy, rehearse migration and restore on copies,
+and stop if it finds a previously claimed artwork in an unclaimed or half-bound state.
+
+**Next: Phase 1 item 1.1, artwork-first registration with optional plate preparation.** No
+additional Adrian content is needed to begin it.
+
+**2026-08-09: Phase 1 item 1.1 is complete locally and has not been deployed.** An artwork can now
+receive its permanent public identity, encrypted Ownership Code, verified identity backup, and
+initial public history before any physical plate exists. Public lookup and the permanent QR work in
+that registered state without exposing ownership secrets, keeper identity, or private recovery
+data. First keeper binding uses the qualified identity backup independently of plate fabrication.
+
+Optional plate preparation keeps the same artwork identity, code, keeper state, and public history.
+It records a separate administrator action and remains replay-safe. The older plate endpoint can
+only replay a previously generated package and cannot mint around artwork registration. Catalog
+membership storage is separate and cannot create an edition, public code, keeper, or lineage.
+
+Verification passed with 482 unit tests, typecheck, the production build, and the complete browser
+suite with 58 passes and 10 intentional skips. The focused registration gate passed 230 tests.
+Independent specification and security reviews found and closed expired-authority creation,
+plate-first bypass, qualification ordering, catalog conflict, endpoint-coverage, and concurrent
+replay defects.
+
+**Next: Phase 1 items 1.2 through 1.7 can build in parallel behind the published registration and
+first-bind seams.** No additional Adrian content is needed for invitation proof, template editing,
+privacy and shared birth onboarding, or dry-run catalog membership.
+
+**2026-08-09: Phase 1 items 1.2 through 1.8 produced local infrastructure and an older presentation,
+and were not deployed.** Under that older model, the public arrival represented an artwork record
+without a sign-in wall or timed gate. A collector could enter through a neutral registration door,
+read the opening promise, sign in, prove the artwork with either its Ownership Code or a single-use
+invitation, choose privacy, review or skip shared birth information, see the effective certificate
+facts, and finish that older journey. Invitation proof
+is restricted to its intended verified recipient, expires or revokes safely, cannot be reused, and
+does not enter public history, browser storage, or the page address.
+The token remains editable while an invitation is inspected, then freezes during irreversible
+redemption so a successful single-use result cannot be discarded by an in-flight edit.
+
+The opening promises a durable, exportable ownership record. It always explains that the Ownership
+Code remains with the artwork, grants registration access to whoever holds it, and must be kept safe
+and private. Editable wording can supplement but cannot replace those truths. Video remains an
+optional attachment and does not promise permanent hosting. Privacy defaults closed. Existing birth
+information can be kept or updated, and missing information can be added or skipped. Public
+certificate facts resolve from reusable templates plus individual artwork overrides, render the
+exact server-resolved artwork instance, and omit blank values. A mismatched certificate response
+fails closed. Administrator surfaces now expose artwork registration, collector invitations, and
+certificate editing, while
+physical plate preparation remains optional and later.
+
+Catalog-wide membership planning completed as a dry run only. Encrypted recovery now carries every
+new Phase 1 record, restores invitation redemption in its valid sequence, preserves private account
+references, and upgrades older archives without inventing proof. The local non-production canary
+passed 127 focused ownership, invitation, and encrypted clean-restore checks. After the final
+acceptance repairs, the stable full gate passed 540 unit tests, 84 browser tests with 10 intentional
+skips, typecheck, the production build, and clean-diff checks. No production data was seeded or
+changed, no launch flag was enabled, and no deployment was performed.
+
+Adrian can add materials, makers, origins, and final wording gradually through the certificate
+editor; missing facts stay hidden and do not block the next phase. Before production rollout, run
+the ownership damage detector against a fresh read-only production copy, rehearse migration and
+encrypted restore on copies, and stop on any damaged ownership state. Real sale-to-artwork mapping
+also remains an Adrian input before the later sale door can be connected.
+
+**Next: Phase 2 makes the piece feel alive.** Build the dream, globe-light, equal-brightness, and
+yearly-ritual experience behind the closed launch flag. Do not seed production or enable the
+journey before the production-copy preflight succeeds.
+
+**2026-08-10: Phase 2 produced local data and scheduling foundations and was not deployed.** A current keeper can create
+one dream in the exact self, family, community, or planet scope, keep it private, share it
+anonymously, or attribute it only when adult and name consent remain current. Edits, sharing,
+revocation, transfer closure, and yearly ritual actions are request-bound, replay-safe, and tied to
+their exact database audit. There is no approval gate and no visible support count.
+
+The public collector field now includes the complete catalog without pretending that catalog rows
+are claimed identities. Unregistered pieces remain dim. Registered lights have equal resting
+brightness, permanent first-claim ordinals, neutral marker size, consent-safe place projection,
+and browsing by series, year, or place. Filters recede nonmatches instead of emptying the field, and
+the accessible list remains equivalent to the visual field on desktop, mobile, and reduced motion.
+
+Letters now arrive from committed first binds and transfers, and a replay-safe daily runner covers
+due anniversaries. Their wording is limited to current consent, trusted curated places, and current
+adult evidence. A disabled-by-default schedule calls a launch-gated, secret-protected runner, so no
+production ceremony starts before rollout. The yearly ritual offers reinforce, plant new, or mark
+fulfilled against the keeper's existing dream rather than opening a blank form.
+
+Encrypted recovery advanced to schema v5. It preserves permanent ordinals, dreams, audit markers,
+rituals, and letters, upgrades older archives, and recreates every runtime guard exactly after a
+clean restore. Final verification passed 619 unit tests and 88 browser journeys with 10 intentional
+mobile skips, plus typecheck, the production build, clean-diff checks, and a 57-test independent
+acceptance pass. No production data was read or changed, the `livingLegacy` flag remains false, and
+no deployment was performed.
+
+Adrian can continue adding materials, makers, origins, and final wording through the existing
+template editor. Those facts do not block the first three Phase 3 items. Exact sale-to-artwork
+mapping remains the one Adrian input required before the sale door can connect a purchase to the
+correct artwork record.
+
+**Next: Phase 3 begins with contributors around one canonical keeper.** Then build optional video,
+warning delivery, and the sale door. Stop here until a Phase 3 session begins.
+
+**2026-08-10: the verified-sales and reconnection foundation is complete locally and has not been
+deployed.** The private artist workspace can begin with only an email, so an older collector may be
+invited back into the process before Adrian knows which artwork they bought or has a photograph. It
+also records one sale across several artworks, keeps buyer details, references, notes, and prices
+private, and supports exact or approximate sale dates. Older records remain searchable beyond the
+first page. Unknown works can stay unresolved indefinitely, then be identified, registered, linked,
+or invited later without forcing the collector to claim anything.
+
+Creator messages and pictures may be added to an artwork ledger at any later time. They are
+append-only, pictures are never overwritten, and one better image may be selected for the
+certificate while the earlier evidence remains. The public certificate reveals only the selected
+fortune-like message and image after the exact artwork is claimed. Buyer information and prices are
+never public. A signed-in current keeper can see the complete private price history, including later
+resales, and a transfer immediately removes that access from the former keeper. Resales can reuse the
+existing private artwork record, so they extend one price ledger instead of creating a duplicate.
+
+Corrections preserve both the original facts and the current effective facts with permanent reasons.
+One-time Ownership Codes and invitation proofs remain in memory only. Encrypted recovery advanced to
+schema v6 and now includes every private sale, reconnection, artwork-ledger, price, and media record.
+Media-aware restore verifies a read-only copy of every referenced R2 object before it produces any
+restore SQL.
+
+Final local verification passed 743 unit tests, 210 focused security and privacy checks, 12 complete
+sales journeys across desktop and mobile, typecheck, the production build, clean-diff checks, and an
+independent acceptance re-review with no remaining P1 or P2 finding. The broader site browser run
+passed 88 cases with 10 intentional skips; 10 existing smoke cases reached their assertions but were
+blocked by external-resource `net::ERR_INTERNET_DISCONNECTED` console errors and remain queued for an
+online rerun. No production database or storage was read or changed, `livingLegacy` remains false,
+and no deployment was performed.
+
+Adrian's remaining work is data entry, not product design: add real historical sales, emails, prices,
+artwork mappings, pictures, and optional messages gradually after rollout. An email-only case may
+stay open until Adrian and the collector reconnect and identify the piece. Automatic inbound email
+capture is deliberately deferred; the current path keeps that relationship personal and manual.
+
+**Next: continue Phase 3 with contributors around one canonical keeper.** Optional video and warning
+delivery remain unbuilt. The commerce-triggered sale door is also still separate: this completed
+foundation records artist-verified sales and reconnections, but it does not yet turn a new checkout
+into an automatic registration invitation. Stop here at the verified-sales boundary.
+
+**2026-08-11: Phase 3.1 contributor access, API, UI, recovery, and integrated acceptance are complete
+locally, and nothing has been deployed.** A current canonical keeper can invite a verified account
+with a single-use, artwork-specific proof, inspect pending invitations, and revoke pending or active
+access. The recipient can inspect and accept only while signed in as the exact verified account.
+Proof stays in memory, plaintext is returned only on first creation, and persistence keeps only its
+SHA-256 hash.
+Contributor identity, email, authentication identifiers, proof hashes, idempotency digests, and
+free text do not enter public lineage, public registry identity, the certificate, the artwork
+ledger, the offline issuance ledger, or an unauthenticated response.
+
+Contributor access is structurally separate from keeper authority. It grants no transfer,
+recovery, contested-claim, contributor-invitation, private-price, privacy, dream, ritual, or letter
+authority. A committed transfer removes both pending invitations and active access immediately. A
+failed transfer preserves access, and transferring the artwork back does not revive an older grant.
+Outside keeper-only contributor management, the exact signed-in recipient can see only an opaque
+invitation identifier, safe artwork identity, and proof status. A signed-in artwork relationship
+check returns only that account's own contributor boolean.
+
+Encrypted recovery advanced to schema v7. Its archive includes every contributor invitation,
+acceptance, grant, and revocation with exact Better Auth closure, and older archives upgrade without
+inventing contributor access. Migration 034's operational triggers are suspended during historical
+insertion, recreated with exact SQL parity, and leave the transient rate and reservation tables
+empty. Restore accepts eleven same-hour invitations for one keeper and rolls back if recreated
+trigger SQL is missing or altered. The focused acceptance gate passed 339 tests, the recovery and
+operational-trigger subset passed 7 tests, the complete unit gate passed 830 tests, and the
+contributor journeys passed all 4 desktop and 390 px mobile cases.
+Typecheck, the production build, and clean-diff checks also passed. No production database or
+storage was read or changed, `livingLegacy` remains false, and no deployment was performed.
+
+The first review's account-email enumeration P2 is repaired. Missing, unverified, and ambiguous
+recipient accounts now share one opaque response, and a persistent keeper-scoped ten-attempt hourly
+bucket bounds probes across isolates, recipient changes, and idempotency-key changes. Migration 034
+stores keeper and window counters plus private idempotency reservation metadata, but no recipient,
+artwork, proof, or token data. It is transient security state, separate from the encrypted schema-v7
+business recovery boundary.
+
+The final replay repair combines the durable generation lease with versioned HMAC-SHA-256 derivation.
+Synchronized exact requests, delayed post-refresh takeover, a crash after derivation, and active-key
+rotation all converge on the same logical proof and invitation identifier. Server invitation
+material creation uses no random-value or UUID calls. Active reservations remain token-free and do
+not charge quota; completed replay is token-free; only a created result returns plaintext. Missing,
+invalid, or failed key material fails closed before recipient lookup or quota mutation, and a failed
+elected derivation releases its reservation for stable retry. A frozen old key version is preserved
+across rotation and fails closed without destructive cleanup if its key is unavailable.
+
+Fresh independent security/spec and code-quality reviews both pass with zero P1 or P2 findings.
+They independently verified deterministic proof and identifier derivation, key rotation and failure
+cleanup, replay secrecy, zero server RNG and UUID calls, durable rate limiting, recipient opacity,
+recovery exclusion and trigger parity, public privacy, transfer invalidation, authority separation,
+and `livingLegacy = false`. Phase 3.1 private contributor-access acceptance is complete. The launch
+flag remains false because contributor material and launch authorization are separate.
+
+Attributed contributor material is not part of the implemented access work. Its content shape
+remains blocked on Adrian's decision, and no material editor, upload path, public projection, or
+ceremony integration has been built. Optional video, warning delivery, and the commerce-triggered
+sale door also remain separate.
+
+**2026-08-10: active collector branch truth pass.** At the start of this pass, the collector source
+worktree was clean at `d5b10fa1cf7a05577c72a1a87e51f017b5e82b99`. That is the final collector
+commit copied into this integration branch. Its recorded full baseline passed 740 unit tests and 98 Playwright tests, with 10
+intentional skips. The verified-sales workspace, certificate resolver, media authorization and
+integrity checks, and their regression coverage were reviewed as finished active work. The launch
+flag remains off, no production migration or seed was run, and no collector surface was deployed.
+
+The locally built Phase 1 and Phase 2 presentations do not establish completion against the August
+10 master. The migration from local implementation to the settled collector experience is:
+
+| Disposition | Surfaces | Current meaning |
+|---|---|---|
+| Reuse | Identity; invitations; governed claim and transfer; certificate resolver; verified sales; media integrity; recovery | Durable canonical seams. Integrate them without adding a second writer or store. |
+| Adapt | Public projections; dream persistence; letters scheduling; field data | Retain valid data and service boundaries, then align their projections and behavior with the master. |
+| Replace | Old Register-or-Dream fork; combined privacy and birth flow; legacy keeper panels; equal-brightness semantics where they conflict with the master | Existing presentation is superseded and is not acceptance evidence. |
+| Later | Garden; household; collaborators; heirs; gift wishes; passing UI; video | Do not count these as built or include them in the current integration. |
+
+**Next:** integrate the reusable collector foundation without launching it, then replace or adapt one
+master-defined surface at a time. Production rollout remains a separate approval and verification
+stage.
+
+**2026-08-12: reconciliation note.** The truth pass above was written on the admin-integration
+branch before the Phase 3.1 contributor-access work landed; this unified branch now carries both.
+The contributor-access acceptance (2026-08-11 entry) and the admin workspace integration are merged
+into one line of history. Integration of the master-defined surfaces continues from here.

@@ -49,8 +49,10 @@ The succession letter in `mandalacodes/docs/ledger-successor.md` already opens b
 Atlas "the living history system for every piece of physical art that has left Adrian
 Rasmussen's studio" — the intent was always general; only the hosting was specific.
 
-**Fact two — there are two complete ownership systems, not one.** This was not visible when
-`living-legacy.md` was written. Both are built, both are live, neither references the other:
+**Fact two: there are two ownership implementations, not two populated account stores.** This
+was not visible when `living-legacy.md` was written. Both code paths can write ownership, but both
+deployments already share the same account database. The configured Atlas ledger object was absent
+and its public response was empty when Phase 0 audited it:
 
 | | mandalacodes Atlas | this site's registry |
 |---|---|---|
@@ -84,12 +86,12 @@ already ratified as permanent and it stays permanent; it is a boundary, not a ga
 the 64. All other work needs a different way in, by series or year or where it lives. That is
 new design, called out in Missing below.
 
-**The chain moves cleanly.** Chain identity is content-based — SHA-256 over canonicalized event
-JSON, with no domain or bucket in the hash. Nothing invalidates on relocation. The one real cost
-is the public mirror: its tamper-evidence is a commit history, so relocating either carries that
-repository along unchanged or records honestly that the trust chain moved on a given date. One
-paragraph of documentation, not an engineering problem. With 18 pieces in the ledger and zero in
-production on this side, the migration is small and now is the cheapest it will ever be.
+**The source chain keeps its identity in a separate envelope.** Its hashes are content-based over
+canonicalized source events, with no domain or bucket in the hash, so the original source evidence
+survives relocation. The local registry uses a different hash envelope and event vocabulary, so
+source events must not be inserted as native lineage. They remain an append-only source chain
+linked to the local keeper record. The public mirror still matters as historical evidence, but the
+planned 18-piece export was not present in the configured object or available recovery copies.
 
 ---
 
@@ -311,11 +313,13 @@ holder opened ring two, and it may not name the person unless they opened ring f
 The piece sells. The new holder enters the code. Everything stays with the piece as part of its
 history, and the process begins again for them.
 
-**Built, correctly, and this is the load-bearing guarantee.** Transfer appends an event carrying
-opaque references and a kind — sale, gift, inheritance, or artist rebind. Re-binding a claimed
-piece outside an audited transfer is structurally impossible, not merely discouraged. Requests
-against a piece someone already holds route to the current holder, never to Adrian. A contested
-claim can only resolve through a human. The escalation path that could free a piece from an
+**Built locally, not deployed.** The canonical registry now records keeper state, private transfer
+evidence, recovery, and append-only public transfer history as one governed operation. A previously
+claimed piece cannot return to bearer binding or change keeper outside audited transfer. Public
+history carries only random transfer-scoped references and the kind, such as sale, gift,
+inheritance, or artist rebind. Contested claims stay in this registry and can only resolve through
+a human. The
+escalation path that could free a piece from an
 unresponsive holder is **deliberately switched off** because it requires four warnings a person
 actually received and there is no way to send them yet: *"Silence a keeper never heard is not
 consent."* Leave it off until warnings can be delivered.
@@ -324,17 +328,19 @@ consent."* Leave it off until warnings can be delivered.
 
 ## What blocks a full walk today
 
-**The two systems are one system in name only.** Until the ceremony layer is rehomed, a person's
-journey crosses two records of who owns a piece. Two records of ownership is the one thing a
-provenance system cannot have.
+**The ownership authority is now one system.** Phase 0 froze the legacy writer and retired its
+holder-dependent readers. Phase 1 has repaired the canonical transfer path and moved contested
+claims into the canonical database locally. The remaining deployment rehearsal is not a second
+ownership merge.
 
-**Forty-six of sixty-four pieces are not in the ledger at all**, and no non-Universal-Language
-work is in it. Someone who buys one of those and scans it reaches nothing. This is the gap that
-makes the flow untestable end to end, and it is Adrian's data entry.
+**The catalog still needs registry identities.** The catalog already contains every artwork, so
+seeding registry entries is agent-runnable implementation rather than Adrian's data entry.
 
-**The certificate has nothing to read from** until materials, makers, and origins are recorded.
+**The certificate needs an editing workflow.** Materials, makers, origins, and wording use reusable
+templates with per-artwork overrides. Unrecorded fields remain absent until Adrian fills them.
 
-**Birth details are stored twice**, so the never-asked-twice test fails by construction.
+**Birth details already use one shared profile row.** Phase 1 only needs to make the onboarding
+experience reuse that row so a person is never asked twice.
 
 **The registration flow is still framed around making a metal plate.** The registry's own build
 plan already diagnoses this and calls for reframing it as registering an artwork with the plate
@@ -361,14 +367,16 @@ These were paid for with real review and must not be relitigated when the ceremo
 
 ---
 
-## Open, needing Adrian
+## Tunable after the walk exists
 
-1. **The materials data.** Wood species, stones, makers, manufacture location, per piece. The place
-   to hold it exists and is empty.
-2. **Video.** Where it lives, what is promised, how extra uploads are paid for. Governs step 5's wording.
-3. **Co-holding.** Whether a spouse and children are holders with their own access, or contributors
-   under one holder.
-4. **Brightness.** What actually makes a light brighter, defined so it cannot be farmed.
-5. **The invitation.** What proof it carries, since a retroactive collector has no printed code.
-6. **The plate registry's eight tasks.** Its own plan is written and unstarted; task one is the same
-   reframe this document needs.
+1. **Factual content.** Adrian gradually fills materials, makers, manufacture location, and wording
+   through templates and per-artwork overrides.
+2. **Video.** Optional attached video, with no promise of a personal recording or permanent hosting.
+3. **Holding roles.** One canonical keeper has authority; spouses and family are contributors unless
+   a later reviewed ownership model deliberately changes that rule.
+4. **Brightness.** Unregistered pieces are dim and registered pieces are equally lit. Engagement does
+   not change brightness.
+5. **Invitations.** A single-use, artwork-specific invitation tied to its intended recipient supplies
+   the proof for a retroactive collector with no printed code.
+6. **The plate registry's eight tasks.** Its first task is the same registration reframe this document
+   needs; physical production still waits for Adrian's test-piece approval.

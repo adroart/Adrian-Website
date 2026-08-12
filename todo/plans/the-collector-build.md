@@ -17,38 +17,52 @@
 
 ---
 
-## Blocked on Adrian — nothing below starts without these
+## Authority and delivery truth
 
-**B1. The Stage 1 aesthetic questions.** Four questions, one round, in the Visual Design
-section below. Until answered, no screen can be briefed and every design item is stalled.
+Before using this ordered plan, read `collector-screen-wording.md`,
+`collector-primitives.html`, `collector-flow-chart.html`, and
+`collector-flow-preview.html`. The August 10 wording record is the master. Its locked copy and
+settled behavior outrank this older phase list wherever they disagree.
 
-**B2. The materials data.** Wood species, stones, makers, manufacture location, per piece.
-The table to hold it exists and is empty. Without it the certificate has nothing to show.
-*Serves step 6.*
+"Local implementation" means code and tests exist on the collector branch. "Active refinement"
+means a reusable seam still needs integration or master-semantic alignment. "Superseded
+presentation" means an older screen or behavior is not acceptance evidence. "Production rollout"
+is a separate stage and has not begun.
 
-**B3. Four design calls** — video, co-holding, brightness, and what the invitation carries
-as proof. Each is listed in the journey's Open section. Each blocks a specific build item
-below, marked where it bites.
+---
+
+## Inputs and defaults
+
+**B1. Factual content is entered through reusable templates with per-artwork overrides.** Materials,
+makers, manufacture location, certificate wording, and related factual fields need an admin editing
+surface. Adrian can apply one template to many works, then change any field on an individual work.
+Missing facts stay absent from the public certificate rather than blocking the build. *Serves step 6.*
+
+**B2. Product calls follow the August 10 master.** Invitations remain single-use and
+artwork-specific, and one canonical caretaker retains ownership authority. The older equal-brightness
+default is superseded by the master's two-part light behavior. Video remains later work and carries
+no promise of personal or permanent hosting.
 
 ---
 
 ## Phase 0 — Stop the bleeding
 
-Both systems currently claim to own who holds a piece. Two records of ownership is the one
+Both codebases can currently claim to own who holds a piece. Two ownership writers is the one
 thing a provenance system cannot have. Nothing else is safe to build on top until this is
-resolved, and it is small right now: 18 pieces in the mandalacodes ledger, zero production
-identities here, no real collectors on either side.
+resolved. The corrected audit found one existing registry identity here and no recoverable
+authoritative mandalacodes ledger export.
 
 **0.1 Freeze the mandalacodes ledger as canonical-elsewhere.** Mark it read-only for new
 claims and record the date. Nothing new enters it after this point. *Serves the whole spec.*
 
-**0.2 Migrate the 18 ledger pieces into this site's registry.** Chain identity is content-based
-and carries no domain, so hashes survive. Record the move date and cross-reference the old
-mirror as the historical proof for events before it. *Serves step 15.*
+**0.2 Preserve any verified historical source chain.** The audit and Adrian's confirmation establish
+that the Atlas never began and no historical chains exist to import. The verified import path remains
+available if contrary evidence ever appears, but Phase 0 creates no fictional history. *Serves step 15.*
 
-**0.3 Collapse birth details into one field on the person.** Two databases each define their
-own copy today, computed separately. One row, on this site, read by both. This is what makes
-the never-asked-twice test possible. *Serves step 9.*
+**0.3 Keep birth details in the one shared profile row.** Both sites already use the same account
+database and profile record. Consolidate migration ownership and keep both readers on that row;
+do not create a second consolidation migration. This is what makes the never-asked-twice test
+possible. *Serves step 9.*
 
 **0.4 Point mandalacodes at the registry.** It reads; it no longer holds. The oracle and the
 kinship between the 64 stay there and stay theirs.
@@ -61,6 +75,12 @@ what made two surveys disagree about which login was live.
 
 ## Phase 1 — The registration a person can actually walk
 
+**1.0 Repair the post-freeze ownership paths. Complete locally, not deployed.** Keeper transfer and its public transfer
+history one atomic, replay-safe operation. Remove reset-to-bearer behavior for every previously
+claimed piece. Move contested claims into the canonical database and remove new-write calls to the
+frozen legacy writer. This is a correctness preflight discovered after Phase 0 froze that writer,
+not a reopening of the placement decision. *Serves step 15 and protects every registration door.*
+
 **1.1 Reframe registration around the artwork, not the plate.** The flow currently reads as
 "make a metal plate." It becomes "register an artwork," with the plate an optional step
 afterward. This is task one of the registry's own eight-task plan and the same reframe the
@@ -68,20 +88,23 @@ invitation door needs. *Serves steps 1, 4, and door two.*
 
 **1.2 Build the invitation door.** Adrian invites someone who bought years ago; the invitation
 itself carries the proof, because they have no printed code. Their piece has a history that
-predates the system. *Serves door two. Blocked on B3.*
+predates the system. Use a single-use, artwork-specific invitation tied to the intended recipient.
+*Serves door two.*
 
 **1.3 Build the opening screen.** What is about to happen, said plainly, before anything is
 asked. Registering to you, certifying as authentic, storing your intentions, joining the map.
-The piece lasts. The code lasts. Whoever holds the code holds the access. **Its wording is
-constrained by what can honestly be promised — see the video note in the journey.**
+The piece lasts. The code lasts. Whoever holds the code holds the access. Store the wording as a
+reusable template with per-artwork overrides. Promise only optional attached video, never personal
+or permanent hosting.
 *Serves step 5.*
 
 **1.4 Rehome the arrival page.** Zero sign-in, the artwork, its story, its public history spine.
 A person who only wants to look gets a complete experience. *Serves step 2.*
 
-**1.5 Fill the certificate.** The provenance table exists with typed entries for contributor,
-creation place, material, technique, and intention, each with its own visibility. Populate and
-surface it. *Serves step 6. Blocked on B2.*
+**1.5 Build and fill the certificate.** The provenance table exists with typed entries for contributor,
+creation place, material, technique, maker, intention, and wording, each with its own visibility.
+Build an admin editor that applies reusable templates to many artworks and supports per-artwork
+overrides. Surface only recorded fields, so Adrian can add facts gradually. *Serves step 6.*
 
 **1.6 Rehome the four rings as one privacy screen.** One page, plain words, decided once.
 Ring two stays unticked by default. *Serves step 7.*
@@ -90,9 +113,10 @@ Ring two stays unticked by default. *Serves step 7.*
 displayed, skippable, addable later through the oracle. Adrian's rule overrides both earlier
 positions. *Serves step 9.*
 
-**1.8 Seed the remaining pieces.** Forty-six of the 64 are absent, and no other series is in
-at all. The catalog already holds 173 pieces across five series, so this is registry entry,
-not cataloguing. *Serves every step — it is what makes the flow walkable end to end.*
+**1.8 Seed catalog registry membership.** The catalog already holds 173 pieces across five series.
+Create replay-safe artwork-level membership so every work can appear in the registry experience.
+Do not mint 173 physical identities, Ownership Codes, or edition claims. Physical instances are
+registered individually through 1.1. *Serves every step because it makes the whole catalog visible.*
 
 ---
 
@@ -107,8 +131,9 @@ all series. *Serves step 10.*
 **2.3 Design a way in that is not the hexagram ring.** The ring is the index of the 64 and
 does not generalize. Other work needs browsing by series, year, or place. *Serves step 10.*
 
-**2.4 Define brightness.** What actually makes a light brighter, defined so it cannot be farmed
-by visiting or padding. *Serves step 10. Blocked on B3.*
+**2.4 Build equal resting brightness.** Unregistered pieces are dim. Every registered piece has
+equal resting brightness. Physical size may affect marker size, while visits, price, word count,
+and activity never affect brightness. *Serves step 10.*
 
 **2.5 Rehome letters.** Kin claims, anniversaries, transfers. A letter may only mention what a
 ring has made visible. *Serves step 14.*
@@ -120,12 +145,40 @@ fulfilled. Never a blank form. *Serves step 14.*
 
 ## Phase 3 — What only exists on paper
 
-**3.1 Co-holding.** Roles (holder versus contributor) and holder type (person versus
-organization). Heirs stay hints that never auto-bind. *Serves step 13. Blocked on B3.*
+**3.1 Contributors around one keeper.** One canonical keeper retains ownership authority.
+Contributors may add attributed material but cannot transfer, recover, or invite another keeper.
+They are removed on transfer unless invited again. Organization ownership is deferred. Heirs stay
+hints that never auto-bind. *Serves step 13.*
 
-**3.2 Video.** Where it lives, what is promised, how extra uploads are paid for. The honest
-frame governs: a record you can always export and hold yourself, not forever.
-*Serves step 12. Blocked on B3.*
+- [x] Private access foundation and keeper-only invitation authority.
+- [x] Authenticated contributor and keeper API acceptance. Core proof handling is one-time and
+  memory-only, recipient account states are opaque, and the keeper-scoped rate limit is durable.
+  Versioned HMAC derivation produces one stable proof and invitation identifier across synchronized
+  races, delayed lease takeover, post-derivation retry, and key rotation. Only the proof hash
+  persists, plaintext is returned once, replay and in-progress are token-free, and server material
+  generation uses no RNG or UUID calls. Missing, invalid, or failed keys fail closed without account
+  lookup, quota mutation, or proof persistence, and an elected derivation failure releases its lease.
+- [x] Contributor and keeper UI on desktop and 390 px mobile.
+- [x] Encrypted recovery schema v7, clean restore, older-archive upgrades, and migration 034
+  operational-state isolation. Restore suspends the operational triggers, accepts more than ten
+  same-hour historical invitations, recreates the exact canonical triggers, rolls back on parity
+  drift, and leaves transient rate and reservation tables empty.
+- [x] Integrated authority, privacy, public-projection, replay, recovery, and transfer acceptance.
+  Product gates and fresh independent security/spec and code-quality reviews pass with no P1 or P2.
+- [ ] Attributed contributor material. Blocked on Adrian's content-shape decision; no material,
+  upload, public projection, dream, ritual, letter, privacy, price, claim, recovery, invitation, or
+  ownership authority is granted by the implemented access foundation.
+
+The implemented access boundary remains behind `LAUNCH_FLAGS.livingLegacy = false` and has not been
+deployed. A successful transfer invalidates invitations and active access immediately. A failed
+transfer leaves access unchanged, and a later return to the former keeper does not revive it. The
+launch flag remains false because this acceptance completes only the private access boundary, not
+contributor material or launch authorization.
+
+**3.2 Optional video.** Begin with one keeper upload in private storage, explicit export and
+deletion, and separate consent before public testimonial display. No permanence promise and no
+paid expansion in the first release. The honest frame governs: a record you can always export and
+hold yourself, not forever. *Serves step 12.*
 
 **3.3 Warning delivery, then the claim window.** The escalation path that can free a piece from
 an unresponsive holder stays switched off until four warnings can actually be delivered.
@@ -267,12 +320,24 @@ brief — one complete example beats three partial ones.
 
 ---
 
-## Document map — what is canonical and what is superseded
+## Document map: authority, working records, and superseded material
 
-**Canonical, read these:**
+**August 10 authority, read these first:**
+
+- `HANDOFF-COLLECTOR.md`: the manual and reading order.
+- `collector-screen-wording.md`: the master record and locked copy.
+- `collector-primitives.html`: the settled interactive behavior.
+- `collector-flow-chart.html` and `collector-flow-preview.html`: the journey and screen cards.
+- `collector-build-prompt.md`: the bounded starting prompt that points back to this authority set.
+
+**Working implementation records, subordinate to the authority above:**
 
 - `the-collector-journey.md` — the spec. What must be true.
-- `the-collector-build.md` — this file. What to do, in order.
+- `the-collector-build.md`: this file. What to do, in order, with current status corrections.
+- `the-collector-execution.md`: the progress record and semantic migration table.
+- `collector-hybrid-execution.md`: the approved multi-agent ownership and merge design.
+- `collector-ownership-foundation-implementation.md`: the Phase 1 correctness preflight packet.
+- `collector-phase-1-implementation.md`: the test-first work packets for the walkable journey.
 - `artwork-registry-finish-and-handover.md` — the registry's own eight tasks. Still live;
   its task one is the same reframe as 1.1 here.
 

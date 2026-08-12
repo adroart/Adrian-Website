@@ -16,6 +16,7 @@
  *       out of band). Silence means they match exactly.
  *
  *   restore-sql <private-recovery.json> <key-file> <new-out.sql>
+ *       [--media-dir <read-only-r2-copy> --media-manifest <json>]
  *       Authenticate and decrypt the complete private recovery artifact, then
  *       emit conflict-failing SQL for a NEW, fully migrated recovery database.
  *       The tool never selects or connects to a database.
@@ -24,8 +25,13 @@
  *   npx tsx scripts/registry-ledger.ts verify  ./registry-ledger.jsonl
  *   npx tsx scripts/registry-ledger.ts diff     ./held.jsonl ./fresh.jsonl
  *   npx tsx scripts/registry-ledger.ts restore-sql ./registry-private-recovery.json ./registry-recovery.key ./restore.sql
+ *   npx tsx scripts/registry-ledger.ts restore-sql ./registry-private-recovery.json ./registry-recovery.key ./restore.sql --media-dir ./r2-copy --media-manifest ./r2-copy.json
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import {
+  createReadStream, lstatSync, readFileSync, realpathSync, statSync, writeFileSync,
+} from 'node:fs';
+import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
+import { Readable } from 'node:stream';
 import {
   diffLedgerRecords,
   parseLedgerJsonl,
@@ -33,7 +39,7 @@ import {
   type LedgerFileParseResult,
 } from '../utils/registryLedger';
 import {
-  buildRegistryRestoreSql,
+  buildVerifiedRegistryRestoreSql,
   decryptPrivateRecoveryExport,
 } from '../utils/registryRecoveryArchive';
 
@@ -120,10 +126,124 @@ function loadRecoveryKey(path: string): { keyId: string; key: string } {
   return { keyId: lines[0], key: lines[1] };
 }
 
+type RestoreMediaOptions = { mediaDir?: string; mediaManifest?: string };
+
+function exactKeys(value: Record<string, unknown>, keys: string[]) {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length
+    && actual.every((key, index) => key === expected[index]);
+}
+
+function parseRestoreMediaOptions(args: string[]): RestoreMediaOptions {
+  const options: RestoreMediaOptions = {};
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index];
+    const value = args[index + 1];
+    if (!value || !['--media-dir', '--media-manifest'].includes(flag)) {
+      fail('Media restore options must be exact --media-dir and --media-manifest pairs.');
+    }
+    const key = flag === '--media-dir' ? 'mediaDir' : 'mediaManifest';
+    if (options[key]) fail(`Duplicate restore option: ${flag}`);
+    options[key] = value;
+  }
+  if (Boolean(options.mediaDir) !== Boolean(options.mediaManifest)) {
+    fail('Media restore requires both --media-dir and --media-manifest.');
+  }
+  return options;
+}
+
+function safeRelativeMediaPath(value: unknown): value is string {
+  if (typeof value !== 'string' || !value || value.includes('\\') || value.includes('\0')
+    || isAbsolute(value) || normalize(value) !== value) return false;
+  return value.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..');
+}
+
+function loadMediaBucket(mediaDir: string, manifestPath: string) {
+  let manifest: unknown;
+  try {
+    const manifestInfo = lstatSync(manifestPath);
+    if (!manifestInfo.isFile() || manifestInfo.isSymbolicLink()) {
+      fail('Media manifest must be one real local file, not a symlink.');
+    }
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch {
+    fail('Refusing unreadable or malformed media manifest.');
+  }
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)
+    || !exactKeys(manifest as Record<string, unknown>, ['version', 'objects'])
+    || (manifest as Record<string, unknown>).version !== 1
+    || !Array.isArray((manifest as Record<string, unknown>).objects)) {
+    fail('Refusing malformed media manifest.');
+  }
+  const root = resolve(mediaDir);
+  let realRoot: string;
+  try {
+    const rootInfo = lstatSync(root);
+    if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+      fail('Media directory must be one real local directory, not a symlink.');
+    }
+    realRoot = realpathSync(root);
+  } catch {
+    fail('Cannot read media directory.');
+  }
+  const objects = new Map<string, { path: string; contentType: string; size: number }>();
+  for (const raw of (manifest as { objects: unknown[] }).objects) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)
+      || !exactKeys(raw as Record<string, unknown>, ['reference', 'file', 'contentType'])) {
+      fail('Refusing malformed media manifest object.');
+    }
+    const { reference, file, contentType } = raw as Record<string, unknown>;
+    if (typeof reference !== 'string' || !reference || reference !== reference.trim()
+      || reference.length > 1000 || objects.has(reference)
+      || !safeRelativeMediaPath(file)
+      || !['image/jpeg', 'image/png', 'image/webp'].includes(String(contentType))) {
+      fail('Refusing invalid or duplicate media manifest object.');
+    }
+    const path = resolve(root, file);
+    const fromRoot = relative(root, path);
+    if (!fromRoot || fromRoot.startsWith(`..${sep}`) || fromRoot === '..' || isAbsolute(fromRoot)) {
+      fail('Refusing media path outside the media directory.');
+    }
+    let cursor = root;
+    let size: number;
+    try {
+      for (const segment of file.split('/')) {
+        cursor = join(cursor, segment);
+        if (lstatSync(cursor).isSymbolicLink()) fail('Refusing symlinked media path.');
+      }
+      const fileInfo = statSync(path);
+      const realPath = realpathSync(path);
+      const realFromRoot = relative(realRoot, realPath);
+      if (!fileInfo.isFile() || realFromRoot.startsWith(`..${sep}`)
+        || realFromRoot === '..' || isAbsolute(realFromRoot)) {
+        fail('Media manifest must reference real local files.');
+      }
+      size = fileInfo.size;
+    } catch {
+      fail('Cannot read one media manifest file.');
+    }
+    objects.set(reference, { path, contentType: String(contentType), size });
+  }
+  return {
+    references: [...objects.keys()],
+    async get(reference: string) {
+      const object = objects.get(reference);
+      if (!object) return null;
+      return {
+        size: object.size,
+        httpMetadata: { contentType: object.contentType },
+        body: Readable.toWeb(createReadStream(object.path)),
+      };
+    },
+  };
+}
+
 async function cmdRestoreSql(
   archivePath: string,
   keyPath: string,
   outPath: string,
+  mediaOptions: RestoreMediaOptions,
 ): Promise<void> {
   let payload;
   try {
@@ -131,7 +251,25 @@ async function cmdRestoreSql(
   } catch (error) {
     fail(`Refusing invalid private recovery archive (${String((error as Error)?.message || error)}).`);
   }
-  const sql = buildRegistryRestoreSql(payload);
+  let sql: string;
+  try {
+    const mediaSource = mediaOptions.mediaDir && mediaOptions.mediaManifest
+      ? loadMediaBucket(mediaOptions.mediaDir, mediaOptions.mediaManifest)
+      : undefined;
+    if (mediaSource) {
+      const expectedReferences = payload.tables.artist_artwork_media
+        .map((row) => String(row.storage_reference)).sort();
+      const manifestReferences = [...mediaSource.references].sort();
+      if (expectedReferences.length !== manifestReferences.length
+        || expectedReferences.some((reference, index) =>
+          reference !== manifestReferences[index])) {
+        fail('Media manifest does not exactly match the recovery archive.');
+      }
+    }
+    sql = await buildVerifiedRegistryRestoreSql(payload, { mediaBucket: mediaSource });
+  } catch (error) {
+    fail(`Refusing incomplete private recovery media (${String((error as Error)?.message || error)}).`);
+  }
   try {
     writeFileSync(outPath, sql, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
     process.stdout.write(
@@ -159,14 +297,15 @@ async function main(): Promise<void> {
       break;
     case 'restore-sql':
       if (!args[0] || !args[1] || !args[2]) {
-        fail('Usage: registry-ledger.ts restore-sql <private-recovery.json> <key-file> <new-out.sql>');
+        fail('Usage: registry-ledger.ts restore-sql <private-recovery.json> <key-file> <new-out.sql> [--media-dir <root> --media-manifest <json>]');
       }
-      await cmdRestoreSql(args[0], args[1], args[2]);
+      await cmdRestoreSql(args[0], args[1], args[2], parseRestoreMediaOptions(args.slice(3)));
       break;
     default:
       fail(
         'Commands: verify <ledger> | diff <held-ledger> <fresh-ledger> | ' +
-        'restore-sql <private-recovery> <key-file> <new-out.sql>',
+        'restore-sql <private-recovery> <key-file> <new-out.sql> ' +
+        '[--media-dir <root> --media-manifest <json>]',
       );
   }
 }

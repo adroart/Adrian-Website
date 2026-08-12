@@ -86,7 +86,7 @@ export async function onRequest({ request, env, params }) {
          FROM keeper_pieces kp
          LEFT JOIN registry_artworks ra ON ra.id = kp.piece_id
          LEFT JOIN user ba ON ba.id = kp.keeper_user_id
-         LEFT JOIN users u ON u.clerk_user_id = kp.keeper_user_id
+         LEFT JOIN users u ON u.auth_user_id = kp.keeper_user_id
         WHERE kp.id = ?1`,
     ).bind(id).first();
     if (!row) return jsonResponse({ ok: false, error: 'not_found' }, 404);

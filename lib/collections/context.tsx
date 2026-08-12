@@ -27,7 +27,7 @@ interface CollectionsContextValue {
   collections: Collection[];
   isLoading: boolean;
   /** True only when accounts are configured. SaveToCollectionButton uses this
-   * to short-circuit and trigger Clerk sign-in flow. */
+   * to short-circuit and trigger the account sign-in flow. */
   available: boolean;
   reload: () => Promise<void>;
   createCollection: (name: string) => Promise<Collection | null>;

@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AdminPage } from './admin/AdminPage';
-import { adminMode } from './admin/adminMode';
+import { AdminAlert, AdminPage } from './admin/AdminPage';
+import { exactAdminPageSelection } from './admin/adminMode';
 import type {
   Invoice,
   InvoiceDraft,
@@ -115,7 +115,10 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
 
 const AdminInvoices: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const creatingFromShortcut = adminMode(searchParams) === 'create';
+  const pageSelection = exactAdminPageSelection(searchParams, 'invoiceId');
+  const creatingFromShortcut = pageSelection.kind === 'create';
+  const linkedInvoiceId = pageSelection.kind === 'exact' ? pageSelection.id : null;
+  const selectedFromUrlRef = useRef<number | null>(null);
   const [presets, setPresets] = useState<PaymentPreset[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [draft, setDraft] = useState<InvoiceDraft>(EMPTY_DRAFT);
@@ -124,6 +127,12 @@ const AdminInvoices: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exactInvoiceLoading, setExactInvoiceLoading] = useState(false);
+  const [exactInvoiceResult, setExactInvoiceResult] = useState<{
+    requestId: number;
+    invoice: Invoice | null;
+    error: string | null;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [presetSaving, setPresetSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -160,6 +169,38 @@ const AdminInvoices: React.FC = () => {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (linkedInvoiceId === null) {
+      setExactInvoiceResult(null);
+      setExactInvoiceLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setExactInvoiceLoading(true);
+    setExactInvoiceResult(null);
+    setEditingId(null);
+    setSavedInvoice(null);
+    setDraft({ ...EMPTY_DRAFT, paymentPresetIds: presets.map(preset => preset.id) });
+    void fetch(`/api/admin/invoices?invoiceId=${encodeURIComponent(String(linkedInvoiceId))}`, {
+      cache: 'no-store', signal: controller.signal,
+    })
+      .then(response => readJson<{ ok: boolean; invoices: Invoice[] }>(response))
+      .then(data => {
+        if (controller.signal.aborted) return;
+        const exact = data.invoices || [];
+        if (exact.length > 1) throw new Error('invalid_response');
+        setExactInvoiceResult({ requestId: linkedInvoiceId, invoice: exact[0] || null, error: null });
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setExactInvoiceResult({ requestId: linkedInvoiceId, invoice: null, error: niceError(error) });
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setExactInvoiceLoading(false);
+      });
+    return () => controller.abort();
+  }, [linkedInvoiceId]);
 
   // Prefill from the pricing calculator's "Draft an invoice from this quote"
   // hand-off (sessionStorage key 'pricing:invoice-draft'). One-shot: consume
@@ -360,6 +401,33 @@ const AdminInvoices: React.FC = () => {
     setMessage(null);
   };
 
+  useEffect(() => {
+    if (loading || exactInvoiceLoading) return;
+    if (linkedInvoiceId !== null) {
+      if (!exactInvoiceResult || exactInvoiceResult.requestId !== linkedInvoiceId) return;
+      if (exactInvoiceResult.invoice) {
+        selectedFromUrlRef.current = linkedInvoiceId;
+        editInvoice(exactInvoiceResult.invoice);
+      } else {
+        selectedFromUrlRef.current = null;
+        resetForm();
+        setMessage({
+          type: 'err',
+          text: exactInvoiceResult.error || 'The requested invoice was not found.',
+        });
+      }
+      return;
+    }
+    if (pageSelection.kind === 'invalid') {
+      selectedFromUrlRef.current = null;
+      resetForm();
+      setMessage({ type: 'err', text: 'The invoice link is not valid.' });
+    } else if (selectedFromUrlRef.current !== null) {
+      selectedFromUrlRef.current = null;
+      resetForm();
+    }
+  }, [exactInvoiceLoading, exactInvoiceResult, linkedInvoiceId, loading, pageSelection.kind]);
+
   const markPaid = async (invoice: Invoice) => {
     const paidSoFar = invoice.amountPaidCents || 0;
     const balance = invoice.totalCents - paidSoFar;
@@ -507,15 +575,10 @@ const AdminInvoices: React.FC = () => {
             </div>
           </div>
 
-          {message && (
-            <div className={`mb-6 border px-4 py-3 font-sans text-sm ${
-              message.type === 'ok'
-                ? 'border-bronze-300 bg-bronze-50 text-bronze-900 dark:text-bronze-600'
-                : 'border-red-300 bg-red-50 text-red-800'
-            }`}>
-              {message.text}
-            </div>
-          )}
+          {message && <div className="mb-6"><AdminAlert
+            tone={message.type === 'ok' ? 'success' : 'error'}
+            live={message.type === 'err'}
+          >{message.text}</AdminAlert></div>}
 
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-8">

@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import { readFileSync, realpathSync, writeFileSync, readdirSync } from 'fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import matter from 'gray-matter';
@@ -136,6 +136,7 @@ function mockApiPlugin(): Plugin {
   let maintenanceStewardVersion = 1;
   const maintenanceUsers = new Map([
     ['verified-steward@example.test', { id: 'local-verified-steward', verified: true }],
+    ['replay-steward@example.test', { id: 'local-replay-steward', verified: true }],
     ['unverified-steward@example.test', { id: 'local-unverified-steward', verified: false }],
   ]);
   const maintenanceMutationAttempts = new Map<string, {
@@ -319,9 +320,10 @@ function mockApiPlugin(): Plugin {
     | { ok: false; error: string }
     | {
         ok: true;
-        action: 'reset_steward' | 'transfer_steward';
-        targetEmail: string | null;
-        targetUserId: string | null;
+        action: 'transfer_steward';
+        targetEmail: string;
+        targetUserId: string;
+        transferKind: 'sale' | 'gift' | 'inheritance' | 'artist-rebind';
         reason: string;
         idempotencyKey: string;
         expectedStewardVersion: number;
@@ -329,12 +331,13 @@ function mockApiPlugin(): Plugin {
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return { ok: false, error: 'invalid_input' };
     }
-    if (body.action !== 'reset_steward' && body.action !== 'transfer_steward') {
+    if (body.action !== 'transfer_steward') {
       return { ok: false, error: 'invalid_action' };
     }
-    const allowed = body.action === 'transfer_steward'
-      ? new Set(['action', 'targetEmail', 'reason', 'idempotencyKey', 'expectedStewardVersion'])
-      : new Set(['action', 'reason', 'idempotencyKey', 'expectedStewardVersion']);
+    const allowed = new Set([
+      'action', 'targetEmail', 'transferKind', 'reason', 'idempotencyKey',
+      'expectedStewardVersion',
+    ]);
     if (Object.keys(body).length !== allowed.size
       || Object.keys(body).some(key => !allowed.has(key))) {
       return { ok: false, error: 'invalid_input' };
@@ -349,12 +352,8 @@ function mockApiPlugin(): Plugin {
     if (!idempotencyKey || idempotencyKey.length > 128) {
       return { ok: false, error: 'invalid_idempotency_key' };
     }
-    if (body.action === 'reset_steward') {
-      return {
-        ok: true, action: body.action, targetEmail: null, targetUserId: null,
-        reason, idempotencyKey, expectedStewardVersion: body.expectedStewardVersion,
-      };
-    }
+    const transferKinds = new Set(['sale', 'gift', 'inheritance', 'artist-rebind']);
+    if (!transferKinds.has(body.transferKind)) return { ok: false, error: 'invalid_transfer_kind' };
     const targetEmail = typeof body.targetEmail === 'string' ? body.targetEmail.trim().toLowerCase() : '';
     if (!targetEmail) return { ok: false, error: 'target_email_required' };
     if (targetEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) {
@@ -365,7 +364,8 @@ function mockApiPlugin(): Plugin {
     if (!target.verified) return { ok: false, error: 'target_unverified' };
     return {
       ok: true, action: body.action, targetEmail, targetUserId: target.id,
-      reason, idempotencyKey, expectedStewardVersion: body.expectedStewardVersion,
+      transferKind: body.transferKind, reason, idempotencyKey,
+      expectedStewardVersion: body.expectedStewardVersion,
     };
   }
 
@@ -510,6 +510,7 @@ function mockApiPlugin(): Plugin {
             action: validated.action,
             keeperPieceId: maintenancePiece.id,
             targetEmail: validated.targetEmail,
+            transferKind: validated.transferKind,
             reason: validated.reason,
             expectedStewardVersion: validated.expectedStewardVersion,
           });
@@ -517,8 +518,10 @@ function mockApiPlugin(): Plugin {
           if (maintenanceStewardVersion !== validated.expectedStewardVersion) {
             return send(res, 409, { ok: false, error: 'version_conflict' });
           }
-          if (validated.action === 'transfer_steward'
-            && maintenancePiece.steward?.userId === validated.targetUserId) {
+          if (!maintenancePiece.steward) {
+            return send(res, 409, { ok: false, error: 'no_current_steward' });
+          }
+          if (maintenancePiece.steward.userId === validated.targetUserId) {
             return send(res, 409, { ok: false, error: 'target_is_current_steward' });
           }
           const before = {
@@ -533,26 +536,16 @@ function mockApiPlugin(): Plugin {
           const createdAt = nowIso();
           maintenanceStewardVersion += 1;
           maintenancePiece.stewardVersion = maintenanceStewardVersion;
-          const after = validated.action === 'reset_steward'
-            ? {
-                keeperPieceId: maintenancePiece.id,
-                artworkId: maintenancePiece.public.artworkId,
-                keeperUserId: null,
-                claimedAt: null,
-                releasedAt: null,
-                currentDisplayLocation: null,
-                stewardVersion: maintenanceStewardVersion,
-              }
-            : {
-                keeperPieceId: maintenancePiece.id,
-                artworkId: maintenancePiece.public.artworkId,
-                keeperUserId: validated.targetUserId,
-                claimedAt: createdAt,
-                releasedAt: null,
-                currentDisplayLocation: null,
-                stewardVersion: maintenanceStewardVersion,
-              };
-          maintenancePiece.steward = after.keeperUserId === null ? null : {
+          const after = {
+            keeperPieceId: maintenancePiece.id,
+            artworkId: maintenancePiece.public.artworkId,
+            keeperUserId: validated.targetUserId,
+            claimedAt: createdAt,
+            releasedAt: null,
+            currentDisplayLocation: null,
+            stewardVersion: maintenanceStewardVersion,
+          };
+          maintenancePiece.steward = {
             userId: after.keeperUserId,
             email: validated.targetEmail,
             active: true,
@@ -565,7 +558,7 @@ function mockApiPlugin(): Plugin {
           maintenancePiece.maintenanceHistory.push({
             id: eventId,
             idempotencyKey: validated.idempotencyKey,
-            eventType: validated.action === 'reset_steward' ? 'steward_reset' : 'steward_transferred',
+            eventType: 'steward_transferred',
             administrator: { userId: 'local-dev-admin', email: 'local-admin@example.test' },
             reason: validated.reason,
             before,
@@ -854,6 +847,12 @@ export default defineConfig({
     port: 5555,
     host: '0.0.0.0',
     strictPort: true,
+    fs: {
+      allow: [
+        __dirname,
+        realpathSync(path.resolve(__dirname, 'node_modules')),
+      ],
+    },
     watch: {
       usePolling: true,
       interval: 500,

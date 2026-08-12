@@ -13,6 +13,9 @@ const NAV: Array<{ to: string; label: string }> = [
   { to: '/oracle/profile', label: 'Profile' },
   { to: '/account/orders', label: 'Orders' },
   { to: '/account/collections', label: 'Collections' },
+  ...(LAUNCH_FLAGS.livingLegacy
+    ? [{ to: '/account/contributor-access', label: 'Contributor access' }]
+    : []),
 ];
 
 /**
@@ -61,7 +64,7 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({ title, children }) => {
                   <Link
                     to={item.to}
                     className={[
-                      'block font-label text-[11px] uppercase tracking-[0.22em] py-2 transition-colors',
+                      'flex min-h-11 items-center font-label text-[11px] uppercase tracking-[0.22em] py-2 transition-colors',
                       active ? 'text-bronze-600' : 'text-wood-700 hover:text-bronze-600',
                     ].join(' ')}
                   >

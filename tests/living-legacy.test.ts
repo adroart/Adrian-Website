@@ -44,11 +44,7 @@ import {
   IntentionRow,
 } from '../utils/intentions';
 
-import {
-  buildClaimBridgePayload,
-  requestContestedClaim,
-  CLAIM_REQUEST_NOTE_MAX,
-} from '../functions/api/_lib/claimBridge.js';
+import { CLAIM_REQUEST_NOTE_MAX } from '../functions/api/_lib/claimRequests.js';
 
 import { buildLineageEvent, prepareNextLineageEvent } from '../functions/api/_lib/lineage.js';
 import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
@@ -102,6 +98,7 @@ const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
 const ADMIN_COOKIES = `better-auth.session_token=admin-session; registry_unlock=${REGISTRY_UNLOCK_TOKEN}`;
 const { onRequest: adminPieces } = await import('../functions/api/admin/pieces.js');
 const { onRequest: adminArtworks } = await import('../functions/api/admin/artworks.js');
+const { onRequest: bindKeeper } = await import('../functions/api/keeper/bind.js');
 const { findStaticArtwork } = await import('../functions/api/_lib/artworkCatalog.js');
 const { onRequest: readClaimEvidence } = await import('../functions/api/admin/pieces/[id]/claim-evidence.js');
 const { onRequest: revealArtworkPlate } = await import('../functions/api/admin/pieces/[id]/reveal.js');
@@ -1145,21 +1142,6 @@ describe('private claim evidence pagination', () => {
   });
 });
 
-// The contested-claim handoff opens a request on mandalacodes' SINGLE shared
-// store, then leans on the escalation logic merged there. These pure modules
-// are the contract Adrian-Website depends on; we import them across the repo
-// boundary to lock that contract (skips cleanly if the sister repo is absent).
-import {
-  planClaimRequest,
-  MAX_OPEN_REQUESTS_PER_REQUESTER,
-} from '../../mandalacodes/utils/claimRequests.ts';
-import {
-  evaluateClaimWindow,
-  CLAIM_WINDOW_DAYS,
-  CLAIM_WARNING_DAYS,
-  FINAL_WARNING_GRACE_DAYS,
-} from '../../mandalacodes/utils/claimWindow.ts';
-
 // ── Recovery code ──────────────────────────────────────────────────────────
 
 describe('recovery code', () => {
@@ -1361,308 +1343,6 @@ describe('parseIntentionInput (whitelist)', () => {
     assert.equal(parseIntentionInput({ kind: 'motivation', body: 'x', evil: 1 }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'spell', body: 'x' }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'journal', body: '   ' }).ok, false);
-  });
-});
-
-// ── Contested-claim handoff: Adrian-side bridge payload ──────────────────────
-
-describe('claim bridge payload (Adrian side, whitelist)', () => {
-  it('builds exactly the fields the receiver accepts, edition 0 always sent', () => {
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      editionNumber: 0,
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.deepEqual(Object.keys(p).sort(), [
-      'editionNumber',
-      'pieceId',
-      'requesterEmail',
-      'requesterRef',
-    ]);
-    // edition 0 is the chain-key default and must travel (not dropped as falsy).
-    assert.equal(p.editionNumber, 0);
-  });
-
-  it('defaults a missing/invalid editionNumber to 0', () => {
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.equal(p.editionNumber, 0);
-  });
-
-  it('includes a trimmed note and caps it at CLAIM_REQUEST_NOTE_MAX', () => {
-    const long = 'x'.repeat(CLAIM_REQUEST_NOTE_MAX + 200);
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: `   bought at auction lot 12   `,
-    });
-    assert.equal(p.note, 'bought at auction lot 12');
-
-    const capped = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: long,
-    });
-    assert.equal(capped.note?.length, CLAIM_REQUEST_NOTE_MAX);
-
-    // An empty/whitespace note is omitted entirely (never an empty string).
-    const blank = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: '   ',
-    });
-    assert.equal('note' in blank, false);
-  });
-});
-
-describe('requestContestedClaim (Adrian side, transport)', () => {
-  it('no-ops with secret_unset when CLAIM_BRIDGE_SECRET is not provisioned', async () => {
-    const r = await requestContestedClaim({}, {
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, 'secret_unset');
-  });
-
-  it('reports missing required fields without calling out', async () => {
-    const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 's' }, {
-      pieceId: 'UL-100',
-      // requesterRef / requesterEmail missing
-    } as never);
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, 'missing_required_fields');
-  });
-
-  it('passes through the receiver status on a 200 (opened / duplicate)', async () => {
-    const calls: string[] = [];
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async (_url: string, init: { headers: Record<string, string> }) => {
-      calls.push(init.headers['X-Claim-Signature']);
-      return new Response(JSON.stringify({ ok: true, status: 'opened', request: { id: 'req-1' } }), {
-        status: 200,
-      });
-    }) as typeof fetch;
-    try {
-      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        editionNumber: 0,
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.equal(r.ok, true);
-      assert.equal(r.status, 'opened');
-      assert.equal(r.request?.id, 'req-1');
-      // The call was signed (an HMAC hex of length 64 went out).
-      assert.match(calls[0], /^[0-9a-f]{64}$/);
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-
-  it('rejects an unknown receiver outcome instead of inventing a request', async () => {
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async () => new Response(JSON.stringify({
-      ok: true,
-      status: 'unexpected',
-      request: { id: 'req-unknown' },
-    }), { status: 200 })) as typeof fetch;
-    try {
-      const response = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        editionNumber: 0,
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.deepEqual(response, { ok: false, reason: 'invalid_outcome' });
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-
-  it('does NOT retry a 400 (our payload is wrong)', async () => {
-    let n = 0;
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async () => {
-      n++;
-      return new Response(JSON.stringify({ ok: false, error: 'bad' }), { status: 400 });
-    }) as typeof fetch;
-    try {
-      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.equal(r.ok, false);
-      assert.equal(r.reason, 'rejected_400');
-      assert.equal(n, 1); // no retry
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-});
-
-// ── Contested-claim handoff: shared escalation contract (mandalacodes) ────────
-// These pin the rules Adrian-Website hands the claim into. They live on the
-// mandalacodes side (one source of truth); we assert the contract here so a
-// drift on either side is caught.
-
-describe('contested claim opens a request (not a 409)', () => {
-  const boundSteward = {
-    pieceId: 'UL-100',
-    clerkUserId: 'user-holder',
-    email: 'holder@example.com',
-    issuedAt: '2026-01-01T00:00:00Z',
-    outreachStatus: 'claimed' as const,
-  };
-
-  it('a bound piece routes the request to the HOLDER, pending, never binding', () => {
-    const plan = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward: boundSteward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(plan.ok, true);
-    assert.equal(plan.value?.status, 'pending'); // not bound, not 409
-    assert.equal(plan.value?.routedTo, 'holder'); // anti-takeover: the holder decides
-    assert.equal(plan.value?.requesterRef, 'user-asker');
-  });
-
-  it('the bound holder cannot request their own piece (self-guard)', () => {
-    const plan = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-holder',
-      requesterEmail: 'holder@example.com',
-      steward: boundSteward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(plan.ok, false);
-  });
-});
-
-describe('dedupe + rate limit (shared store guardrails)', () => {
-  const steward = {
-    pieceId: 'UL-100',
-    clerkUserId: 'user-holder',
-    email: 'holder@example.com',
-    issuedAt: '2026-01-01T00:00:00Z',
-    outreachStatus: 'claimed' as const,
-  };
-
-  it('a second request for the same piece by the same requester is one open request', () => {
-    const first = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(first.ok, true);
-    const second = planClaimRequest([first.value!], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward,
-      now: '2026-06-23T01:00:00Z',
-    });
-    assert.equal(second.ok, false); // dedupe → no duplicate open request
-  });
-
-  it('caps a requester at MAX_OPEN_REQUESTS_PER_REQUESTER open requests', () => {
-    const open = [];
-    for (let i = 0; i < MAX_OPEN_REQUESTS_PER_REQUESTER; i++) {
-      const r = planClaimRequest(open, {
-        input: { pieceId: `UL-10${i}` },
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-        steward: undefined,
-        now: '2026-06-23T00:00:00Z',
-      });
-      assert.equal(r.ok, true);
-      open.push(r.value!);
-    }
-    const overflow = planClaimRequest(open, {
-      input: { pieceId: 'UL-999' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward: undefined,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(overflow.ok, false); // rate limited
-  });
-});
-
-describe('escalation outcomes (run on the mandalacodes side)', () => {
-  const baseRequest = {
-    id: 'req-1',
-    pieceId: 'UL-100',
-    requesterRef: 'user-asker',
-    requesterEmail: 'asker@example.com',
-    createdAt: '2026-06-01T00:00:00Z',
-    status: 'pending' as const,
-    routedTo: 'holder' as const,
-  };
-  const dayMs = 24 * 60 * 60 * 1000;
-  const isoDaysAfterRequest = (days: number) =>
-    new Date(Date.parse(baseRequest.createdAt) + days * dayMs).toISOString();
-  const deliveredWarnings = () =>
-    CLAIM_WARNING_DAYS.map((day, index) => ({
-      ordinal: index + 1,
-      sentAt: isoDaysAfterRequest(day),
-    }));
-
-  it("a holder's NO stops the claim cold, regardless of elapsed time", () => {
-    const declined = { ...baseRequest, status: 'declined' as const };
-    // Even far past the full window, a decline never frees the piece.
-    const r = evaluateClaimWindow({
-      request: declined,
-      holderResponded: false,
-      nowIso: '2027-01-01T00:00:00Z',
-    });
-    assert.equal(r.status, 'declined');
-  });
-
-  it('only unanswered silence across the FULL window, every warning delivered, frees the piece', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS + FINAL_WARNING_GRACE_DAYS);
-    const freed = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: false,
-      nowIso: past,
-      warnings: deliveredWarnings(), // all four delivered
-    });
-    assert.equal(freed.status, 'frees-to-requester');
-  });
-
-  it('mere inactivity never frees: full window but warnings undelivered stays blocked', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
-    const notFreed = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: false,
-      nowIso: past,
-      warnings: [], // nothing actually delivered to the steward yet
-    });
-    assert.notEqual(notFreed.status, 'frees-to-requester');
-  });
-
-  it('any steward response keeps the piece blocked (engagement never frees)', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
-    const held = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: true,
-      nowIso: past,
-      warnings: deliveredWarnings(),
-    });
-    assert.equal(held.status, 'blocked-active');
   });
 });
 
@@ -2039,13 +1719,12 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('rejects unknown artworks, invalid editions, and missing issuance keys', async () => {
+  it('rejects invalid editions and missing issuance keys before replay lookup', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
       const { DB } = makeIssuanceDb();
       const env = issuanceEnv(DB);
-      assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'NOPE', editionNumber: 0, issuanceKey: 'a' }), env })).status, 400);
       assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: -1, issuanceKey: 'b' }), env })).status, 400);
       assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 10000, issuanceKey: 'b-max' }), env })).status, 400);
       assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 1.5, issuanceKey: 'c' }), env })).status, 400);
@@ -2055,401 +1734,163 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('requires the exact explicit edition identity before issuance', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const unique = makeIssuanceDb({
-        draftArtworks: [{ id: 'MD-906', title: 'Unique Study', edition_size: null }],
-      });
-      const uniqueEnv = issuanceEnv(unique.DB);
-
-      const missingEdition = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-100',
-          editionKind: 'unique',
-          uniqueConfirmed: true,
-          issuanceKey: 'missing-edition',
-        }),
-        env: uniqueEnv,
-      });
-      assert.deepEqual(await missingEdition.json(), {
-        ok: false,
-        error: 'edition_number_required',
-      });
-
-      const missingMetadata = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-100',
-          editionNumber: 0,
-          uniqueConfirmed: true,
-          issuanceKey: 'missing-kind',
-        }),
-        env: uniqueEnv,
-      });
-      assert.deepEqual(await missingMetadata.json(), {
-        ok: false,
-        error: 'edition_metadata_required',
-      });
-
-      const unconfirmedUnique = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'MD-906',
-          editionNumber: 0,
-          issuanceKey: 'unconfirmed-unique',
-        }),
-        env: uniqueEnv,
-      });
-      assert.deepEqual(await unconfirmedUnique.json(), {
-        ok: false,
-        error: 'unique_confirmation_required',
-      });
-
-      const numberedUnique = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'MD-906',
-          editionNumber: 1,
-          uniqueConfirmed: true,
-          issuanceKey: 'numbered-unique',
-        }),
-        env: uniqueEnv,
-      });
-      assert.deepEqual(await numberedUnique.json(), {
-        ok: false,
-        error: 'invalid_edition_number',
-      });
-
-      const numbered = makeIssuanceDb({
-        draftArtworks: [{ id: 'MD-905', title: 'Edition Study', edition_size: 3 }],
-      });
-      const numberedEnv = issuanceEnv(numbered.DB);
-      for (const editionNumber of [0, 4]) {
-        const response = await adminPieces({
-          request: adminReq('POST', {
-            pieceId: 'MD-905',
-            editionNumber,
-            issuanceKey: `numbered-${editionNumber}`,
-          }),
-          env: numberedEnv,
-        });
-        assert.deepEqual(await response.json(), {
-          ok: false,
-          error: 'invalid_edition_number',
-        });
-      }
-
-      const validNumbered = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'MD-905',
-          editionNumber: 3,
-          issuanceKey: 'numbered-3',
-        }),
-        env: numberedEnv,
-      });
-      assert.equal(validNumbered.status, 201);
-      assert.equal(numbered.rows[0].edition_number, 3);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('preserves a preexisting numbered canary identity and rejects mixing in edition zero', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const registry = makeIssuanceDb({
-        draftArtworks: [{ id: 'UL-162', title: 'Canary', edition_size: null }],
-      });
-      const env = issuanceEnv(registry.DB);
-      registry.rows.push({
-        id: 'kp-canary',
-        piece_id: 'UL-162',
-        edition_number: 1,
-        issuance_key: 'ul-162-canary',
-      });
-
-      const mixed = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-162',
-          editionKind: 'unique',
-          editionNumber: 0,
-          uniqueConfirmed: true,
-          issuanceKey: 'ul-162-unique',
-        }),
-        env,
-      });
-      assert.equal(mixed.status, 409);
-      assert.deepEqual(await mixed.json(), {
-        ok: false,
-        error: 'artwork_edition_kind_conflict',
-      });
-      assert.equal(registry.rows.length, 1);
-      assert.equal(registry.rows[0].edition_number, 1);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('replays an exact issuance before mutable artwork metadata is consulted', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const draftArtworks = [{ id: 'MD-905', title: 'Edition Study', edition_size: 3 as number | null }];
-      const registry = makeIssuanceDb({ draftArtworks });
-      const env = issuanceEnv(registry.DB);
-      const requestBody = {
-        pieceId: 'MD-905',
-        editionNumber: 3,
-        issuanceKey: 'stable-across-drift',
-      };
-      const first = await adminPieces({ request: adminReq('POST', requestBody), env });
-      assert.equal(first.status, 201);
-      const firstBody = await first.json();
-
-      draftArtworks[0].edition_size = null;
-      const replay = await adminPieces({ request: adminReq('POST', requestBody), env });
-      assert.equal(replay.status, 200);
-      assert.deepEqual(await replay.json(), firstBody);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('persists an issuance atomically and GET exposes only safe plate metadata', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB, rows, lineage } = makeIssuanceDb();
-      const bucket = makeBackupBucket();
-      const env = { ...issuanceEnv(DB), ARTWORK_REGISTRY_BACKUP: bucket };
-      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'issue-atomic' }), env });
-      const created = await post.json();
-      assert.equal(post.status, 201);
-      assert.ok(isWellFormedRecoveryCode(created.ownershipCode));
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(created.ownershipCode));
-      assert.equal(rows[0].plate_status, 'generated');
-      assert.equal(rows[0].front_svg_sha256, created.frontSha256);
-      assert.equal(rows[0].back_svg_sha256, created.undersideSha256);
-      assert.equal(lineage.length, 1);
-      assert.equal(lineage[0][3], 'issued');
-      assert.doesNotMatch(JSON.stringify(lineage), /ownership|cipher|nonce|buyer@/i);
-      assert.ok(rows[0].ownership_code_ciphertext);
-      assert.ok(rows[0].ownership_code_nonce);
-      assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(created.ownershipCode)), false);
-      const backupEntry = [...bucket.objects.entries()].find(([key]) => (
-        key.startsWith(`plates/${created.publicCode}/`)
-      ));
-      assert.ok(backupEntry);
-      const backup = JSON.parse(new TextDecoder().decode(backupEntry[1]));
-      assert.equal(backup.publicCode, created.publicCode);
-      assert.equal(backup.envelope.ciphertext, rows[0].ownership_code_ciphertext);
-      assert.equal(backup.envelope.nonce, rows[0].ownership_code_nonce);
-      const backupBlob = JSON.stringify(backup);
-      assert.equal(backupBlob.includes(created.ownershipCode), false);
-      assert.equal(backupBlob.includes(rows[0].recovery_code_hash), false);
-      assert.equal(backupBlob.includes(created.frontSvg), false);
-
-      const res = await adminPieces({ request: adminReq('GET'), env });
-      assert.equal(res.status, 200);
-      const json = await res.json();
-      assert.equal(json.ok, true);
-      assert.equal(json.pieces.length, 1);
-      const listed = json.pieces[0];
-      assert.equal(listed.pieceId, 'UL-100');
-      assert.equal(listed.publicCode, created.publicCode);
-      assert.equal(listed.plateStatus, 'generated');
-      assert.equal(listed.backupStatus, 'verified');
-      assert.equal(listed.frontSha256, created.frontSha256);
-      const blob = JSON.stringify(json);
-      for (const secret of ['ownershipCode', 'recovery_code_hash', 'ownership_code_ciphertext', 'ownership_code_nonce', 'ownership_code_key_version', 'frontSvg', 'undersideSvg']) {
-        assert.equal(secret in listed, false);
-      }
-      assert.equal(blob.includes(created.ownershipCode), false);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('replays the exact deterministic package for the same issuance key', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB, rows } = makeIssuanceDb();
-      const env = issuanceEnv(DB);
-      const body = { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'same-request' };
-      const first = await (await adminPieces({ request: adminReq('POST', body), env })).json();
-      const secondRes = await adminPieces({ request: adminReq('POST', body), env });
-      const second = await secondRes.json();
-      assert.equal(secondRes.status, 200);
-      assert.deepEqual(second, first);
-      assert.equal(rows.length, 1);
-
-      const wrongKind = await adminPieces({
-        request: adminReq('POST', { ...body, editionKind: 'numbered' }),
-        env,
-      });
-      assert.equal(wrongKind.status, 409);
-      assert.deepEqual(await wrongKind.json(), { ok: false, error: 'idempotency_conflict' });
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('rejects issuance-key reuse for a different artwork identity without revealing a code', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB } = makeIssuanceDb();
-      const env = issuanceEnv(DB);
-      await adminPieces({
-        request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
-        env,
-      });
-      const conflict = await adminPieces({
-        request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
-        env,
-      });
-      assert.equal(conflict.status, 409);
-      const body = await conflict.json();
-      assert.deepEqual(body, { ok: false, error: 'idempotency_conflict' });
-      assert.equal('ownershipCode' in body, false);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('never decrypts or replays a package after the plate leaves generated state', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB, rows } = makeIssuanceDb();
-      const env = issuanceEnv(DB);
-      const request = adminReq('POST', {
-        pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
-      });
-      await adminPieces({ request, env });
-      rows[0].plate_status = 'active';
-      rows[0].ownership_code_ciphertext = 'not-valid-base64';
-
-      const locked = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
-        }),
-        env,
-      });
-      assert.equal(locked.status, 409);
-      assert.deepEqual(await locked.json(), { ok: false, error: 'plate_identity_locked' });
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('rejects a different issuance key for the same artwork edition', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB } = makeIssuanceDb();
-      const env = issuanceEnv(DB);
-      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'one' }), env });
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'two' }), env });
-      assert.equal(res.status, 409);
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('retries a public-code collision and marks backup failures safely', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB, rows } = makeIssuanceDb({ collideOnce: true });
-      const env = issuanceEnv(DB, true);
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'collision' }), env });
-      assert.equal(res.status, 201);
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].backup_status, 'failed');
-      assert.equal(rows[0].plate_status, 'generated');
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
-
-  it('maps database edition guard races to stable API errors', async () => {
+  it('routes every new identity through artwork registration without keeper, lineage, or backup writes', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
       for (const testCase of [
-        { message: 'D1_ERROR: keeper_piece_edition_kind_conflict', status: 409, error: 'artwork_edition_kind_conflict' },
-        { message: 'D1_ERROR: keeper_piece_edition_range_violation', status: 400, error: 'invalid_edition_number' },
-      ]) {
-        const { DB } = makeIssuanceDb({ batchError: testCase.message });
-        const response = await adminPieces({
-          request: adminReq('POST', {
+        {
+          label: 'unique catalog artwork',
+          options: {},
+          body: {
             pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0,
-            uniqueConfirmed: true, issuanceKey: `guard-${testCase.status}`,
-          }),
-          env: issuanceEnv(DB),
+            uniqueConfirmed: true, issuanceKey: 'retired-unique-mint',
+          },
+        },
+        {
+          label: 'numbered registry artwork',
+          options: {
+            draftArtworks: [{ id: 'MD-905', title: 'Edition Study', edition_size: 3 }],
+          },
+          body: {
+            pieceId: 'MD-905', editionKind: 'numbered', editionNumber: 3,
+            issuanceKey: 'retired-numbered-mint',
+          },
+        },
+        {
+          label: 'unknown artwork',
+          options: {},
+          body: {
+            pieceId: 'NOPE', editionKind: 'unique', editionNumber: 0,
+            uniqueConfirmed: true, issuanceKey: 'retired-unknown-mint',
+          },
+        },
+      ]) {
+        const registry = makeIssuanceDb(testCase.options);
+        const bucket = makeBackupBucket();
+        const response = await adminPieces({
+          request: adminReq('POST', testCase.body),
+          env: { ...issuanceEnv(registry.DB), ARTWORK_REGISTRY_BACKUP: bucket },
         });
-        assert.equal(response.status, testCase.status);
-        assert.deepEqual(await response.json(), { ok: false, error: testCase.error });
+
+        assert.equal(response.status, 409, testCase.label);
+        assert.deepEqual(await response.json(), {
+          ok: false, error: 'artwork_registration_required',
+        });
+        assert.equal(registry.rows.length, 0, testCase.label);
+        assert.equal(registry.lineage.length, 0, testCase.label);
+        assert.equal(bucket.objects.size, 0, testCase.label);
       }
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
-  it('returns the committed package when backup status recording fails and repairs it on replay', async () => {
+  it('replays and repairs only a seeded generated issuance with the exact issuance key', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB, rows } = makeIssuanceDb({ failBackupStatusOnce: true });
-      const env = issuanceEnv(DB);
-      const body = { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'repair-status' };
+      const registry = makeIssuanceDb();
+      const bucket = makeBackupBucket();
+      const env = { ...issuanceEnv(registry.DB), ARTWORK_REGISTRY_BACKUP: bucket };
+      const { createRegistryPlateCandidate } = await import(
+        '../functions/api/_lib/registryPlateIssuance.js'
+      );
+      const candidate = await createRegistryPlateCandidate(env, {
+        keeperPieceId: 'kp-existing-replay',
+        pieceId: 'UL-100',
+        editionNumber: 0,
+        issuanceKey: 'existing-replay',
+        publicCode: 'AR-7KQ9M2WX',
+        ownershipCode: 'ABCD-EFGH-JKLM-NPQR',
+        generatedAt: '2026-07-13T00:00:00.000Z',
+      });
+      registry.rows.push({
+        id: candidate.id,
+        piece_id: candidate.pieceId,
+        edition_number: candidate.editionNumber,
+        keeper_user_id: null,
+        recovery_code_hash: candidate.verifier,
+        public_code: candidate.publicCode,
+        issuance_key: candidate.issuanceKey,
+        plate_status: 'generated',
+        plate_generated_at: candidate.generatedAt,
+        front_svg_sha256: candidate.plate.frontSha256,
+        back_svg_sha256: candidate.plate.undersideSha256,
+        ownership_code_ciphertext: candidate.envelope.ciphertext,
+        ownership_code_nonce: candidate.envelope.nonce,
+        ownership_code_key_version: candidate.envelope.keyVersion,
+        backup_status: 'pending',
+        record_version: 0,
+        registered_at: candidate.generatedAt,
+        claimed_at: null,
+        released_at: null,
+        lineage_head_hash: candidate.lineageEvent.eventHash,
+        lineage_event_count: 1,
+      });
 
-      const issued = await adminPieces({ request: adminReq('POST', body), env });
-      assert.equal(issued.status, 201);
-      const issuedBody = await issued.json();
-      assert.equal(issuedBody.backupStatus, 'pending');
-      assert.equal(issuedBody.warning, 'backup_status_record_failed');
-      assert.ok(issuedBody.ownershipCode);
-      assert.equal(rows[0].backup_status, 'pending');
+      const body = {
+        pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0,
+        uniqueConfirmed: true, issuanceKey: 'existing-replay',
+      };
+      const replay = await adminPieces({ request: adminReq('POST', body), env });
+      const replayBody = await replay.json();
 
-      const replayed = await adminPieces({ request: adminReq('POST', body), env });
-      assert.equal(replayed.status, 200);
-      const replayedBody = await replayed.json();
-      assert.equal(replayedBody.backupStatus, 'verified');
-      assert.equal('warning' in replayedBody, false);
-      assert.equal(replayedBody.ownershipCode, issuedBody.ownershipCode);
-      assert.equal(rows[0].backup_status, 'verified');
-    } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-    }
-  });
+      assert.equal(replay.status, 200);
+      assert.equal(replayBody.ok, true);
+      assert.equal(replayBody.ownershipCode, candidate.ownershipCode);
+      assert.equal(replayBody.publicCode, candidate.publicCode);
+      assert.equal(replayBody.backupStatus, 'verified');
+      assert.equal(registry.rows.length, 1);
+      assert.equal(registry.rows[0].backup_status, 'verified');
+      assert.equal(registry.lineage.length, 0);
+      assert.equal(bucket.objects.size, 1);
 
-  it('returns an honest failed backup state while keeping the committed plate generated', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
-    try {
-      const { DB, rows } = makeIssuanceDb();
-      const env = issuanceEnv(DB, true);
-      const issued = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'failed-backup-state',
-        }),
+      const conflict = await adminPieces({
+        request: adminReq('POST', { ...body, pieceId: 'UL-101' }),
         env,
       });
-      assert.equal(issued.status, 201);
-      const body = await issued.json();
-      assert.equal(body.backupStatus, 'failed');
-      assert.equal(body.warning, 'online_backup_failed');
-      assert.equal(rows[0].backup_status, 'failed');
-      assert.equal(rows[0].plate_status, 'generated');
+      assert.equal(conflict.status, 409);
+      assert.deepEqual(await conflict.json(), {
+        ok: false, error: 'idempotency_conflict',
+      });
+      assert.equal(registry.rows.length, 1);
+      assert.equal(registry.lineage.length, 0);
+      assert.equal(bucket.objects.size, 1);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
+  it('never decrypts or replays a seeded package after the plate leaves generated state', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const registry = makeIssuanceDb();
+      registry.rows.push({
+        id: 'kp-active-replay',
+        piece_id: 'UL-100',
+        edition_number: 0,
+        issuance_key: 'locked-after-activation',
+        plate_status: 'active',
+        ownership_code_ciphertext: 'not-valid-base64',
+      });
+
+      const locked = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0,
+          uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
+        }),
+        env: issuanceEnv(registry.DB),
+      });
+      assert.equal(locked.status, 409);
+      assert.deepEqual(await locked.json(), {
+        ok: false, error: 'plate_identity_locked',
+      });
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
   it('returns a safe 503 when ownership-code crypto is not configured', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
@@ -3144,15 +2585,15 @@ describe('admin artwork plate lifecycle', () => {
 // These exercise functions/api/keeper/bind.js against the SAME in-memory D1
 // stand-in the admin suite uses, extended to the few extra statement shapes
 // bind issues (the no-released-filter SELECT, the legacy keeper_user_id UPDATE, and the users
-// lookup getUserByClerkId runs). The session layer (requireUser) is module-
+// lookup getUserByAuthId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth
-// cookie; the contested-claim bridge fetch is stubbed at globalThis.fetch.
+// cookie; contested claims are stored in the same canonical D1 stand-in.
 //
 // Run note: this section uses node:test's mock.module, so the suite is invoked
 // with `npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts`.
 // The flag is benign for every other test in this file.
 
-// getUserByClerkId is satisfied by the fake DB's users SELECT below, so we do
+// getUserByAuthId is satisfied by the fake DB's users SELECT below, so we do
 // not mock db.js; we just make the fake DB answer that statement.
 
 // A fuller fake D1 that serves BOTH the admin registration statements and the
@@ -3163,9 +2604,13 @@ function makeKeeperDb() {
   const qualifications: any[] = [];
   const lineage: any[] = [];
   const evidence: any[] = [];
+  const claimRequests: any[] = [];
   let loseNextFirstBind = false;
   let lastChanges = 0;
-  const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
+  const users: any[] = [
+    { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' },
+    { id: 'row-2', auth_user_id: 'user-second', email: 'second@example.com' },
+  ];
 
   function findActive(pieceId: string, edition: number) {
     return pieces.find(
@@ -3187,16 +2632,45 @@ function makeKeeperDb() {
       return { kind: 'first', row: overlays.find((row) => row.id === params[0]) || null };
     }
 
-    // users lookup (getUserByClerkId)
-    if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(s)) {
-      const u = users.find((r) => r.clerk_user_id === params[0]) || null;
+    // users lookup (getUserByAuthId)
+    if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(s)) {
+      const u = users.find((r) => r.auth_user_id === params[0]) || null;
       return { kind: 'first', row: u };
+    }
+    if (/^INSERT INTO artwork_claim_requests/i.test(s)) {
+      const [id, keeperPieceId, requesterUserId, requesterEmail, note,
+        expectedStewardUserId, createdAt, limit] = params;
+      const piece = pieces.find((row) => row.id === keeperPieceId);
+      const duplicate = claimRequests.some((row) => row.keeper_piece_id === keeperPieceId
+        && row.requester_user_id === requesterUserId && row.status === 'pending');
+      const openByUser = claimRequests.filter((row) => row.requester_user_id === requesterUserId
+        && row.status === 'pending').length;
+      const openByEmail = claimRequests.filter((row) => row.requester_email === requesterEmail
+        && row.status === 'pending').length;
+      if (!piece || piece.keeper_user_id !== expectedStewardUserId || !piece.claimed_at
+        || piece.keeper_user_id === requesterUserId || duplicate
+        || openByUser >= limit || openByEmail >= limit) {
+        return { kind: 'run', meta: { changes: 0 } };
+      }
+      claimRequests.push({
+        id, keeper_piece_id: keeperPieceId, requester_user_id: requesterUserId,
+        requester_email: requesterEmail, note, routed_to_user_id: piece.keeper_user_id,
+        status: 'pending', created_at: createdAt,
+      });
+      return { kind: 'run', meta: { changes: 1 } };
+    }
+    if (/^SELECT keeper_user_id, claimed_at FROM keeper_pieces WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: pieces.find((row) => row.id === params[0]) || null };
+    }
+    if (/^SELECT id FROM artwork_claim_requests/i.test(s)) {
+      return { kind: 'first', row: claimRequests.find((row) => row.keeper_piece_id === params[0]
+        && row.requester_user_id === params[1] && row.status === 'pending') || null };
     }
 
     // Public-code lookup: the row itself is the only source of artwork and
     // edition identity. Bind deliberately sees released rows as well.
     if (
-      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256, ownership_code_key_version FROM keeper_pieces WHERE public_code = \?1$/i.test(
+      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256, ownership_code_key_version, registration_status, identity_backup_status, identity_backup_reference, identity_backup_sha256 FROM keeper_pieces WHERE public_code = \?1$/i.test(
         s,
       )
     ) {
@@ -3398,7 +2872,7 @@ function makeKeeperDb() {
   };
 
   return {
-    DB, pieces, users, lineage, evidence, qualifications,
+    DB, pieces, users, lineage, evidence, claimRequests, qualifications,
     qualify(row: any) {
       qualifications.push({
         id: `qualification-${qualifications.length + 1}`,
@@ -3431,248 +2905,217 @@ function bindReq(body: unknown) {
   });
 }
 
-describe('steward bind lifecycle (register → first-bind → contested)', () => {
-  it('walks the full happy path and the contested handoff', async () => {
+const BIND_OWNERSHIP_CODE = 'K7QM-9XTR-2PHV-N4WB';
+
+async function seedReadyPhysicalBindPiece(
+  fixture: ReturnType<typeof makeKeeperDb>,
+  overrides: Record<string, unknown> = {},
+) {
+  const backupSha256 = 'a'.repeat(64);
+  const row = {
+    id: 'kp-bind',
+    piece_id: 'UL-100',
+    edition_number: 0,
+    keeper_user_id: null,
+    recovery_code_hash: await hashRecoveryCode(BIND_OWNERSHIP_CODE),
+    public_code: 'AR-7KQ9M2WX',
+    issuance_key: 'registered-bind-fixture',
+    registration_status: 'registered',
+    plate_status: 'active',
+    backup_status: 'verified',
+    backup_reference: `plates/AR-7KQ9M2WX/${backupSha256}.json`,
+    backup_sha256: backupSha256,
+    ownership_code_key_version: 1,
+    registered_at: '2026-07-13T00:00:00.000Z',
+    claimed_at: null,
+    released_at: null,
+    lineage_head_hash: null,
+    lineage_event_count: 0,
+    ...overrides,
+  };
+  fixture.pieces.push(row);
+  fixture.qualify(row);
+  return row;
+}
+
+describe('steward bind endpoint against registered artwork identities', () => {
+  it('rejects the wrong Ownership Code without changing registry state', async () => {
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture);
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
-    const origFetch = globalThis.fetch;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
     try {
-      // Imported AFTER the requireUser mock is installed.
-      const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
-
-      const { DB, pieces, users, lineage, evidence, qualify, loseNextFirstBind } = makeKeeperDb();
-      const adminEnv = issuanceEnv(DB);
-
-      // 1) Admin registers the piece → we capture the printed recovery code.
-      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-lifecycle' }), env: adminEnv });
-      assert.equal(reg.status, 201);
-      const regJson = await reg.json();
-      const recoveryCode: string = regJson.ownershipCode;
-      assert.ok(isWellFormedRecoveryCode(recoveryCode));
-      // Row exists, registered but unclaimed.
-      assert.equal(pieces.length, 1);
-      assert.equal(pieces[0].keeper_user_id, null);
-      assert.equal(pieces[0].claimed_at, null);
-
-      // Bind env: the bridge secret is set so the contested path actually fires.
-      const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
-
-      // A new registry identity is not bindable until physical activation and
-      // verified online backup are both complete.
-      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: false };
-      const publicCode: string = regJson.publicCode;
-      const unverifiedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(unverifiedRes.status, 403);
-      assert.equal((await unverifiedRes.json()).error, 'verified_email_required');
-      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
-      const generatedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(generatedRes.status, 409);
-      assert.equal((await generatedRes.json()).error, 'plate_not_ready');
-      pieces[0].plate_status = 'active';
-      pieces[0].backup_status = 'pending';
-      const unbackedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(unbackedRes.status, 409);
-      assert.equal((await unbackedRes.json()).error, 'plate_not_ready');
-
-      // 2) FIRST BIND: active + verified, so the holder can bind.
-      pieces[0].backup_status = 'verified';
-      const unqualifiedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(unqualifiedRes.status, 409);
-      assert.equal((await unqualifiedRes.json()).error, 'plate_recovery_not_qualified');
-      assert.equal(pieces[0].keeper_user_id, null);
-      qualify(pieces[0]);
-      const fixtureState = { lineage: lineage.length, evidence: evidence.length };
-      // Simulate a competing steward winning after the read but before UPDATE.
-      // The losing batch must not stamp lineage or evidence.
-      loseNextFirstBind();
-      const lostRace = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(lostRace.status, 409);
-      assert.equal(pieces[0].keeper_user_id, null);
-      assert.equal(lineage.length, fixtureState.lineage);
-      assert.equal(evidence.length, fixtureState.evidence);
-      const firstRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(firstRes.status, 200);
-      const firstJson = await firstRes.json();
-      assert.equal(firstJson.ok, true);
-      assert.equal(firstJson.keeper.pieceId, 'UL-100');
-      assert.ok(firstJson.keeper.claimedAt);
-      // The row now carries the first steward; still the SAME row (UPDATE, not INSERT).
-      assert.equal(pieces.length, 1);
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-      assert.ok(pieces[0].claimed_at);
-      assert.equal(lineage.at(-1)[3], 'first_bound');
-      assert.equal(evidence.at(-1)[6], 'first_bound');
-      assert.equal(evidence.at(-1)[3], 'first@example.com');
-      assert.equal(evidence.at(-1)[4], '203.0.113.42');
-      assert.doesNotMatch(lineage.at(-1)[7], /email|ip|ownership|cipher|nonce/i);
-
-      // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
-      const againRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(againRes.status, 200);
-      const againJson = await againRes.json();
-      assert.equal(againJson.ok, true);
-      assert.equal('status' in againJson, false); // not a claim_requested envelope
-
-      // 3) A DIFFERENT user now tries to bind → CONTESTED. Goes to a claim
-      //    request (202), never a silent takeover. Stub the bridge fetch.
-      let bridgeCalled = 0;
-      let bridgeOutcome: 'opened' | 'duplicate' | 'rate_limited' | 'self' = 'opened';
-      globalThis.fetch = (async (_input, init) => {
-        bridgeCalled++;
-        const bridged = JSON.parse(String(init?.body));
-        assert.equal(bridged.requesterRef, 'user-second');
-        assert.equal(bridged.requesterEmail, 'second@example.com');
-        assert.equal(bridged.pieceId, 'UL-100');
-        assert.equal(bridged.editionNumber, 0);
-        return new Response(JSON.stringify({
-          ok: true,
-          status: bridgeOutcome,
-          ...(bridgeOutcome === 'opened' || bridgeOutcome === 'duplicate'
-            ? { request: { id: 'req-1' } }
-            : {}),
-        }), {
-          status: 200,
-        });
-      }) as typeof fetch;
-      // Seed the contesting user so getUserByClerkId resolves them, then bind AS
-      // that user. user-first still holds the piece, so this is a genuine contest.
-      users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
-      CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
-
-      const contestRes = await bind({ request: bindReq({
-        publicCode,
-        ownershipCode: recoveryCode,
-        note: 'Auction receipt available',
-        requesterRef: 'forged-requester',
-        requesterEmail: 'forged@example.com',
-      }), env: bindEnv });
-      assert.equal(contestRes.status, 202);
-      const contestJson = await contestRes.json();
-      assert.equal(contestJson.ok, true);
-      assert.equal(contestJson.status, 'claim_requested');
-      assert.equal(contestJson.claim.outcome, 'opened');
-      assert.match(contestJson.message, /recorded for manual review/i);
-      assert.match(contestJson.message, /remain unchanged/i);
-      assert.doesNotMatch(contestJson.message, /notif|silence|window|free|release/i);
-      assert.doesNotMatch(contestJson.message, /\bkeeper\b/i);
-      assert.equal(bridgeCalled, 1);
-      assert.equal(evidence.at(-1)[6], 'contested_attempt');
-      // The binding was NOT stolen: user-first is still the steward.
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-
-      // Retries still reach the governed bridge, but private evidence is
-      // atomically throttled for this piece/requester/outcome tuple.
-      const evidenceCount = evidence.length;
-      bridgeOutcome = 'duplicate';
-      const repeatedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(repeatedContest.status, 202);
-      const repeatedJson = await repeatedContest.json();
-      assert.equal(repeatedJson.claim.outcome, 'duplicate');
-      assert.match(repeatedJson.message, /already recorded/i);
-      assert.doesNotMatch(repeatedJson.message, /notif|silence|window|free|release/i);
-      assert.equal(bridgeCalled, 2);
-      assert.equal(evidence.length, evidenceCount);
-
-      bridgeOutcome = 'rate_limited';
-      const rateLimited = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(rateLimited.status, 429);
-      const rateLimitedJson = await rateLimited.json();
-      assert.equal(rateLimitedJson.error, 'claim_rate_limited');
-      assert.match(rateLimitedJson.message, /no new request was recorded/i);
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-
-      bridgeOutcome = 'self';
-      const self = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(self.status, 409);
-      assert.deepEqual(await self.json(), {
-        ok: false,
-        error: 'already_current_steward',
-        message: 'You are already the current steward for this piece. No request was recorded.',
+      const response = await bindKeeper({
+        request: bindReq({ publicCode: row.public_code, ownershipCode: 'WRONG-CODE' }),
+        env: { DB: fixture.DB },
       });
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-
-      // A copied permanent code is not enough to open a governed claim.
-      const wrongContest = await bind({ request: bindReq({ publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }), env: bindEnv });
-      assert.equal(wrongContest.status, 403);
-      assert.equal(bridgeCalled, 4);
-
-      // Once claimed, release never turns the permanent Ownership Code back
-      // into a bearer instrument. A later holder enters the governed path.
-      bridgeOutcome = 'opened';
-      pieces[0].released_at = '2026-07-13T12:00:00Z';
-      const releasedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(releasedContest.status, 202);
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-      assert.equal(bridgeCalled, 5);
-
-      // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
-      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
-      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
-      const reg2Body = await reg2.json();
-      const wrongRes = await bind({
-        request: bindReq({ publicCode: reg2Body.publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }),
-        env: bindEnv,
-      });
-      assert.equal(wrongRes.status, 403);
-      const wrongJson = await wrongRes.json();
-      assert.equal(wrongJson.ok, false);
-      assert.equal(wrongJson.error, 'code_mismatch');
-      // Still unclaimed: a wrong code never binds.
-      const row201 = pieces.find((r) => r.piece_id === 'UL-101');
-      assert.equal(row201.keeper_user_id, null);
-
-      // A registry-only draft numbered identity derives edition 1 from the
-      // plate row. No catalog route data is needed and edition never defaults.
-      const draftCode = 'ZZZZ-YYYY-XXXX-WWWW';
-      const draftBackupSha256 = 'd'.repeat(64);
-      pieces.push({
-        id: 'kp-draft-bind', piece_id: 'MD-905', edition_number: 1,
-        keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(draftCode),
-        claimed_at: null, released_at: null, public_code: 'AR-ABCDEFGH',
-        plate_status: 'active', backup_status: 'verified',
-        backup_reference: `plates/AR-ABCDEFGH/${draftBackupSha256}.json`,
-        backup_sha256: draftBackupSha256,
-        ownership_code_key_version: 1,
-        lineage_head_hash: null, lineage_event_count: 0,
-      });
-      qualify(pieces.at(-1));
-      const draftRes = await bind({
-        request: bindReq({ publicCode: 'AR-ABCDEFGH', ownershipCode: draftCode }),
-        env: bindEnv,
-      });
-      assert.equal(draftRes.status, 200);
-      assert.deepEqual((await draftRes.json()).keeper, {
-        pieceId: 'MD-905', editionNumber: 1, claimedAt: pieces.at(-1).claimed_at,
-      });
-      assert.equal(pieces.find((row) => row.id === 'kp-draft-bind').keeper_user_id, 'user-first');
-
-      // Client-supplied identity fields are rejected instead of being allowed
-      // to select a different artwork or edition.
-      const forged = await bind({
-        request: bindReq({
-          publicCode: reg2Body.publicCode,
-          ownershipCode: reg2Body.ownershipCode,
-          pieceId: 'MD-905',
-          editionNumber: 1,
-        }),
-        env: bindEnv,
-      });
-      assert.equal(forged.status, 400);
-      assert.equal((await forged.json()).error, 'identity_fields_forbidden');
-
-      // 5) Binding an UNREGISTERED piece is rejected (no row → not_registered).
-      const unregRes = await bind({
-        request: bindReq({ publicCode: 'AR-HHHHHHHH', ownershipCode: recoveryCode }),
-        env: bindEnv,
-      });
-      assert.equal(unregRes.status, 404);
-      const unregJson = await unregRes.json();
-      assert.equal(unregJson.ok, false);
-      assert.equal(unregJson.error, 'not_registered');
+      assert.equal(response.status, 403);
+      assert.equal((await response.json()).error, 'code_mismatch');
+      assert.equal(row.keeper_user_id, null);
+      assert.equal(fixture.lineage.length, 0);
+      assert.equal(fixture.evidence.length, 0);
     } finally {
-      LAUNCH_FLAGS.livingLegacy = wasOn;
-      globalThis.fetch = origFetch;
       CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('returns an idempotent keeper result when the current holder rescans', async () => {
+    const claimedAt = '2026-07-14T00:00:00.000Z';
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture, {
+      keeper_user_id: 'user-first',
+      claimed_at: claimedAt,
+    });
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({ publicCode: row.public_code, ownershipCode: BIND_OWNERSHIP_CODE }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), {
+        ok: true,
+        keeper: { pieceId: 'UL-100', editionNumber: 0, claimedAt },
+      });
+      assert.equal(fixture.claimRequests.length, 0);
+      assert.equal(fixture.lineage.length, 0);
+      assert.equal(fixture.evidence.length, 0);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('opens a contested claim without replacing the current keeper', async () => {
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture, {
+      keeper_user_id: 'user-first',
+      claimed_at: '2026-07-14T00:00:00.000Z',
+    });
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({
+          publicCode: row.public_code,
+          ownershipCode: BIND_OWNERSHIP_CODE,
+          note: 'Bought from the current holder.',
+        }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 202);
+      assert.equal((await response.json()).status, 'claim_requested');
+      assert.equal(row.keeper_user_id, 'user-first');
+      assert.equal(fixture.claimRequests.length, 1);
+      assert.equal(fixture.claimRequests[0].routed_to_user_id, 'user-first');
+      assert.equal(fixture.evidence.length, 1);
+      assert.equal(fixture.evidence[0][6], 'contested_attempt');
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('keeps a released but previously governed identity in the contested path', async () => {
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture, {
+      keeper_user_id: 'user-first',
+      claimed_at: '2026-07-14T00:00:00.000Z',
+      released_at: '2026-07-15T00:00:00.000Z',
+    });
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({ publicCode: row.public_code, ownershipCode: BIND_OWNERSHIP_CODE }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 202);
+      assert.equal((await response.json()).status, 'claim_requested');
+      assert.equal(row.keeper_user_id, 'user-first');
+      assert.equal(row.released_at, '2026-07-15T00:00:00.000Z');
+      assert.equal(fixture.claimRequests.length, 1);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('rejects forged artwork identity fields before binding', async () => {
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture);
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({
+          publicCode: row.public_code,
+          ownershipCode: BIND_OWNERSHIP_CODE,
+          pieceId: 'UL-101',
+          editionNumber: 9,
+        }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 400);
+      assert.deepEqual(await response.json(), { ok: false, error: 'identity_fields_forbidden' });
+      assert.equal(row.keeper_user_id, null);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('returns not_registered for an unknown public code', async () => {
+    const fixture = makeKeeperDb();
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({ publicCode: 'AR-Z8X7C6V5', ownershipCode: BIND_OWNERSHIP_CODE }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 404);
+      assert.equal((await response.json()).error, 'not_registered');
+      assert.equal(fixture.pieces.length, 0);
+      assert.equal(fixture.lineage.length, 0);
+      assert.equal(fixture.evidence.length, 0);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('rolls back keeper, lineage, and evidence when a concurrent first bind wins', async () => {
+    const fixture = makeKeeperDb();
+    const row = await seedReadyPhysicalBindPiece(fixture);
+    fixture.loseNextFirstBind();
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    try {
+      const response = await bindKeeper({
+        request: bindReq({ publicCode: row.public_code, ownershipCode: BIND_OWNERSHIP_CODE }),
+        env: { DB: fixture.DB },
+      });
+      assert.equal(response.status, 409);
+      assert.equal((await response.json()).error, 'bind_conflict');
+      assert.equal(row.keeper_user_id, null);
+      assert.equal(row.claimed_at, null);
+      assert.equal(row.lineage_head_hash, null);
+      assert.equal(row.lineage_event_count, 0);
+      assert.equal(fixture.lineage.length, 0);
+      assert.equal(fixture.evidence.length, 0);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 });
@@ -3696,11 +3139,14 @@ describe('steward status and display location by public identity', () => {
           bind(...values: unknown[]) { params = values; return statement; },
           async first() {
             seen.push({ sql: normalized, params });
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) {
               return params[0] === row.public_code ? row : null;
+            }
+            if (/FROM artwork_contributor_current_access/i.test(normalized)) {
+              return { is_contributor: 0 };
             }
             throw new Error(`unexpected status first: ${normalized}`);
           },
@@ -3717,7 +3163,9 @@ describe('steward status and display location by public identity', () => {
         env: { DB },
       });
       assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { ok: true, kept: false, byYou: false });
+      assert.deepEqual(await response.json(), {
+        ok: true, kept: false, byYou: false, contributor: false,
+      });
       assert.ok(seen.some((entry) => entry.params[0] === row.public_code));
       assert.equal(seen.some((entry) => entry.params.includes(row.piece_id)), false);
 
@@ -3728,7 +3176,9 @@ describe('steward status and display location by public identity', () => {
         env: { DB },
       });
       assert.equal(released.status, 200);
-      assert.deepEqual(await released.json(), { ok: true, kept: true, byYou: false });
+      assert.deepEqual(await released.json(), {
+        ok: true, kept: true, byYou: false, contributor: false,
+      });
     } finally {
       CURRENT_AUTH = null;
       LAUNCH_FLAGS.livingLegacy = wasOn;
@@ -3751,10 +3201,13 @@ describe('steward status and display location by public identity', () => {
         const statement = {
           bind() { return statement; },
           async first() {
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
+            if (/FROM artwork_contributor_current_access/i.test(normalized)) {
+              return { is_contributor: 0 };
+            }
             throw new Error(`unexpected steward-history first: ${normalized}`);
           },
           async all() {
@@ -3781,7 +3234,12 @@ describe('steward status and display location by public identity', () => {
       });
       assert.equal(response.status, 200);
       assert.deepEqual(await response.json(), {
-        ok: true, kept: true, byYou: true, currentDisplayLocation: 'Ubud studio',
+        ok: true,
+        kept: true,
+        byYou: true,
+        contributor: false,
+        keeperPieceId: row.id,
+        currentDisplayLocation: 'Ubud studio',
         stewardHistory: [{
           entryType: 'intention', title: 'For the steward',
           detail: 'Keep the work where changing light can reach it.',
@@ -3795,7 +3253,9 @@ describe('steward status and display location by public identity', () => {
         request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
         env: { DB },
       });
-      assert.deepEqual(await outsider.json(), { ok: true, kept: true, byYou: false });
+      assert.deepEqual(await outsider.json(), {
+        ok: true, kept: true, byYou: false, contributor: false,
+      });
       assert.equal(historyReads, 1);
     } finally {
       CURRENT_AUTH = null;
@@ -3821,8 +3281,8 @@ describe('steward status and display location by public identity', () => {
           bind(...values: unknown[]) { params = values; return statement; },
           async first() {
             seen.push({ sql: normalized, params });
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
             throw new Error(`unexpected location first: ${normalized}`);

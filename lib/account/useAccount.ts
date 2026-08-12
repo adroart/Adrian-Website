@@ -23,7 +23,7 @@ export const AccountContext = createContext<AccountState>(stub);
 /**
  * Unified account hook used by every account-aware feature (profile sync,
  * cart sync, collections, order history). When accounts are not configured
- * (no Clerk key) or the launch flag is off, returns a quiet "not available"
+ * (no account service) or the launch flag is off, returns a quiet "not available"
  * shape so the rest of the app can render guest UI without further branching.
  */
 export function useAccount(): AccountState {

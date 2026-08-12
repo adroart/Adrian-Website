@@ -1,12 +1,12 @@
 /**
  * DELETE /api/profile/delete
  *
- * Wipes the signed-in user's profile row. Idempotent — succeeds when no
+ * Wipes the signed-in user's profile row. Idempotent, succeeds when no
  * profile exists.
  */
 
 import { requireUser, jsonResponse } from '../_lib/auth.js';
-import { ensureUser } from '../_lib/db.js';
+import { deleteCollectorBirthProfile } from '../_lib/collectorOnboarding.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -19,13 +19,6 @@ export async function onRequest(context) {
 
   if (!env.DB) return jsonResponse({ error: 'db_not_configured' }, { status: 503 }, request, env);
 
-  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
-  if (!user) return jsonResponse({ ok: true }, { status: 200 }, request, env);
-
-  await env.DB
-    .prepare('DELETE FROM profiles WHERE user_id = ?1')
-    .bind(user.id)
-    .run();
-
-  return jsonResponse({ ok: true }, { status: 200 }, request, env);
+  const result = await deleteCollectorBirthProfile(env, { userId: auth.userId });
+  return jsonResponse(result, { status: 200 }, request, env);
 }

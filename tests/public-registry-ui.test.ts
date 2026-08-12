@@ -1,11 +1,35 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 const readSource = (relativePath: string) =>
   readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8');
 
 describe('public scanned-identity UI wiring', () => {
+  it('has separate public artwork-ledger projection and private keeper price surfaces', () => {
+    for (const relativePath of [
+      'utils/artworkLedger.ts',
+      'functions/api/artwork-ledger/media/[id].js',
+      'functions/api/keeper/certificate-ledger.js',
+      'components/collector/CertificateLedger.tsx',
+    ]) {
+      assert.equal(existsSync(new URL(`../${relativePath}`, import.meta.url)), true, relativePath);
+    }
+
+    const projector = readSource('utils/artworkLedger.ts');
+    const publicMedia = readSource('functions/api/artwork-ledger/media/[id].js');
+    const privateLedger = readSource('functions/api/keeper/certificate-ledger.js');
+    const certificateLedger = readSource('components/collector/CertificateLedger.tsx');
+    const certificateService = readSource('functions/api/_lib/certificateContent.js');
+    assert.match(projector, /parsePublicArtworkLedger/);
+    assert.match(projector, /parseKeeperCertificateLedger/);
+    assert.match(publicMedia, /export async function onRequest/);
+    assert.match(privateLedger, /export async function onRequest/);
+    assert.match(certificateLedger, /export default function CertificateLedger/);
+    assert.match(certificateService, /resolvePublicArtworkLedger/);
+    assert.match(certificateService, /resolveCurrentKeeperPriceHistory/);
+  });
+
   it('loads only strict public instance codes from the no-store registry endpoint', () => {
     const source = readSource('components/WorksPage.tsx');
 
@@ -41,7 +65,8 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /<PublicIdentityRecord[\s\S]*?identityState/);
     assert.match(source, /draft\.status === ['"]found['"][\s\S]*?<DraftArtworkRecord/);
     assert.match(source, /<PublicIdentityRecord[\s\S]*?<CatalogArtworkRecord/);
-    assert.match(source, /\{publicIdentityRecord\}[\s\S]*?<ArrivalGate/);
+    assert.match(source, /<ArrivalGate[\s\S]*?>[\s\S]*?\{publicIdentityRecord\}[\s\S]*?\{record\}/);
+    assert.match(source, /return <>\{publicIdentityRecord\}\{record\}<\/>/);
   });
 
   it('replaces a mismatched route with the canonical verified artwork route', () => {
@@ -61,12 +86,14 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /data-testid="public-registry-invalid"/);
   });
 
-  it('gives scanned identity the only h1 when the legacy arrival is enabled', () => {
+  it('gives the scanned arrival the only h1 before the verified identity details', () => {
     const worksPage = readSource('components/WorksPage.tsx');
     const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
+    const arrivalScreen = readSource('components/collector/ArrivalScreen.tsx');
 
     assert.match(arrivalGate, /headingLevel\?:\s*1\s*\|\s*2/);
-    assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} headingLevel=\{publicCode \? 2 : 1\}>/);
+    assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} identity=\{verifiedIdentity\} headingLevel=\{1\}>/);
+    assert.match(arrivalScreen, /headingLevel === 1[\s\S]*?<h1 id="collector-arrival-title"[\s\S]*?<h2 id="collector-arrival-title"/);
   });
 
   it('gives not-found and temporary failures different states with retry only for temporary failures', () => {
@@ -83,7 +110,7 @@ describe('public scanned-identity UI wiring', () => {
     const keeperPanel = readSource('components/legacy/KeeperPanel.tsx');
 
     assert.match(worksPage, /const verifiedIdentity = identityState\.status === ['"]ready['"] && identityState\.publicCode === publicCode/);
-    assert.match(worksPage, /legacyOn && identity && <KeeperPanel publicIdentity=\{identity\}/);
+    assert.match(worksPage, /legacyOn && identity[\s\S]*?<KeeperPanel publicIdentity=\{identity\}/);
     assert.match(keeperPanel, /publicIdentity:\s*PublicPlateIdentity/);
     assert.doesNotMatch(keeperPanel, /React\.FC<\{ artwork: Artwork; editionNumber\?: number \}>/);
   });
@@ -153,9 +180,56 @@ describe('public scanned-identity UI wiring', () => {
     assert.doesNotMatch(source, /notified|silence|patient window|response window/i);
   });
 
-  it('makes the unrevealed arrival content inert as well as aria-hidden', () => {
+  it('keeps the complete arrival record immediately available without a timed inert gate', () => {
     const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
-    assert.match(arrivalGate, /!opened[\s\S]*?inert:\s*['"]['"]/);
-    assert.match(arrivalGate, /aria-hidden=\{!opened\}/);
+    assert.match(arrivalGate, /data-testid="arrival-record"/);
+    assert.doesNotMatch(arrivalGate, /setTimeout|\binert\b|aria-hidden/);
+  });
+
+  it('keeps a failed certificate recoverable and renders only exact instance identity facts', () => {
+    const certificate = readSource('components/collector/CertificateScreen.tsx');
+
+    assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onClick=\{retry\}[\s\S]*?>Try again</);
+    assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onComplete[\s\S]*?Complete registration/);
+    assert.match(certificate, /projectInstanceCertificate\(body\?\.certificate, artworkId, publicCode\)/);
+    assert.match(certificate, /<Fact label="Identifier">\{state\.certificate\.artworkId\}<\/Fact>/);
+    assert.match(certificate, /<Fact label="Edition">\{certificateEditionLabel\(state\.certificate\.edition\)\}<\/Fact>/);
+    assert.match(certificate, /<Fact label="Public code">\{state\.certificate\.publicCode\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Edition">\{editionLabel\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Public code">\{publicCode\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Edition">\{state\.certificate\.editionWording\}/);
+  });
+
+  it('renders claimed creator fortunes and probes private prices without guest affordances', () => {
+    const certificate = readSource('components/collector/CertificateScreen.tsx');
+    const ledger = readSource('components/collector/CertificateLedger.tsx');
+
+    assert.match(certificate, /parsePublicArtworkLedger\(source\.publicLedger\)/);
+    assert.match(certificate, /source\.title/);
+    assert.match(certificate, /<CertificateLedger[\s\S]*?publicLedger=\{state\.certificate\.publicLedger\}/);
+    assert.match(certificate, /title=\{state\.certificate\.title \|\| title\}/);
+    assert.match(ledger, /useAccount\(\)/);
+    assert.match(ledger, /\/api\/keeper\/certificate-ledger\?publicCode=/);
+    assert.match(ledger, /credentials:\s*['"]include['"]/);
+    assert.match(ledger, /cache:\s*['"]no-store['"]/);
+    assert.match(ledger, /parseKeeperCertificateLedger/);
+    assert.match(ledger, /entry\.message/);
+    assert.match(ledger, /entry\.mediaUrl/);
+    assert.match(ledger, /alt=\{`\$\{title\}, creator note from the artwork certificate`\}/);
+    assert.match(ledger, />Price history</);
+    assert.match(ledger, /!available \|\| !isLoaded \|\| !isSignedIn \|\| !userId[\s\S]*?return/);
+    assert.match(ledger, /errorBody\?\.currentKeeper === true[\s\S]*?state\.status === ['"]error['"]/);
+    assert.doesNotMatch(ledger, /locked|unlock|upgrade|price unavailable/i);
+  });
+
+  it('uses the mandated Universal Language alt-text contract for every scanned-record artwork image', () => {
+    const arrival = readSource('components/collector/ArrivalScreen.tsx');
+    const worksPage = readSource('components/WorksPage.tsx');
+
+    assert.match(arrival, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/\.\.\/utils\/universalLanguage['"]/);
+    assert.match(arrival, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);
+    assert.match(worksPage, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/utils\/universalLanguage['"]/);
+    assert.match(worksPage, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);
+    assert.match(worksPage, /alt=\{imageAlt\}/);
   });
 });

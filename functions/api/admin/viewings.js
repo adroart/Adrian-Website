@@ -63,6 +63,25 @@ export async function onRequest(context) {
 
 async function listViewings(request, env) {
   const url = new URL(request.url);
+  const keys = [...url.searchParams.keys()];
+  const viewingIds = url.searchParams.getAll('viewingId');
+  if (viewingIds.length > 0) {
+    const rawId = viewingIds[0];
+    const viewingId = Number(rawId);
+    if (viewingIds.length !== 1 || keys.length !== 1 || !/^\d+$/.test(rawId)
+      || !Number.isSafeInteger(viewingId) || viewingId < 1 || String(viewingId) !== rawId) {
+      return jsonResponse({ ok: false, error: 'invalid_query' }, 400);
+    }
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM viewings WHERE id = ?1 LIMIT 1',
+    ).bind(viewingId).all();
+    return jsonResponse({ ok: true, viewings: (results || []).map(serialize) });
+  }
+  const allowed = new Set(['status', 'limit', 'offset']);
+  if (keys.some(key => !allowed.has(key))
+    || [...allowed].some(key => url.searchParams.getAll(key).length > 1)) {
+    return jsonResponse({ ok: false, error: 'invalid_query' }, 400);
+  }
   const status = url.searchParams.get('status');
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100);
   const offset = Math.max(0, Number(url.searchParams.get('offset') || 0) || 0);

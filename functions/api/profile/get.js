@@ -7,7 +7,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/auth.js';
-import { ensureUser } from '../_lib/db.js';
+import { readCollectorOnboarding } from '../_lib/collectorOnboarding.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -18,12 +18,16 @@ export async function onRequest(context) {
 
   if (!env.DB) return jsonResponse({ error: 'db_not_configured' }, { status: 503 }, request, env);
 
-  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
-  if (!user) return new Response(null, { status: 204 });
-
+  const onboarding = await readCollectorOnboarding(env, { userId: auth.userId });
+  if (onboarding.status === 'missing') return new Response(null, { status: 204 });
   const row = await env.DB
-    .prepare('SELECT birth_date, birth_time, birth_place_label, lat, lng, tz_id, computed_json, updated_at FROM profiles WHERE user_id = ?1')
-    .bind(user.id)
+    .prepare(`
+      SELECT profile.computed_json
+        FROM users AS account
+        JOIN profiles AS profile ON profile.user_id = account.id
+       WHERE account.auth_user_id = ?1
+    `)
+    .bind(auth.userId)
     .first();
   if (!row) return new Response(null, { status: 204 });
 
@@ -36,18 +40,9 @@ export async function onRequest(context) {
 
   return jsonResponse(
     {
-      inputs: {
-        date: row.birth_date,
-        time: row.birth_time,
-        place: {
-          label: row.birth_place_label,
-          lat: row.lat,
-          lng: row.lng,
-          tzId: row.tz_id,
-        },
-      },
+      inputs: onboarding.inputs,
       computed,
-      updatedAt: new Date(row.updated_at * 1000).toISOString(),
+      updatedAt: onboarding.updatedAt,
     },
     { status: 200 },
     request,

@@ -3,7 +3,7 @@ export const PUBLIC_REGISTRY_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ234567
 
 const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
 const MAX_EDITION_NUMBER = 9999;
-const PLATE_STATUSES = ['generated', 'active', 'superseded'] as const;
+const PLATE_STATUSES = ['registered', 'generated', 'active', 'superseded'] as const;
 const PROVENANCE_EVENTS = [
   'created',
   'exhibited',
@@ -55,7 +55,7 @@ interface PublicPlateIdentityBase {
 }
 
 export type PublicPlateIdentity = PublicPlateIdentityBase & (
-  | { plateStatus: 'generated' | 'active' }
+  | { plateStatus: 'registered' | 'generated' | 'active' }
   | { plateStatus: 'superseded'; successorDisclosure: 'withheld' }
   | {
       plateStatus: 'superseded';

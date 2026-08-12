@@ -5,6 +5,7 @@ import { before, describe, it, mock } from 'node:test';
 
 import { buildArtworkPlatePackage } from '../utils/artworkPlate';
 import { encryptOwnershipCode } from '../utils/ownershipCodeCrypto';
+import { buildIdentityBackupDocument } from '../functions/api/_lib/identityBackup.js';
 const ADMIN_SECRET = 'registry-admin-secret';
 const ADMIN_IDENTITY = {
   userId: 'admin-user', email: 'artist@example.com',
@@ -28,6 +29,7 @@ mock.module('../functions/api/_lib/auth.js', {
 
 const { onRequest: recoverArtworkPackage } = await import('../functions/api/admin/pieces/[id]/package.js');
 const { onRequest: verifyR2Recovery } = await import('../functions/api/admin/pieces/[id]/verify-recovery.js');
+const { onRequest: revealOwnershipCode } = await import('../functions/api/admin/pieces/[id]/reveal.js');
 const { hashRecoveryCode } = await import('../functions/api/_lib/keeper.js');
 const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
 const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
@@ -192,6 +194,29 @@ describe('audited fabrication-package recovery', () => {
   });
 });
 
+describe('audited registered-identity recovery', () => {
+  it('reveals only the Ownership Code before optional plate fabrication', async () => {
+    const registeredRow = {
+      ...fixtureRow,
+      registration_status: 'registered',
+      plate_status: 'legacy',
+      plate_generated_at: null,
+      front_svg_sha256: null,
+      back_svg_sha256: null,
+    };
+    const { env, operations } = environment({ row: registeredRow });
+    const response = await revealOwnershipCode({
+      request: request(), env, params: { id: 'kp-package-1' },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, ownershipCode: OWNERSHIP_CODE });
+    assert.match(operations[0], /^SELECT \*/);
+    assert.match(operations[1], /^INSERT INTO ownership_code_audit/);
+    assert.equal(operations.some((sql) => /UPDATE|INSERT INTO keeper_pieces/i.test(sql)), false);
+  });
+});
+
 function r2RecoveryEnvironment(options: {
   row?: Record<string, unknown> | null;
   backup?: Record<string, unknown> | string | null;
@@ -284,6 +309,72 @@ function r2RecoveryEnvironment(options: {
     env: {
       DB,
       ARTWORK_REGISTRY_BACKUP: bucket,
+      REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
+      OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+      OWNERSHIP_CODE_KEY_V1: KEY,
+    },
+  };
+}
+
+function identityRecoveryEnvironment(options: { plateStatus?: string } = {}) {
+  const candidate = {
+    publicCode: fixtureRow.public_code,
+    artworkId: fixtureRow.piece_id,
+    edition: { kind: 'numbered', number: fixtureRow.edition_number, size: 10 },
+    registeredAt: '2026-08-09T12:00:00.000Z',
+    verifier: fixtureRow.recovery_code_hash,
+    envelope: {
+      ciphertext: fixtureRow.ownership_code_ciphertext,
+      nonce: fixtureRow.ownership_code_nonce,
+      keyVersion: String(fixtureRow.ownership_code_key_version),
+    },
+  };
+  const copiedDocument = JSON.stringify(buildIdentityBackupDocument(candidate));
+  const sha256 = createHash('sha256').update(copiedDocument).digest('hex');
+  const row = {
+    id: fixtureRow.id,
+    piece_id: fixtureRow.piece_id,
+    edition_number: fixtureRow.edition_number,
+    public_code: fixtureRow.public_code,
+    registration_status: 'registered',
+    plate_status: options.plateStatus || 'legacy',
+    registered_at: candidate.registeredAt,
+    ownership_code_key_version: fixtureRow.ownership_code_key_version,
+    recovery_code_hash: fixtureRow.recovery_code_hash,
+    identity_backup_status: 'verified',
+    identity_backup_reference: `identities/${fixtureRow.public_code}/${sha256}.json`,
+    identity_backup_sha256: sha256,
+  };
+  const operations: string[] = [];
+  const qualifications: unknown[][] = [];
+  const DB = {
+    prepare(sql: string) {
+      operations.push(sql.replace(/\s+/g, ' ').trim());
+      if (/^SELECT /i.test(sql.trim())) {
+        return { bind() { return this; }, async first() { return row; } };
+      }
+      if (/^INSERT INTO ownership_code_audit/i.test(sql.trim())) {
+        return { bind() { return this; }, async run() { return { success: true }; } };
+      }
+      if (/^INSERT INTO artwork_identity_recovery_qualifications/i.test(sql.trim())) {
+        let values: unknown[] = [];
+        return {
+          bind(...bound: unknown[]) { values = bound; return this; },
+          async run() { qualifications.push(values); return { meta: { changes: 1 } }; },
+        };
+      }
+      throw new Error(`Unexpected database operation: ${sql}`);
+    },
+    async batch(statements: Array<{ run(): Promise<unknown> }>) {
+      return Promise.all(statements.map((statement) => statement.run()));
+    },
+  };
+  return {
+    copiedDocument,
+    operations,
+    qualifications,
+    env: {
+      DB,
       REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
       OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
       OWNERSHIP_CODE_KEY_V1: KEY,
@@ -445,5 +536,56 @@ describe('copied-file recovery qualification', () => {
     assert.match(runbook, /private full-registry recovery archive/i);
     assert.match(runbook, /separate key/i);
     assert.doesNotMatch(runbook, /Reveal exactly one non-production canary plate/);
+  });
+});
+
+describe('copied registered-identity qualification', () => {
+  it('qualifies the identity backup without fabricating or activating a plate', async () => {
+    const fixture = identityRecoveryEnvironment();
+    const response = await verifyR2Recovery({
+      request: request('POST', { backupDocument: fixture.copiedDocument }),
+      env: fixture.env,
+      params: { id: 'kp-package-1' },
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.deepEqual(body, {
+      ok: true,
+      recoveryStatus: 'passed',
+      qualificationStatus: 'current',
+      qualifiedAt: body.qualifiedAt,
+      publicCode: 'AR-ABCDEFGH',
+      pieceId: 'UL-100',
+      editionNumber: 2,
+      identityBackupReference: body.identityBackupReference,
+      identityBackupSha256: body.identityBackupSha256,
+      keyVersion: '1',
+    });
+    assert.match(fixture.operations[1], /^INSERT INTO ownership_code_audit/);
+    assert.equal(fixture.qualifications.length, 1);
+    assert.equal(fixture.operations.some((sql) => /UPDATE keeper_pieces/i.test(sql)), false);
+    assert.equal(JSON.stringify(body).includes(OWNERSHIP_CODE), false);
+    assert.equal('frontSha256' in body || 'undersideSha256' in body, false);
+  });
+
+  it('can explicitly qualify the identity copy after optional plate fabrication', async () => {
+    const fixture = identityRecoveryEnvironment({ plateStatus: 'generated' });
+    const response = await verifyR2Recovery({
+      request: request('POST', {
+        qualificationKind: 'identity',
+        backupDocument: fixture.copiedDocument,
+      }),
+      env: fixture.env,
+      params: { id: 'kp-package-1' },
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.qualificationStatus, 'current');
+    assert.equal(body.identityBackupReference.startsWith('identities/'), true);
+    assert.equal('frontSha256' in body || 'undersideSha256' in body, false);
+    assert.equal(fixture.qualifications.length, 1);
+    assert.equal(fixture.operations.some((sql) => /UPDATE keeper_pieces/i.test(sql)), false);
   });
 });

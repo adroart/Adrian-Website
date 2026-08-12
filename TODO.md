@@ -4,20 +4,12 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
-- [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: you-required | effort: deep)_ → Flow (start here): [collector-screen-wording.md](todo/plans/collector-screen-wording.md) · Cards: [collector-flow-preview.html](todo/plans/collector-flow-preview.html) · Chart: [collector-flow-chart.html](todo/plans/collector-flow-chart.html) · Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  The flow's wording was settled with Adrian on 2026-08-09 and is locked; the wording record outranks the older docs where they disagree. Still blocked on the per-piece materials data and the invitation-proof call. Done when a person can walk the whole flow end to end.
-- [ ] Research whether the video time capsule is affordable: storage costs per short video, per piece, over years _(band: agent-runnable | effort: moderate)_ → Context: [collector-screen-wording.md](todo/plans/collector-screen-wording.md)
-  Adrian sketched one video at purchase plus a yearly one, sealed like time capsules. Deferred until the cost model exists. Done when a one-page answer says what it costs at 50, 200, and 1000 pieces and whether a solo artist can underwrite it.
-- [ ] Reconcile the collector build plan with the flow settled in the wording doc _(band: agent-runnable | effort: moderate)_ → Flow: [collector-screen-wording.md](todo/plans/collector-screen-wording.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  The 2026-08-09 wording session reshaped the plan: one two-state piece page replaces arrival plus code entry, the code sleeps after claiming, the privacy default flipped to shines-by-default with city ceiling, and the question garden with its glowing meter replaced the single writing step. Done when the build doc's phase 1 and 2 items match the locked flow and nothing superseded is still listed as work.
-- [ ] Build the question garden and the glowing meter on the piece page _(band: you-required | effort: deep)_ → Flow: [collector-screen-wording.md](todo/plans/collector-screen-wording.md)
-  The permanent home of the writing: chosen questions answerable across years, each answer brightening the piece's light, the glow itself opening the garden. Needs the question list written with Adrian before build. Done when a caretaker can answer from the piece page and watch the light deepen.
-- [ ] Build the gift and passing flows behind the unlock fork _(band: you-required | effort: deep)_ → Flow: [collector-screen-wording.md](todo/plans/collector-screen-wording.md)
-  Sealed wishes that live with the piece forever, the grave transfer, the patient receiving side. Wording locked; needs the invitation-proof design call before the passing can be built end to end. Done when a gift buyer can seal wishes and a caretaker can pass a piece with confirmation.
-- [ ] Record what each artwork is actually made of: wood, stones, makers, where it was made _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
-  Every one of the 64 currently carries the identical material string, so the certificate has nothing to show. The table to hold it exists and is empty. Done when a certificate can be read for any registered piece.
-- [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
-  Its task one (reframe registration around the artwork, not the plate) is the same work as the collector build's 1.1.
+- [ ] **Collector journey integration and refinement.** _(band: agent-runnable)_ Integrate the reusable collector foundation, then align each collector-facing surface with the locked August 10 master. → Master: [collector-screen-wording.md](todo/plans/collector-screen-wording.md) · Cards: [collector-flow-preview.html](todo/plans/collector-flow-preview.html) · Chart: [collector-flow-chart.html](todo/plans/collector-flow-chart.html) · Build: [the-collector-build.md](todo/plans/the-collector-build.md) · Integration: [collector-admin-workflow-integration.md](docs/superpowers/plans/2026-08-10-collector-admin-workflow-integration.md)
+  Identity, invitations, governed claim and transfer, certificates, verified sales, media integrity, and recovery are built and verified locally. Phase 3.1 contributor access, API, UI, recovery, privacy, authority, replay, and integrated acceptance are also complete locally; attributed contributor material remains blocked on Adrian's content-shape decision. Public projections, dreams, letters, and field data need adaptation. The old Register-or-Dream fork, combined privacy and birth flow, legacy keeper panels, and conflicting equal-brightness semantics are superseded. Garden, household, collaborators, heirs, gift wishes, passing UI, and video remain later. The journey is not live.
+- [ ] Record and refine what each artwork is made of, who made it, where it was made, and its wording _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
+  The certificate editor now provides reusable templates with per-artwork overrides. Fill the desired factual fields gradually; incomplete entries stay hidden until then.
+- [ ] **Finish the artwork registry rollout and handover.** _(band: you-required)_ Artwork-first registration, optional plate preparation, and the private verified-sales workspace are built locally. Remaining work is the production-copy ownership preflight, rollout, and handover. Historical reconnection may begin with only an email and attach the exact artwork later. → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
+- [ ] **Enter historical verified sales.** _(band: you-required)_ After the private workspace is rolled out, add known buyer emails, dates, private prices, artwork mappings, pictures, and optional creator messages gradually. Unknown artworks may remain email-only reconnection cases until Adrian and the collector identify them together.
 
 ### Recent decisions to watch
 
@@ -28,7 +20,14 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Pre-launch
 
+- [ ] **Rerun the broad browser smoke gate with network access.** _(band: routine)_ The Phase 3 desktop and mobile journeys pass, but ten existing site-wide smoke checks logged `net::ERR_INTERNET_DISCONNECTED` for external resources. Rerun them in an online browser environment before rollout.
+
 ### Adrian-only: blocks launch
+
+- [ ] **Collector registry rollout rehearsal.** _(band: you-required)_ Run the ownership damage detector against a fresh read-only production copy, then rehearse migration and encrypted restore on copies.
+  The reusable local foundation has a passing baseline, but the collector presentation is still being reconciled with the master. The journey intentionally remains off. Done when integration is verified, the detector finds no damaged ownership state, migration and clean restore including the private media manifest succeed on copies, required production bindings are confirmed, the letter runner secret and disabled-by-default schedule are configured, and a canary proves the journey can be enabled without seeding or changing production during rehearsal.
+- [ ] **Collector facts and verified-sale review.** _(band: you-required)_ Add the real materials and wording for each artwork, then review historical sale facts and exact artwork links in the verified-sales workspace.
+  Missing certificate facts stay hidden and can be filled gradually. Verified sales and artwork-level price history are built locally as the canonical record, while source facts still need Adrian's confirmation before production rollout.
 
 - [ ] **Commit Bali edits** — commit the staged Bali-to-studio wording change (8 files already edited, on their own branch) _(you · quick)_
   The edits exist on a branch but aren't committed, so they're invisible until you commit. Done when the branch is committed and merged.
@@ -44,9 +43,6 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   The defaults are plan estimates; no real art-pricing data was available to calibrate. Load real pieces, set Settings to match your intuition, save pieces to Reference with their actual prices, and recenter. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
 - [ ] **Pricing tool: flip the explorer on** — make the public Pricing Explorer live once the model reads true _(you · quick)_
   Set `LAUNCH_FLAGS.pricingExplorer` to `true`. It lives on the Multidimensional Art page. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
-- [ ] **Clerk prod** — take Clerk login to production: rotate the exposed secret, add the 5 DNS records, finish Google OAuth, then Claude wires the live keys _(you · deep)_
-  Shared dev login is live, but production needs its own keys and DNS, and the pasted `sk_live_` must be rotated for safety. Done when DNS is verified, Google OAuth is set, prod keys are wired, and a real sign-up lands a D1 row on the live site. → Plan: [clerk-production-launch.md](todo/plans/clerk-production-launch.md)
-
 ### Adrian-only: backend security pass (waiting on you to verify before it goes live)
 
 - [ ] **Backend security hardening** — review, verify, and merge the open security pass, and rotate the live Stripe key _(you · deep)_
@@ -73,8 +69,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ### Oracle accounts branch: decision pending
 
-- [ ] **Oracle branch** — decide what happens to the oracle accounts branch _(you · deep)_
-  An older oracle-accounts branch predates the shared-Clerk work that just shipped, so it may now be partly redundant. Done when you decide to merge, salvage, or close it. → Plan: [oracle-accounts-decision.md](todo/plans/oracle-accounts-decision.md)
+- [ ] **Oracle branch:** decide what happens to the old oracle accounts branch _(you · deep)_
+  This branch predates the completed Better Auth migration, so its account work may now be redundant. Done when you decide to merge, salvage, or close it. → Plan: [oracle-accounts-decision.md](todo/plans/oracle-accounts-decision.md)
 
 ## Future
 
@@ -153,8 +149,6 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   The collections feature exists but the save button isn't shown where users browse. Done when the button appears on piece pages and Store cards for signed-in users.
 - [ ] **Configurator sync** — thread configurator state through the cart sync if configured options ship in the cart _(agent · moderate)_
   This keeps a piece's chosen size and finish attached to it through the synced cart. Done when configured options persist in the cart across devices.
-- [ ] **Lazy Clerk SDK** — lazy-load the sign-in SDK so the home page bundle stays light while accounts are off _(agent · quick)_
-  The Clerk SDK adds weight even when sign-in isn't shown, so defer it. Done when the home page bundle no longer eagerly loads Clerk.
 - [ ] **Cities index** — expand the cities index from a fresh GeoNames extract _(agent · quick)_
   The birth-location city picker uses a limited city list, and a fresh extract widens coverage. Done when the cities index is regenerated from current GeoNames data.
 
@@ -245,4 +239,4 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - The cart system and checkout flow are already built. Stripe webhooks for fulfillment notifications are wired (see `docs/oracle-accounts-implementation.md` for the per-file detail). Cart persists via localStorage.
 
-- Accounts/login: shared Clerk app + shared D1 (`adrian-website`) with mandalacodes.com — one collector identity across both sites, dev login live as of 2026-06-09. Production launch is tracked in Pre-launch above. No Clerk Pro / no paid satellite (each site gets its own free prod instance on the same DB).
+- Accounts/login: both sites use Better Auth and the same D1 database, so one person has one account row and one birth-details row across both sites.

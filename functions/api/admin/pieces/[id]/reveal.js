@@ -36,7 +36,8 @@ export async function onRequest({ request, env, params }) {
     const row = await env.DB.prepare(
       'SELECT * FROM keeper_pieces WHERE id = ?1',
     ).bind(params.id).first();
-    if (!row || !['generated', 'active'].includes(row.plate_status)) {
+    const registeredIdentity = row?.registration_status === 'registered';
+    if (!row || (!registeredIdentity && !['generated', 'active'].includes(row.plate_status))) {
       return jsonResponse({ ok: false, error: 'plate_not_found' }, 404);
     }
 
@@ -54,6 +55,9 @@ export async function onRequest({ request, env, params }) {
     const verifier = await hashRecoveryCode(ownershipCode);
     if (!constantTimeEqual(verifier, row.recovery_code_hash)) {
       return jsonResponse({ ok: false, error: 'ownership_code_verifier_mismatch' }, 409);
+    }
+    if (registeredIdentity && row.plate_status === 'legacy') {
+      return jsonResponse({ ok: true, ownershipCode });
     }
     const plate = await buildArtworkPlatePackage({
       publicCode: row.public_code,

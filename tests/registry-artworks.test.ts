@@ -8,6 +8,7 @@ import {
   resolveArtwork,
   validateDraftInput,
 } from '../functions/api/_lib/artworkCatalog.js';
+import { issueRegistryPlate } from '../functions/api/_lib/registryPlateIssuance.js';
 
 function fakeEnv(row: unknown, opts: { throwMissing?: boolean } = {}) {
   return {
@@ -180,18 +181,42 @@ describe('artwork resolution for minting', () => {
 });
 
 describe('mint + admin wiring', () => {
-  it('the mint endpoint resolves an artwork from either source', () => {
+  it('the legacy mint endpoint only replays an issuance key and requires artwork registration otherwise', async () => {
     const pieces = readFileSync(new URL('../functions/api/admin/pieces.js', import.meta.url), 'utf8');
-    const issuance = readFileSync(
-      new URL('../functions/api/_lib/registryPlateIssuance.js', import.meta.url),
-      'utf8',
-    );
+    const queries: string[] = [];
+    const env = {
+      OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+      OWNERSHIP_CODE_KEY_V1: Buffer.alloc(32, 7).toString('base64'),
+      DB: {
+        prepare(sql: string) {
+          queries.push(sql.replace(/\s+/g, ' ').trim());
+          return {
+            bind(issuanceKey: string) {
+              assert.equal(issuanceKey, 'existing-registration-only');
+              return { first: async () => null };
+            },
+          };
+        },
+      },
+    };
+
+    const response = await issueRegistryPlate(new Request('https://example.test/api/admin/pieces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pieceId: 'UL-100',
+        editionNumber: 0,
+        issuanceKey: 'existing-registration-only',
+      }),
+    }), env);
+
     assert.match(pieces, /issueRegistryPlate/);
-    assert.match(issuance, /resolveArtwork/);
-    assert.match(issuance, /await validateNewIssuance\(env, basic\)/);
-    const issuePlate = issuance.slice(issuance.indexOf('export async function issueRegistryPlate'));
-    assert.ok(issuePlate.indexOf('findByIssuanceKey') < issuePlate.indexOf('validateNewIssuance(env, basic)'));
-    assert.doesNotMatch(`${pieces}\n${issuance}`, /FULL_ARCHIVE/);
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), {
+      ok: false,
+      error: 'artwork_registration_required',
+    });
+    assert.deepEqual(queries, ['SELECT * FROM keeper_pieces WHERE issuance_key = ?1']);
   });
 
   it('the draft admin endpoint gates create behind the registry unlock', () => {

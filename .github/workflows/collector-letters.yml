@@ -1,0 +1,26 @@
+name: Collector letter anniversaries
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collector-letter-anniversaries
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    if: vars.COLLECTOR_LETTERS_RUNNER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Generate due collector letters
+        run: |
+          curl --silent --show-error --fail-with-body --retry 2 \
+            --request POST \
+            --header "X-Collector-Letters-Key: ${{ secrets.COLLECTOR_LETTERS_SERVICE_KEY }}" \
+            https://adrianrasmussen.com/api/collector/letters-runner

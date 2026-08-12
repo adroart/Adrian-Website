@@ -13,14 +13,14 @@
 
 ## Current truth
 
-The active `codex/collector-phase-1` branch is the foundation, not a prototype branch to rebuild elsewhere. At the time of this plan it contains 51 commits from the shared merge base and changes roughly 186 production and planning files. Its verified-sales workspace is still being refined in a separate worktree.
+The integration snapshot is anchored to the clean final collector foundation commit `d5b10fa1cf7a05577c72a1a87e51f017b5e82b99` from `codex/collector-phase-1`. Any later external work on that branch must be merged into this integration branch before anyone touches overlapping collector files here.
 
 | Capability | Status | Decision |
 |---|---|---|
 | Permanent artwork identity and optional plate | Built locally on collector branch | Reuse |
 | Ownership Code, invitation, claim, governed transfer | Built locally on collector branch | Reuse as the only writers |
 | Certificate templates and effective certificate | Built locally on collector branch | Reuse |
-| Verified sales, reconnections, artwork ledger, price history | Built locally and actively refined | Reuse as canonical sale history |
+| Verified sales, reconnections, artwork ledger, price history | Built locally at the snapshot commit | Reuse as canonical sale history |
 | Registration, invitations, certificates, verified-sales admin pages | Built locally as separate tools | Compose inside an artwork workspace |
 | Plate, recovery, registry maintenance | Built on main and collector branch | Keep specialized and admin-only |
 | Pricing, private viewings, invoices | Built on main | Connect with persistent artwork context |
@@ -70,15 +70,15 @@ These rules prevent the integration from creating a second system.
 - Preserve: `todo/plans/collector-primitives.html`
 - Preserve: `todo/plans/collector-build-prompt.md`
 
-- [ ] **Step 1: Wait for the active sales workspace to reach a clean commit**
+- [x] **Step 1: Wait for the active sales workspace to reach a clean commit**
 
 Do not edit the active sales files from another worktree. Record the final collector commit and confirm its worktree is clean before integration begins.
 
-- [ ] **Step 2: Preserve the August 10 authority files**
+- [x] **Step 2: Preserve the August 10 authority files**
 
 The active branch currently removes several master and prototype documents while project instructions still identify them as authoritative. Keep the locked wording, flow chart, flow preview, primitives, and build prompt until a separate approved archival change updates every reference to them.
 
-- [ ] **Step 3: Add a semantic migration table to the collector progress record**
+- [x] **Step 3: Add a semantic migration table to the collector progress record**
 
 Mark each existing collector surface as one of:
 
@@ -87,11 +87,11 @@ Mark each existing collector surface as one of:
 - `replace`: the old Register-or-Dream fork, combined privacy and birth flow, legacy keeper panels, equal-brightness semantics where they conflict with the master.
 - `later`: garden, household, collaborators, heirs, gift wishes, passing UI, video.
 
-- [ ] **Step 4: Reconcile progress language without changing locked copy**
+- [x] **Step 4: Reconcile progress language without changing locked copy**
 
 Update `the-collector-build.md`, `the-collector-execution.md`, and `TODO.md` so they distinguish local implementation, active refinement, superseded presentation, and production rollout. Do not mark a surface complete merely because its earlier version exists.
 
-- [ ] **Step 5: Verify the truth pass**
+- [x] **Step 5: Verify the truth pass**
 
 Run:
 
@@ -119,15 +119,15 @@ Expected: every authority reference resolves, locked files remain present, and o
 - Verify: `tests/artist-sales.test.ts`
 - Verify: `tests/registry-recovery.test.ts`
 
-- [ ] **Step 1: Create one integration branch from the finished collector branch**
+- [x] **Step 1: Create one integration branch from the finished collector branch**
 
 Bring current `main` into the finished collector branch. Resolve the planning-document overlap by preserving the August 10 authority files and the collector branch’s truthful progress record.
 
-- [ ] **Step 2: Keep production closed**
+- [x] **Step 2: Keep production closed**
 
 Assert `LAUNCH_FLAGS.livingLegacy === false`. Do not apply remote migrations, fabricate a plate, seed production membership, or change production bindings in this task.
 
-- [ ] **Step 3: Run the collector foundation gate**
+- [x] **Step 3: Run the collector foundation gate**
 
 Run the focused ownership, invitation, registration, certificate, privacy, field, letters, verified-sales, and recovery suites listed by the collector execution record, followed by:
 
@@ -141,7 +141,7 @@ git diff --check
 
 Expected: the collector branch is integrated locally, its recovery archive covers every new permanent table, and the collector launch flag remains false.
 
-- [ ] **Step 4: Review ownership boundaries once**
+- [x] **Step 4: Review ownership boundaries once**
 
 Review only for P0 and P1 defects in identity, claim, transfer, privacy projection, encrypted recovery, and media access. Fix those before adding workflow composition.
 
@@ -155,22 +155,23 @@ Review only for P0 and P1 defects in identity, claim, transfer, privacy projecti
 - Modify: `utils/adminRegistryMaintenance.ts`
 - Modify: `tests/registry-maintenance.test.ts`
 - Modify: `tests/admin-maintenance-ui.test.ts`
+- Modify: `tests/admin-studio-navigation.spec.ts` (guarded legacy-sale navigation)
 - Reuse: `functions/api/_lib/artistSales.js`
 - Reuse: `components/admin/CollectorSales.tsx`
 
-- [ ] **Step 1: Write the failing maintenance contract tests**
+- [x] **Step 1: Write the failing maintenance contract tests**
 
 Prove that a new maintenance acquisition cannot write `acquisition_type = 'sale'`, while retained work, loan, consignment, gift, inheritance, and other custody records still work.
 
-- [ ] **Step 2: Preserve legacy sale records as read-only**
+- [x] **Step 2: Preserve legacy sale records as read-only**
 
 The maintenance reader continues to show existing `sale` acquisitions with a “Legacy sale record” label. The editor does not offer `sale` for new entries and does not silently convert old records.
 
-- [ ] **Step 3: Hand sale work to the verified-sales workspace**
+- [x] **Step 3: Hand sale work to the verified-sales workspace**
 
 Add an exact link from a legacy sale record or paid invoice to `/admin/collector-sales` with stable source context. Adrian must confirm the artwork and facts before the verified-sale writer runs.
 
-- [ ] **Step 4: Verify no dual writes**
+- [x] **Step 4: Verify no dual writes**
 
 Test that creating or correcting a verified sale never writes `artwork_acquisitions`, and maintenance acquisition changes never write `artist_verified_sales` or the private price ledger.
 
@@ -188,7 +189,7 @@ Test that creating or correcting a verified sale never writes `artwork_acquisiti
 - Reuse: `functions/api/_lib/artworkInvitations.js`
 - Reuse: `functions/api/_lib/registryMaintenance.js`
 
-- [ ] **Step 1: Define the response contract in a failing test**
+- [x] **Step 1: Define the response contract in a failing test**
 
 The endpoint accepts one or more stable selectors:
 
@@ -217,15 +218,15 @@ type ArtworkWorkspace = {
 };
 ```
 
-- [ ] **Step 2: Resolve identifiers without inventing identity**
+- [x] **Step 2: Resolve identifiers without inventing identity**
 
 An unresolved sales record may have no `artworkId`. An identified record may have no `keeperPieceId`. Only `identity_linked` may expose all three identifiers. Conflicting selectors return a 409 response instead of merging two artworks.
 
-- [ ] **Step 3: Reuse existing projections**
+- [x] **Step 3: Reuse existing projections**
 
 Call the effective certificate, invitation, verified-sale, identity, and maintenance readers. Do not copy their mutation rules into `artworkWorkspace.js`.
 
-- [ ] **Step 4: Derive one next action**
+- [x] **Step 4: Derive one next action**
 
 Use an ordered rule set, beginning with data integrity and moving toward optional work:
 
@@ -237,11 +238,11 @@ Use an ordered rule set, beginning with data integrity and moving toward optiona
 6. Verify a paid invoice or legacy sale candidate.
 7. Open the public or caretaker experience for review.
 
-- [ ] **Step 5: Prove privacy and secret exclusion**
+- [x] **Step 5: Prove privacy and secret exclusion**
 
 The response may include private admin facts needed for the workspace, but it must never contain plaintext ownership codes, invitation tokens, code verifiers, ciphertext, nonces, recovery keys, raw media storage keys, or birth data.
 
-- [ ] **Step 6: Run focused verification**
+- [x] **Step 6: Run focused verification**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks tests/artwork-workspace.test.ts tests/artist-sales.test.ts tests/certificate-content.test.ts tests/registry-maintenance.test.ts
@@ -250,6 +251,8 @@ git diff --check
 ```
 
 ## Task 5: Add the artwork-centered admin screen
+
+Completed locally through `ac4b27f`, with the final integrated browser assertion corrected in the following Task 5 closeout commit. Specification and quality review approved the connected route, exact specialist selections, retry-safe relationship completion, one-time credential gate, responsive behavior, and launch-flag preservation.
 
 **Files:**
 
@@ -264,15 +267,15 @@ git diff --check
 - Modify: `tests/admin-studio-navigation.spec.ts`
 - Create: `tests/admin-artwork-workspace.test.ts`
 
-- [ ] **Step 1: Add the route**
+- [x] **Step 1: Add the route**
 
 Add `/admin/artworks/:artworkId`. Accept `instance` and `record` query parameters for `keeperPieceId` and `artistArtworkRecordId`. The route renders a stable workspace header even while details load.
 
-- [ ] **Step 2: Build the header around identity and next action**
+- [x] **Step 2: Build the header around identity and next action**
 
 Show title, catalog ID, public code when present, relationship state, and exactly one next meaningful action. Do not put mutation forms in the header.
 
-- [ ] **Step 3: Compose existing specialist tools**
+- [x] **Step 3: Compose existing specialist tools**
 
 The first version contains summaries and deep links for:
 
@@ -285,15 +288,19 @@ The first version contains summaries and deep links for:
 
 The links carry stable IDs. The workspace calls existing routes and writers rather than embedding copies of their forms.
 
-- [ ] **Step 4: Link every artwork-bearing admin surface back to the workspace**
+- [x] **Step 4: Link every artwork-bearing admin surface back to the workspace**
 
 Add “Open artwork” links to registration results, verified-sale artwork rows, registry pieces, maintenance details, and plate completion. Fix the existing `/admin/plate-wizard` dead link by using `/admin/pieces/wizard`.
 
-- [ ] **Step 5: Test desktop, mobile, keyboard, and missing-state behavior**
+- [x] **Step 5: Test desktop, mobile, keyboard, and missing-state behavior**
 
 The screen must remain useful for unresolved, identified, registered, invited, claimed, plate-free, and legacy records. Verify 390px and desktop layouts and ensure focus moves to status and conflict messages.
 
 ## Task 6: Replace dashboard counts with an item-level work queue
+
+**Authorized scope reconciliation, 2026-08-11:** Adrian authorized the truthful
+temporary boundary below. This records the accepted Task 6 behavior while its
+remaining reviews are still pending; it does not mark Task 6 complete.
 
 **Files:**
 
@@ -309,12 +316,19 @@ Cover at least:
 
 - recovery proof missing or stale;
 - identified sale artwork ready for optional registration;
-- paid invoice waiting for sale verification;
 - draft viewing;
 - requested viewing with linked invoice;
 - open, partial, or overdue invoice;
-- invitation ready, expired, or unresolved;
-- legacy sale acquisition awaiting verification.
+- an existing invitation that is ready or expired.
+
+Invitation absence is not work by itself. Task 6 must not emit an unresolved
+invitation item for an unsold or retained piece with no invitation row.
+
+Paid-invoice sale-verification alerts and legacy-acquisition verification alerts
+are deliberately deferred to Task 7. The current schema has no exact, clearable
+source-to-verified-sale resolution for either workflow. Task 6 must not infer
+completion from a keeper identity or emit a permanent false alarm that cannot be
+cleared by its destination action.
 
 - [ ] **Step 2: Return action items, not category counts**
 
@@ -352,9 +366,16 @@ Test that “Nothing is waiting” cannot appear when any supported queue source
 - Modify: `functions/api/_lib/invoices.js`
 - Modify: `functions/api/admin/invoices.js`
 - Modify: `components/AdminInvoices.tsx`
+- Modify: `functions/api/_lib/adminWorkQueue.js`
+- Modify: `functions/api/_lib/artistSales.js`
+- Modify: `functions/api/admin/collector-sales.js`
+- Modify: `components/admin/CollectorSales.tsx`
 - Modify: `tests/invoice-utils.test.mjs`
 - Modify: `tests/invoice-ui.test.ts`
 - Modify: `tests/public-registry-ui.test.ts`
+- Modify: `tests/admin-work-queue.test.ts`
+- Modify: `tests/artist-sales.test.ts`
+- Modify: `tests/artist-sales-admin.test.ts`
 - Create: `tests/admin-workflow-context.test.ts`
 
 - [ ] **Step 1: Add a narrow context model**
@@ -376,6 +397,24 @@ type ArtifactSource = {
 
 Add valid JSON context columns to pricing quotes, viewings, and invoices. Add source kind and source ID to invoices. Keep every field optional for legacy records.
 
+Add one private source-resolution relation owned by the verified-sales domain:
+
+```ts
+type SaleSourceResolution = {
+  sourceKind: 'paid_invoice' | 'legacy_acquisition';
+  sourceId: string;
+  resolutionKind: 'verified_sale' | 'not_a_sale';
+  verifiedSaleId: string | null;
+  resolvedAt: string;
+};
+```
+
+The migration enforces one resolution per exact `(sourceKind, sourceId)`. A
+`verified_sale` resolution requires a valid `verifiedSaleId`; `not_a_sale`
+requires it to be null. This relation stores the exact invoice ID or acquisition
+ID. A shared `keeperPieceId` is never sufficient evidence that a source was
+reviewed or resolved.
+
 - [ ] **Step 2: Give viewing pieces canonical catalog IDs**
 
 Keep `ViewingPiece.id` for selection compatibility and add `artworkId`. Map Universal Language gate 1 to `UL-100`, gate 2 to `UL-101`, through gate 64 to `UL-163`. Store those IDs in the viewing’s persisted context.
@@ -396,9 +435,33 @@ Invoice normalization and serialization retain the context and source while prev
 
 A paid invoice with artwork context shows “Verify sale details.” It opens the existing verified-sales workspace with source context. Adrian confirms occurrence, buyer, exact artwork, and artwork-level price before any verified sale or price entry is appended.
 
+The protected verified-sales writer records the exact paid-invoice source
+resolution in the same successful workflow as the confirmed verified sale, or
+records an explicit `not_a_sale` review outcome. Legacy acquisition review does
+the same with the exact acquisition ID after Adrian confirms the facts. Neither
+path resolves by matching only `keeperPieceId`, artwork title, line-item text, or
+price. A paid-invoice `verified_sale` resolution commits only after every
+persisted invoice artwork context is represented by an exact verified-sale item;
+partial or ambiguous artwork matching does not clear the queue item.
+
+Activate queue items only when the source is reviewable and unresolved:
+
+- a paid invoice is eligible only when it is paid and has persisted artwork
+  context;
+- a legacy acquisition is eligible only when it is an existing legacy `sale`
+  acquisition with an exact acquisition ID;
+- the item clears only after the exact source-resolution row commits;
+- a failed, ambiguous, or mismatched write leaves the item active and retryable;
+- retries cannot create a second verified sale or a second source resolution.
+
 - [ ] **Step 7: Verify old and new records**
 
-Prove legacy rows with no context still open, multi-artwork viewings remain multi-artwork invoices, public responses contain no private context, and retries cannot duplicate links.
+Prove legacy rows with no context still open, multi-artwork viewings remain
+multi-artwork invoices, public responses contain no private context, and retries
+cannot duplicate links. Add focused migration, verified-sales, endpoint, and work
+queue tests showing paid invoices and legacy acquisitions activate only when
+eligible, remain active after failed or ambiguous writes, clear after their exact
+resolution commits, and never clear from keeper-only inference.
 
 ## Task 8: Make delivery states honest
 
