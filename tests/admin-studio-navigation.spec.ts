@@ -103,9 +103,11 @@ test('admin work queue shows exact actions and never reports clear work on an in
           privateContext: null, status: 'open',
           createdAt: '2025-01-01T00:00:00.000Z',
         }] : [],
+        artworkRecords: [],
         pagination: { limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
-          reconnectionCases: { hasMore: false, nextOffset: null } },
+          reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null } },
       }),
     });
   });
@@ -601,11 +603,12 @@ test('legacy sale nextAction verifies and locks the exact acquisition artwork', 
     return route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({
-        ok: true, sales: [], reconnectionCases: [],
+        ok: true, sales: [], reconnectionCases: [], artworkRecords: [],
         pagination: {
           limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
           reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
         },
       }),
     });
@@ -776,10 +779,12 @@ test('verified sales deep link opens the exact artwork record on a fresh load', 
       } : {
         ok: true, sales: [{ ...sale, identificationStatuses: ['identity_linked'] }],
         reconnectionCases: [],
+        artworkRecords: [],
         pagination: {
           limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
           reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
         },
       }),
     });
@@ -856,10 +861,11 @@ test('verified sales rejects a sale detail that omits the requested artwork reco
         corrections: [], items: [wrongItem], events: [],
       } : {
         ok: true, sales: [{ ...sale, identificationStatuses: ['identified'] }],
-        reconnectionCases: [], pagination: {
+        reconnectionCases: [], artworkRecords: [], pagination: {
           limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
           reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
         },
       }),
     });
@@ -926,10 +932,11 @@ test('verified sales clears stale detail while an updated URL record resolves', 
           { ...sale('sale-first', '2020'), identificationStatuses: ['identified'] },
           { ...sale('sale-second', '2025'), identificationStatuses: ['identified'] },
         ],
-        reconnectionCases: [], pagination: {
+        reconnectionCases: [], artworkRecords: [], pagination: {
           limit: 25, offset: 0,
           sales: { hasMore: false, nextOffset: null },
           reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
         },
       }),
     });
