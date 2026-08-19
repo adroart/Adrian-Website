@@ -17,7 +17,15 @@
  * Content is public-safe by construction: every stored record already passed
  * the pieceRecord.js strip-pass before it was written, so the archive needs
  * no encryption (unlike the private recovery export, which stays separate).
+ *
+ * The zip root also carries successors-handbook.html, the rendered custodian
+ * guide (functions/api/_lib/successorHandbook.js), so a held copy of the
+ * archive always explains itself to whoever inherits it.
  */
+import {
+  SUCCESSOR_HANDBOOK_FILENAME,
+  renderSuccessorHandbookHtml,
+} from './successorHandbook.js';
 
 function codedError(code) {
   return Object.assign(new Error(code), { code });
@@ -276,6 +284,10 @@ export async function buildPieceRecordsArchive(env) {
   entries.push({
     name: 'records/index.html',
     bytes: new TextEncoder().encode(renderRecordsIndexHtml(pieces)),
+  });
+  entries.push({
+    name: SUCCESSOR_HANDBOOK_FILENAME,
+    bytes: new TextEncoder().encode(renderSuccessorHandbookHtml()),
   });
   return { bytes: buildStoredZip(entries), pieces };
 }

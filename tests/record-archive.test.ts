@@ -247,6 +247,7 @@ describe('piece records archive', () => {
       `records/${CODE_ONE}.html`,
       `records/${CODE_TWO}.html`,
       'records/index.html',
+      'successors-handbook.html',
     ]);
 
     // The newest record for piece one is the one in the archive.
