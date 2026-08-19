@@ -52,24 +52,28 @@ describe('central admin registry UI', () => {
     assert.match(pieces, /setRegistryUnlocked\(false\)/);
     assert.match(pieces, /method: 'DELETE'/);
     assert.match(pieces, /Lock registry/);
-    const lockAction = pieces.slice(pieces.indexOf('const lockRegistry'), pieces.indexOf('const issuePlate'));
+    const lockAction = pieces.slice(pieces.indexOf('const lockRegistry'), pieces.indexOf('const [driveStatus'));
     assert.ok(lockAction.indexOf('setRegistryUnlocked(false)') < lockAction.indexOf("await fetch('/api/admin/registry-unlock'"));
   });
 
-  it('requires an explicit edition identity when issuing from the registry desk', () => {
+  it('is the desk and ledger only: no inline issuance or edition-structure panel', () => {
     const pieces = source('components/AdminPieces.tsx');
-    assert.match(pieces, /editionKind/);
-    assert.match(pieces, /issueEditionKind/);
-    assert.match(pieces, /This is a unique, non-numbered work/);
-    assert.match(pieces, /uniqueConfirmed/);
-    assert.match(pieces, /editionKind:\s*selectedEditionKind/);
-    assert.match(pieces, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
-    assert.doesNotMatch(pieces, /editionNumber\.trim\(\) \? Number\(editionNumber\) : 0/);
-    assert.match(pieces, /const saveEditionStructure/);
-    assert.match(pieces, /\/api\/admin\/artworks/);
-    assert.match(pieces, /editionSize:/);
-    assert.match(pieces, /Save edition structure/);
-    assert.doesNotMatch(pieces, /selectedArtwork\.editionSize \|\| 9999/);
+    assert.doesNotMatch(pieces, /Issue a plate identity/);
+    assert.doesNotMatch(pieces, /const issuePlate/);
+    assert.doesNotMatch(pieces, /const saveEditionStructure/);
+    assert.doesNotMatch(pieces, /Save edition structure/);
+    assert.doesNotMatch(pieces, /issueEditionKind|newPieceEditionKind/);
+    assert.doesNotMatch(pieces, /go use the wizard|guided plate wizard/);
+    assert.match(pieces, /\/admin\/register/);
+    assert.match(pieces, /Register an artwork/);
+    // Every remaining per-row lifecycle action stays.
+    assert.match(pieces, /Retry backup/);
+    assert.match(pieces, /Reveal Ownership Code/);
+    assert.match(pieces, /Recover full fabrication package/);
+    assert.match(pieces, /Physical checks/);
+    assert.match(pieces, /Prove copied-file recovery in wizard/);
+    assert.match(pieces, /Download offline ledger/);
+    assert.match(pieces, /Sync to Google Drive/);
   });
 
   it('keeps local Vite admin mocks aligned with central auth and registry unlock', () => {

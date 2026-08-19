@@ -25,6 +25,34 @@ function fakeEnv(row: unknown, opts: { throwMissing?: boolean } = {}) {
   } as never;
 }
 
+// A DB fake that answers the catalog-snapshot query and the draft-row query
+// with independent rows, keyed off the SQL text each caller prepares — the
+// same distinction a real D1 connection makes by running different SQL.
+function fakeSnapshotEnv(options: { snapshotRow?: unknown; draftRow?: unknown } = {}) {
+  return {
+    DB: {
+      prepare: (sql: string) => ({
+        bind: () => ({
+          first: async () => {
+            if (/artwork_catalog_snapshots/.test(sql)) return options.snapshotRow ?? null;
+            if (/registry_artworks/.test(sql)) return options.draftRow ?? null;
+            return null;
+          },
+        }),
+      }),
+    },
+  } as never;
+}
+
+function snapshotRow(metadata: Record<string, unknown>) {
+  return {
+    snapshot_hash: 'a'.repeat(64),
+    canonical_json: JSON.stringify(metadata),
+    source: 'admin',
+    created_at: '2026-01-01T00:00:00.000Z',
+  };
+}
+
 describe('draft artwork validation', () => {
   it('accepts a numbered draft and normalizes its explicit edition identity', () => {
     const result = validateDraftInput({
@@ -180,6 +208,89 @@ describe('artwork resolution for minting', () => {
   });
 });
 
+describe('snapshot precedence for a registered piece', () => {
+  it('the newest snapshot wins over conflicting static and draft edition metadata, without throwing', async () => {
+    const staticPiece = findStaticArtwork('UL-100');
+    assert.ok(staticPiece);
+    const originalEditionSize = staticPiece!.editionSize;
+    staticPiece!.editionSize = 5; // static says 5
+    try {
+      const env = fakeSnapshotEnv({
+        snapshotRow: snapshotRow({
+          id: 'UL-100',
+          title: 'Snapshot Title',
+          series: 'Universal Language',
+          category: 'sculpture',
+          year: '2024',
+          dimensions: '12 x 12 x 4 in',
+          materials: ['walnut', 'brass'],
+          description: 'A frozen record of this exact registration.',
+          edition: { kind: 'numbered', size: 9 }, // snapshot says 9
+        }),
+        draftRow: { id: 'UL-100', title: 'Older Draft Title', edition_size: 4 }, // draft says 4
+      });
+      const resolved = await resolveArtwork(env, 'UL-100');
+      assert.deepEqual(resolved, {
+        id: 'UL-100',
+        title: 'Snapshot Title',
+        editionKind: 'numbered',
+        editionSize: 9,
+        source: 'snapshot',
+        series: 'Universal Language',
+        category: 'sculpture',
+        year: '2024',
+        dimensions: '12 x 12 x 4 in',
+        materials: ['walnut', 'brass'],
+        description: 'A frozen record of this exact registration.',
+      });
+    } finally {
+      staticPiece!.editionSize = originalEditionSize;
+    }
+  });
+
+  it('a unique-edition snapshot resolves with a null edition size and materials default to an empty list', async () => {
+    const env = fakeSnapshotEnv({
+      snapshotRow: snapshotRow({
+        id: 'MD-905',
+        title: 'One of One',
+        series: null,
+        category: null,
+        year: null,
+        dimensions: null,
+        materials: [],
+        description: null,
+        edition: { kind: 'unique', size: null },
+      }),
+    });
+    const resolved = await resolveArtwork(env, 'MD-905');
+    assert.equal(resolved?.source, 'snapshot');
+    assert.equal(resolved?.editionKind, 'unique');
+    assert.equal(resolved?.editionSize, null);
+    assert.deepEqual(resolved?.materials, []);
+  });
+
+  it('falls back past a missing or malformed snapshot without disturbing static/draft resolution', async () => {
+    // No snapshot table at all — the classic missing-table failure.
+    const missingTable = await resolveArtwork(
+      fakeSnapshotEnv({ draftRow: { id: 'UL-905', title: 'Draft Study', edition_size: 5 } }),
+      'UL-905',
+    );
+    assert.equal(missingTable?.source, 'registry');
+    assert.equal(missingTable?.title, 'Draft Study');
+
+    // A malformed snapshot row (unparsable JSON) is treated the same as "no snapshot".
+    const malformed = await resolveArtwork(
+      fakeSnapshotEnv({
+        snapshotRow: { snapshot_hash: 'a'.repeat(64), canonical_json: 'not json', source: 'admin', created_at: '2026-01-01T00:00:00.000Z' },
+        draftRow: { id: 'UL-905', title: 'Draft Study', edition_size: 5 },
+      }),
+      'UL-905',
+    );
+    assert.equal(malformed?.source, 'registry');
+    assert.equal(malformed?.title, 'Draft Study');
+  });
+});
+
 describe('mint + admin wiring', () => {
   it('the legacy mint endpoint only replays an issuance key and requires artwork registration otherwise', async () => {
     const pieces = readFileSync(new URL('../functions/api/admin/pieces.js', import.meta.url), 'utf8');
@@ -243,9 +354,13 @@ describe('mint + admin wiring', () => {
     assert.doesNotMatch(recovery, /019_registry_recovery_qualification\.sql/);
   });
 
-  it('the public draft record only appears once a plate exists', () => {
+  it('the public draft record appears for any registered identity, not only a fabricated plate', () => {
     const works = readFileSync(new URL('../functions/api/works/[id].js', import.meta.url), 'utf8');
-    assert.match(works, /FROM keeper_pieces WHERE piece_id/);
-    assert.match(works, /registry_artworks/);
+    assert.match(works, /FROM keeper_pieces/);
+    assert.match(works, /registration_status = 'registered'/);
+    assert.doesNotMatch(works, /plate_status/);
+    // Metadata comes from the shared resolver so the snapshot wins over the
+    // thinner draft row when one exists.
+    assert.match(works, /resolveArtwork/);
   });
 });

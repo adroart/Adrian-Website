@@ -1,23 +1,26 @@
 /**
- * Artwork Registry desk for issuing permanent plate identities, verifying the
- * physical plate, and recovering an Ownership Code.
+ * Artwork Registry desk: the ledger for every registered artwork identity —
+ * plate status, encrypted backup, recovery proof, and activation.
+ *
+ * Registering a new artwork identity happens at /admin/register; this desk
+ * only tracks identities that already exist. It still holds the registry
+ * unlock (needed for reveal and recovery actions) and every per-piece
+ * lifecycle action: retry backup, prove recovery, reveal the Ownership Code,
+ * recover the fabrication package, run physical activation checks, download
+ * the offline ledger, and sync to Google Drive.
  *
  * Sensitive values exist only in this component's immediate React state. They
  * are never written to browser storage and are cleared on dismissal or plate
  * activation. The persistent admin shell supplies the authenticated boundary.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
-import { adminMode } from './admin/adminMode';
-import { FULL_ARCHIVE } from '../data/mockData';
 import {
   activationChecklistComplete,
-  beginIssuanceAttempt,
   projectPlateDownloads,
   projectIssuedPlateResponse,
   type ActivationChecklist,
-  type IssuedPlatePackage,
   type SensitivePlateState,
 } from '../utils/adminArtworkRegistry';
 import {
@@ -27,8 +30,6 @@ import {
   jsonRequest,
   titleFor,
   formatDate,
-  TITLE_BY_ID,
-  type MintableArtwork,
   type PieceRow,
 } from '../utils/adminPieces';
 
@@ -63,23 +64,14 @@ export function registryKeeperPieceSelection(searchParams: URLSearchParams): str
 
 const AdminPieces: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const issueMode = adminMode(searchParams) === 'issue';
   const linkedKeeperPieceId = registryKeeperPieceSelection(searchParams);
   const rowRefs = useRef(new Map<string, HTMLElement>());
   const appliedKeeperPieceRef = useRef<string | null>(null);
   const [rows, setRows] = useState<PieceRow[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState('');
-  const [pieceId, setPieceId] = useState('');
-  const [editionNumber, setEditionNumber] = useState('');
-  const [issueEditionKind, setIssueEditionKind] = useState<'' | 'unique' | 'numbered'>('');
-  const [issueEditionSize, setIssueEditionSize] = useState('');
-  const [uniqueConfirmed, setUniqueConfirmed] = useState(false);
-  const [structureSaving, setStructureSaving] = useState(false);
-  const [issuing, setIssuing] = useState(false);
-  const [issueError, setIssueError] = useState('');
-  const [issueSuccess, setIssueSuccess] = useState('');
   const [sensitive, setSensitive] = useState<RegistrySensitiveState>(emptySensitiveState);
+  const [packageSuccess, setPackageSuccess] = useState('');
   const unlockInputRef = useRef<HTMLInputElement>(null);
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -102,52 +94,6 @@ const AdminPieces: React.FC = () => {
     return message;
   };
 
-  const [drafts, setDrafts] = useState<{
-    id: string;
-    title: string;
-    series: string | null;
-    editionKind: 'unique' | 'numbered';
-    editionSize: number | null;
-  }[]>([]);
-  const sortedPieces = useMemo(() => {
-    const draftsById = new Map(drafts.map((draft) => [draft.id, draft]));
-    const staticList: MintableArtwork[] = FULL_ARCHIVE.map((a) => {
-      const draft = draftsById.get(a.id);
-      const staticHasEdition = Number.isInteger(a.editionSize);
-      const conflict = staticHasEdition && draft
-        && (draft.editionKind !== 'numbered' || draft.editionSize !== a.editionSize);
-      return {
-        id: a.id,
-        title: a.title,
-        draft: false,
-        editionKind: conflict
-          ? 'conflict'
-          : staticHasEdition
-            ? 'numbered'
-            : draft?.editionKind || 'unspecified',
-        editionSize: staticHasEdition ? a.editionSize! : draft?.editionSize ?? null,
-      };
-    });
-    const draftList = drafts
-      .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
-      .map((d): MintableArtwork => ({
-        id: d.id,
-        title: d.title,
-        draft: true,
-        editionKind: d.editionKind,
-        editionSize: d.editionSize,
-      }));
-    return [...staticList, ...draftList].sort((a, b) => a.title.localeCompare(b.title));
-  }, [drafts]);
-  const selectedArtwork = useMemo(
-    () => sortedPieces.find((artwork) => artwork.id === pieceId) || null,
-    [pieceId, sortedPieces],
-  );
-  const selectedEditionKind = selectedArtwork?.editionKind === 'unique'
-    || selectedArtwork?.editionKind === 'numbered'
-    ? selectedArtwork.editionKind
-    : '';
-
   const loadPieces = useCallback(async () => {
     setListLoading(true);
     setListError('');
@@ -161,22 +107,12 @@ const AdminPieces: React.FC = () => {
     }
   }, []);
 
-  const loadDrafts = useCallback(async () => {
-    try {
-      const data = await jsonRequest('/api/admin/artworks');
-      setDrafts(data.artworks || []);
-    } catch {
-      setDrafts([]);
-    }
-  }, []);
-
   useEffect(() => {
     void loadPieces();
     void jsonRequest('/api/admin/registry-unlock')
       .then((data) => setRegistryUnlocked(data.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
-    void loadDrafts();
-  }, [loadDrafts, loadPieces]);
+  }, [loadPieces]);
 
   useEffect(() => {
     if (!linkedKeeperPieceId || listLoading
@@ -192,7 +128,7 @@ const AdminPieces: React.FC = () => {
 
   const dismissSensitiveState = () => {
     setSensitive(emptySensitiveState);
-    setIssueSuccess('');
+    setPackageSuccess('');
   };
 
   const unlockRegistry = async (event: React.FormEvent) => {
@@ -235,118 +171,6 @@ const AdminPieces: React.FC = () => {
       setUnlockError(errorMessage(error, 'Could not lock the registry.'));
     } finally {
       setUnlockBusy(false);
-    }
-  };
-
-  const saveEditionStructure = async () => {
-    if (!registryUnlocked) {
-      setIssueError('Unlock the private registry first.');
-      return;
-    }
-    if (!selectedArtwork || selectedArtwork.editionKind !== 'unspecified') return;
-    if (!issueEditionKind) {
-      setIssueError('Choose whether this work is unique or numbered.');
-      return;
-    }
-    if (issueEditionKind === 'unique' && !uniqueConfirmed) {
-      setIssueError('Confirm that this is a unique, non-numbered work.');
-      return;
-    }
-    const editionSize = Number(issueEditionSize);
-    if (
-      issueEditionKind === 'numbered'
-      && (!issueEditionSize.trim() || !Number.isSafeInteger(editionSize) || editionSize < 1 || editionSize > 9999)
-    ) {
-      setIssueError('Enter the exact edition size from 1 to 9999.');
-      return;
-    }
-    setStructureSaving(true);
-    setIssueError('');
-    setIssueSuccess('');
-    try {
-      await jsonRequest('/api/admin/artworks', {
-        id: selectedArtwork.id,
-        editionKind: issueEditionKind,
-        editionSize: issueEditionKind === 'numbered' ? editionSize : undefined,
-        uniqueConfirmed: issueEditionKind === 'unique' ? uniqueConfirmed : undefined,
-      });
-      await loadDrafts();
-      setIssueEditionKind('');
-      setIssueEditionSize('');
-      setEditionNumber('');
-      setUniqueConfirmed(false);
-      setIssueSuccess('Edition structure saved. Confirm this piece identity, then issue its plate.');
-    } catch (error) {
-      setIssueError(registryErrorMessage(error, 'Could not save the edition structure.'));
-    } finally {
-      setStructureSaving(false);
-    }
-  };
-
-  const issuePlate = async () => {
-    if (!registryUnlocked) {
-      setIssueError('Unlock the private registry first.');
-      return;
-    }
-    if (!pieceId) {
-      setIssueError('Choose an artwork first.');
-      return;
-    }
-    if (!selectedArtwork) {
-      setIssueError('Choose an artwork first.');
-      return;
-    }
-    if (selectedArtwork.editionKind === 'conflict') {
-      setIssueError('This artwork has conflicting edition metadata. Resolve it before issuing.');
-      return;
-    }
-    if (selectedArtwork.editionKind === 'unspecified') {
-      setIssueError('Save the exact edition structure before issuing.');
-      return;
-    }
-    if (!selectedEditionKind) {
-      setIssueError('Choose whether this work is unique or numbered.');
-      return;
-    }
-    const parsedEdition = Number(editionNumber);
-    if (selectedEditionKind === 'unique') {
-      if (!uniqueConfirmed) {
-        setIssueError('Confirm that this is a unique, non-numbered work.');
-        return;
-      }
-    } else if (
-      !editionNumber.trim() ||
-      !Number.isSafeInteger(parsedEdition) ||
-      parsedEdition < 1 ||
-      parsedEdition > selectedArtwork.editionSize!
-    ) {
-      setIssueError(`Enter the exact edition number from 1 to ${selectedArtwork.editionSize}.`);
-      return;
-    }
-    const issuanceKey = beginIssuanceAttempt(sensitive.issuanceKey);
-    setSensitive((current) => ({ ...current, issuanceKey, package: null }));
-    setIssuing(true);
-    setIssueError('');
-    setIssueSuccess('');
-    try {
-      const data = await jsonRequest('/api/admin/pieces', {
-        pieceId,
-        editionKind: selectedEditionKind,
-        editionNumber: selectedEditionKind === 'unique' ? 0 : parsedEdition,
-        uniqueConfirmed: selectedEditionKind === 'unique' ? uniqueConfirmed : undefined,
-        issuanceKey,
-      });
-      const issuedPackage: IssuedPlatePackage = projectIssuedPlateResponse(data);
-      setSensitive((current) => ({ ...current, issuanceKey, package: issuedPackage }));
-      setIssueSuccess(data.backupStatus === 'verified'
-        ? 'Plate package issued and encrypted backup verified.'
-        : 'Plate package issued. Repair the online backup before activation.');
-      await loadPieces();
-      void syncDrive({ silent: true });
-    } catch (error) {
-      setIssueError(`${registryErrorMessage(error, 'Could not issue the plate.')} Retry keeps this issuance attempt and will not mint a second identity.`);
-    } finally {
-      setIssuing(false);
     }
   };
 
@@ -415,7 +239,7 @@ const AdminPieces: React.FC = () => {
           revealedOwnershipCode: null,
           revealedUndersideSvg: null,
         }));
-        setIssueSuccess('Full fabrication package recovered after audit.');
+        setPackageSuccess('Full fabrication package recovered after audit.');
         setRowSuccess((current) => ({ ...current, [row.id]: 'Full fabrication package recovered.' }));
       } else if (action === 'reveal') {
         setSensitive((current) => ({
@@ -475,19 +299,7 @@ const AdminPieces: React.FC = () => {
     }
   };
 
-  const issued = sensitive.package;
-  const registryStage = issueMode
-    ? 0
-    : rows.some(row => row.plateStatus === 'generated' && row.backupStatus === 'verified')
-      ? 2
-      : rows.some(row => row.plateStatus === 'generated')
-        ? 1
-        : 0;
-  const registryStages = [
-    'Issue identity',
-    'Verify recovery copy',
-    'Activate plate',
-  ];
+  const recovered = sensitive.package;
 
   return (
     <AdminPage width="medium">
@@ -496,52 +308,40 @@ const AdminPieces: React.FC = () => {
             Artwork Registry
           </p>
           <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate registry</h1>
-          <p className="font-serif text-wood-600 leading-relaxed mb-4 max-w-2xl">
-            Issue one permanent plate identity, download its private fabrication package, verify the
-            physical metal, then activate and permanently lock its identity.
-          </p>
           <p className="font-serif text-wood-600 leading-relaxed mb-10 max-w-2xl">
-            New to this, or want a step-by-step path for one piece? Use the{' '}
-            <Link to="/admin/pieces/wizard" className="text-bronze-700 underline underline-offset-4">guided plate wizard</Link>.
-            This desk is the flat view of the same registry.
+            The desk and ledger for every registered artwork identity: plate status, encrypted backup,
+            recovery proof, and activation. Registering a new artwork identity happens at{' '}
+            <Link to="/admin/register" className="text-bronze-700 underline underline-offset-4">Register an artwork</Link>.
           </p>
 
-          <ol className="admin-stage-list" aria-label="Plate registry stages">
-            {registryStages.map((stage, index) => (
-              <li key={stage} className={index < registryStage ? 'is-complete' : index === registryStage ? 'is-current' : ''} aria-current={index === registryStage ? 'step' : undefined}>
-                <span>{index + 1}</span>{stage}
-              </li>
-            ))}
-          </ol>
-
-          {issued && (
-            <section className="border border-bronze-500 bg-bronze-200/20 p-6 mb-10" aria-labelledby="issued-package-title">
-              <p id="issued-package-title" className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 font-semibold mb-2">
+          {recovered && (
+            <section className="border border-bronze-500 bg-bronze-200/20 p-6 mb-10" aria-labelledby="recovered-package-title">
+              <p id="recovered-package-title" className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 font-semibold mb-2">
                 Private fabrication package
               </p>
               <div className="grid md:grid-cols-[1fr_auto] gap-6 items-start">
                 <div>
-                  <p className="font-title text-xl text-wood-900 mb-2">{issued.publicCode}</p>
-                  <p className="font-sans text-sm text-wood-600 mb-2">{titleFor(issued.manifest.artworkId)} · {issued.manifest.artworkId} · edition {issued.manifest.editionNumber}</p>
+                  <p className="font-title text-xl text-wood-900 mb-2">{recovered.publicCode}</p>
+                  <p className="font-sans text-sm text-wood-600 mb-2">{titleFor(recovered.manifest.artworkId)} · {recovered.manifest.artworkId} · edition {recovered.manifest.editionNumber}</p>
                   <p className="font-title text-2xl md:text-3xl text-wood-900 tracking-[0.15em] break-all mb-3">
-                    {issued.ownershipCode}
+                    {recovered.ownershipCode}
                   </p>
-                  <a className="font-sans text-sm text-bronze-700 underline underline-offset-4 break-all" href={issued.publicUrl} target="_blank" rel="noreferrer">
-                    {issued.publicUrl}
+                  <a className="font-sans text-sm text-bronze-700 underline underline-offset-4 break-all" href={recovered.publicUrl} target="_blank" rel="noreferrer">
+                    {recovered.publicUrl}
                   </a>
                   <dl className="mt-4 grid sm:grid-cols-2 gap-x-5 gap-y-2 font-sans text-xs text-wood-600">
-                    <div><dt className="font-semibold">Front SHA-256</dt><dd className="break-all">{issued.frontSha256}</dd></div>
-                    <div><dt className="font-semibold">Underside SHA-256</dt><dd className="break-all">{issued.undersideSha256}</dd></div>
+                    <div><dt className="font-semibold">Front SHA-256</dt><dd className="break-all">{recovered.frontSha256}</dd></div>
+                    <div><dt className="font-semibold">Underside SHA-256</dt><dd className="break-all">{recovered.undersideSha256}</dd></div>
                   </dl>
                 </div>
                 <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-600 border border-wood-300 px-3 py-2">
-                  Backup {issued.backupStatus || 'pending'}
+                  Backup {recovered.backupStatus || 'pending'}
                 </span>
               </div>
-              {issueSuccess && <p className="font-sans text-sm text-green-800 mt-5" role="status">{issueSuccess}</p>}
-              {issued.warning && <p className="font-sans text-sm text-amber-800 mt-2">{issued.warning}</p>}
+              {packageSuccess && <p className="font-sans text-sm text-green-800 mt-5" role="status">{packageSuccess}</p>}
+              {recovered.warning && <p className="font-sans text-sm text-amber-800 mt-2">{recovered.warning}</p>}
               <div className="flex flex-wrap gap-3 mt-5">
-                {projectPlateDownloads(issued).map((download) => (
+                {projectPlateDownloads(recovered).map((download) => (
                   <button key={download.filename} type="button" className={buttonClass} onClick={() => downloadText(download.filename, download.mimeType, download.content)}>
                     Download {download.filename.includes('front') ? 'front SVG' : download.filename.includes('underside') ? 'underside SVG' : 'private manifest'}
                   </button>
@@ -550,69 +350,6 @@ const AdminPieces: React.FC = () => {
               </div>
             </section>
           )}
-
-          <section className="border border-wood-200 bg-white p-5 mb-12" aria-labelledby="issue-title">
-            <h2 id="issue-title" className="font-title text-xl text-wood-900 mb-5">Issue a plate identity</h2>
-            <div className="grid sm:grid-cols-[1fr_16rem] gap-4 items-end">
-              <div>
-                <label className={labelClass} htmlFor="piece-select">Artwork</label>
-                <select id="piece-select" value={pieceId} disabled={issuing || structureSaving || Boolean(sensitive.issuanceKey)} onChange={(event) => { setPieceId(event.target.value); setEditionNumber(''); setIssueEditionKind(''); setIssueEditionSize(''); setUniqueConfirmed(false); setIssueError(''); }} className={inputClass}>
-                  <option value="">Choose an artwork</option>
-                  {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
-                </select>
-              </div>
-              <div>
-                {selectedArtwork?.editionKind === 'unspecified' ? (
-                  <div>
-                    <fieldset className="mb-3">
-                      <legend className={labelClass}>Edition structure</legend>
-                      <div className="flex gap-4 font-sans text-sm text-wood-700">
-                        {(['unique', 'numbered'] as const).map((kind) => (
-                          <label key={kind} className="flex items-center gap-2">
-                            <input type="radio" name="issue-edition-kind" value={kind} checked={issueEditionKind === kind} disabled={structureSaving} onChange={() => { setIssueEditionKind(kind); setIssueEditionSize(''); setUniqueConfirmed(false); }} />
-                            <span>{kind === 'unique' ? 'Unique' : 'Numbered'}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                    {issueEditionKind === 'unique' && (
-                      <label className="flex items-start gap-3 font-sans text-sm text-wood-700 mb-3">
-                        <input type="checkbox" checked={uniqueConfirmed} disabled={structureSaving} onChange={(event) => setUniqueConfirmed(event.target.checked)} className="mt-1" />
-                        <span>This is a unique, non-numbered work</span>
-                      </label>
-                    )}
-                    {issueEditionKind === 'numbered' && (
-                      <div className="mb-3">
-                        <label className={labelClass} htmlFor="edition-size-input">Exact edition size</label>
-                        <input id="edition-size-input" type="number" min={1} max={9999} step={1} value={issueEditionSize} disabled={structureSaving} onChange={(event) => setIssueEditionSize(event.target.value)} className={inputClass} />
-                      </div>
-                    )}
-                    <button type="button" className={quietButtonClass} disabled={structureSaving} onClick={() => void saveEditionStructure()}>{structureSaving ? 'Saving…' : 'Save edition structure'}</button>
-                  </div>
-                ) : selectedEditionKind === 'unique' ? (
-                  <label className="flex items-start gap-3 font-sans text-sm text-wood-700 pb-2">
-                    <input type="checkbox" checked={uniqueConfirmed} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setUniqueConfirmed(event.target.checked)} className="mt-1" />
-                    <span>This is a unique, non-numbered work</span>
-                  </label>
-                ) : selectedEditionKind === 'numbered' ? (
-                  <div>
-                    <label className={labelClass} htmlFor="edition-input">Exact edition (1 to {selectedArtwork?.editionSize})</label>
-                    <input id="edition-input" type="number" min={1} max={selectedArtwork?.editionSize || undefined} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} className={inputClass} />
-                  </div>
-                ) : selectedArtwork?.editionKind === 'conflict' ? (
-                  <p className="font-sans text-sm text-red-700 pb-2">Conflicting edition metadata must be resolved before issuing.</p>
-                ) : (
-                  <p className="font-sans text-sm text-wood-500 pb-2">Choose an artwork to confirm its edition identity.</p>
-                )}
-              </div>
-            </div>
-            <div className="mt-5 flex items-center gap-4 flex-wrap">
-              <button type="button" onClick={issuePlate} disabled={issuing || structureSaving || Boolean(issued) || selectedArtwork?.editionKind === 'unspecified' || selectedArtwork?.editionKind === 'conflict'} className={buttonClass}>{issuing ? 'Issuing plate…' : 'Issue fabrication package'}</button>
-              {sensitive.issuanceKey && !issued && <span className="font-sans text-xs text-wood-500">This retry will reuse the same issuance attempt.</span>}
-              {sensitive.issuanceKey && !issued && !issuing && <button type="button" className={quietButtonClass} onClick={() => { dismissSensitiveState(); setIssueError(''); }}>Abandon attempt and start new</button>}
-            </div>
-            {issueError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{issueError}</p>}
-          </section>
 
           <section className="mb-14" aria-labelledby="registry-title">
             <div className="flex flex-wrap justify-between gap-4 items-end mb-4">
@@ -643,7 +380,12 @@ const AdminPieces: React.FC = () => {
             ) : listLoading && rows.length === 0 ? (
               <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : rows.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-8 text-center"><p className="font-serif text-wood-600">No plate identities have been issued.</p></div>
+              <div className="border border-wood-200 bg-white p-8 text-center">
+                <p className="font-serif text-wood-600">
+                  No plate identities have been issued.{' '}
+                  <Link to="/admin/register" className="text-bronze-700 underline underline-offset-4">Register an artwork</Link> to begin.
+                </p>
+              </div>
             ) : (
               <div className="border border-wood-200 bg-white divide-y divide-wood-200">
                 {rows.map((row) => (

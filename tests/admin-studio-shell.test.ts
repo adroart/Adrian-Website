@@ -105,7 +105,10 @@ describe('admin studio shell', () => {
       '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',
     );
 
-    for (const label of ['Issue identity', 'Verify recovery copy', 'Activate plate']) {
+    // Issuing a plate identity moved to the registration ceremony at
+    // /admin/register; the desk only tracks lifecycle stages that remain
+    // here: encrypted backup, recovery proof, and activation.
+    for (const label of ['Retry backup', 'Prove copied-file recovery', 'Physical checks']) {
       assert.match(source('components/AdminPieces.tsx'), new RegExp(label));
     }
     assert.doesNotMatch(source('components/AdminPieces.tsx'), /fulfillment|shipping/i);

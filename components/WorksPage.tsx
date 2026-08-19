@@ -54,10 +54,11 @@ const WorksPage: React.FC = () => {
     const artwork = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
     const book = useBookContent(id);
 
-    // Draft pieces (registered from the admin, not yet in the static catalog)
-    // resolve via a minimal record endpoint so a plate's QR never dead-ends.
+    // Registered pieces absent from the static catalog (an admin draft, or an
+    // artwork typed inline during registration) resolve via a minimal record
+    // endpoint so a plate's QR never dead-ends.
     const [draft, setDraft] = useState<
-        { status: 'idle' | 'loading' | 'found' | 'none'; artwork?: { id: string; title: string; series: string | null; editionSize: number | null } }
+        { status: 'idle' | 'loading' | 'found' | 'none'; artwork?: DraftArtwork }
     >({ status: 'idle' });
     useEffect(() => {
         if (artwork || !id) { setDraft({ status: 'idle' }); return; }
@@ -67,7 +68,7 @@ const WorksPage: React.FC = () => {
             .then(response => (response.ok ? response.json() : null))
             .then(data => {
                 if (!active) return;
-                if (data?.ok && data.artwork) setDraft({ status: 'found', artwork: data.artwork });
+                if (data?.ok && data.artwork) setDraft({ status: 'found', artwork: normalizeDraftArtwork(data.artwork) });
                 else setDraft({ status: 'none' });
             })
             .catch(() => { if (active) setDraft({ status: 'none' }); });
@@ -216,8 +217,40 @@ type DraftArtwork = {
     id: string;
     title: string;
     series: string | null;
-    editionSize: number | null;
+    year: string | null;
+    dimensions: string | null;
+    materials: string[];
+    category: string | null;
+    description: string | null;
+    edition: { kind: 'unique' | 'numbered' | null; size: number | null };
 };
+
+/** Fills in defaults for an /api/works/:id response, tolerating the older,
+ *  thinner {id, title, series, editionSize} shape as well as the current one. */
+function normalizeDraftArtwork(raw: any): DraftArtwork {
+    return {
+        id: raw?.id,
+        title: raw?.title,
+        series: raw?.series ?? null,
+        year: raw?.year ?? null,
+        dimensions: raw?.dimensions ?? null,
+        materials: Array.isArray(raw?.materials) ? raw.materials : [],
+        category: raw?.category ?? null,
+        description: raw?.description ?? null,
+        edition: {
+            kind: raw?.edition?.kind === 'unique' || raw?.edition?.kind === 'numbered' ? raw.edition.kind : null,
+            size: typeof raw?.edition?.size === 'number'
+                ? raw.edition.size
+                : typeof raw?.editionSize === 'number' ? raw.editionSize : null,
+        },
+    };
+}
+
+function draftEditionLine(edition: DraftArtwork['edition']): string | null {
+    if (edition.size) return `Edition of ${edition.size}`;
+    if (edition.kind === 'unique') return 'Unique';
+    return null;
+}
 
 function DraftArtworkRecord({
     draft,
@@ -234,7 +267,7 @@ function DraftArtworkRecord({
     legacyOn: boolean;
     followsIdentity: boolean;
 }) {
-    const draftEdition = draft.editionSize ? `Edition of ${draft.editionSize}` : null;
+    const editionLine = draftEditionLine(draft.edition);
     return (
         <section
             data-testid="draft-artwork-record"
@@ -261,8 +294,28 @@ function DraftArtworkRecord({
                             )}
                         </div>
                         <OrnamentalDivider />
-                        {!identity && draftEdition && <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>}
-                        <p className="font-sans text-[13px] text-wood-400 text-center">Registered artwork record</p>
+                        {/* Registered work, quietly degraded: whatever the registry snapshot
+                            knows, shown without an image slot, price, or shop elements. */}
+                        {!identity && (
+                            <div className="max-w-md mx-auto mb-10">
+                                <div className="space-y-4">
+                                    {draft.year && <DetailRow label="Year" value={draft.year} />}
+                                    {draft.materials.length > 0 && (
+                                        <DetailRow label="Materials" value={draft.materials.join(', ')} />
+                                    )}
+                                    {draft.dimensions && <DetailRow label="Dimensions" value={draft.dimensions} />}
+                                    {editionLine && <DetailRow label="Edition" value={editionLine} />}
+                                    {draft.category && <DetailRow label="Category" value={draft.category} />}
+                                    <DetailRow label="Identifier" value={draft.id} />
+                                </div>
+                            </div>
+                        )}
+                        {!identity && draft.description && (
+                            <p className="font-sans text-[15px] text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
+                                {draft.description}
+                            </p>
+                        )}
+                        <p className="font-sans text-[13px] text-wood-400 text-center">Registered · in the artist's registry</p>
                         {identity && (
                             <div className="mt-10">
                                 <CertificateScreen

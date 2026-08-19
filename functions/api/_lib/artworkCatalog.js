@@ -1,14 +1,25 @@
 /**
- * Artwork resolution for minting.
+ * Artwork resolution for minting and for the public works fallback.
  *
  * The public catalog is compiled into the bundle (data/mockData.ts). Admin-added
- * draft pieces live in the D1 `registry_artworks` table (migration 015). Minting
- * accepts a piece from EITHER source: the static catalog is checked first, then
- * the draft table. Everything here is minimal — only what the plate needs (id,
- * title, edition size). No codes, no personal data.
+ * draft pieces live in the D1 `registry_artworks` table (migration 015). A
+ * registered artwork also carries an append-only catalog snapshot (migration 035,
+ * catalogSnapshot.js) taken at registration time. Resolution order is:
+ *
+ *   1. the newest catalog snapshot for the artwork, when one exists — it is
+ *      authoritative for a registered piece, carrying the full descriptive
+ *      shape (title, series, category, year, dimensions, materials,
+ *      description, edition) frozen at registration time;
+ *   2. otherwise the static catalog;
+ *   3. otherwise the draft table.
+ *
+ * A snapshot lookup failure (missing table, or an unrecognized mock in tests)
+ * is treated the same as "no snapshot" — it never blocks the static/draft
+ * fallback below it. No codes, no personal data live here.
  */
 import { FULL_ARCHIVE } from '../../../data/mockData.ts';
 import { isMissingTableError } from './keeper.js';
+import { latestCatalogSnapshot } from './catalogSnapshot.js';
 
 export const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
 export const DRAFT_TITLE_MAX = 120;
@@ -53,10 +64,49 @@ export function findStaticArtwork(pieceId) {
 }
 
 /**
- * Resolve a piece id to the minimal shape minting needs, from the static catalog
- * first, then the draft table. Returns null when the id is unknown in both.
+ * The newest catalog snapshot's metadata for a piece id, or null. Any failure
+ * reading or parsing it (missing table, malformed row) is treated as "no
+ * snapshot" rather than propagated, so a snapshot lookup can never itself
+ * cause artwork resolution to fail closed.
+ */
+async function findSnapshotArtwork(env, pieceId) {
+  try {
+    const snapshot = await latestCatalogSnapshot(env, pieceId);
+    return snapshot?.metadata || null;
+  } catch {
+    return null;
+  }
+}
+
+function fromSnapshot(metadata) {
+  const editionKind = metadata.edition?.kind === 'unique' || metadata.edition?.kind === 'numbered'
+    ? metadata.edition.kind
+    : 'unspecified';
+  return {
+    id: metadata.id,
+    title: metadata.title,
+    editionKind,
+    editionSize: metadata.edition?.size ?? null,
+    source: 'snapshot',
+    series: metadata.series ?? null,
+    category: metadata.category ?? null,
+    year: metadata.year ?? null,
+    dimensions: metadata.dimensions ?? null,
+    materials: Array.isArray(metadata.materials) ? metadata.materials : [],
+    description: metadata.description ?? null,
+  };
+}
+
+/**
+ * Resolve a piece id to the shape minting and the public works fallback need.
+ * The newest catalog snapshot wins when one exists; otherwise the static
+ * catalog is checked, then the draft table. Returns null when the id is
+ * unknown everywhere.
  */
 export async function resolveArtwork(env, pieceId) {
+  const snapshotMetadata = await findSnapshotArtwork(env, pieceId);
+  if (snapshotMetadata) return fromSnapshot(snapshotMetadata);
+
   const staticArtwork = findStaticArtwork(pieceId);
   const row = await findRegistryArtwork(env, pieceId);
   if (staticArtwork) {
