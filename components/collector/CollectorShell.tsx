@@ -19,266 +19,57 @@
  * pressing through the flow to get there.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { C, F } from './tokens';
 import { MARKS_DEFAULT } from './copy';
 import { CollectorStyles } from './styles';
 import { PiecePage, Relationship } from './PiecePage';
 import { CodePage } from './CodePage';
-import { Room, RoomKey } from './rooms';
-import { StateScreen, StateKey } from './states';
-import { LetterScreen, LetterKey } from './letters';
-import { WALK, WalkScreen } from './walk';
+import { Room } from './rooms';
+import { StateScreen } from './states';
+import { LetterScreen } from './letters';
 import { KIND_LABEL, Note, REVIEW } from './review';
 import { WiredByCode } from './wired';
 import { isValidPublicCode } from './api';
+import { FLOWS, JUMP, View, WALK, WalkScreen, sourceOf } from './tourData';
 
-type View =
-  | { kind: 'piece' }
-  | { kind: 'code' }
-  | { kind: 'walk'; key: keyof typeof WALK }
-  | { kind: 'room'; key: RoomKey }
-  | { kind: 'state'; key: StateKey }
-  | { kind: 'letter'; key: LetterKey };
-
-/* ------------------------------------------------------------------ *
- * The jump list, grouped as the interactive spec groups it
- * ------------------------------------------------------------------ */
-
-type Jump = [label: string, go: View];
-
-/**
- * Where each surface came from, so a review can check a screen against its
- * source rather than against a memory.
- *
- * A value is the design file's own card id. `null` means the designer never
- * drew it: those were built from the wording record and the interactive spec,
- * following the shape the drawn screens establish, and they are the ones that
- * most need Adrian's eye, because nothing exists to compare them to.
- */
-const SOURCE: Record<string, string | null> = {
-  /* the piece page and the code, from section 2a, the winter piece page.
-     Its loading foot is 20a and its empty state is 20h. */
-  piece: '2a · 20a · 20h',
-  code: '2a',
-  codetrue: '2a',
-
-  /* drawn */
-  sign: '9a',
-  born: '9b',
-  lives: '9c',
-  links: '9d',
-  shows: '9e',
-  light47: '9f',
-  welcome: '9g',
-  explain: '9h',
-  transfer: '19e',
-  passready: '19e',
-  passaccept: '19f',
-
-  /* not drawn: built from the record and the spec */
-  fork: null,
-  gift: null,
-  sealed: null,
-  receiving: null,
-  written: null,
-  pull: null,
-  grid: null,
-  love: null,
-  carries: null,
-  forgot: null,
-  ritual: null,
-  ritualfamily: null,
-  passfork: null,
-  passname: null,
-  passsell: null,
-  passvalue: null,
-  passdone: null,
-  invite: null,
-  invitesent: null,
-  person: null,
-  joinletter: null,
-  joinhello: null,
-  joinwho: null,
-  inheritletter: null,
-  inheritaccept: null,
-  inherit: null,
-  inheritread: null,
-
-  /* the rooms, all drawn */
-  story: '19a',
-  certificate: '19b',
-  history: '14f',
-  dreams: '19c',
-  information: '14a',
-  garden: '15g · 15e · 14c',
-  family: '14d',
-  account: '19g',
-
-  /* the states, all drawn */
-  recordonly: '20b',
-  held: '20e',
-  plate: '20f',
-  offline: '20g',
-  letter: '14e',
-  email: '14g',
-};
-
-/* two rooms share a key with a walked screen, so they are looked up by hand */
-const ROOM_SOURCE: Record<string, string | null> = { grid: '19h' };
-const STATE_SOURCE: Record<string, string | null> = { account: '20c' };
-
-const sourceOf = (v: View): string | null | undefined => {
-  if (v.kind === 'room') return ROOM_SOURCE[v.key] ?? SOURCE[v.key];
-  if (v.kind === 'state') return STATE_SOURCE[v.key] ?? SOURCE[v.key];
-  if (v.kind === 'walk') return SOURCE[v.key];
-  return SOURCE[v.kind];
-};
-
-/**
- * The journeys, each startable at its first screen.
- *
- * Four of them cannot be entered from inside the app and never will be: the
- * gift's receiving side, the collaborator, the heir, and accepting a passing
- * all arrive by letter, because none of those people had a door until the
- * piece reached them. Starting them here is the only way to walk them.
- */
-const FLOWS: [label: string, start: View, note: string][] = [
-  [
-    'Registering it, all the way',
-    { kind: 'piece' },
-    'Begin, sixteen ones, the vault, the four, all five gathering screens, and out onto the page as yours.',
-  ],
-  ['Giving it as a gift', { kind: 'walk', key: 'fork' }, 'The giver seals words into it and the record never moves.'],
-  ['Receiving one that was a gift', { kind: 'walk', key: 'sealed' }, 'Arrives right after the vault, before everything else.'],
-  ['Passing it to someone you love', { kind: 'walk', key: 'passfork' }, 'It stays inside the house, and the line was set privately.'],
-  ['Selling it to a stranger', { kind: 'walk', key: 'passsell' }, 'What travels is stated in one line rather than triaged.'],
-  ['Accepting a piece passed to you', { kind: 'walk', key: 'passaccept' }, 'Arrives by letter. Nothing moves without their hand on it.'],
-  ['Claiming one someone else holds', { kind: 'walk', key: 'receiving' }, 'Thirty silent days with reminders, and only refusal reaches Adrian.'],
-  ['Being asked onto a piece', { kind: 'walk', key: 'joinletter' }, 'Two screens, never five. She is not registering it and not receiving it.'],
-  ['Inheriting it', { kind: 'walk', key: 'inheritletter' }, 'The payoff of the three tiers, and the one that needs call 5 settled.'],
-  ['The year turning', { kind: 'walk', key: 'ritual' }, 'One occasion, and every person has their own birthday window.'],
-  ['Adding to your piece', { kind: 'room', key: 'garden' }, 'The garden: ask, index, write.'],
-  ['Signing back in', { kind: 'walk', key: 'welcome' }, 'No code for everyday life. The code sleeps until a passing.'],
-];
-
-const JUMP: [string, Jump[]][] = [
-  [
-    'The door',
-    [
-      ['Nobody holds it', { kind: 'piece' }],
-      ['The code page', { kind: 'code' }],
-      ['A true code, no account', { kind: 'state', key: 'account' }],
-      ['Already held', { kind: 'state', key: 'held' }],
-      ['A reissued plate', { kind: 'state', key: 'plate' }],
-      ['The connection dropped', { kind: 'state', key: 'offline' }],
-      ['The registry is off', { kind: 'state', key: 'recordonly' }],
-    ],
-  ],
-  [
-    'The threshold',
-    [
-      ['The code is true', { kind: 'walk', key: 'codetrue' }],
-      ['For someone else', { kind: 'walk', key: 'fork' }],
-      ['Leave your wishes', { kind: 'walk', key: 'gift' }],
-      ['Something was left', { kind: 'walk', key: 'sealed' }],
-      ['Passing it on', { kind: 'walk', key: 'transfer' }],
-      ['A passing begins', { kind: 'walk', key: 'receiving' }],
-      ['We have written', { kind: 'walk', key: 'written' }],
-    ],
-  ],
-  [
-    'The four',
-    [
-      ['You felt the pull', { kind: 'walk', key: 'pull' }],
-      ['The resonant grid', { kind: 'walk', key: 'grid' }],
-      ['When you focus your love', { kind: 'walk', key: 'love' }],
-      ['It carries on', { kind: 'walk', key: 'carries' }],
-    ],
-  ],
-  [
-    'The gathering',
-    [
-      ['Sign its record', { kind: 'walk', key: 'sign' }],
-      ['Who you are', { kind: 'walk', key: 'born' }],
-      ['Where it lives', { kind: 'walk', key: 'lives' }],
-      ['Your links', { kind: 'walk', key: 'links' }],
-      ['What shows', { kind: 'walk', key: 'shows' }],
-      ['What this is for', { kind: 'walk', key: 'explain' }],
-      ['You are Light 47', { kind: 'walk', key: 'light47' }],
-    ],
-  ],
-  [
-    'Inside the page',
-    [
-      ['The story', { kind: 'room', key: 'story' }],
-      ['The certificate', { kind: 'room', key: 'certificate' }],
-      ['The history', { kind: 'room', key: 'history' }],
-      ['The dreams', { kind: 'room', key: 'dreams' }],
-      ['Piece information', { kind: 'room', key: 'information' }],
-      ['Add to your piece', { kind: 'room', key: 'garden' }],
-      ['The people you love', { kind: 'room', key: 'family' }],
-      ['Your account', { kind: 'room', key: 'account' }],
-      ['The Resonant Grid', { kind: 'room', key: 'grid' }],
-    ],
-  ],
-  [
-    'The year turns',
-    [
-      ['The year turns', { kind: 'walk', key: 'ritual' }],
-      ['Each at their own birthday', { kind: 'walk', key: 'ritualfamily' }],
-      ['A letter from the piece', { kind: 'letter', key: 'letter' }],
-      ['Someone placed something', { kind: 'letter', key: 'email' }],
-    ],
-  ],
-  [
-    'The passing',
-    [
-      ['Two exits', { kind: 'walk', key: 'passfork' }],
-      ['It stays in the house', { kind: 'walk', key: 'passname' }],
-      ['What travels', { kind: 'walk', key: 'passsell' }],
-      ['What it was worth', { kind: 'walk', key: 'passvalue' }],
-      ['Let it go', { kind: 'walk', key: 'passready' }],
-      ['It is waiting', { kind: 'walk', key: 'passdone' }],
-      ['Accepting it', { kind: 'walk', key: 'passaccept' }],
-    ],
-  ],
-  [
-    'Asking someone on',
-    [
-      ['Ask them onto the piece', { kind: 'walk', key: 'invite' }],
-      ['The letter is sent', { kind: 'walk', key: 'invitesent' }],
-      ['One person', { kind: 'walk', key: 'person' }],
-    ],
-  ],
-  [
-    'Arriving by letter',
-    [
-      ['A piece has asked for you', { kind: 'walk', key: 'joinletter' }],
-      ['A collaborator arrives', { kind: 'walk', key: 'joinhello' }],
-      ['Who you are (theirs)', { kind: 'walk', key: 'joinwho' }],
-      ['It has come to you', { kind: 'walk', key: 'inheritletter' }],
-      ['It is yours to carry', { kind: 'walk', key: 'inheritaccept' }],
-      ['What he kept', { kind: 'walk', key: 'inherit' }],
-      ['In his own words', { kind: 'walk', key: 'inheritread' }],
-    ],
-  ],
-  [
-    'Signing in',
-    [
-      ['Welcome back', { kind: 'walk', key: 'welcome' }],
-      ['A way back in', { kind: 'walk', key: 'forgot' }],
-    ],
-  ],
-];
+export type { View } from './tourData';
 
 /* ------------------------------------------------------------------ */
 
 /** dev builds only: the same screens can be run against the real api.ts */
 const DEV_SHELL = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 
-const CollectorShell: React.FC = () => {
-  const [view, setView] = useState<View>({ kind: 'piece' });
+export type CollectorShellProps = {
+  /** 'full' (default) is the review harness, byte-identical to before this
+   *  contract existed. 'tour' hides that harness and renders only the phone
+   *  frame and its screen, for a host page that supplies its own chrome. */
+  chrome?: 'full' | 'tour';
+  /** the view the shell opens on, before the `?screen=` mount effect (which
+   *  still runs and may override it) has a chance to look at the URL */
+  initialView?: View;
+  onViewChange?: (view: View) => void;
+};
+
+export type CollectorShellHandle = {
+  /** jump to any view from outside, with the same relationship inference a
+   *  press in the Flows list uses */
+  jumpTo: (view: View) => void;
+};
+
+/** the relationship a jump into `v` implies, exactly as the Flows onStart
+ *  handler infers it: entering a room is entering as its keeper, and
+ *  restarting at the piece page is entering unclaimed. Every other jump
+ *  target (a walk screen, a state, a letter, the code page) carries no
+ *  relationship of its own and leaves whoever was looking as they were. */
+const relationshipForJump = (v: View): Relationship | undefined =>
+  v.kind === 'room' ? 'yours' : v.kind === 'piece' ? 'unclaimed' : undefined;
+
+const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(function CollectorShell(
+  { chrome = 'full', initialView, onViewChange }: CollectorShellProps,
+  ref,
+) {
+  const [view, setView] = useState<View>(initialView ?? { kind: 'piece' });
   /* dev-only shell mode: 'demo' is the review vehicle, untouched; 'wired'
      runs the same screens against whatever backend the dev server proxies
      to. The sixteen-1s code only opens the piece in demo mode. */
@@ -303,6 +94,14 @@ const CollectorShell: React.FC = () => {
     if (who) setRelationship(who);
     setView(next);
   };
+
+  useEffect(() => {
+    onViewChange?.(view);
+  }, [view]);
+
+  useImperativeHandle(ref, () => ({
+    jumpTo: (next: View) => visit(next, relationshipForJump(next)),
+  }));
 
   /* the pop reads the trail from the closure rather than from inside the
      updater: a state updater must be pure, and StrictMode runs it twice */
@@ -458,6 +257,13 @@ const CollectorShell: React.FC = () => {
             : screen}
         </div>
 
+        {/* the harness below the phone: dev-mode chips, back/restart, caption,
+            source, review notes, the flow starters, and the jump-list
+            controls. None of it is part of the design; it exists so every
+            surface can be reached and checked. A host page rendering its own
+            chrome (chrome="tour") hides all of it and supplies its own. */}
+        {chrome !== 'tour' && (
+        <>
         {/* dev-only: run the same screens against the real api.ts. The demo
             mode above stays exactly what it was — Adrian's review vehicle. */}
         {DEV_SHELL && (
@@ -596,11 +402,7 @@ const CollectorShell: React.FC = () => {
 
         <ReviewPanel notes={notes} source={source} />
 
-        <Flows
-          onStart={next =>
-            visit(next, next.kind === 'room' ? 'yours' : next.kind === 'piece' ? 'unclaimed' : undefined)
-          }
-        />
+        <Flows onStart={next => visit(next, relationshipForJump(next))} />
 
         <Controls
           relationship={relationship}
@@ -613,10 +415,12 @@ const CollectorShell: React.FC = () => {
           setMarks={setMarks}
           onJump={next => visit(next, next.kind === 'room' ? 'yours' : undefined)}
         />
+        </>
+        )}
       </div>
     </div>
   );
-};
+});
 
 /* ------------------------------------------------------------------ *
  * The controls under the phone. These are the shell's own scaffolding
@@ -919,5 +723,7 @@ const Btn: React.FC<{
     {children}
   </button>
 );
+
+CollectorShell.displayName = 'CollectorShell';
 
 export default CollectorShell;
