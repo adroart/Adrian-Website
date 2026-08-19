@@ -86,6 +86,7 @@ export const Walkthrough: React.FC = () => {
   const goToChapter = (idx: number) => {
     setChapterIndex(idx);
     setStationIndex(0);
+    setListOpen(false);
   };
 
   /* observation: the real shell reports every view it lands on, whether that

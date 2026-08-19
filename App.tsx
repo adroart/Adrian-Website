@@ -55,10 +55,6 @@ const GenerativeBackground = lazy(() => import('./components/GenerativeBackgroun
 const Poetry = lazy(() => import('./components/Poetry'));
 const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
 const CollectorFieldPage = lazy(() => import('./components/collector/legacy/CollectorFieldPage'));
-/** dev builds only: the guided walkthrough rail over the real collector and
- *  ceremony screens. Never imported, let alone routed, outside dev — see
- *  `DEV_SHELL` below, mirroring the same-named check in `CollectorShell`. */
-const Walkthrough = lazy(() => import('./components/walkthrough/Walkthrough'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';
@@ -71,11 +67,6 @@ import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
 import { FULL_ARCHIVE } from './data/mockData';
-
-/** dev builds only: the same check `CollectorShell` uses to hide its own
- *  dev-only chrome, reused here so the walkthrough route only ever exists
- *  when a dev server is actually running it. */
-const DEV_SHELL = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -127,10 +118,7 @@ const SiteShell: React.FC = () => {
   // The collector journey is its own dark room: no site nav, no footer, no
   // generative background. It is drawn for a phone and reviewed at 390 wide.
   const isCollector = location.pathname.startsWith('/collector');
-  // Same reasoning as the collector journey: the walkthrough draws its own
-  // full phone frame and would otherwise sit half under the fixed nav.
-  const isWalkthrough = location.pathname.startsWith('/dev/walkthrough');
-  const isChromeless = isInvoice || isViewing || isCollector || isWalkthrough;
+  const isChromeless = isInvoice || isViewing || isCollector;
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
@@ -214,9 +202,6 @@ const SiteShell: React.FC = () => {
                 before it is folded into /works/:code. */}
             <Route path="/collector" element={<CollectorShell />} />
             <Route path="/qr" element={<QRIndex />} />
-            {/* The guided walkthrough rail: dev builds only, never routed (and
-                so never fetched) in a production build. See DEV_SHELL above. */}
-            {DEV_SHELL && <Route path="/dev/walkthrough" element={<Walkthrough />} />}
             <Route path="/viewing/:token" element={<Viewing />} />
             <Route path="/atlas" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />
             <Route path="/atlas/*" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />

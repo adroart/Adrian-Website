@@ -184,9 +184,10 @@ test('every other collector chapter walks by Next with a live phone and no page 
   page.on('pageerror', e => errors.push(e.message));
 
   await page.goto('/dev/walkthrough');
-  await page.getByRole('button', { name: /^Chapters/ }).click();
 
   for (const [title, total] of OTHER_COLLECTOR_CHAPTERS) {
+    // choosing a chapter closes the list, so reopen it for each one
+    await page.getByRole('button', { name: /^Chapters/ }).click();
     await page.getByRole('button', { name: title, exact: true }).click();
     await expect(station(page, 1, total)).toBeVisible();
     await assertPhoneAlive(page);
@@ -207,29 +208,14 @@ test('every other collector chapter walks by Next with a live phone and no page 
 /* ------------------------------------------------------------------ *
  * 4. the two ceremony chapters
  *
- * KNOWN BUG, not in this spec's writable set (components/walkthrough/):
- * `CeremonyStation.tsx` wraps `RegisterCeremony`/`AddToPiece` in its own
- * fresh `<MemoryRouter>`. That is harmless in the standalone artifact/
- * prototype build (`scripts/collector-prototype/main.tsx` mounts `Walkthrough`
- * with no ambient router at all), but `/dev/walkthrough` is the first place
- * `Walkthrough` is ever mounted *inside* the site's own `<BrowserRouter>`
- * (`index.tsx`) — and React Router refuses to render a `<Router>` inside
- * another `<Router>`. The instant either ceremony chapter opens, that throws
- * during render, and the site's top-level `ErrorBoundary` (index.tsx) trips
- * for the whole page ("Something went wrong"), not just the ceremony chapter
- * — the crash is not scoped to `CeremonyStation`, and nothing on the page
- * recovers without a reload.
- *
- * This test is marked `fail()` for exactly that reason: it documents the
- * regression precisely (real clicks, real assertions, the same choreography
- * the task calls for) rather than skipping past it, and it will start
- * reporting as an unexpected pass — the signal to remove `.fail()` — the
- * moment CeremonyStation.tsx stops nesting a second Router.
+ * CeremonyStation.tsx carries its own <MemoryRouter>, so the walkthrough
+ * must never mount under the site's BrowserRouter (a Router cannot render
+ * inside another Router). index.tsx therefore mounts /dev/walkthrough
+ * standalone, outside BrowserRouter, in dev builds — the same shape the
+ * standalone prototype build has always had.
  * ------------------------------------------------------------------ */
 
 test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to-piece opens its screens', async ({ page }) => {
-  test.fail(true, 'components/walkthrough/CeremonyStation.tsx nests a <MemoryRouter> inside the ' +
-    'site BrowserRouter when reached via /dev/walkthrough — see the block comment above this test.');
   test.setTimeout(60_000);
 
   await page.goto('/dev/walkthrough');
@@ -255,7 +241,7 @@ test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to
   await page.getByRole('button', { name: /^Unlock/ }).click();
   await expect(station(page, 5, 6)).toBeVisible({ timeout: 8000 });
 
-  await page.getByRole('button', { name: /^Register/ }).click();
+  await page.getByRole('button', { name: 'Register', exact: true }).click();
   await expect(station(page, 6, 6)).toBeVisible({ timeout: 8000 });
 
   // a demo AR- public code, and the once-only Ownership Code block
@@ -271,13 +257,15 @@ test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to
   // the hub: one row per thing that can join the piece
   await expect(page.getByRole('button', { name: 'A photograph', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'The story', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Materials and makers', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Materials and makers/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'A video', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'A message for its caretaker', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'A photograph', exact: true }).click();
   await expect(station(page, 2, 4)).toBeVisible();
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  // two Backs exist here: the frame's own (first in DOM, inside the phone)
+  // and the rail's chapter-level Back beneath it. We want the frame's.
+  await page.getByRole('button', { name: 'Back', exact: true }).first().click();
 
   // posting a story is the one real advance the task asks for here
   await page.getByRole('button', { name: 'The story', exact: true }).click();
