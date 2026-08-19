@@ -256,7 +256,7 @@ const AdminPlateWizard: React.FC = () => {
     return nextRows;
   };
 
-  const runRowAction = async (action: 'backup' | 'package' | 'verify-recovery') => {
+  const runRowAction = async (action: 'backup' | 'package' | 'prepare-plate' | 'verify-recovery') => {
     if (!piece) return;
     setBusy(action);
     setStepError('');
@@ -266,7 +266,11 @@ const AdminPlateWizard: React.FC = () => {
         `/api/admin/pieces/${encodeURIComponent(piece.id)}/${action}`,
         action === 'verify-recovery' ? { backupDocument: copiedBackupDocument } : {},
       );
-      if (action === 'package') {
+      if (action === 'prepare-plate') {
+        setPkg({ ...projectIssuedPlateResponse(data), backupStatus: data.backupStatus || undefined });
+        await refreshPiece();
+        setStepNote('Plate files generated. Download them below and archive them off-site.');
+      } else if (action === 'package') {
         setPkg({ ...projectIssuedPlateResponse(data), backupStatus: piece.backupStatus || undefined });
         setStepNote('Fabrication package recovered. Re-download the files below.');
       } else if (action === 'verify-recovery') {
@@ -526,6 +530,11 @@ const AdminPlateWizard: React.FC = () => {
                         <input type="checkbox" checked={filesArchived} onChange={(event) => setFilesArchived(event.target.checked)} className="mt-1" />
                         <span>I downloaded and archived the front SVG, underside SVG, and private manifest, and compared the codes and both SHA-256 hashes against the manifest.</span>
                       </label>
+                    </>
+                  ) : piece?.plateStatus === 'legacy' ? (
+                    <>
+                      <p className="font-serif text-sm text-wood-600 mb-4">This registered identity has no plate yet. Generate its front and underside SVGs, the private manifest, and its encrypted backup now.</p>
+                      <button type="button" className={buttonClass} disabled={Boolean(busy)} onClick={() => void runRowAction('prepare-plate')}>{busy === 'prepare-plate' ? 'Generating…' : 'Generate plate files'}</button>
                     </>
                   ) : (
                     <>

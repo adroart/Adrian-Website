@@ -215,7 +215,7 @@ const AdminPieces: React.FC = () => {
 
   const runRowAction = async (
     row: PieceRow,
-    action: 'backup' | 'reveal' | 'package',
+    action: 'backup' | 'reveal' | 'package' | 'prepare-plate',
   ) => {
     if (!registryUnlocked) {
       setRowError((current) => ({ ...current, [row.id]: 'Unlock the private registry first.' }));
@@ -226,7 +226,10 @@ const AdminPieces: React.FC = () => {
     setRowSuccess((current) => ({ ...current, [row.id]: '' }));
     try {
       const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {});
-      if (action === 'package') {
+      if (action === 'prepare-plate') {
+        setRowSuccess((current) => ({ ...current, [row.id]: 'Plate files generated.' }));
+        await loadPieces();
+      } else if (action === 'package') {
         const recoveredPackage = {
           ...projectIssuedPlateResponse(data),
           backupStatus: row.backupStatus || undefined,
@@ -416,6 +419,7 @@ const AdminPieces: React.FC = () => {
                         <Link className={quietButtonClass} to={`/admin/artworks/${encodeURIComponent(row.pieceId)}?${new URLSearchParams({ instance: row.id })}`}>Open artwork</Link>
                         {row.publicCode && (
                           <>
+                            {row.plateStatus === 'legacy' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'prepare-plate')}>{rowBusy === `${row.id}:prepare-plate` ? 'Generating…' : 'Generate plate files'}</button>}
                             {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
                             {row.backupStatus === 'verified' && row.recoveryQualification?.status !== 'current' && <Link className={quietButtonClass} to={`/admin/pieces/wizard?${new URLSearchParams({ keeperPieceId: row.id })}`}>Prove copied-file recovery in wizard</Link>}
                             <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
