@@ -19,6 +19,7 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
       { label: 'Certificate editor', href: '/admin/certificates' },
       { label: 'Optional plate wizard', href: '/admin/pieces/wizard' },
       { label: 'Registry and plates', href: '/admin/pieces' },
+      { label: 'Rehearsal', href: '/admin/rehearsal' },
       { label: 'Maintenance', href: '/admin/maintenance' },
       { label: 'Private viewings', href: '/admin/viewings' },
       { label: 'Artwork stories', href: '/admin/book' },

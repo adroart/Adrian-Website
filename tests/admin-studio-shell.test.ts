@@ -17,6 +17,7 @@ describe('admin studio shell', () => {
           'Certificate editor',
           'Optional plate wizard',
           'Registry and plates',
+          'Rehearsal',
           'Maintenance',
           'Private viewings',
           'Artwork stories',

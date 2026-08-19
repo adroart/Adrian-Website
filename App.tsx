@@ -42,6 +42,7 @@ const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitati
 const CollectorSales = lazy(() => import('./components/admin/CollectorSales'));
 const CertificateEditor = lazy(() => import('./components/admin/CertificateEditor'));
 const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
+const Rehearsal = lazy(() => import('./components/admin/Rehearsal'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const Viewing = lazy(() => import('./components/viewing/Viewing'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
@@ -192,6 +193,7 @@ const SiteShell: React.FC = () => {
               <Route path="maintenance" element={<AdminMaintenance />} />
               <Route path="pieces/wizard" element={<AdminPlateWizard />} />
               <Route path="pricing" element={<PricingCalculator />} />
+              <Route path="rehearsal" element={<Rehearsal />} />
             </Route>
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
