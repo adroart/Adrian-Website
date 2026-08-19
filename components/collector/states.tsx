@@ -27,13 +27,53 @@ import { Drawing } from './drawings';
 
 export type StateKey = 'account' | 'held' | 'plate' | 'offline' | 'recordonly';
 
-type Props = { state: StateKey; onBack?: () => void };
+type Props = {
+  state: StateKey;
+  onBack?: () => void;
+  /**
+   * Wired extras. Absent, every screen renders its demo content unchanged.
+   *   heldCode  the real held code shown on the account state (memory only)
+   *   onPrimary / onSecondary  the brass and the quiet link, when the wired
+   *   journey routes them somewhere other than back
+   *   receipt   what survives on the phone, shown back on the offline state;
+   *   an empty array hides the receipt card entirely
+   */
+  heldCode?: string;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  receipt?: [string, string][];
+};
 
-export const StateScreen: React.FC<Props> = ({ state, onBack }) => {
-  if (state === 'account') return <NoAccount onBack={onBack} />;
+export const StateScreen: React.FC<Props> = ({
+  state,
+  onBack,
+  heldCode,
+  onPrimary,
+  onSecondary,
+  receipt,
+}) => {
+  if (state === 'account') {
+    return (
+      <NoAccount
+        onBack={onBack}
+        heldCode={heldCode}
+        onMake={onPrimary ?? onBack}
+        onHave={onSecondary ?? onBack}
+      />
+    );
+  }
   if (state === 'held') return <AlreadyHeld onBack={onBack} />;
   if (state === 'plate') return <ReissuedPlate onBack={onBack} />;
-  if (state === 'offline') return <Offline onBack={onBack} />;
+  if (state === 'offline') {
+    return (
+      <Offline
+        onBack={onBack}
+        onRetry={onPrimary ?? onBack}
+        onLater={onSecondary ?? onBack}
+        receipt={receipt}
+      />
+    );
+  }
   return <RecordOnly />;
 };
 
@@ -44,7 +84,14 @@ export const StateScreen: React.FC<Props> = ({ state, onBack }) => {
  * account is described as what it is rather than as a gate.
  * ------------------------------------------------------------------ */
 
-const NoAccount: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
+const NoAccount: React.FC<{
+  onBack?: () => void;
+  heldCode?: string;
+  onMake?: () => void;
+  onHave?: () => void;
+}> = ({ onBack, heldCode, onMake = onBack, onHave = onBack }) => {
+  const shown = heldCode ?? PIECE.code;
+  return (
   <Ground light="c" pad="52px 30px 30px">
     <div style={{ position: 'relative', flex: 'none', display: 'grid', placeItems: 'center', height: 150 }}>
       <Drawing motif="vault" size={104} draw />
@@ -78,8 +125,8 @@ const NoAccount: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
           color: C.inkBody,
         }}
       >
-        <span>{PIECE.code.slice(0, 4)} {PIECE.code.slice(4, 8)}</span>
-        <span>{PIECE.code.slice(8, 12)} {PIECE.code.slice(12, 16)}</span>
+        <span>{shown.slice(0, 4)} {shown.slice(4, 8)}</span>
+        <span>{shown.slice(8, 12)} {shown.slice(12, 16)}</span>
       </div>
       <Note top={12}>{COPY.states.accountHeldNote}</Note>
     </div>
@@ -96,13 +143,14 @@ const NoAccount: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
         paddingTop: 24,
       }}
     >
-      <Brass full onClick={onBack}>
+      <Brass full onClick={onMake}>
         {COPY.states.accountMake}
       </Brass>
-      <TLink onClick={onBack}>{COPY.states.accountHave}</TLink>
+      <TLink onClick={onHave}>{COPY.states.accountHave}</TLink>
     </div>
   </Ground>
-);
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * Already held.
@@ -209,7 +257,17 @@ const ReissuedPlate: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
  * failure.
  * ------------------------------------------------------------------ */
 
-const Offline: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
+const Offline: React.FC<{
+  onBack?: () => void;
+  onRetry?: () => void;
+  onLater?: () => void;
+  receipt?: [string, string][];
+}> = ({ onBack, onRetry = onBack, onLater = onBack, receipt }) => {
+  const rows: [string, string][] = receipt ?? [
+    ['Your name', 'Mara Ellis'],
+    ['Where it lives', 'Lisbon, Portugal'],
+  ];
+  return (
   <Ground light="g" pad="52px 30px 30px">
     <div style={{ position: 'relative', flex: 'none', display: 'grid', placeItems: 'center', height: 152 }}>
       <Drawing motif="letter" size={102} draw />
@@ -219,20 +277,23 @@ const Offline: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
     </div>
     <Body top={16}>{COPY.states.offlineBody}</Body>
 
-    <div
-      style={{
-        position: 'relative',
-        flex: 'none',
-        marginTop: 26,
-        border: '1px solid rgba(237,233,226,.1)',
-        borderRadius: 14,
-        padding: '4px 20px',
-        background: 'rgba(0,0,0,.16)',
-      }}
-    >
-      <Ledger label="Your name" value="Mara Ellis" />
-      <Ledger label="Where it lives" value="Lisbon, Portugal" />
-    </div>
+    {rows.length > 0 && (
+      <div
+        style={{
+          position: 'relative',
+          flex: 'none',
+          marginTop: 26,
+          border: '1px solid rgba(237,233,226,.1)',
+          borderRadius: 14,
+          padding: '4px 20px',
+          background: 'rgba(0,0,0,.16)',
+        }}
+      >
+        {rows.map(([label, value]) => (
+          <Ledger key={label} label={label} value={value} />
+        ))}
+      </div>
+    )}
 
     <div style={{ position: 'relative', flex: 1 }} />
     <div
@@ -246,13 +307,14 @@ const Offline: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
         paddingTop: 24,
       }}
     >
-      <Brass full onClick={onBack}>
+      <Brass full onClick={onRetry}>
         {COPY.states.offlineRetry}
       </Brass>
-      <TLink onClick={onBack}>{COPY.states.offlineLater}</TLink>
+      <TLink onClick={onLater}>{COPY.states.offlineLater}</TLink>
     </div>
   </Ground>
-);
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * The registry is off.

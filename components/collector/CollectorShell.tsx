@@ -30,6 +30,8 @@ import { StateScreen, StateKey } from './states';
 import { LetterScreen, LetterKey } from './letters';
 import { WALK, WalkScreen } from './walk';
 import { KIND_LABEL, Note, REVIEW } from './review';
+import { WiredByCode } from './wired';
+import { isValidPublicCode } from './api';
 
 type View =
   | { kind: 'piece' }
@@ -272,8 +274,16 @@ const JUMP: [string, Jump[]][] = [
 
 /* ------------------------------------------------------------------ */
 
+/** dev builds only: the same screens can be run against the real api.ts */
+const DEV_SHELL = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+
 const CollectorShell: React.FC = () => {
   const [view, setView] = useState<View>({ kind: 'piece' });
+  /* dev-only shell mode: 'demo' is the review vehicle, untouched; 'wired'
+     runs the same screens against whatever backend the dev server proxies
+     to. The sixteen-1s code only opens the piece in demo mode. */
+  const [mode, setMode] = useState<'demo' | 'wired'>('demo');
+  const [wiredCode, setWiredCode] = useState('');
   const [relationship, setRelationship] = useState<Relationship>('unclaimed');
   const [placed, setPlaced] = useState(7);
   const [near, setNear] = useState(1);
@@ -441,8 +451,67 @@ const CollectorShell: React.FC = () => {
             boxShadow: '0 32px 64px -24px rgba(0,0,0,.7)',
           }}
         >
-          {screen}
+          {mode === 'wired' && DEV_SHELL
+            ? (isValidPublicCode(wiredCode)
+                ? <WiredByCode key={wiredCode} publicCode={wiredCode} />
+                : <div style={{ position: 'absolute', inset: 0, background: C.ground }} />)
+            : screen}
         </div>
+
+        {/* dev-only: run the same screens against the real api.ts. The demo
+            mode above stays exactly what it was — Adrian's review vehicle. */}
+        {DEV_SHELL && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              marginTop: 14,
+              flexWrap: 'wrap',
+            }}
+          >
+            {(['demo', 'wired'] as const).map(value => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                style={{
+                  border: `1px solid ${mode === value ? C.brassEdge : C.hairStrong}`,
+                  borderRadius: 999,
+                  padding: '6px 15px',
+                  background: 'none',
+                  fontFamily: F.body,
+                  fontSize: 12.5,
+                  color: mode === value ? C.brass : C.inkQuiet,
+                  cursor: 'pointer',
+                }}
+              >
+                {value === 'demo' ? 'Demo' : 'Wired (dev)'}
+              </button>
+            ))}
+            {mode === 'wired' && (
+              <input
+                value={wiredCode}
+                onChange={e => setWiredCode(e.target.value.toUpperCase().trim())}
+                placeholder="AR-XXXXXXXX"
+                spellCheck={false}
+                autoComplete="off"
+                aria-label="Public code for wired mode"
+                style={{
+                  border: `1px solid ${C.hairStrong}`,
+                  borderRadius: 999,
+                  padding: '6px 15px',
+                  background: 'none',
+                  fontFamily: F.body,
+                  fontSize: 12.5,
+                  color: C.inkBody,
+                  width: 150,
+                }}
+              />
+            )}
+          </div>
+        )}
 
         <div
           style={{

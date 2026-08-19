@@ -625,12 +625,37 @@ type Props = {
    */
   values?: Record<string, string>;
   onType?: (label: string, value: string) => void;
+  /**
+   * Wired: the What shows lamps and the display-grain chips, controlled from
+   * above so the choices can actually be kept. Absent, each screen holds its
+   * own state exactly as the demo shell always has.
+   */
+  lampsValue?: boolean[];
+  onLamps?: (lamps: boolean[]) => void;
+  grainValue?: 0 | 1;
+  onGrain?: (grain: 0 | 1) => void;
 };
 
-export const WalkScreen: React.FC<Props> = ({ screen, onGo, values, onType }) => {
-  const [grain, setGrain] = useState<0 | 1>(0);
-  const [lamps, setLamps] = useState<boolean[]>([true, true, false]);
+export const WalkScreen: React.FC<Props> = ({
+  screen,
+  onGo,
+  values,
+  onType,
+  lampsValue,
+  onLamps,
+  grainValue,
+  onGrain,
+}) => {
+  const [ownGrain, setOwnGrain] = useState<0 | 1>(0);
+  const [ownLamps, setOwnLamps] = useState<boolean[]>([true, true, false]);
   const [linksOpen, setLinksOpen] = useState(false);
+  const grain = grainValue ?? ownGrain;
+  const setGrain = onGrain ?? setOwnGrain;
+  const lamps = lampsValue ?? ownLamps;
+  const setLamps = (next: (l: boolean[]) => boolean[]) => {
+    if (onLamps) onLamps(next(lamps));
+    else setOwnLamps(next);
+  };
 
   const advance = () => screen.to && onGo(screen.to);
 

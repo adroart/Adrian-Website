@@ -15,10 +15,12 @@
 import React, { useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PIECE } from './copy';
-import { Body, Brass, Eyebrow, Ground, Ledger, Note, Plus, RoomBody, RoomHead } from './ui';
+import { Body, Brass, Eyebrow, Ground, Ledger, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
 import { Drawing } from './drawings';
 import { ResonantGrid } from './ResonantGrid';
 import { Garden } from './garden';
+import type { PieceLive } from './live';
+import { formatLineageEventLabel } from '../../utils/publicLineage';
 
 export type RoomKey =
   | 'story'
@@ -55,12 +57,18 @@ const LIGHT: Record<RoomKey, string> = {
   grid: 'n',
 };
 
-type Props = { room: RoomKey; onClose: () => void; onWalk?: (key: string) => void };
+type Props = {
+  room: RoomKey;
+  onClose: () => void;
+  onWalk?: (key: string) => void;
+  /** wired: the real piece. Absent, every room renders the demo unchanged. */
+  live?: PieceLive;
+};
 
-export const Room: React.FC<Props> = ({ room, onClose, onWalk }) => {
+export const Room: React.FC<Props> = ({ room, onClose, onWalk, live }) => {
   /* the garden brings its own ground: its first surface is the piece asking a
      single thing full screen, which has no room header to sit under */
-  if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} />;
+  if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} live={live?.garden ?? undefined} />;
 
   /* rooms that end in a list, rather than in something to close, carry their
      own way out and take no brass */
@@ -69,13 +77,13 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk }) => {
   return (
     <Ground light={LIGHT[room] as never} pad="44px 30px 30px">
       <RoomHead title={TITLES[room]} onBack={onClose} />
-      {room === 'story' && <StoryRoom />}
-      {room === 'certificate' && <CertificateRoom />}
-      {room === 'history' && <HistoryRoom />}
-      {room === 'dreams' && <DreamsRoom />}
-      {room === 'information' && <InformationRoom />}
-      {room === 'family' && <FamilyRoom onWalk={onWalk} />}
-      {room === 'account' && <AccountRoom />}
+      {room === 'story' && (live ? <LiveStoryRoom live={live} /> : <StoryRoom />)}
+      {room === 'certificate' && (live ? <LiveCertificateRoom live={live} /> : <CertificateRoom />)}
+      {room === 'history' && (live ? <LiveHistoryRoom live={live} /> : <HistoryRoom />)}
+      {room === 'dreams' && (live ? <LiveDreamsRoom live={live} /> : <DreamsRoom />)}
+      {room === 'information' && (live ? <LiveInformationRoom live={live} /> : <InformationRoom />)}
+      {room === 'family' && (live ? <LiveFamilyRoom onWalk={onWalk} /> : <FamilyRoom onWalk={onWalk} />)}
+      {room === 'account' && (live ? <LiveAccountRoom live={live} /> : <AccountRoom />)}
       {room === 'grid' && <GridRoom />}
       {!listRoom && (
         <div style={{ flex: 'none', marginTop: 'auto', paddingTop: 18, display: 'flex', justifyContent: 'flex-end' }}>
@@ -470,6 +478,209 @@ const AccountRoom: React.FC = () => (
           {COPY.rooms.accountSignOut}
         </span>
       </div>
+    </RoomBody>
+  </>
+);
+
+/* ------------------------------------------------------------------ *
+ * The wired rooms. Same surfaces, real registry data via api.ts (fetched
+ * upstream in wired.tsx — no room touches the network itself). Every
+ * network state renders quietly: an absence is an absence, a failure is a
+ * plain line with the one locked retry word, never an error wall.
+ * ------------------------------------------------------------------ */
+
+const LiveStoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const certificate = live.certificate.status === 'ready' ? live.certificate.data : null;
+  const paragraphs = live.story?.paragraphs?.length
+    ? live.story.paragraphs
+    : [certificate?.openingWording, certificate?.certificateWording].filter(
+        (line): line is string => Boolean(line),
+      );
+  return (
+    <RoomBody top={22}>
+      {live.story?.lead && (
+        <p style={{ margin: 0, fontFamily: F.display, fontWeight: 300, fontSize: 24, lineHeight: 1.4, color: C.ink }}>
+          {live.story.lead}
+        </p>
+      )}
+      {paragraphs.map((text, i) => (
+        <Body key={i} top={i === 0 && !live.story?.lead ? 4 : 16}>{text}</Body>
+      ))}
+    </RoomBody>
+  );
+};
+
+const LiveCertificateRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const { identity, certificate, ordinal } = live;
+  const ready = certificate.status === 'ready' ? certificate.data : null;
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 11 }}>
+        <Note>{COPY.rooms.certNote}</Note>
+      </div>
+      <RoomBody>
+        <div style={{ display: 'grid', placeItems: 'center', height: 118, marginBottom: 18 }}>
+          <Drawing motif="piece" size={92} lit draw />
+        </div>
+        {identity.series && <Ledger label="Series" value={identity.series} />}
+        <Ledger label="Edition" value={identity.edition.label} />
+        {ready?.yearWording && <Ledger label="Made" value={ready.yearWording} />}
+        {ready?.materials && ready.materials.length > 0 && (
+          <Ledger label="Material" value={ready.materials.join(', ')} />
+        )}
+        {ready?.origin && <Ledger label="Origin" value={ready.origin} />}
+        {ready?.techniques && ready.techniques.length > 0 && (
+          <Ledger label="Technique" value={ready.techniques.join(', ')} />
+        )}
+        {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
+        {certificate.status === 'failed' && (
+          <div style={{ paddingTop: 16 }}>
+            <TLink onClick={certificate.retry}>{COPY.code.tryAgain}</TLink>
+          </div>
+        )}
+        <Note top={18}>{COPY.rooms.certFoot}</Note>
+      </RoomBody>
+    </>
+  );
+};
+
+const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const { lineage } = live;
+  const outcome = lineage.status === 'ready' ? lineage.data : null;
+  /* the dark lineage is the quiet absence the design prescribes: the note
+     stands alone and nothing reads as an error */
+  const events = outcome && outcome.kind === 'ok' ? outcome.events : [];
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 10 }}>
+        <Note>{COPY.rooms.historyNote}</Note>
+      </div>
+      <RoomBody top={24}>
+        {events.map((event) => (
+          <div
+            key={event.eventHash}
+            style={{ display: 'grid', gridTemplateColumns: '52px minmax(0,1fr)', gap: 16, paddingBottom: 26 }}
+          >
+            <div style={{ paddingTop: 4 }}>
+              <Eyebrow>{String(new Date(event.eventAt).getFullYear() || '')}</Eyebrow>
+            </div>
+            <div style={{ position: 'relative', paddingLeft: 20 }}>
+              <span
+                style={{
+                  position: 'absolute', left: 0, top: 7, width: 5, height: 5, borderRadius: '50%',
+                  background: C.brass, boxShadow: '0 0 9px 3px rgba(212,184,138,.4)', display: 'block',
+                }}
+              />
+              <span style={{ position: 'absolute', left: 2, top: 16, bottom: -26, width: 1, background: C.hair, display: 'block' }} />
+              <div style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink }}>
+                {formatLineageEventLabel(event.eventType)}
+              </div>
+            </div>
+          </div>
+        ))}
+        {lineage.status === 'failed' && (
+          <div style={{ paddingTop: 6 }}>
+            <TLink onClick={lineage.retry}>{COPY.code.tryAgain}</TLink>
+          </div>
+        )}
+      </RoomBody>
+    </>
+  );
+};
+
+const LiveDreamsRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const dream = live.dream.status === 'ready' ? live.dream.data : null;
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 11 }}>
+        <Note>{COPY.rooms.dreamsNote}</Note>
+      </div>
+      <RoomBody top={24}>
+        {dream && (
+          <div style={{ padding: '0 0 26px' }}>
+            <p
+              style={{
+                margin: 0, fontFamily: F.display, fontWeight: 300, fontSize: 23,
+                lineHeight: 1.36, color: C.inkWarm, textWrap: 'pretty',
+              }}
+            >
+              {dream.body}
+            </p>
+          </div>
+        )}
+        {live.dream.status === 'failed' && (
+          <div style={{ paddingBottom: 16 }}>
+            <TLink onClick={live.dream.retry}>{COPY.code.tryAgain}</TLink>
+          </div>
+        )}
+        {dream && <Note>{COPY.rooms.dreamsFoot}</Note>}
+      </RoomBody>
+    </>
+  );
+};
+
+const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const { identity, ordinal, displayLocation } = live;
+  const ready = live.certificate.status === 'ready' ? live.certificate.data : null;
+  return (
+    <RoomBody top={16}>
+      <div
+        style={{
+          position: 'relative', width: 240, height: 240, margin: '6px auto 22px',
+          display: 'grid', placeItems: 'center', borderRadius: 2,
+          boxShadow: `inset 0 0 0 1px ${C.hairStrong}`,
+        }}
+      >
+        <Drawing motif="piece" size={120} />
+      </div>
+      {identity.series && <Ledger label="Series" value={identity.series} />}
+      <Ledger label="Edition" value={identity.edition.label} />
+      {ready?.yearWording && <Ledger label="Made" value={ready.yearWording} />}
+      {ready?.materials && ready.materials.length > 0 && (
+        <Ledger label="Material" value={ready.materials.join(', ')} />
+      )}
+      {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
+      {displayLocation && <Ledger label="Where it lives" value={displayLocation} />}
+    </RoomBody>
+  );
+};
+
+const LiveFamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) => (
+  <>
+    <div style={{ flex: 'none', paddingTop: 10 }}>
+      <Note>{COPY.rooms.familyNote}</Note>
+    </div>
+    <RoomBody top={18}>
+      <button
+        type="button"
+        onClick={() => onWalk?.('invite')}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 13, width: '100%',
+          background: 'none', border: 0, padding: '8px 0 0', cursor: 'pointer', textAlign: 'left',
+        }}
+      >
+        <Plus />
+        <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{COPY.rooms.familyInvite}</span>
+      </button>
+    </RoomBody>
+  </>
+);
+
+const LiveAccountRoom: React.FC<{ live: PieceLive }> = ({ live }) => (
+  <>
+    <div style={{ flex: 'none', paddingTop: 11 }}>
+      <Note>{COPY.rooms.accountNote}</Note>
+    </div>
+    <RoomBody top={18}>
+      {live.accountEmail && (
+        <div style={{ borderBottom: `1px solid ${C.hair}`, padding: '15px 0' }}>
+          <Eyebrow>Email</Eyebrow>
+          <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>
+            {live.accountEmail}
+          </div>
+        </div>
+      )}
+      <Note top={20}>{COPY.rooms.accountFoot}</Note>
     </RoomBody>
   </>
 );

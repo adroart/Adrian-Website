@@ -33,23 +33,89 @@ import { Brass, Eyebrow, Ground, TLink } from './ui';
 /** how long the piece waits after the sixteenth character before it answers */
 const PAUSE_MS = 620;
 
+/**
+ * What a wired submit resolved to. The vault fires ONLY on 'vault' — an
+ * actual successful bind — never optimistically on code completion.
+ *   vault    the bind answered bound; run the vault and carry through
+ *   wrong    the code did not match this piece
+ *   handled  the parent routed the journey elsewhere (account bridge, a
+ *            pending passing, a quiet retry state); this page is leaving
+ */
+export type CodeSubmitOutcome =
+  | { kind: 'vault' }
+  | { kind: 'wrong' }
+  | { kind: 'handled' };
+
 type Props = {
   onTrue: () => void;
   onNoCode?: () => void;
   onGift?: () => void;
   onBack?: () => void;
+  /**
+   * Wired: answer the completed code against the real registry. When absent,
+   * the shell's demo check runs (sixteen ones true, anything else wrong).
+   * The typed code goes nowhere but this call — never a URL, a query string,
+   * a log, or any storage from this file.
+   */
+  onSubmit?: (typedCode: string) => Promise<CodeSubmitOutcome>;
+  /** the real piece's name for the eyebrow; the demo shows the sample piece */
+  pieceName?: string;
+  /**
+   * A code restored from the account bridge arrives already read: the cells
+   * render filled and the existing pause fires the answer, so the vault has
+   * its stage on the return passage too.
+   */
+  initialCode?: string;
+  /** land directly on the wrong-code state (a mismatch after account creation) */
+  initialWrong?: boolean;
 };
 
-export const CodePage: React.FC<Props> = ({ onTrue, onNoCode, onGift, onBack }) => {
-  const [code, setCode] = useState('');
-  const [wrong, setWrong] = useState(false);
+export const CodePage: React.FC<Props> = ({
+  onTrue,
+  onNoCode,
+  onGift,
+  onBack,
+  onSubmit,
+  pieceName,
+  initialCode,
+  initialWrong,
+}) => {
+  const [code, setCode] = useState(() =>
+    (initialCode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16),
+  );
+  const [wrong, setWrong] = useState(Boolean(initialWrong));
   const [vault, setVault] = useState(false);
+  const answering = useRef(false);
   const input = useRef<HTMLInputElement>(null);
 
   const filled = code.length;
 
   const answer = useCallback(
     (value: string) => {
+      if (onSubmit) {
+        /* wired: the registry answers. Quiet while it does — the tumbler
+           readout already reads True; nothing spins. */
+        if (answering.current) return;
+        answering.current = true;
+        void onSubmit(value)
+          .then(outcome => {
+            if (outcome.kind === 'vault') {
+              setVault(true);
+              /* the vault carries you through: no button press after the click */
+              window.setTimeout(onTrue, 1300);
+            } else if (outcome.kind === 'wrong') {
+              setWrong(true);
+            }
+            /* 'handled': the parent moved the journey; this page is leaving */
+          })
+          .catch(() => {
+            /* the parent's submit routes its own failures; nothing to show here */
+          })
+          .finally(() => {
+            answering.current = false;
+          });
+        return;
+      }
       if (value === PIECE.code) {
         setVault(true);
         /* the vault carries you through: no button press after the click */
@@ -58,7 +124,7 @@ export const CodePage: React.FC<Props> = ({ onTrue, onNoCode, onGift, onBack }) 
         setWrong(true);
       }
     },
-    [onTrue],
+    [onSubmit, onTrue],
   );
 
   useEffect(() => {
@@ -107,7 +173,7 @@ export const CodePage: React.FC<Props> = ({ onTrue, onNoCode, onGift, onBack }) 
           gap: 14,
         }}
       >
-        <Eyebrow>{PIECE.name}</Eyebrow>
+        <Eyebrow>{pieceName ?? PIECE.name}</Eyebrow>
         <button
           type="button"
           onClick={onBack}

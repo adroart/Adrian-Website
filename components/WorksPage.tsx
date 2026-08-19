@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
@@ -28,6 +28,11 @@ import {
     shouldLoadPublicLineage,
     validatePublicLineageResponse,
 } from '../utils/publicLineage';
+
+// Living Legacy new-generation arrival (components/collector/wired.tsx).
+// Loaded lazily so the collector surface costs nothing while the launch flag
+// is off and nothing on ordinary catalog visits.
+const CollectorPieceArrival = lazy(() => import('./collector/wired'));
 
 const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
     created: 'Created',
@@ -128,6 +133,22 @@ const WorksPage: React.FC = () => {
     if (invalidInstance) return <InvalidPublicIdentityState />;
     if (canonicalMismatch) return <PublicIdentityRedirectState />;
     if (publicCode && !verifiedIdentity) return publicIdentityRecord;
+
+    // Living Legacy ON and the visit carries a verified ?instance code: the
+    // new-generation collector piece page becomes the body, replacing what the
+    // legacy ArrivalGate/KeeperPanel path below occupied. With the flag OFF
+    // this branch is unreachable and the current behavior below is unchanged.
+    if (legacyOn && publicCode && verifiedIdentity) {
+        return (
+            <Suspense fallback={null}>
+                <CollectorPieceArrival
+                    identity={verifiedIdentity}
+                    artwork={artwork ?? null}
+                    beginClaim={searchParams.get('claim') === '1'}
+                />
+            </Suspense>
+        );
+    }
 
     let record: React.ReactNode;
     if (!artwork) {

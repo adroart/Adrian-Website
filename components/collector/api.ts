@@ -897,6 +897,34 @@ export async function appendCollectorDreamMarker(input: {
   });
 }
 
+/**
+ * GET /api/collector/dreams/public/:publicCode — the one dream a piece lets
+ * shine, if any. Public, no auth. Gated by livingLegacy (bare 404 while off).
+ * functions/api/collector/dreams/public/[publicCode].js. A piece with nothing
+ * shared answers 200 `{dream: null}`, which is an absence, not an error.
+ */
+export interface PublicCollectorDream {
+  body: string;
+  scope: CollectorDreamScope;
+  visibility: 'anonymous' | 'attributed';
+  attribution: string | null;
+  sharedAt: string | null;
+}
+
+export async function getPublicDream(
+  publicCode: string,
+): Promise<ApiOutcome<PublicCollectorDream | null>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  if (!isValidPublicCode(publicCode)) return { ok: true, status: 200, data: null };
+  const { status, ok, body } = await rawRequest(
+    `/api/collector/dreams/public/${encodeURIComponent(publicCode)}`,
+  );
+  if (!ok) return outcomeError(status, body);
+  const record = isRecord(body) ? body : {};
+  const dream = isRecord(record.dream) ? (record.dream as unknown as PublicCollectorDream) : null;
+  return { ok: true, status, data: dream };
+}
+
 export type CollectorRitualAction = 'reinforce' | 'plant-new' | 'fulfilled';
 
 export interface CollectorRitualEligibility {
@@ -1032,6 +1060,50 @@ export async function redeemFirstBindInvitation(token: string): Promise<ApiOutco
     }),
     'keeper',
   );
+}
+
+// ============================================================================
+// Public Atlas projection — the source of the real claim ordinal (Light N)
+// functions/api/atlas.js at /api/atlas. Public, not gated by livingLegacy.
+// The bind response carries no ordinal; the atlas's verified projection does,
+// per identity row: { publicCode, ordinal, ... } inside state.lights[].
+// ============================================================================
+
+interface AtlasIdentityRow {
+  publicCode: string | null;
+  ordinal: number | null;
+}
+
+/**
+ * The claim ordinal for one public code, from GET /api/atlas. Returns the
+ * ordinal when the atlas has projected a first bind for this code, null when
+ * it has not (yet). Failures surface through ApiOutcome; only a rejected
+ * fetch throws (CollectorApiNetworkError), matching the rest of this file.
+ */
+export async function getAtlasOrdinal(publicCode: string): Promise<ApiOutcome<number | null>> {
+  if (!isValidPublicCode(publicCode)) return { ok: true, status: 200, data: null };
+  const { status, ok, body } = await rawRequest('/api/atlas');
+  if (!ok) return outcomeError(status, body);
+  const record = isRecord(body) ? body : {};
+  const state = isRecord(record.state) ? record.state : {};
+  const lights = Array.isArray(state.lights) ? state.lights : [];
+  for (const light of lights) {
+    if (!isRecord(light) || !Array.isArray(light.identity)) continue;
+    for (const identity of light.identity as unknown[]) {
+      if (!isRecord(identity)) continue;
+      const row = identity as unknown as AtlasIdentityRow;
+      if (row.publicCode === publicCode) {
+        return {
+          ok: true,
+          status,
+          data: typeof row.ordinal === 'number' && Number.isSafeInteger(row.ordinal) && row.ordinal > 0
+            ? row.ordinal
+            : null,
+        };
+      }
+    }
+  }
+  return { ok: true, status, data: null };
 }
 
 // ============================================================================

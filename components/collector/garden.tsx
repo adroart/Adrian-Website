@@ -27,6 +27,7 @@ import React, { useState } from 'react';
 import { C, F } from './tokens';
 import { COPY } from './copy';
 import { Area, Brass, Capsule, Eyebrow, Flag, Ground, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
+import type { GardenLive } from './live';
 
 type View = 'ask' | 'index' | 'write';
 
@@ -42,9 +43,28 @@ const PLACED: (string | null)[] = [
   null,
 ];
 
-export const Garden: React.FC<{ onWalk?: (key: string) => void; onClose?: () => void }> = ({ onClose }) => {
+/**
+ * The wired index: the piece's real dream state, projected onto the question
+ * slots. The dreams contract holds ONE current dream per piece, so the first
+ * slot carries it and the rest read as waiting. Loading and failure are both
+ * quiet: nothing answered yet is a true statement in either.
+ */
+function livePlaced(live: GardenLive): (string | null)[] {
+  const placed: (string | null)[] = COPY.garden.questions.map(() => null);
+  if (live.dreams.status === 'ready' && live.dreams.data?.current) {
+    placed[0] = live.dreams.data.current.body;
+  }
+  return placed;
+}
+
+export const Garden: React.FC<{
+  onWalk?: (key: string) => void;
+  onClose?: () => void;
+  /** wired: the real dream state and the place call. Absent, demo unchanged. */
+  live?: GardenLive;
+}> = ({ onClose, live }) => {
   const [view, setView] = useState<View>('ask');
-  const [which, setWhich] = useState(3);
+  const [which, setWhich] = useState(live ? 0 : 3);
 
   if (view === 'index') {
     return (
@@ -55,12 +75,25 @@ export const Garden: React.FC<{ onWalk?: (key: string) => void; onClose?: () => 
           setView('write');
         }}
         onClose={onClose}
+        placed={live ? livePlaced(live) : undefined}
       />
     );
   }
 
   if (view === 'write') {
-    return <QuestionPage index={which} onBack={() => setView('index')} onPlace={() => setView('index')} />;
+    return (
+      <QuestionPage
+        index={which}
+        onBack={() => setView('index')}
+        onPlace={() => setView('index')}
+        live={live}
+        initialText={
+          live && which === 0 && live.dreams.status === 'ready'
+            ? live.dreams.data?.current?.body ?? ''
+            : ''
+        }
+      />
+    );
   }
 
   return (
@@ -144,15 +177,22 @@ const GardenAsk: React.FC<{
  * of contents. No count anywhere, and no state is a failure.
  * ------------------------------------------------------------------ */
 
-const GardenIndex: React.FC<{ onBack: () => void; onPick: (i: number) => void; onClose?: () => void }> = ({
+const GardenIndex: React.FC<{
+  onBack: () => void;
+  onPick: (i: number) => void;
+  onClose?: () => void;
+  /** wired: the real answers; absent, the shell's samples */
+  placed?: (string | null)[];
+}> = ({
   onBack,
   onPick,
+  placed,
 }) => (
   <Ground light="a" pad="44px 30px 30px">
     <RoomHead title={COPY.garden.title} onBack={onBack} />
     <RoomBody top={20}>
       {COPY.garden.questions.map((q, i) => {
-        const answer = PLACED[i];
+        const answer = (placed ?? PLACED)[i];
         return (
           <button
             key={q}
@@ -217,13 +257,41 @@ const GardenIndex: React.FC<{ onBack: () => void; onPick: (i: number) => void; o
  * decision under it.
  * ------------------------------------------------------------------ */
 
-export const QuestionPage: React.FC<{ index: number; onBack: () => void; onPlace: () => void }> = ({
+export const QuestionPage: React.FC<{
+  index: number;
+  onBack: () => void;
+  onPlace: () => void;
+  /** wired: place the words for real through api.ts; absent, demo unchanged */
+  live?: GardenLive;
+  initialText?: string;
+}> = ({
   index,
   onBack,
   onPlace,
+  live,
+  initialText = '',
 }) => {
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialText);
   const [where, setWhere] = useState<0 | 1>(0);
+  const [placing, setPlacing] = useState(false);
+  const [held, setHeld] = useState(false);
+
+  const place = () => {
+    if (!live) {
+      onPlace();
+      return;
+    }
+    if (placing || !text.trim()) return;
+    setPlacing(true);
+    setHeld(false);
+    void live
+      .place(text.trim(), where === 0)
+      .then(landed => {
+        if (landed) onPlace();
+        else setHeld(true);
+      })
+      .finally(() => setPlacing(false));
+  };
 
   return (
     <Ground light="k" pad="44px 30px 30px">
@@ -255,6 +323,14 @@ export const QuestionPage: React.FC<{ index: number; onBack: () => void; onPlace
         <div style={{ flex: 'none', paddingTop: 14 }}>
           <Note>{COPY.garden.lock}</Note>
         </div>
+
+        {/* the quiet failure: a receipt, never an error. The words stay on the
+            phone and the same brass tries again. */}
+        {held && (
+          <div style={{ flex: 'none', paddingTop: 12 }}>
+            <Note>{COPY.states.offlineBody}</Note>
+          </div>
+        )}
       </div>
 
       <div
@@ -269,7 +345,7 @@ export const QuestionPage: React.FC<{ index: number; onBack: () => void; onPlace
         }}
       >
         <TLink onClick={onBack}>{COPY.garden.finishLater}</TLink>
-        <Brass onClick={onPlace}>{COPY.garden.place}</Brass>
+        <Brass onClick={place}>{COPY.garden.place}</Brass>
       </div>
     </Ground>
   );

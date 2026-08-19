@@ -27,6 +27,7 @@ import { Brass, Eyebrow, Flag, Ground, Row, TLink } from './ui';
 import { Drawing } from './drawings';
 import { Orbit } from './Orbit';
 import { Room, RoomKey } from './rooms';
+import type { PieceLive } from './live';
 
 export type Relationship = 'loading' | 'unclaimed' | 'registered' | 'signedin' | 'yours';
 
@@ -39,6 +40,13 @@ type Props = {
   onBegin?: () => void;
   onSignIn?: () => void;
   onWalk?: (key: string) => void;
+  /**
+   * Wired: the real piece. Absent, the page renders the demo sample exactly
+   * as the shell always has.
+   */
+  live?: PieceLive;
+  /** open with one room already showing (a caretaker door re-entered) */
+  initialRoom?: RoomKey | null;
 };
 
 export const PiecePage: React.FC<Props> = ({
@@ -48,8 +56,13 @@ export const PiecePage: React.FC<Props> = ({
   onBegin,
   onSignIn,
   onWalk,
+  live,
+  initialRoom = null,
 }) => {
-  const [room, setRoom] = useState<RoomKey | null>(null);
+  const [room, setRoom] = useState<RoomKey | null>(initialRoom);
+  const liveDream = live
+    ? (live.dream.status === 'ready' ? live.dream.data : null)
+    : undefined;
 
   const isCaretaker = relationship === 'yours';
   const registered = relationship !== 'unclaimed' && relationship !== 'loading';
@@ -57,7 +70,7 @@ export const PiecePage: React.FC<Props> = ({
   /* a room opens in place: the body gives way, the room becomes the surface,
      and closing returns to the page. Nothing navigates. */
   if (room) {
-    return <Room room={room} onClose={() => setRoom(null)} onWalk={onWalk} />;
+    return <Room room={room} onClose={() => setRoom(null)} onWalk={onWalk} live={live} />;
   }
 
   return (
@@ -74,10 +87,10 @@ export const PiecePage: React.FC<Props> = ({
           borderBottom: `1px solid ${C.hairStrong}`,
         }}
       >
-        <Drawing motif="piece" size={40} lit draw label={`${PIECE.name}, line drawing`} />
+        <Drawing motif="piece" size={40} lit draw label={`${live ? live.identity.title : PIECE.name}, line drawing`} />
         <div style={{ minWidth: 0 }}>
           <div>
-            <Eyebrow size={10.5}>{PIECE.series}</Eyebrow>
+            <Eyebrow size={10.5}>{live ? (live.identity.series ?? live.identity.edition.label) : PIECE.series}</Eyebrow>
           </div>
           <div
             style={{
@@ -89,7 +102,7 @@ export const PiecePage: React.FC<Props> = ({
               marginTop: 2,
             }}
           >
-            {PIECE.name}
+            {live ? live.identity.title : PIECE.name}
           </div>
         </div>
       </div>
@@ -101,8 +114,9 @@ export const PiecePage: React.FC<Props> = ({
 
       {/* the dream: the first thing any guest reads. Placing it IS the choice
           to show it, so there is no switch for it anywhere. Words only; who
-          wrote them does not show. */}
-      {registered && (
+          wrote them does not show. On the wired page a piece with nothing
+          shared simply has no dream block: a quiet absence, never a prompt. */}
+      {registered && (live === undefined || liveDream) && (
         <blockquote style={{ margin: 0, flex: 'none', paddingTop: 20 }}>
           <p
             style={{
@@ -117,10 +131,21 @@ export const PiecePage: React.FC<Props> = ({
               textShadow: '0 0 24px rgba(212,184,138,.2)',
             }}
           >
-            <Flag text={COPY.page.dreamSample} />
+            {liveDream ? liveDream.body : <Flag text={COPY.page.dreamSample} />}
           </p>
           <cite style={{ display: 'block', marginTop: 12, fontStyle: 'normal' }}>
-            <Eyebrow size={10}>{COPY.page.dreamCite}</Eyebrow>
+            {live && live.ritual?.eligible && relationship === 'yours' ? (
+              /* the year has turned: the cite line is the quiet door in */
+              <button
+                type="button"
+                onClick={() => onWalk?.('ritual')}
+                style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+              >
+                <Eyebrow size={10}>{COPY.page.dreamCite}</Eyebrow>
+              </button>
+            ) : (
+              <Eyebrow size={10}>{COPY.page.dreamCite}</Eyebrow>
+            )}
           </cite>
         </blockquote>
       )}
