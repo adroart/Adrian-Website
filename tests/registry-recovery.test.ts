@@ -29,6 +29,7 @@ import {
   REGISTRY_RECOVERY_V4_TABLES,
   REGISTRY_RECOVERY_V5_TABLES,
   REGISTRY_RECOVERY_V6_TABLES,
+  REGISTRY_RECOVERY_V7_TABLES,
   REGISTRY_RECOVERY_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
@@ -67,7 +68,9 @@ const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
 \n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
 \n${readMigration('033_artwork_contributors.sql')}
-\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}`;
+\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}
+\n${readMigration('035_artwork_catalog_snapshots.sql')}
+\n${readMigration('036_piece_records.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -89,7 +92,8 @@ async function encryptLegacyPayload(payload: any) {
       : payload.schemaVersion === 3 ? REGISTRY_RECOVERY_V3_TABLES
         : payload.schemaVersion === 4 ? REGISTRY_RECOVERY_V4_TABLES
           : payload.schemaVersion === 5 ? REGISTRY_RECOVERY_V5_TABLES
-            : REGISTRY_RECOVERY_V6_TABLES;
+            : payload.schemaVersion === 6 ? REGISTRY_RECOVERY_V6_TABLES
+              : REGISTRY_RECOVERY_V7_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -592,6 +596,24 @@ function seedCompleteRegistry(database: DatabaseSync) {
       ('letter-${'9'.repeat(64)}', 'kp-recovery', 'anniversary',
        'A year with this piece invites a quiet reflection.',
        '2026-08-05T03:04:05.000Z', 'anniversary:kp-recovery:2026');
+
+    INSERT INTO artwork_catalog_snapshots
+      (id, artwork_id, snapshot_hash, canonical_json, source, created_at)
+    VALUES
+      ('acs-ul-100-${'2'.repeat(32)}', 'UL-100', '${'2'.repeat(64)}',
+       '{"category":"multidimensional-art","id":"UL-100","title":"Art of Living"}',
+       'mockData', '${exportedAt}'),
+      ('acs-ul-101-${'4'.repeat(32)}', 'UL-101', '${'4'.repeat(64)}',
+       '{"category":"multidimensional-art","id":"UL-101","title":"Invitation Work"}',
+       'admin', '${exportedAt}');
+    INSERT INTO piece_records
+      (id, public_code, record_hash, r2_key, trigger_event, created_at)
+    VALUES
+      ('pr-${'5'.repeat(64)}', 'AR-7KQ9M2WX', '${'5'.repeat(64)}',
+       'records/AR-7KQ9M2WX/${'5'.repeat(64)}.html', 'registration', '${exportedAt}'),
+      ('pr-${'6'.repeat(64)}', 'AR-8KQ9M2WX', '${'6'.repeat(64)}',
+       'records/AR-8KQ9M2WX/${'6'.repeat(64)}.html', 'on_demand',
+       '2026-08-02T03:04:05.000Z');
   `);
 }
 
@@ -1032,8 +1054,49 @@ describe('registry-only legacy fulfillment migration', () => {
 });
 
 describe('private registry recovery export', () => {
+  it('freezes the schema-v7 manifest and adds both permanent-record tables in schema v8', () => {
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 8);
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(0, REGISTRY_RECOVERY_V6_TABLES.length),
+      REGISTRY_RECOVERY_V6_TABLES);
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(-4), [
+      'artwork_contributor_invitations',
+      'artwork_contributor_revocations',
+      'artwork_contributor_invitation_acceptances',
+      'artwork_contributor_access_grants',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(0, REGISTRY_RECOVERY_V7_TABLES.length),
+      REGISTRY_RECOVERY_V7_TABLES);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-2), [
+      'artwork_catalog_snapshots',
+      'piece_records',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_catalog_snapshots, [
+      'id', 'artwork_id', 'snapshot_hash', 'canonical_json', 'source', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.piece_records, [
+      'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.artwork_catalog_snapshots, ['id']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.piece_records, ['id']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.artwork_catalog_snapshots, ['text']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.piece_records, ['text']);
+  });
+
+  it('archives every schema-v8 permanent-record column exactly as migrations 035 and 036 define them', () => {
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-2)) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+    } finally {
+      database.close();
+    }
+  });
+
   it('freezes the schema-v6 manifest and adds every migration 033 private table in schema v7', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 7);
     assert.deepEqual(REGISTRY_RECOVERY_V6_TABLES.slice(-10), [
       'artist_reconnection_cases',
       'artist_reconnection_events',
@@ -1046,7 +1109,7 @@ describe('private registry recovery export', () => {
       'artist_artwork_ledger_entries',
       'artist_artwork_price_entries',
     ]);
-    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-4), [
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(-4), [
       'artwork_contributor_invitations',
       'artwork_contributor_revocations',
       'artwork_contributor_invitation_acceptances',
@@ -1187,7 +1250,7 @@ describe('private registry recovery export', () => {
     try {
       database.exec('PRAGMA foreign_keys = ON;');
       database.exec(registryMigrations);
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+      for (const table of REGISTRY_RECOVERY_V7_TABLES.slice(-4)) {
         assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
           .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
       }
@@ -2031,7 +2094,7 @@ describe('clean-only private registry restore', () => {
         assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
           canonicalRecoveryJson(v5Payload.tables[table]), table);
       }
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-10)) {
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-16)) {
         assert.deepEqual(upgraded.tables[table], [], table);
       }
     } finally {
@@ -2070,7 +2133,51 @@ describe('clean-only private registry restore', () => {
         assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
           canonicalRecoveryJson(v6Payload.tables[table]), table);
       }
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-6)) {
+        assert.deepEqual(upgraded.tables[table], [], table);
+      }
+    } finally {
+      source.database.close();
+    }
+  });
+
+  it('decrypts schema v7 without changing any contributor row or digest input', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.ok(current.tables.artwork_catalog_snapshots.length >= 2,
+        'v8 fixture archives catalog snapshot rows');
+      assert.ok(current.tables.piece_records.length >= 2,
+        'v8 fixture archives piece record rows');
+      const v7Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 7,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V7_TABLES.map((name) => [
+          name, current.tables[name],
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v7Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      assert.equal(upgraded.schemaVersion, PRIVATE_RECOVERY_SCHEMA_VERSION);
+      for (const table of REGISTRY_RECOVERY_V7_TABLES) {
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v7Payload.tables[table]), table);
+      }
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-2)) {
         assert.deepEqual(upgraded.tables[table], [], table);
       }
     } finally {
@@ -2108,6 +2215,8 @@ describe('clean-only private registry restore', () => {
       source.database.exec(phase2Migrations);
       source.database.exec(readMigration('032_artist_verified_sales.sql'));
       source.database.exec(readMigration('033_artwork_contributors.sql'));
+      source.database.exec(readMigration('035_artwork_catalog_snapshots.sql'));
+      source.database.exec(readMigration('036_piece_records.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference

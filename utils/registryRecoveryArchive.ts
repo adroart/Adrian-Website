@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 7 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 8 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -144,12 +144,19 @@ export const REGISTRY_RECOVERY_V6_TABLES = [
   'artist_artwork_price_entries',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+/** The exact schema-v7 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V7_TABLES = [
   ...REGISTRY_RECOVERY_V6_TABLES,
   'artwork_contributor_invitations',
   'artwork_contributor_revocations',
   'artwork_contributor_invitation_acceptances',
   'artwork_contributor_access_grants',
+] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V7_TABLES,
+  'artwork_catalog_snapshots',
+  'piece_records',
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -391,6 +398,12 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'invitation_id', 'keeper_piece_id', 'contributor_user_id', 'keeper_user_id',
     'steward_version', 'granted_at',
   ],
+  artwork_catalog_snapshots: [
+    'id', 'artwork_id', 'snapshot_hash', 'canonical_json', 'source', 'created_at',
+  ],
+  piece_records: [
+    'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
+  ],
 };
 
 export type PrivateRecoveryPayload = {
@@ -402,7 +415,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -430,7 +443,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -575,6 +588,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 4) return REGISTRY_RECOVERY_V4_TABLES;
   if (schemaVersion === 5) return REGISTRY_RECOVERY_V5_TABLES;
   if (schemaVersion === 6) return REGISTRY_RECOVERY_V6_TABLES;
+  if (schemaVersion === 7) return REGISTRY_RECOVERY_V7_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -645,7 +659,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, 6, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, 7, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -771,10 +785,14 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         artist_artwork_ledger_entries: [],
         artist_artwork_price_entries: [],
       } : {}),
-      artwork_contributor_invitations: [],
-      artwork_contributor_revocations: [],
-      artwork_contributor_invitation_acceptances: [],
-      artwork_contributor_access_grants: [],
+      ...(payload.schemaVersion < 7 ? {
+        artwork_contributor_invitations: [],
+        artwork_contributor_revocations: [],
+        artwork_contributor_invitation_acceptances: [],
+        artwork_contributor_access_grants: [],
+      } : {}),
+      artwork_catalog_snapshots: [],
+      piece_records: [],
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -795,7 +813,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, 6, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, 7, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -1948,6 +1966,11 @@ function buildRegistryRestoreSqlInternal(
     'artist_verified_sale_items', 'artist_artwork_media',
     'artist_artwork_ledger_entries', 'artist_artwork_price_entries',
   ]);
+  // Append-only permanent-record tables (migrations 035 and 036). Their
+  // no-update/no-delete triggers do not block restore inserts, and the
+  // piece_records address-pin trigger holds because every archived row was
+  // written through it.
+  insertTables(['artwork_catalog_snapshots', 'piece_records']);
   for (const trigger of CONTRIBUTOR_RESTORE_TRIGGER_NAMES) {
     statements.push(`DROP TRIGGER ${trigger};`);
   }
