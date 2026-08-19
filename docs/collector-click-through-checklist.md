@@ -10,6 +10,8 @@ The collector journey and the registration ceremony are wired end to end and eve
 - The real entrance, once the flag is on, is a QR scan: `/works/:id?instance=AR-XXXXXXXX&ref=qr`, with `&claim=1` opening the code page directly.
 - Artist side: `/admin/register` (the ceremony), `/admin/artworks/:id/add` (Add to this piece), `/admin/pieces` (the desk), `/admin/pieces/wizard` (fabrication only).
 
+This checklist can now be walked as a guided clickable rail that steps through every screen in order with a caption. See `docs/collector-walkthrough-guide.md` for the walkthrough guide. Sections 6 and 7 of this checklist (the artist ceremony and record archive) map to the rehearsal at `/admin/rehearsal`, where you run all eight real steps in sequence.
+
 ## 1. Arrival, by relationship
 
 - [ ] Unclaimed piece: quiet page, one lit Begin, no sign-in link.
