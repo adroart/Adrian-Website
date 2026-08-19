@@ -134,7 +134,7 @@ describe('shared collector birth onboarding', () => {
 
   it('keeps the collector UI skippable and recognizes existing details', () => {
     const source = readFileSync(
-      new URL('../components/collector/PrivacyAndBirth.tsx', import.meta.url),
+      new URL('../components/collector/legacy/PrivacyAndBirth.tsx', import.meta.url),
       'utf8',
     );
     assert.match(source, /details are already here/i);

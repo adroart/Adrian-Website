@@ -71,7 +71,7 @@ describe('piece letters', () => {
 
   it('keeps prohibited language and imagery out of the component', () => {
     const source = readFileSync(
-      new URL('../components/collector/PieceLetters.tsx', import.meta.url),
+      new URL('../components/collector/legacy/PieceLetters.tsx', import.meta.url),
       'utf8',
     );
     assert.doesNotMatch(source, /[\u2014\u{1F300}-\u{1FAFF}]/u);

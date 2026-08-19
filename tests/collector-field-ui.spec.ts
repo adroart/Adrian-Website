@@ -47,7 +47,7 @@ test('hydrated collector field changes its lens and stays readable and contained
     const React = ReactModule.default ?? ReactModule;
     const ReactDomClientModule = await loadModule('/node_modules/.vite/deps/react-dom_client.js');
     const { createRoot } = ReactDomClientModule.default ?? ReactDomClientModule;
-    const { default: FieldExperience } = await loadModule('/components/collector/FieldExperience.tsx');
+    const { default: FieldExperience } = await loadModule('/components/collector/legacy/FieldExperience.tsx');
     createRoot(document.getElementById('collector-field-harness')!).render(
       React.createElement(FieldExperience, {
         status: 'ready', data: fieldData, onRetry: () => undefined,
@@ -109,7 +109,7 @@ test('the canonical collector field page loads the public projection', async ({ 
     const React = ReactModule.default ?? ReactModule;
     const ReactDomClientModule = await loadModule('/node_modules/.vite/deps/react-dom_client.js');
     const { createRoot } = ReactDomClientModule.default ?? ReactDomClientModule;
-    const { default: CollectorFieldPage } = await loadModule('/components/collector/CollectorFieldPage.tsx');
+    const { default: CollectorFieldPage } = await loadModule('/components/collector/legacy/CollectorFieldPage.tsx');
     createRoot(document.getElementById('collector-field-page-harness')!).render(
       React.createElement(CollectorFieldPage),
     );
