@@ -51,6 +51,7 @@ import {
   hashRecoveryCode,
 } from '../_lib/keeper.js';
 import { openContestedClaim } from '../_lib/claimRequests.js';
+import { evaluateSilence, openSilenceWindow } from '../_lib/claimSilence.js';
 import { claimEvidenceStatement } from '../_lib/lineage.js';
 import { prepareFirstKeeperBind } from '../_lib/keeperClaim.js';
 import { syncFirstBindCollectorLetters } from '../_lib/collectorLetters.js';
@@ -179,6 +180,32 @@ export async function onRequest(context) {
       );
     }
 
+    // Thirty-day passing, evaluated lazily (no cron): any authenticated touch
+    // of a piece that carries a contested claim runs the silence engine
+    // (functions/api/_lib/claimSilence.js). It sends due reminders, lets the
+    // registered steward's own touch withdraw the window (they are alive and
+    // holding it), and after the deadline EXECUTES the pass through the
+    // governed transfer path from migration 024. Fail closed both ways: an
+    // error here never blocks nor forces a bind, and the pass itself never
+    // runs without the recorded, soaked reminders.
+    let silence = { status: 'none' };
+    try {
+      silence = await evaluateSilence(env.DB, env, {
+        keeperPieceId: existing.id,
+        touchUserId: auth.userId,
+      }, nowIso);
+    } catch (silenceError) {
+      console.error('[keeper/bind] silence evaluation error:', silenceError?.message);
+    }
+    if (silence.status === 'passed' && silence.targetUserId === auth.userId) {
+      // The post-deadline claimant touch just executed the governed pass; the
+      // bind now succeeds for them as the normal bound outcome.
+      return json({
+        ok: true,
+        keeper: { pieceId, editionNumber, claimedAt: silence.claimedAt },
+      });
+    }
+
     // A current steward's re-scan is idempotent.
     if (existing.keeper_user_id === auth.userId && !existing.released_at) {
       await syncFirstBindCollectorLetters(env, {
@@ -223,6 +250,22 @@ export async function onRequest(context) {
         expectedKeeperUserId: existing.keeper_user_id,
         openedAt: nowIso,
       });
+
+      // A fresh contested claim opens its thirty-day silence window; a
+      // duplicate re-touch heals a claim that is missing one (lazy, no cron).
+      // Governance must not break the 202 contract if the 037 tables are not
+      // deployed yet: the next touch after migration will open it.
+      if ((claim.status === 'opened' || claim.status === 'duplicate') && claim.requestId) {
+        try {
+          await openSilenceWindow(env.DB, {
+            requestId: claim.requestId,
+            keeperPieceId: existing.id,
+            createdAt: nowIso,
+          }, nowIso);
+        } catch (windowError) {
+          console.error('[keeper/bind] silence window open error:', windowError?.message);
+        }
+      }
 
       if (claim.status === 'opened') {
         return json(
