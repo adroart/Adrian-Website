@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import PieceLetters from '../components/collector/PieceLetters.tsx';
+import PieceLetters from '../components/collector/legacy/PieceLetters.tsx';
 import type { CollectorLetter } from '../utils/collectorLetters.ts';
 
 const letters: CollectorLetter[] = [

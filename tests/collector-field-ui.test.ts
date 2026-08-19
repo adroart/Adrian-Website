@@ -9,7 +9,7 @@ import FieldExperience, {
   flattenFieldData,
   markerPresentation,
   type CollectorFieldData,
-} from '../components/collector/FieldExperience.tsx';
+} from '../components/collector/legacy/FieldExperience.tsx';
 
 const fixture: CollectorFieldData = {
   schemaVersion: 3,

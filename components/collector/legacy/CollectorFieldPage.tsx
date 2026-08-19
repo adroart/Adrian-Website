@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   fetchCollectorField,
   type CollectorFieldState,
-} from '../../utils/collectorField';
+} from '../../../utils/collectorField';
 import FieldExperience from './FieldExperience';
 
 type FieldPageState = {

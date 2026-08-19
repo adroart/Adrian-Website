@@ -51,7 +51,7 @@ const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
 const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
-const CollectorFieldPage = lazy(() => import('./components/collector/CollectorFieldPage'));
+const CollectorFieldPage = lazy(() => import('./components/collector/legacy/CollectorFieldPage'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';

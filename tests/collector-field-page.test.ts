@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import { CollectorFieldPageView } from '../components/collector/CollectorFieldPage.tsx';
+import { CollectorFieldPageView } from '../components/collector/legacy/CollectorFieldPage.tsx';
 
 describe('collector field page', () => {
   it('keeps loading and recoverable failure states inside the real page shell', () => {

@@ -3,7 +3,7 @@ import {
   loadPublicCollectorDream,
   type CollectorDreamScope,
   type PublicCollectorDream,
-} from '../../utils/collectorDreams';
+} from '../../../utils/collectorDreams';
 
 type PublicDreamStatus = 'loading' | 'ready' | 'error';
 

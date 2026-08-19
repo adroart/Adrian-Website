@@ -1,7 +1,7 @@
-import type { Artwork } from '../../types';
-import type { PublicPlateIdentity } from '../../utils/publicRegistry';
-import { img as cldImg } from '../../utils/cloudinary';
-import { ulAltText, ulCardNumber } from '../../utils/universalLanguage';
+import type { Artwork } from '../../../types';
+import type { PublicPlateIdentity } from '../../../utils/publicRegistry';
+import { img as cldImg } from '../../../utils/cloudinary';
+import { ulAltText, ulCardNumber } from '../../../utils/universalLanguage';
 
 export default function ArrivalScreen({
   artwork,

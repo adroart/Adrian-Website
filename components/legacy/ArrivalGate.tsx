@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Artwork } from '../../types';
 import type { PublicPlateIdentity } from '../../utils/publicRegistry';
-import ArrivalScreen from '../collector/ArrivalScreen';
+import ArrivalScreen from '../collector/legacy/ArrivalScreen';
 
 export default function ArrivalGate({
   artwork,

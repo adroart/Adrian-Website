@@ -10,8 +10,8 @@ import { LAUNCH_FLAGS } from '../launchFlags';
 import ArrivalGate from './legacy/ArrivalGate';
 import PieceConstellation from './legacy/PieceConstellation';
 import KeeperPanel from './legacy/KeeperPanel';
-import CertificateScreen from './collector/CertificateScreen';
-import PublicDream from './collector/PublicDream';
+import CertificateScreen from './collector/legacy/CertificateScreen';
+import PublicDream from './collector/legacy/PublicDream';
 import {
     isPublicRegistryCode,
     validatePublicPlateIdentity,

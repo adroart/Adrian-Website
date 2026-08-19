@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { fetchCollectorLetters, type CollectorLetter } from '../../utils/collectorLetters';
+import { fetchCollectorLetters, type CollectorLetter } from '../../../utils/collectorLetters';
 import DreamScreen from './DreamScreen';
 import PieceLetters from './PieceLetters';
 import YearlyRitualScreen from './YearlyRitualScreen';

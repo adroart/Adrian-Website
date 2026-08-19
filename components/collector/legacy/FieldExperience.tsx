@@ -4,7 +4,7 @@ import type {
   CollectorFieldArtwork as CanonicalCollectorFieldArtwork,
   CollectorFieldIdentity as CanonicalCollectorFieldIdentity,
   CollectorFieldState,
-} from '../../utils/collectorField';
+} from '../../../utils/collectorField';
 
 import FieldBrowse from './FieldBrowse';
 import FieldMap, { markerPresentation } from './FieldMap';

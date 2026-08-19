@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useAccount } from '../../lib/account/useAccount';
+import { useAccount } from '../../../lib/account/useAccount';
 import {
   parseKeeperCertificateLedger,
   type KeeperCertificatePrice,
   type PublicArtworkLedgerEntry,
-} from '../../utils/artworkLedger';
+} from '../../../utils/artworkLedger';
 
 type PrivateState =
   | { status: 'idle' | 'loading' | 'hidden' }

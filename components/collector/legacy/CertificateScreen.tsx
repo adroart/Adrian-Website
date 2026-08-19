@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import {
   projectEffectiveCertificate,
   type EffectiveCertificate,
-} from '../../utils/certificateContent';
+} from '../../../utils/certificateContent';
 import {
   parsePublicArtworkLedger,
   type PublicArtworkLedgerEntry,
-} from '../../utils/artworkLedger';
+} from '../../../utils/artworkLedger';
 import CertificateLedger from './CertificateLedger';
 
 type CertificateEdition =

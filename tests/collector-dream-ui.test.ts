@@ -4,9 +4,9 @@ import { describe, it } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 
-import { DreamScreenView } from '../components/collector/DreamScreen.tsx';
-import { PublicDreamView } from '../components/collector/PublicDream.tsx';
-import { YearlyRitualView } from '../components/collector/YearlyRitualScreen.tsx';
+import { DreamScreenView } from '../components/collector/legacy/DreamScreen.tsx';
+import { PublicDreamView } from '../components/collector/legacy/PublicDream.tsx';
+import { YearlyRitualView } from '../components/collector/legacy/YearlyRitualScreen.tsx';
 import { loadPublicCollectorDream } from '../utils/collectorDreams.ts';
 import type {
   CollectorDreamState,

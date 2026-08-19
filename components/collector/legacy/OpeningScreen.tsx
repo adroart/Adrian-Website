@@ -1,4 +1,4 @@
-import type { EffectiveCertificate } from '../../utils/certificateContent';
+import type { EffectiveCertificate } from '../../../utils/certificateContent';
 
 export const DEFAULT_OPENING_WORDING =
   'This creates a durable, exportable record for your piece.';

@@ -5,7 +5,7 @@ import {
   type CollectorDreamScope,
   type YearlyRitualAction,
   type YearlyRitualEligibility,
-} from '../../utils/collectorDreams';
+} from '../../../utils/collectorDreams';
 
 type ScreenStatus = 'loading' | 'ready' | 'error';
 

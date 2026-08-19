@@ -3,7 +3,7 @@ import {
   inspectInvitation,
   redeemInvitation,
   type InvitationInspection,
-} from '../../utils/artworkInvitations';
+} from '../../../utils/artworkInvitations';
 
 type InvitationDoorProps = {
   initialToken?: string;

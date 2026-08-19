@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { searchPlaces, type Place } from '../../lib/astrology/places';
-import type { BirthProfileInputs, CollectorOnboardingState } from '../../utils/collectorOnboarding';
+import { searchPlaces, type Place } from '../../../lib/astrology/places';
+import type { BirthProfileInputs, CollectorOnboardingState } from '../../../utils/collectorOnboarding';
 import {
   CLOSED_COLLECTOR_PRIVACY,
   type CollectorPersonChoices,
   type CollectorPrivacyState,
-} from '../../utils/collectorPrivacy';
+} from '../../../utils/collectorPrivacy';
 
 export interface CuratedCityChoice {
   id: string;

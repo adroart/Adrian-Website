@@ -9,7 +9,7 @@ import {
   type CollectorDreamScope,
   type CollectorDreamState,
   type CollectorDreamVisibility,
-} from '../../utils/collectorDreams';
+} from '../../../utils/collectorDreams';
 
 type ScreenStatus = 'loading' | 'ready' | 'error';
 

@@ -1,6 +1,6 @@
 import { useId } from 'react';
 
-import type { CollectorLetter } from '../../utils/collectorLetters';
+import type { CollectorLetter } from '../../../utils/collectorLetters';
 
 export type PieceLettersProps = {
   status: 'loading' | 'ready' | 'error';

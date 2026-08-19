@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import type { PublicPlateIdentity } from '../../utils/publicRegistry';
+import type { PublicPlateIdentity } from '../../../utils/publicRegistry';
 import {
   loadCollectorOnboarding,
   saveCollectorBirth,
   skipCollectorBirth,
   type CollectorOnboardingState,
-} from '../../utils/collectorOnboarding';
+} from '../../../utils/collectorOnboarding';
 import {
   CLOSED_COLLECTOR_PRIVACY,
   loadCollectorCuratedCities,
   loadCollectorPrivacy,
   saveCollectorPrivacy,
   type CollectorPrivacyState,
-} from '../../utils/collectorPrivacy';
-import { inspectInvitation, redeemInvitation, type InvitationInspection } from '../../utils/artworkInvitations';
-import SignInTrigger from '../account/SignInTrigger';
+} from '../../../utils/collectorPrivacy';
+import { inspectInvitation, redeemInvitation, type InvitationInspection } from '../../../utils/artworkInvitations';
+import SignInTrigger from '../../account/SignInTrigger';
 import PrivacyAndBirth from './PrivacyAndBirth';
 import CertificateScreen, { useEffectiveCertificate } from './CertificateScreen';
 import DreamScreen from './DreamScreen';
