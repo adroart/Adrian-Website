@@ -129,6 +129,18 @@ const RegisterCeremony: React.FC = () => {
   const stepRef = useRef<Step>('threshold');
   stepRef.current = step;
   const [relock, setRelock] = useState(false);
+  /* The existing-owner entrance: the piece is already in someone's hands, so
+     after registering, an invitation (the existing first-bind machinery)
+     carries it to its holder. The physical code may be delivered later or
+     never; the invitation is the bind path. */
+  const [heldMode, setHeldMode] = useState(false);
+  const [holderEmail, setHolderEmail] = useState('');
+  const [invitation, setInvitation] = useState<{
+    invitationId: string | null;
+    token: string | null;
+  } | null>(null);
+  const [invitePending, setInvitePending] = useState(false);
+  const inviteKey = useRef<string | null>(null);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [edition, setEdition] = useState<EditionForm>(DEFAULT_EDITION);
   const [newWork, setNewWork] = useState({ title: '', id: '', series: '' });
@@ -397,8 +409,54 @@ const RegisterCeremony: React.FC = () => {
     }
   };
 
+  /** Create the first-bind invitation for a piece already in someone's hands,
+   *  via the existing invitation machinery (POST /api/admin/invitations). */
+  const createHeldInvitation = async (keeperPieceId: string): Promise<void> => {
+    if (!heldMode) return;
+    setInvitePending(true);
+    try {
+      inviteKey.current ||= crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const response = await fetch('/api/admin/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keeperPieceId,
+          intendedRecipientEmail: holderEmail.trim().toLowerCase(),
+          expiresAt,
+          idempotencyKey: inviteKey.current,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (data?.error === 'invitation_already_created') {
+          // A retry after a lost response: the invitation exists, but its
+          // proof was shown to no one. Manage it from the invitations page.
+          setInvitation({ invitationId: null, token: null });
+          setError('The invitation exists, but its proof is not visible here. Manage it from Invitations.');
+          return;
+        }
+        setError('The piece is registered, but the invitation is not created yet. Retry it before leaving.');
+        return;
+      }
+      setInvitation({
+        invitationId: typeof data.invitationId === 'string' ? data.invitationId : null,
+        token: typeof data.token === 'string' ? data.token : null,
+      });
+      setError('');
+    } catch {
+      setError('The piece is registered, but the invitation is not created yet. Retry it before leaving.');
+    } finally {
+      setInvitePending(false);
+    }
+  };
+
   const register = async () => {
     if (busy || !selection) return;
+    if (heldMode && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(holderEmail.trim())) {
+      setError('The holder’s email carries the invitation. Enter it first.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -458,6 +516,7 @@ const RegisterCeremony: React.FC = () => {
       attemptKey.current = null;
       setStep('done');
       await completeLinkedRegistration(data.keeperPieceId);
+      await createHeldInvitation(data.keeperPieceId);
     } catch {
       setError('This artwork could not be registered. The same attempt can be retried safely.');
     } finally {
@@ -483,6 +542,10 @@ const RegisterCeremony: React.FC = () => {
     setResult(null);
     setError('');
     attemptKey.current = null;
+    setHeldMode(false);
+    setHolderEmail('');
+    setInvitation(null);
+    inviteKey.current = null;
     setStep('threshold');
   };
 
@@ -553,7 +616,17 @@ const RegisterCeremony: React.FC = () => {
         )}
         <Spacer />
         {linkedStatus !== 'error' && (
-          <Foot>
+          <Foot
+            link={linkedStatus === 'generic' ? (
+              <TLink onClick={() => {
+                setError('');
+                setHeldMode(true);
+                setStep('work');
+              }}>
+                A piece already in someone’s hands
+              </TLink>
+            ) : undefined}
+          >
             <Brass lifted onClick={begin}>Begin</Brass>
           </Foot>
         )}
@@ -565,7 +638,16 @@ const RegisterCeremony: React.FC = () => {
     const list = filterArtworks(artworks, search);
     screen = (
       <Ground light="b" pad="40px 30px 24px">
-        <RoomHead title="Choose the work" onBack={() => setStep('threshold')} />
+        <RoomHead
+          title="Choose the work"
+          onBack={() => { setHeldMode(false); setStep('threshold'); }}
+        />
+        {heldMode && (
+          <Note top={10}>
+            For a piece already in someone’s hands. An invitation will carry it to its
+            holder after it is registered.
+          </Note>
+        )}
         <div style={{ position: 'relative', paddingTop: 18 }}>
           <Field
             label="Search"
@@ -760,9 +842,20 @@ const RegisterCeremony: React.FC = () => {
           <Ledger label="Edition" value={editionLabelFor(edition)} />
           {linkedTarget && <Ledger label="Sales record" value={linkedTarget.artworkRecordId} />}
         </div>
+        {heldMode && (
+          <div style={{ position: 'relative', paddingTop: 22 }}>
+            <Field
+              label="The holder’s email"
+              value={holderEmail}
+              lit={holderEmail.length > 0}
+              onChange={value => { setHolderEmail(value); inviteKey.current = null; }}
+            />
+          </div>
+        )}
         <Note top={18}>
-          Registering writes the permanent identity: its public code, its Ownership Code
-          shown once to you, and the first record of the piece.
+          {heldMode
+            ? 'Registering writes the permanent identity, with its Ownership Code shown once to you. An invitation will carry the piece to its holder; the physical code can follow later, or never.'
+            : 'Registering writes the permanent identity: its public code, its Ownership Code shown once to you, and the first record of the piece.'}
         </Note>
         {wrongNote}
         <Spacer />
@@ -832,37 +925,82 @@ const RegisterCeremony: React.FC = () => {
             </Foot>
           </>
         ) : (
-          <RoomBody top={20}>
-            {linkSettled && (
+          <>
+            {heldMode && invitation?.token && (
               <>
-                <Row
-                  label="View and save codes"
-                  onClick={() => navigate(`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({
-                    instance: result.keeperPieceId,
-                    ...(linkedTarget ? { record: linkedTarget.artworkRecordId } : {}),
-                  })}`)}
-                />
-                <Row
-                  label="Prepare a physical plate"
-                  onClick={() => navigate(`/admin/pieces/wizard?${new URLSearchParams({ keeperPieceId: result.keeperPieceId })}`)}
-                />
-                <Row
-                  label="Assign to a keeper"
-                  onClick={() => navigate(`/admin/invitations?${new URLSearchParams({ keeperPieceId: result.keeperPieceId })}`)}
-                />
-                <Row
-                  label="Add to this piece"
-                  onClick={() => navigate(`/admin/artworks/${encodeURIComponent(result.artworkId)}`)}
-                />
-                <Row label="Finish for now" onClick={() => navigate('/admin/pieces')} last />
+                {/* Invitation-proof wording is a design "never invent" item:
+                    these lines are placeholders until Adrian writes them. */}
+                <Body top={20}>
+                  This is the invitation for whoever holds the piece. Send it to them
+                  privately. It is shown this once; afterwards only its record remains
+                  under Invitations.
+                </Body>
+                <CodeBlock>{invitation.token}</CodeBlock>
+                <div style={{ paddingTop: 8 }}>
+                  <TLink onClick={() => setInvitation({ ...invitation, token: null })}>
+                    Dismiss it, I have sent it
+                  </TLink>
+                </div>
               </>
             )}
-            {linkedStatus === 'generic' && (
-              <div style={{ paddingTop: 14 }}>
-                <TLink onClick={startOver}>Register another artwork</TLink>
-              </div>
+            {heldMode && invitation && !invitation.token && (
+              <Note top={12}>
+                {invitation.invitationId
+                  ? `Invitation ${invitation.invitationId} carries this piece to its holder. Find it under Invitations.`
+                  : 'The invitation exists. Find it under Invitations.'}
+              </Note>
             )}
-          </RoomBody>
+            {heldMode && !invitation && (
+              <>
+                {wrongNote}
+                <div style={{ position: 'relative', paddingTop: 16 }}>
+                  <Brass full onClick={() => { void createHeldInvitation(result.keeperPieceId); }}>
+                    {invitePending ? 'Creating the invitation' : 'Retry the invitation'}
+                  </Brass>
+                </div>
+              </>
+            )}
+            <RoomBody top={20}>
+              {linkSettled && (
+                <>
+                  <Row
+                    label="View and save codes"
+                    onClick={() => navigate(`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({
+                      instance: result.keeperPieceId,
+                      ...(linkedTarget ? { record: linkedTarget.artworkRecordId } : {}),
+                    })}`)}
+                  />
+                  {heldMode ? (
+                    <Row
+                      label="Open invitations"
+                      onClick={() => navigate(`/admin/invitations?${new URLSearchParams({ keeperPieceId: result.keeperPieceId })}`)}
+                    />
+                  ) : (
+                    <>
+                      <Row
+                        label="Prepare a physical plate"
+                        onClick={() => navigate(`/admin/pieces/wizard?${new URLSearchParams({ keeperPieceId: result.keeperPieceId })}`)}
+                      />
+                      <Row
+                        label="Assign to a keeper"
+                        onClick={() => navigate(`/admin/invitations?${new URLSearchParams({ keeperPieceId: result.keeperPieceId })}`)}
+                      />
+                    </>
+                  )}
+                  <Row
+                    label="Add to this piece"
+                    onClick={() => navigate(`/admin/artworks/${encodeURIComponent(result.artworkId)}/add`)}
+                  />
+                  <Row label="Finish for now" onClick={() => navigate('/admin/pieces')} last />
+                </>
+              )}
+              {linkedStatus === 'generic' && (
+                <div style={{ paddingTop: 14 }}>
+                  <TLink onClick={startOver}>Register another artwork</TLink>
+                </div>
+              )}
+            </RoomBody>
+          </>
         )}
       </Ground>
     );

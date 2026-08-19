@@ -28,6 +28,7 @@ export const {
   ChoiceRow,
   Ledger,
   Field,
+  Area,
   Capsule,
   RoomHead,
   RoomBody,
