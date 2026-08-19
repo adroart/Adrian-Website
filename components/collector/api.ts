@@ -410,7 +410,7 @@ export async function bindKeeper(request: StewardBindRequest): Promise<StewardBi
     && (error === 'plate_not_ready' || error === 'plate_recovery_not_qualified' || error === 'identity_recovery_not_qualified')) {
     return { kind: 'not_ready', code: error, message: message || 'This artwork plate is not ready yet.' };
   }
-  if (status === 429 && error === 'claim_rate_limited') {
+  if (status === 429 && (error === 'claim_rate_limited' || error === 'bind_rate_limited')) {
     return { kind: 'rate_limited', message: message || 'Please wait before trying again.' };
   }
   if (status === 409 && (error === 'already_current_steward' || error === 'bind_conflict')) {
