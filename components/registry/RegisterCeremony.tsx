@@ -105,7 +105,7 @@ const REGISTER_ERRORS: Record<string, string> = {
   edition_size_required: 'A numbered edition of a new work needs its edition size.',
 };
 
-const RegisterCeremony: React.FC = () => {
+const RegisterCeremony: React.FC<{ onStepChange?: (step: Step) => void }> = ({ onStepChange }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const registrationQuery = searchParams.toString();
@@ -182,6 +182,11 @@ const RegisterCeremony: React.FC = () => {
     });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    onStepChange?.(step);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   /* An already-open unlock never asks again: if the opening check resolves
      while the unlock screen is up, the ceremony walks on by itself. */

@@ -87,7 +87,7 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-const AddToPiece: React.FC = () => {
+const AddToPiece: React.FC<{ onStepChange?: (step: Step) => void }> = ({ onStepChange }) => {
   const navigate = useNavigate();
   const params = useParams<{ artworkId: string }>();
   const artworkId = (params.artworkId || '').toUpperCase();
@@ -123,6 +123,11 @@ const AddToPiece: React.FC = () => {
     }
   };
   const { state: unlockState, unlock } = useRegistryUnlock(unlockLost);
+
+  useEffect(() => {
+    onStepChange?.(step);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   /* Quietly learn what is already with the piece; nothing depends on it. */
   useEffect(() => {
