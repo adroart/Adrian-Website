@@ -28,6 +28,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - [ ] **Collector registry rollout rehearsal.** _(band: you-required)_ Run the ownership damage detector against a fresh read-only production copy, then rehearse migration and encrypted restore on copies.
   The reusable local foundation has a passing baseline, but the collector presentation is still being reconciled with the master. The journey intentionally remains off. Done when integration is verified, the detector finds no damaged ownership state, migration and clean restore including the private media manifest succeed on copies, required production bindings are confirmed, the letter runner secret and disabled-by-default schedule are configured, and a canary proves the journey can be enabled without seeding or changing production during rehearsal.
+  **Progress 2026-08-19:** detector run clean on fresh production copies before and after; the full migration (through 034) rehearsed clean on copies and then **applied to production** (unblocking the public Atlas, which was down). Pre-apply export saved. Still open from this item: encrypted restore rehearsal incl. private media manifest, letter runner secret + disabled schedule, and the enable-journey canary.
 - [ ] **Collector facts and verified-sale review.** _(band: you-required)_ Add the real materials and wording for each artwork, then review historical sale facts and exact artwork links in the verified-sales workspace.
   Missing certificate facts stay hidden and can be filled gradually. Verified sales and artwork-level price history are built locally as the canonical record, while source facts still need Adrian's confirmation before production rollout.
 
@@ -56,8 +57,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - [ ] **Shared notification secret on the art site** — set `SALE_WEBHOOK_SECRET` on the art-site hosting, same value as the oracle uses _(you · quick)_
   Without it the art site can't sign its sale notifications, so nothing reaches the oracle's pending-sales queue. Generate with `openssl rand -hex 32`, then Cloudflare → the Adrian-Website Pages project → Settings → Environment variables → Production. The exact same value must already be set on the mandalacodes project (the live probe says the oracle side is configured). Done when both sites carry the identical secret.
-- [ ] **Apply the sale-queue database setup on the art site** — run the records migration against the live art-site database _(you · quick)_
-  The pending-sales table has to exist on the live database or the sale bridge can't store anything. From the Adrian-Website folder: `wrangler d1 migrations apply adrian-website --remote`. Done when the migration reports applied. Then prove the whole chain end-to-end: make one test sale and confirm it appears under `/admin/atlas` → Pending Sales on mandalacodes.
+- [ ] **Prove the sale bridge end-to-end** — make one test sale and confirm it appears under `/admin/atlas` → Pending Sales on mandalacodes _(you · quick)_
+  The database side is DONE (2026-08-19: all pending migrations applied to the live art-site database during the Atlas fix). What remains is the human proof: one test sale arriving as a pending row. Requires the shared notification secret above.
 
 ### Claude-side: code bugs to fix before shop launch
 
