@@ -508,8 +508,7 @@ END;
 CREATE TRIGGER artist_artwork_record_events_exact_snapshot
 BEFORE INSERT ON artist_artwork_record_events
 BEGIN
-  SELECT CASE WHEN
-    (SELECT COUNT(*) FROM json_each(NEW.before_json)) <> 5
+  SELECT RAISE(ABORT, 'artwork record event requires complete snapshots') WHERE (SELECT COUNT(*) FROM json_each(NEW.before_json)) <> 5
     OR json_remove(
       NEW.before_json, '$.artworkId', '$.editionJson', '$.keeperPieceId',
       '$.identificationStatus', '$.recordVersion'
@@ -522,10 +521,9 @@ BEGIN
     OR json_type(NEW.before_json, '$.recordVersion') <> 'integer'
     OR json_type(NEW.after_json, '$.recordVersion') <> 'integer'
     OR json_type(NEW.before_json, '$.identificationStatus') <> 'text'
-    OR json_type(NEW.after_json, '$.identificationStatus') <> 'text'
-  THEN RAISE(ABORT, 'artwork record event requires complete snapshots') END;
+    OR json_type(NEW.after_json, '$.identificationStatus') <> 'text';
 
-  SELECT CASE WHEN NOT (
+  SELECT RAISE(ABORT, 'artwork record event requires canonical edition identity') WHERE NOT (
     json_type(NEW.after_json, '$.editionJson') = 'object'
     AND (SELECT COUNT(*)
            FROM json_each(json_extract(NEW.after_json, '$.editionJson'))) = 3
@@ -547,9 +545,9 @@ BEGIN
               json_extract(NEW.after_json, '$.editionJson.number') AND 9999)
         ))
     ), 0)
-  ) THEN RAISE(ABORT, 'artwork record event requires canonical edition identity') END;
+  );
 
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'artwork record event snapshot, action, or version mismatch') WHERE NOT EXISTS (
     SELECT 1 FROM artist_artwork_records record
      WHERE record.id = NEW.artwork_record_id
        AND json_extract(NEW.before_json, '$.artworkId') IS record.artwork_id
@@ -612,7 +610,7 @@ BEGIN
            )
          )
        )
-  ) THEN RAISE(ABORT, 'artwork record event snapshot, action, or version mismatch') END;
+  );
 END;
 
 -- Callers first insert the exact event above, then update only the identity
@@ -620,8 +618,7 @@ END;
 CREATE TRIGGER artist_artwork_records_guarded_update
 BEFORE UPDATE ON artist_artwork_records
 BEGIN
-  SELECT CASE WHEN
-    NEW.id IS NOT OLD.id
+  SELECT RAISE(ABORT, 'artwork record update is not authorized by an exact event') WHERE NEW.id IS NOT OLD.id
     OR NEW.created_by_user_id IS NOT OLD.created_by_user_id
     OR NEW.created_at IS NOT OLD.created_at
     OR NEW.record_version <> OLD.record_version + 1
@@ -653,8 +650,7 @@ BEGIN
          AND json_extract(event.after_json, '$.keeperPieceId') IS NEW.keeper_piece_id
          AND json_extract(event.after_json, '$.identificationStatus') = NEW.identification_status
          AND json_extract(event.after_json, '$.recordVersion') = NEW.record_version
-    )
-  THEN RAISE(ABORT, 'artwork record update is not authorized by an exact event') END;
+    );
 END;
 
 CREATE TRIGGER artist_artwork_records_update_identity_collision
@@ -680,8 +676,7 @@ END;
 CREATE TRIGGER artist_verified_sale_events_exact_snapshot
 BEFORE INSERT ON artist_verified_sale_events
 BEGIN
-  SELECT CASE WHEN
-    (SELECT COUNT(*) FROM json_each(NEW.before_json)) <> 10
+  SELECT RAISE(ABORT, 'sale event requires complete replacement snapshots') WHERE (SELECT COUNT(*) FROM json_each(NEW.before_json)) <> 10
     OR json_remove(
       NEW.before_json, '$.reconnectionCaseId', '$.occurrencePrecision',
       '$.occurredOn', '$.buyerEmail', '$.currency', '$.totalMinor',
@@ -694,10 +689,9 @@ BEGIN
       '$.privateReference', '$.privateNotes', '$.verifiedByUserId', '$.recordedAt'
     ) <> '{}'
     OR json_type(NEW.before_json, '$.occurrencePrecision') <> 'text'
-    OR json_type(NEW.after_json, '$.occurrencePrecision') <> 'text'
-  THEN RAISE(ABORT, 'sale event requires complete replacement snapshots') END;
+    OR json_type(NEW.after_json, '$.occurrencePrecision') <> 'text';
 
-  SELECT CASE WHEN COALESCE((
+  SELECT RAISE(ABORT, 'sale event before snapshot date is invalid') WHERE COALESCE((
     json_extract(NEW.before_json, '$.occurrencePrecision') IN
       ('exact', 'month', 'year', 'unknown')
     AND (
@@ -746,9 +740,9 @@ BEGIN
       ) = json_extract(NEW.before_json, '$.recordedAt'),
       0
     ) = 1
-  ), 0) <> 1 THEN RAISE(ABORT, 'sale event before snapshot date is invalid') END;
+  ), 0) <> 1;
 
-  SELECT CASE WHEN COALESCE((
+  SELECT RAISE(ABORT, 'sale event replacement snapshot is invalid') WHERE COALESCE((
     json_extract(NEW.after_json, '$.occurrencePrecision') IN ('exact', 'month', 'year', 'unknown')
     AND (
       (json_extract(NEW.after_json, '$.occurrencePrecision') = 'exact'
@@ -838,9 +832,9 @@ BEGIN
       ) = json_extract(NEW.after_json, '$.recordedAt'),
       0
     ) = 1
-  ), 0) <> 1 THEN RAISE(ABORT, 'sale event replacement snapshot is invalid') END;
+  ), 0) <> 1;
 
-  SELECT CASE WHEN NEW.sequence = 1 AND NOT EXISTS (
+  SELECT RAISE(ABORT, 'sale event before snapshot does not match base sale') WHERE NEW.sequence = 1 AND NOT EXISTS (
     SELECT 1 FROM artist_verified_sales sale
      WHERE sale.id = NEW.sale_id
        AND json_extract(NEW.before_json, '$.reconnectionCaseId') IS sale.reconnection_case_id
@@ -853,9 +847,9 @@ BEGIN
        AND json_extract(NEW.before_json, '$.privateNotes') IS sale.private_notes
        AND json_extract(NEW.before_json, '$.verifiedByUserId') = sale.verified_by_user_id
        AND json_extract(NEW.before_json, '$.recordedAt') = sale.recorded_at
-  ) THEN RAISE(ABORT, 'sale event before snapshot does not match base sale') END;
+  );
 
-  SELECT CASE WHEN NEW.sequence > 1 AND NOT EXISTS (
+  SELECT RAISE(ABORT, 'sale event before snapshot does not continue prior event') WHERE NEW.sequence > 1 AND NOT EXISTS (
     SELECT 1 FROM artist_verified_sale_events prior
      WHERE prior.sale_id = NEW.sale_id
        AND prior.sequence = NEW.sequence - 1
@@ -869,13 +863,12 @@ BEGIN
        AND json_extract(prior.after_json, '$.privateNotes') IS json_extract(NEW.before_json, '$.privateNotes')
        AND json_extract(prior.after_json, '$.verifiedByUserId') IS json_extract(NEW.before_json, '$.verifiedByUserId')
        AND json_extract(prior.after_json, '$.recordedAt') IS json_extract(NEW.before_json, '$.recordedAt')
-  ) THEN RAISE(ABORT, 'sale event before snapshot does not continue prior event') END;
+  );
 
-  SELECT CASE WHEN NEW.event_type = 'corrected'
-    AND json(NEW.before_json) = json(NEW.after_json)
-  THEN RAISE(ABORT, 'sale correction must replace the snapshot') END;
+  SELECT RAISE(ABORT, 'sale correction must replace the snapshot') WHERE NEW.event_type = 'corrected'
+    AND json(NEW.before_json) = json(NEW.after_json);
 
-  SELECT CASE WHEN NEW.event_type = 'shared_message_appended' AND NOT (
+  SELECT RAISE(ABORT, 'shared message event may change only private notes') WHERE NEW.event_type = 'shared_message_appended' AND NOT (
     json_extract(NEW.before_json, '$.reconnectionCaseId') IS json_extract(NEW.after_json, '$.reconnectionCaseId')
     AND json_extract(NEW.before_json, '$.occurrencePrecision') IS json_extract(NEW.after_json, '$.occurrencePrecision')
     AND json_extract(NEW.before_json, '$.occurredOn') IS json_extract(NEW.after_json, '$.occurredOn')
@@ -887,7 +880,7 @@ BEGIN
     AND json_extract(NEW.before_json, '$.recordedAt') IS json_extract(NEW.after_json, '$.recordedAt')
     AND json_type(NEW.after_json, '$.privateNotes') = 'text'
     AND json_extract(NEW.after_json, '$.privateNotes') IS NOT json_extract(NEW.before_json, '$.privateNotes')
-  ) THEN RAISE(ABORT, 'shared message event may change only private notes') END;
+  );
 END;
 
 -- SQLite's REPLACE conflict handler deletes the conflicting row before
@@ -1050,20 +1043,18 @@ END;
 CREATE TRIGGER artwork_lineage_public_payload_privacy
 BEFORE INSERT ON artwork_lineage_events
 BEGIN
-  SELECT CASE WHEN json_valid(NEW.public_payload_json) = 0
-  THEN RAISE(ABORT, 'public lineage payload must be valid JSON') END;
+  SELECT RAISE(ABORT, 'public lineage payload must be valid JSON') WHERE json_valid(NEW.public_payload_json) = 0;
 
-  SELECT CASE WHEN json_type(NEW.public_payload_json) <> 'object'
-  THEN RAISE(ABORT, 'public lineage payload must be an object') END;
+  SELECT RAISE(ABORT, 'public lineage payload must be an object') WHERE json_type(NEW.public_payload_json) <> 'object';
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'public lineage payload must remain flat') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE node.fullkey <> '$'
        AND node.type IN ('array', 'object')
-  ) THEN RAISE(ABORT, 'public lineage payload must remain flat') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'private lineage payload key is forbidden') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE node.key IS NOT NULL
@@ -1072,9 +1063,9 @@ BEGIN
            'pieceid', 'editionnumber', 'publiccode', 'platestatus',
            'fromref', 'toref', 'transferkind'
          )
-  ) THEN RAISE(ABORT, 'private lineage payload key is forbidden') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'private lineage payload value is forbidden') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE node.atom IS NOT NULL
@@ -1090,9 +1081,9 @@ BEGIN
          OR lower(CAST(node.atom AS TEXT)) GLOB 'price-*'
          OR lower(CAST(node.atom AS TEXT)) GLOB 'case-*'
        )
-  ) THEN RAISE(ABORT, 'private lineage payload value is forbidden') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage piece id') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'pieceid'
@@ -1101,16 +1092,16 @@ BEGIN
          AND length(CAST(node.atom AS TEXT)) BETWEEN 6 AND 7
          AND CAST(node.atom AS TEXT) GLOB '[A-Z][A-Z]*-[0-9][0-9][0-9]'
        )
-  ) THEN RAISE(ABORT, 'invalid public lineage piece id') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage edition number') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'editionnumber'
        AND NOT (node.type = 'integer' AND CAST(node.atom AS INTEGER) >= 0)
-  ) THEN RAISE(ABORT, 'invalid public lineage edition number') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage public code') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'publiccode'
@@ -1120,16 +1111,16 @@ BEGIN
          AND substr(CAST(node.atom AS TEXT), 1, 3) = 'AR-'
          AND substr(CAST(node.atom AS TEXT), 4) NOT GLOB '*[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]*'
        )
-  ) THEN RAISE(ABORT, 'invalid public lineage public code') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage plate status') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'platestatus'
        AND NOT (node.type = 'text' AND node.atom IN ('active', 'void', 'superseded'))
-  ) THEN RAISE(ABORT, 'invalid public lineage plate status') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage transfer reference') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', ''))
@@ -1146,9 +1137,9 @@ BEGIN
          AND substr(CAST(node.atom AS TEXT), 27, 1) = '-'
          AND substr(CAST(node.atom AS TEXT), 4) NOT GLOB '*[^0-9a-f-]*'
        )
-  ) THEN RAISE(ABORT, 'invalid public lineage transfer reference') END;
+  );
 
-  SELECT CASE WHEN EXISTS (
+  SELECT RAISE(ABORT, 'invalid public lineage transfer kind') WHERE EXISTS (
     SELECT 1
       FROM json_tree(NEW.public_payload_json) node
      WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'transferkind'
@@ -1156,7 +1147,7 @@ BEGIN
          node.type = 'text'
          AND node.atom IN ('sale', 'gift', 'inheritance', 'artist-rebind')
        )
-  ) THEN RAISE(ABORT, 'invalid public lineage transfer kind') END;
+  );
 END;
 
 CREATE TRIGGER artwork_lineage_events_insert_collision

@@ -95,7 +95,7 @@ WHEN EXISTS (
    WHERE idempotency_key = NEW.idempotency_key
 )
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invite reservation unavailable') WHERE NOT EXISTS (
     SELECT 1 FROM artwork_contributor_invite_reservations
      WHERE idempotency_key = NEW.idempotency_key
        AND request_fingerprint = NEW.request_fingerprint
@@ -103,7 +103,7 @@ BEGIN
        AND reservation_status = 'reserved'
        AND completed_invitation_id IS NULL
        AND julianday(lease_expires_at) > julianday('now')
-  ) THEN RAISE(ABORT, 'contributor invite reservation unavailable') END;
+  );
 END;
 
 -- The counter update and invitation insertion are one SQLite statement. If an
@@ -137,8 +137,7 @@ BEGIN
       AND artwork_contributor_invite_rate_limits.attempt_count < 10
     )
   );
-  SELECT CASE WHEN changes() <> 1
-    THEN RAISE(ABORT, 'contributor invite rate limited') END;
+  SELECT RAISE(ABORT, 'contributor invite rate limited') WHERE changes() <> 1;
 END;
 
 CREATE TRIGGER artwork_contributor_invite_reservation_complete
@@ -156,8 +155,7 @@ BEGIN
      AND request_fingerprint = NEW.request_fingerprint
      AND keeper_user_id = NEW.keeper_user_id
      AND reservation_status = 'reserved';
-  SELECT CASE WHEN changes() <> 1
-    THEN RAISE(ABORT, 'contributor invite reservation completion failed') END;
+  SELECT RAISE(ABORT, 'contributor invite reservation completion failed') WHERE changes() <> 1;
 END;
 
 PRAGMA foreign_key_check;

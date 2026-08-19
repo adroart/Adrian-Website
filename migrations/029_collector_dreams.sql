@@ -111,35 +111,35 @@ END;
 
 CREATE TRIGGER collector_dreams_insert_current_keeper
 BEFORE INSERT ON collector_dreams BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream requires current keeper') WHERE NOT EXISTS (
     SELECT 1 FROM keeper_pieces piece
      WHERE piece.id = NEW.keeper_piece_id
        AND piece.keeper_user_id = NEW.author_user_id
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND piece.plate_status NOT IN ('void', 'superseded')
-  ) THEN RAISE(ABORT, 'dream requires current keeper') END;
-  SELECT CASE WHEN NEW.visibility IN ('anonymous', 'attributed')
+  );
+  SELECT RAISE(ABORT, 'public dream requires established adult') WHERE NEW.visibility IN ('anonymous', 'attributed')
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN profiles profile ON profile.user_id = person.id
        WHERE person.auth_user_id = NEW.author_user_id
          AND date(profile.birth_date, '+18 years') <= date(NEW.created_at)
-    ) THEN RAISE(ABORT, 'public dream requires established adult') END;
-  SELECT CASE WHEN NEW.visibility = 'attributed'
+    );
+  SELECT RAISE(ABORT, 'attributed dream requires name consent') WHERE NEW.visibility = 'attributed'
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN collector_person_privacy privacy ON privacy.user_id = person.id
        WHERE person.auth_user_id = NEW.author_user_id
          AND privacy.share_name = 1
-    ) THEN RAISE(ABORT, 'attributed dream requires name consent') END;
+    );
 END;
 
 CREATE TRIGGER collector_dreams_update_current_keeper
 BEFORE UPDATE ON collector_dreams
 WHEN NEW.archived_at IS OLD.archived_at
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream change requires current keeper') WHERE NOT EXISTS (
     SELECT 1 FROM keeper_pieces piece
      WHERE piece.id = OLD.keeper_piece_id
        AND piece.keeper_user_id = OLD.author_user_id
@@ -152,8 +152,8 @@ BEGIN
     AND NEW.public_shared_at IS OLD.public_shared_at
     AND NEW.fulfilled_at IS OLD.fulfilled_at
     AND NEW.archived_at IS OLD.archived_at
-  ) THEN RAISE(ABORT, 'dream change requires current keeper') END;
-  SELECT CASE WHEN NEW.visibility IN ('anonymous', 'attributed')
+  );
+  SELECT RAISE(ABORT, 'public dream requires established adult') WHERE NEW.visibility IN ('anonymous', 'attributed')
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN profiles profile ON profile.user_id = person.id
@@ -164,19 +164,19 @@ BEGIN
       OLD.public_revoked_at IS NULL AND NEW.public_revoked_at IS NOT NULL
       AND NEW.body = OLD.body AND NEW.scope = OLD.scope
       AND NEW.public_shared_at IS OLD.public_shared_at
-    ) THEN RAISE(ABORT, 'public dream requires established adult') END;
-  SELECT CASE WHEN NEW.visibility = 'attributed'
+    );
+  SELECT RAISE(ABORT, 'attributed dream requires name consent') WHERE NEW.visibility = 'attributed'
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN collector_person_privacy privacy ON privacy.user_id = person.id
        WHERE person.auth_user_id = OLD.author_user_id
          AND privacy.share_name = 1
-    ) THEN RAISE(ABORT, 'attributed dream requires name consent') END;
+    );
 END;
 
 CREATE TRIGGER collector_dream_markers_current_keeper
 BEFORE INSERT ON collector_dream_markers BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream marker requires current keeper') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams dream
     JOIN keeper_pieces piece ON piece.id = dream.keeper_piece_id
      WHERE dream.id = NEW.dream_id
@@ -186,12 +186,12 @@ BEFORE INSERT ON collector_dream_markers BEGIN
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND piece.plate_status NOT IN ('void', 'superseded')
-  ) THEN RAISE(ABORT, 'dream marker requires current keeper') END;
+  );
 END;
 
 CREATE TRIGGER collector_dream_rituals_valid_completion
 BEFORE INSERT ON collector_dream_rituals BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invalid dream ritual completion') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams prior
     JOIN collector_dreams resulting ON resulting.id = NEW.resulting_dream_id
     JOIN keeper_pieces piece ON piece.id = NEW.keeper_piece_id
@@ -212,7 +212,7 @@ BEFORE INSERT ON collector_dream_rituals BEGIN
            AND resulting.archived_at IS NULL
            AND resulting.created_at = NEW.completed_at)
        )
-  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+  );
 END;
 
 -- One mutation insert performs the exact permitted dream update. No caller can
@@ -223,7 +223,7 @@ END;
 CREATE TRIGGER collector_dream_mutation_exact_application
 BEFORE INSERT ON collector_dream_mutations
 BEGIN
-  SELECT CASE WHEN NEW.request_json IS NULL
+  SELECT RAISE(ABORT, 'dream mutation did not apply exactly') WHERE NEW.request_json IS NULL
     OR json_valid(NEW.request_json) = 0
     OR json_type(NEW.request_json) <> 'object'
     OR NOT EXISTS (
@@ -263,7 +263,7 @@ BEGIN
              AND dream.public_shared_at IS NOT NULL
            )
          )
-    ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+    );
 END;
 
 CREATE TRIGGER collector_dream_mutation_apply_exactly
@@ -307,7 +307,7 @@ BEGIN
      AND public_shared_at IS NOT NULL
      AND record_version + 1 = NEW.resulting_version;
 
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream mutation did not apply exactly') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams dream
      WHERE dream.id = NEW.dream_id
        AND dream.last_mutation_id = NEW.id
@@ -326,7 +326,7 @@ BEGIN
            AND dream.public_shared_at IS NOT NULL
            AND dream.public_revoked_at = NEW.created_at)
        )
-  ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+  );
 END;
 
 -- Every mutable dream update is either the exact effect of the mutation row
@@ -336,7 +336,7 @@ END;
 CREATE TRIGGER collector_dreams_runtime_update_guard
 BEFORE UPDATE ON collector_dreams
 BEGIN
-  SELECT CASE WHEN NOT (
+  SELECT RAISE(ABORT, 'dream update requires exact authorization') WHERE NOT (
     EXISTS (
       SELECT 1 FROM collector_dream_mutations mutation
        WHERE mutation.id = NEW.last_mutation_id
@@ -403,8 +403,7 @@ BEGIN
       AND NEW.public_shared_at IS OLD.public_shared_at
       AND NEW.public_revoked_at IS (
         CASE WHEN OLD.public_shared_at IS NOT NULL
-          THEN NEW.archived_at ELSE OLD.public_revoked_at END
-      )
+          THEN NEW.archived_at ELSE OLD.public_revoked_at END)
       AND NEW.fulfilled_at IS OLD.fulfilled_at
       AND NEW.keeper_piece_id = OLD.keeper_piece_id
       AND NEW.author_user_id = OLD.author_user_id
@@ -427,7 +426,7 @@ BEGIN
       AND NEW.created_at = OLD.created_at
       AND NEW.last_mutation_id IS OLD.last_mutation_id
     )
-  ) THEN RAISE(ABORT, 'dream update requires exact authorization') END;
+  );
 END;
 
 CREATE TRIGGER collector_dream_ritual_fulfill_exactly
@@ -443,11 +442,11 @@ BEGIN
      AND keeper_piece_id = NEW.keeper_piece_id
      AND archived_at IS NULL
      AND fulfilled_at IS NULL;
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invalid dream ritual completion') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams
      WHERE id = NEW.prior_dream_id
        AND fulfilled_at = NEW.completed_at
-  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+  );
 END;
 
 -- A transfer closes the former keeper's live contribution and any public projection.
