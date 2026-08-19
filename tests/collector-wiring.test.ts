@@ -97,6 +97,26 @@ describe('the code never travels', () => {
     // the normalized code appears in no template string (URLs are built with templates)
     assert.doesNotMatch(source, /\$\{[^}]*normalizedCode[^}]*\}/);
   });
+
+  it('the code input is walled off from password managers and keyboard capture', () => {
+    // autoComplete="off" alone is documented to be ignored by 1Password /
+    // LastPass / Bitwarden; the sensitive Ownership Code must not be captured
+    // and cloud-synced by an ambient password manager (a leak beyond the app).
+    const source = readSource('components/collector/CodePage.tsx');
+    for (const attribute of [
+      'autoComplete="off"',
+      'autoCorrect="off"',
+      'autoCapitalize="off"',
+      'data-lpignore="true"',
+      'data-1p-ignore="true"',
+      'data-bwignore="true"',
+    ]) {
+      assert.ok(source.includes(attribute), `code input missing ${attribute}`);
+    }
+    // and the input must never carry a name/id a manager keys its vault on
+    assert.doesNotMatch(source, /<input[\s\S]*?\sname=/);
+    assert.doesNotMatch(source, /<input[\s\S]*?\stype="password"/);
+  });
 });
 
 describe('the vault is gated on a bound outcome', () => {

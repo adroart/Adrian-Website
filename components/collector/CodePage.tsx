@@ -347,7 +347,16 @@ export const CodePage: React.FC<Props> = ({
             onChange={e => type(e.target.value)}
             maxLength={16}
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             spellCheck={false}
+            /* the code goes nowhere: keep password managers from capturing and
+               cloud-syncing it. autoComplete="off" alone is documented to be
+               ignored by 1Password / LastPass / Bitwarden, so name each out. */
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            data-form-type="other"
             aria-label="The code"
             style={{
               position: 'absolute',
