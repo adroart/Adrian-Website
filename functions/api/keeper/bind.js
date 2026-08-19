@@ -17,7 +17,9 @@
  *   1. No row for this piece/edition      → 404 not_registered (register first).
  *   2. Ready registry plate or legacy row, unclaimed, code MATCHES
  *                                      → FIRST BIND: stamp steward + claimed_at.
- *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that).
+ *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that),
+ *                                            throttled + audited per (user, piece);
+ *                                            over the limit → 429 bind_rate_limited.
  *   4. Live steward bound (released_at NULL)→ idempotent if it is YOU, else the
  *                                            contested-claim handoff (202).
  *   5. Any row ever claimed, even released → governed contested-claim handoff.
@@ -55,6 +57,18 @@ import { evaluateSilence, openSilenceWindow } from '../_lib/claimSilence.js';
 import { claimEvidenceStatement } from '../_lib/lineage.js';
 import { prepareFirstKeeperBind } from '../_lib/keeperClaim.js';
 import { syncFirstBindCollectorLetters } from '../_lib/collectorLetters.js';
+import { rateLimit } from '../_lib/ratelimit.js';
+import { constantTimeEqual, writeOwnershipAudit } from '../_lib/admin.js';
+
+// Wrong-code guessing on a registered piece is throttled per (authenticated
+// user, keeper piece) pair, matching the granularity of the contested-claim
+// limiter in _lib/claimRequests.js (MAX_PENDING_CLAIMS_PER_REQUESTER, also
+// user-scoped). Code entropy makes brute force infeasible on its own (16
+// chars over a ~31-symbol alphabet); this is abuse visibility + defense in
+// depth, not the primary defense. A current steward's idempotent re-scan and
+// any correctly-coded bind never reach this limiter — only mismatches do.
+const BIND_MISMATCH_LIMIT_MAX = 10;
+const BIND_MISMATCH_LIMIT_WINDOW_MS = 60 * 60_000; // 1 hour
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -169,7 +183,46 @@ export async function onRequest(context) {
 
     // Possession of the exact permanent Ownership Code is required before any
     // direct bind or governed claim. A guessed code cannot create claim traffic.
-    if (existing.recovery_code_hash !== codeHash) {
+    // Constant-time compare: an ordinary `!==` on two hex strings leaks how
+    // many leading characters matched via timing.
+    if (!constantTimeEqual(codeHash, existing.recovery_code_hash)) {
+      // Every wrong guess is throttled and recorded, per (user, piece) pair.
+      // This runs only on a genuine mismatch: a correct code (first bind,
+      // idempotent re-scan, or contested-claim handoff) never reaches here,
+      // so it never consumes an attempt.
+      const mismatchLimit = rateLimit(
+        `bind-mismatch:${auth.userId}:${existing.id}`,
+        { max: BIND_MISMATCH_LIMIT_MAX, windowMs: BIND_MISMATCH_LIMIT_WINDOW_MS },
+      );
+      try {
+        await writeOwnershipAudit(env, {
+          keeperPieceId: existing.id,
+          action: 'bind_mismatch',
+          outcome: 'mismatch',
+          createdAt: nowIso,
+        });
+      } catch (auditError) {
+        // Fail open: an audit hiccup must not change the mismatch response
+        // the caller sees, and must never leak internals.
+        console.error('[keeper/bind] mismatch audit error:', auditError?.message);
+      }
+      if (!mismatchLimit.allowed) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: 'bind_rate_limited',
+            message: 'Too many attempts. Please wait before trying again.',
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+              'Retry-After': String(mismatchLimit.retryAfter),
+            },
+          },
+        );
+      }
       return json(
         {
           ok: false,
