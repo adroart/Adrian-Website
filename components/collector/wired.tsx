@@ -65,6 +65,7 @@ import {
   getCertificate,
   getCollectorCuratedCities,
   getCollectorDreamState,
+  getKeeperMessage,
   getKeeperPieceStatus,
   getLineage,
   getPublicDream,
@@ -157,6 +158,16 @@ type Step =
   | { kind: 'piece'; room?: RoomKey | null }
   | { kind: 'code'; initialCode?: string; initialWrong?: boolean }
   | { kind: 'walk'; key: keyof typeof WALK }
+  /**
+   * The sealed artist message, met once right after the vault: "Something
+   * was left for you," before everything else (todo/plans/collector-screen-
+   * wording.md, the gift mechanic). Reuses WALK.sealed's rendering verbatim
+   * for the teaser, then WALK.written's rendering for the reveal with the
+   * real body swapped in where its own locked copy would otherwise sit —
+   * every other field on both screens (head, pill, link text) stays exactly
+   * as authored.
+   */
+  | { kind: 'gift-message'; stage: 'sealed' | 'written' }
   | {
       kind: 'state';
       key: 'account' | 'plate' | 'offline';
@@ -192,6 +203,14 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const [cityId, setCityId] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
+
+  /* the sealed artist message: fetched once, right on a bound outcome,
+     before the code-is-true screen. giftMessageBody holds the real body for
+     the 'written'-shaped reveal; giftPendingRef is consumed the one time
+     'codetrue' is reached right after this bind, so a later visit to
+     'codetrue' (e.g. back from 'fork') never re-triggers the detour. */
+  const [giftMessageBody, setGiftMessageBody] = useState<string | null>(null);
+  const giftPendingRef = useRef(false);
 
   /* ---------------- data, all through api.ts ---------------- */
 
@@ -344,6 +363,22 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           },
         });
         return { kind: 'handled' };
+      }
+
+      if (outcome.kind === 'bound') {
+        /* the sealed message, before the four: fetched now so it is ready
+           the moment the vault carries through to 'codetrue'. Never blocks
+           the walk — any non-message outcome (no message, not the steward,
+           dark flag, network drop) is skipped in silence. */
+        try {
+          const messageOutcome = await getKeeperMessage(code.publicCode);
+          if (messageOutcome.ok && messageOutcome.data) {
+            setGiftMessageBody(messageOutcome.data.body);
+            giftPendingRef.current = true;
+          }
+        } catch {
+          /* skip quietly */
+        }
       }
 
       switch (outcome.kind) {
@@ -646,6 +681,18 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
 
+      if (key === 'codetrue' && giftPendingRef.current) {
+        /* the one detour: before 'The code is true', the sealed message
+           waiting from this exact bind. Consumed once — a later return to
+           'codetrue' (the fork's quiet back link) never re-triggers it. */
+        giftPendingRef.current = false;
+        setStep({ kind: 'gift-message', stage: 'sealed' });
+        return;
+      }
+      if (key === '__giftOpen') {
+        setStep({ kind: 'gift-message', stage: 'written' });
+        return;
+      }
       if (key === 'sign') {
         /* the account already exists — the bind required it */
         setStep({ kind: 'walk', key: 'born' });
@@ -760,6 +807,29 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         />
       );
     }
+  } else if (step.kind === 'gift-message') {
+    /* the sealed artist message, met once right after the vault. 'sealed'
+       renders WALK.sealed exactly as authored — the teaser is the same for
+       a collector's gift or the artist's own words, by design. 'written'
+       renders WALK.written's shape with its body swapped for the real
+       message; every other field (head, link text) stays exactly as
+       authored, and its link continues the walk into 'codetrue' rather than
+       returning home, since the four screens still follow. */
+    const screen: Screen = step.stage === 'sealed'
+      ? { ...WALK.sealed, to: '__giftOpen' }
+      : { ...WALK.written, body: giftMessageBody ?? WALK.written.body, linkTo: 'codetrue' };
+    surface = (
+      <WalkScreen
+        screen={screen}
+        onGo={go}
+        values={typed}
+        onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+        lampsValue={lamps}
+        onLamps={setLamps}
+        grainValue={grain}
+        onGrain={setGrain}
+      />
+    );
   } else {
     surface = (
       <StateScreen

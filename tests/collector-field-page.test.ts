@@ -25,7 +25,7 @@ describe('collector field page', () => {
 
   it('keeps the local field behind the living-legacy launch gate', () => {
     const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
-    assert.match(app, /lazy\(\(\) => import\('\.\/components\/collector\/CollectorFieldPage'\)\)/);
+    assert.match(app, /lazy\(\(\) => import\('\.\/components\/collector\/legacy\/CollectorFieldPage'\)\)/);
     assert.match(
       app,
       /path="\/atlas" element=\{LAUNCH_FLAGS\.livingLegacy \? <CollectorFieldPage\s*\/> : <AtlasExternalRedirect\s*\/>\}/,

@@ -475,6 +475,44 @@ export async function setKeeperDisplayLocation(
 }
 
 // ============================================================================
+// keeper/message — the artist's sealed message, met once at the vault
+// functions/api/keeper/message.js. Gated by livingLegacy. Steward-only: the
+// body never reaches this file's caller unless they are the piece's active
+// steward, enforced server-side (a non-steward or dark-flag call answers a
+// bare 404, indistinguishable from "no message" at the network layer, so
+// this wrapper collapses both into the same absence rather than surfacing
+// the 404 as an error the caller has to special-case).
+// ============================================================================
+
+export interface KeeperSealedMessage {
+  body: string;
+  sealedAt: string;
+  /** null until the steward's first successful read of this endpoint. */
+  revealedAt: string | null;
+  /** true only on the call that stamped revealedAt for the first time. */
+  firstReveal: boolean;
+}
+
+/**
+ * GET /api/keeper/message?publicCode=. Requires a signed-in, verified-email
+ * session belonging to the piece's active steward. `ok: true, data: null`
+ * means "no active message for this piece"; `ok: false` covers the dark
+ * flag, a non-steward caller, and any other documented failure — the caller
+ * (the collector wiring, right after a bind) treats every non-message
+ * outcome the same way: skip quietly, never block the walk.
+ */
+export async function getKeeperMessage(publicCode: string): Promise<ApiOutcome<KeeperSealedMessage | null>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  if (!isValidPublicCode(publicCode)) return { ok: true, status: 200, data: null };
+  const query = new URLSearchParams({ publicCode });
+  const { status, ok, body } = await rawRequest(`/api/keeper/message?${query.toString()}`);
+  if (!ok) return outcomeError(status, body);
+  const record = isRecord(body) ? body : {};
+  const message = isRecord(record.message) ? (record.message as unknown as KeeperSealedMessage) : null;
+  return { ok: true, status, data: message };
+}
+
+// ============================================================================
 // keeper/intention — journal + yearly motivation
 // functions/api/keeper/intention.js. Gated by livingLegacy.
 // ============================================================================
