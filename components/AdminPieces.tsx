@@ -20,6 +20,17 @@ import {
   type IssuedPlatePackage,
   type SensitivePlateState,
 } from '../utils/adminArtworkRegistry';
+import {
+  downloadText,
+  emptyChecklist,
+  errorMessage,
+  jsonRequest,
+  titleFor,
+  formatDate,
+  TITLE_BY_ID,
+  type MintableArtwork,
+  type PieceRow,
+} from '../utils/adminPieces';
 
 type RegistrySensitiveState = Omit<SensitivePlateState, 'stepUpSecret'>;
 
@@ -32,40 +43,6 @@ const buttonClass =
 const quietButtonClass =
   'min-h-11 font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
 
-interface PieceRow {
-  id: string;
-  pieceId: string;
-  editionNumber: number;
-  publicCode: string | null;
-  plateStatus: string;
-  backupStatus: string | null;
-  backupReference: string | null;
-  backupSha256: string | null;
-  frontSha256: string | null;
-  undersideSha256: string | null;
-  plateGeneratedAt: string | null;
-  plateActivatedAt: string | null;
-  backupAt: string | null;
-  keeperBound: boolean;
-  currentDisplayLocation: string | null;
-  registeredAt: string | null;
-  claimedAt: string | null;
-  releasedAt: string | null;
-  recoveryQualification?: {
-    status: 'missing' | 'stale' | 'current';
-    reasons: string[];
-    qualifiedAt: string | null;
-  };
-}
-
-interface MintableArtwork {
-  id: string;
-  title: string;
-  draft: boolean;
-  editionKind: 'unique' | 'numbered' | 'unspecified' | 'conflict';
-  editionSize: number | null;
-}
-
 const emptySensitiveState: RegistrySensitiveState = {
   issuanceKey: null,
   package: null,
@@ -73,34 +50,6 @@ const emptySensitiveState: RegistrySensitiveState = {
   revealedOwnershipCode: null,
   revealedUndersideSvg: null,
 };
-
-const emptyChecklist: ActivationChecklist = {
-  realMetalQrScanned: false,
-  artworkEditionPublicCodeMatch: false,
-  undersideOwnershipCodeMatch: false,
-  attachmentAndAbrasionInspected: false,
-  frontSha256: '',
-  undersideSha256: '',
-};
-
-const TITLE_BY_ID: Record<string, string> = Object.fromEntries(
-  FULL_ARCHIVE.map((artwork) => [artwork.id, artwork.title]),
-);
-
-function titleFor(pieceId: string): string {
-  return TITLE_BY_ID[pieceId] || pieceId;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return 'Not yet';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'Not yet';
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function errorMessage(value: unknown, fallback: string): string {
-  return value instanceof Error ? value.message : fallback;
-}
 
 export function registryKeeperPieceSelection(searchParams: URLSearchParams): string | null {
   const values = searchParams.getAll('keeperPieceId');
@@ -111,29 +60,6 @@ export function registryKeeperPieceSelection(searchParams: URLSearchParams): str
   return value;
 }
 
-async function jsonRequest(url: string, body?: Record<string, unknown>) {
-  const response = await fetch(url, body ? {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  } : undefined);
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data?.ok) {
-    throw new Error(data?.message || data?.error || `Request failed (${response.status})`);
-  }
-  return data;
-}
-
-function downloadText(filename: string, mimeType: string, content: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: `${mimeType};charset=utf-8` }));
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
 
 const AdminPieces: React.FC = () => {
   const [searchParams] = useSearchParams();
