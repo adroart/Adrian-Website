@@ -20,7 +20,7 @@ const migrationNames = [
   '023_collector_registry_merge.sql', '024_ownership_foundation.sql',
   '025_artwork_registration.sql', '026_artwork_invitations.sql',
   '027_certificate_templates.sql', '028_collector_privacy.sql',
-  '029_collector_dreams.sql',
+  '029_collector_dreams.sql', '035_city_floor_removal.sql',
 ];
 
 function migration(name: string) {
@@ -360,7 +360,6 @@ describe('canonical collector field projection', () => {
         ['kp-minor', 'UL-102', 'auth-minor', 'c'],
         ['kp-inactive', 'UL-103', 'auth-inactive', 'd'],
         ['kp-former', 'UL-104', 'auth-current', 'e'],
-        ['kp-low', 'UL-105', 'auth-low', 'f'],
       ] as const;
       for (const [index, [id, artworkId, keeperUserId, seed]] of cases.entries()) {
         await insertRegisteredIdentity(database, {
@@ -376,8 +375,7 @@ describe('canonical collector field projection', () => {
           ('auth-minor', 'auth-minor', 'minor@example.com'),
           ('auth-inactive', 'auth-inactive', 'inactive@example.com'),
           ('auth-former', 'auth-former', 'former@example.com'),
-          ('auth-current', 'auth-current', 'current@example.com'),
-          ('auth-low', 'auth-low', 'low@example.com');
+          ('auth-current', 'auth-current', 'current@example.com');
         INSERT INTO profiles
           (user_id, birth_date, birth_time, birth_place_label, lat, lng, tz_id,
            computed_json)
@@ -387,18 +385,13 @@ describe('canonical collector field projection', () => {
           (3, '2012-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}'),
           (4, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}'),
           (5, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}'),
-          (6, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}'),
-          (7, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}');
+          (6, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}');
         INSERT INTO collector_curated_cities (id, label, population, active) VALUES
           ('revoked-city', 'Revoked', 100000, 1),
           ('retired-city', 'Retired', 100000, 0),
           ('minor-city', 'Minor', 100000, 1),
           ('inactive-city', 'Inactive', 100000, 0),
           ('former-city', 'Former', 100000, 1);
-        PRAGMA ignore_check_constraints = ON;
-        INSERT INTO collector_curated_cities (id, label, population, active)
-        VALUES ('low-city', 'Low population', 49999, 1);
-        PRAGMA ignore_check_constraints = OFF;
         DROP TRIGGER collector_adult_piece_privacy_insert_guard;
         DROP TRIGGER collector_active_city_piece_privacy_insert_guard;
         DROP TRIGGER collector_piece_privacy_current_keeper_insert_guard;
@@ -409,8 +402,7 @@ describe('canonical collector field projection', () => {
           ('kp-retired', 2, 1, 'retired-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z'),
           ('kp-minor', 3, 1, 'minor-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z'),
           ('kp-inactive', 4, 1, 'inactive-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z'),
-          ('kp-former', 5, 1, 'former-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z'),
-          ('kp-low', 7, 1, 'low-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z');
+          ('kp-former', 5, 1, 'former-city', 'collector-privacy-v1', '2026-08-09T00:00:00.000Z');
       `);
 
       const response = await atlasRequest({
@@ -459,6 +451,48 @@ describe('canonical collector field projection', () => {
       assert.deepEqual(state.facets.places, []);
       assert.equal(state.lights[0].identity[0].city, null);
       assert.equal(state.lights[0].identity[0].status, 'private');
+    } finally {
+      database.close();
+    }
+  });
+
+  it('shows a consented city under 50k population now that the floor is removed', async () => {
+    const database = databaseThroughCollectorField();
+    try {
+      insertCatalog(database, 'UL-100', 'Universal Language');
+      await insertRegisteredIdentity(database, {
+        id: 'kp-ubud', artworkId: 'UL-100', keeperUserId: 'auth-adult',
+        eventAt: '2026-08-09T01:00:00.000Z', eventHashSeed: 'f',
+      });
+      database.exec(`
+        INSERT INTO users (clerk_user_id, auth_user_id, email)
+        VALUES ('auth-adult', 'auth-adult', 'private@example.com');
+        INSERT INTO profiles
+          (user_id, birth_date, birth_time, birth_place_label, lat, lng, tz_id,
+           computed_json)
+        VALUES (1, '1980-01-01', '12:00', 'Private', 0, 0, 'UTC', '{}');
+        INSERT INTO collector_curated_cities (id, label, population, active)
+        VALUES ('ubud-id', 'Ubud, Indonesia', 35000, 1);
+        INSERT INTO collector_piece_privacy
+          (keeper_piece_id, user_id, share_city, city_id, policy_version, updated_at)
+        VALUES ('kp-ubud', 1, 1, 'ubud-id',
+          'collector-privacy-v1', '2026-08-09T03:00:00.000Z');
+      `);
+
+      const response = await atlasRequest({
+        request: new Request('https://adrianrasmussen.com/api/atlas'),
+        env: { DB: d1(database) },
+      });
+      assert.equal(response.status, 200);
+      const state = (await response.json() as any).state;
+      assert.deepEqual(state.facets.places, [{ id: 'ubud-id', label: 'Ubud, Indonesia' }]);
+      assert.deepEqual(state.lights[0].identity[0].city, {
+        id: 'ubud-id',
+        label: 'Ubud, Indonesia',
+        country: 'Indonesia',
+        lat: -8.5069,
+        lng: 115.2625,
+      });
     } finally {
       database.close();
     }

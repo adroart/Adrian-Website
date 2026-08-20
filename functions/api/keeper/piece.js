@@ -99,7 +99,7 @@ async function handleGet(context, auth) {
   let stewardHistory = [];
   // Additive: an open silence window against the steward's own piece, if
   // any. Never affects a guest or non-steward response, and a missing
-  // migration 037 silently omits the field rather than failing the whole
+  // migration 038 silently omits the field rather than failing the whole
   // lookup — the same fail-open-on-absence stance evaluateSilence takes.
   let pendingClaim;
   if (byYou) {
@@ -131,7 +131,7 @@ async function handleGet(context, auth) {
       }
     } catch (err) {
       if (!isMissingTableError(err)) throw err;
-      // migration 037 not applied yet: pendingClaim simply stays absent.
+      // migration 038 not applied yet: pendingClaim simply stays absent.
     }
   }
   return json({

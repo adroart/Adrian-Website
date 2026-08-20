@@ -900,7 +900,7 @@ export type CollectorDreamVisibility = 'private' | 'anonymous' | 'attributed';
 export type CollectorDreamMarkerKind = 'milestone' | 'change' | 'encounter' | 'fulfillment';
 
 /**
- * The three tiers, named for what they actually do (migration 041,
+ * The three tiers, named for what they actually do (migration 042,
  * todo/plans/collector-screen-wording.md §6 "Three tiers"): 'shine' is read
  * by anyone who meets the piece and is permanent once entered; 'keep'
  * travels with the piece and opens only to whoever holds it; 'seal' opens to
@@ -922,7 +922,7 @@ export interface CollectorDream {
   revokedAt: string | null;
   fulfilledAt: string | null;
   archivedAt: string | null;
-  /** Present once migration 041 is applied server-side. */
+  /** Present once migration 042 is applied server-side. */
   tier?: DreamTier;
   /** "The ones who come after may share this" -- pinned false on 'seal'. */
   heirsMayShare?: boolean;
@@ -976,7 +976,7 @@ export async function createCollectorDream(input: {
   body: string;
   scope: CollectorDreamScope;
   /**
-   * The destination tier, planted in ONE create (migration 041's optional
+   * The destination tier, planted in ONE create (migration 042's optional
    * allowlist fields on action:'create'). Omitted, the server plants at keep
    * with heirs ON — the exact pre-041 body shape. On a pre-041 registry a
    * create asking for anything beyond that default answers 503
@@ -1066,7 +1066,7 @@ export async function revokeCollectorDreamSharing(input: {
  * and seal->keep is forbidden, so only 'shine' and 'seal' can be asked for.
  * Documented rejections (all 409): shine_is_permanent, shone_cannot_seal,
  * tier_unchanged, dream_sealed, version_conflict, idempotency_conflict;
- * 503 dream_tiers_unavailable while migration 041 has not been applied.
+ * 503 dream_tiers_unavailable while migration 042 has not been applied.
  * Tier changes are not gated by the yearly birthday window.
  */
 export async function setCollectorDreamTier(input: {

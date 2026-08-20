@@ -1,5 +1,5 @@
 /**
- * Piece media admission: the "time capsule" media layer (migration 038,
+ * Piece media admission: the "time capsule" media layer (migration 039,
  * table piece_media). Per-piece photos, forever videos, and artist message
  * audio are validated, hashed, written write-once and content-addressed to
  * the shared registry R2 bucket (binding ARTWORK_REGISTRY_BACKUP) at
@@ -334,7 +334,7 @@ export async function admitPieceMedia(env, db, {
 
 /**
  * Soft-remove one row (abuse management). Succeeds exactly once per row: the
- * underlying UPDATE trigger (migration 038) accepts only a first transition
+ * underlying UPDATE trigger (migration 039) accepts only a first transition
  * from removed_at IS NULL, so a second call finds zero rows changed.
  */
 export async function removePieceMedia(db, { id, reason, removedAt } = {}) {

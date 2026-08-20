@@ -3,7 +3,7 @@ const DREAM_SCOPES = new Set([
 ]);
 const DREAM_VISIBILITIES = new Set(['private', 'anonymous', 'attributed']);
 const PUBLIC_DREAM_VISIBILITIES = new Set(['anonymous', 'attributed']);
-// Three tiers, named for what they actually do (migration 041,
+// Three tiers, named for what they actually do (migration 042,
 // collector-screen-wording.md §6 "Three tiers, and what outlives you"):
 // shine is public forever, keep travels with the piece and opens to whoever
 // holds it, seal opens to nobody but its writer, ever.
@@ -55,7 +55,7 @@ function tierChangeId() {
 }
 
 /**
- * True once migration 041 (tier / heirs_may_share / the tier-change ledger)
+ * True once migration 042 (tier / heirs_may_share / the tier-change ledger)
  * has been applied to this database. Pages deploys and D1 migrations are not
  * atomic, so every tier behavior below is gated on the schema actually being
  * there; a pre-041 database keeps the exact pre-tier behavior.
@@ -318,7 +318,7 @@ export async function createCollectorDream(env, input) {
     throw new Error('dream_tiers_unavailable');
   }
   // Seal answers the heirs question by itself: the sub-choice is hidden on
-  // that tier and the stored flag is pinned to 0 (migration 041).
+  // that tier and the stored flag is pinned to 0 (migration 042).
   const storedHeirs = tier === 'seal' ? 0 : (heirsMayShare ? 1 : 0);
 
   const matchesReplay = (row) => row.keeper_piece_id === keeperPieceId
@@ -448,7 +448,7 @@ export async function updateCollectorDream(env, input) {
   // editing the standing dream's words opens only inside the person's own
   // window. First placement (create) is ungated, and so are tier changes --
   // the lock is what makes the words worth reading, not a lock on choosing
-  // where they live. Ships with migration 041.
+  // where they live. Ships with migration 042.
   if (rowHasTier(current)) {
     const window = await yearlyWindowFor(db, userId, keeperPieceId, input.now);
     if (!window) throw new Error('outside_birthday_window');
@@ -491,7 +491,7 @@ export async function setCollectorDreamSharing(env, input) {
   const tiered = rowHasTier(current);
   if (action === 'revoke' && tiered && current.tier === 'shine') {
     // Once it shines it stays shining, always (§6). The audited admin abuse
-    // removal (migration 040, functions/api/admin/shine-removals.js) is the
+    // removal (migration 041, functions/api/admin/shine-removals.js) is the
     // only path off display, and it never runs through here.
     throw new Error('shine_is_permanent');
   }
@@ -688,7 +688,7 @@ export async function getPublicCollectorDream(env, { keeperPieceId, now = new Da
   // Post-041 the public read also demands tier = 'shine' (defense in depth:
   // a keep or seal body can never surface here even if the share columns
   // were ever wrong). The tier-less query is kept only for the deploy window
-  // where migration 041 has not landed yet.
+  // where migration 042 has not landed yet.
   const publicDreamSql = (tierGuard) => `
     SELECT dream.id, dream.keeper_piece_id, dream.author_user_id, dream.body,
            dream.scope, dream.visibility, dream.public_shared_at

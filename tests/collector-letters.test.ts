@@ -60,6 +60,7 @@ const migrationsThroughLetters = [
   '026_artwork_invitations.sql', '027_certificate_templates.sql',
   '028_collector_privacy.sql', '029_collector_dreams.sql',
   '030_collector_field.sql', '031_collector_letters.sql',
+  '035_city_floor_removal.sql',
 ].map(readMigration).join('\n');
 
 function d1(database: DatabaseSync) {
@@ -235,7 +236,7 @@ function seedTransfer(db: DatabaseSync, details: {
 }
 
 describe('collector letters', () => {
-  it('applies every migration through 031 on real SQLite', () => {
+  it('applies every migration through 031 plus 035 on real SQLite', () => {
     const db = database();
     try {
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
@@ -313,7 +314,7 @@ describe('collector letters', () => {
     }
   });
 
-  it('uses only a qualified pinned city and positive current adult evidence', async () => {
+  it('uses only an active pinned city and positive current adult evidence', async () => {
     const publishSource = (db: DatabaseSync) => db.exec(`
       INSERT INTO collector_piece_privacy
         (keeper_piece_id, user_id, share_city, city_id, policy_version, updated_at)
@@ -343,22 +344,24 @@ describe('collector letters', () => {
       drifted.close();
     }
 
-    const retired = database();
+    // Population no longer gates anything (floor removed 2026-08-20): a small
+    // curated city still produces kin letters.
+    const lowPopulation = database();
     try {
-      publishSource(retired);
-      retired.exec(`
-        PRAGMA ignore_check_constraints = ON;
+      publishSource(lowPopulation);
+      lowPopulation.exec(`
         UPDATE collector_curated_cities
            SET population = 49999
          WHERE id = 'denpasar-id';
-        PRAGMA ignore_check_constraints = OFF;
       `);
-      assert.deepEqual(await generateCollectorLetters({ DB: d1(retired) }, {
+      const lowPopulationLetters = await generateCollectorLetters({ DB: d1(lowPopulation) }, {
         kind: 'kin-claim', keeperPieceId: 'kp-source-private',
         now: '2026-08-10T00:00:00.000Z',
-      }), []);
+      });
+      assert.equal(lowPopulationLetters.length, 1);
+      assert.match(lowPopulationLetters[0].body, /Denpasar, Indonesia/);
     } finally {
-      retired.close();
+      lowPopulation.close();
     }
 
     const noAdultEvidence = database();

@@ -47,6 +47,7 @@ const migrationsThroughDreams = [
   '024_ownership_foundation.sql', '025_artwork_registration.sql',
   '026_artwork_invitations.sql', '027_certificate_templates.sql',
   '028_collector_privacy.sql', '029_collector_dreams.sql',
+  '035_city_floor_removal.sql',
 ].map(readMigration).join('\n');
 
 function database() {

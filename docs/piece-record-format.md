@@ -214,7 +214,7 @@ Any match throws, and the record is not generated.
 - Written with `onlyIf: { etagDoesNotMatch: '*' }` (write-once), then read
   back and byte-compared before being reported verified, exactly as
   `functions/api/_lib/identityBackup.js` does for identity backups.
-- The `piece_records` D1 row (migration 036) is inserted only after the
+- The `piece_records` D1 row (migration 037) is inserted only after the
   bytes verify. The table forbids UPDATE and DELETE, and a trigger pins
   `r2_key` to `records/{public_code}/{record_hash}.html`.
 - Catalog metadata is snapshotted append-only into

@@ -6,7 +6,7 @@ import { after, describe, it, mock } from 'node:test';
 /**
  * The additive "Add to this piece" layer: artwork-scoped media attach with
  * fail-soft record regeneration, the story as a new admin catalog snapshot,
- * the sealed artist message (migration 039), and the existing-owner path
+ * the sealed artist message (migration 040), and the existing-owner path
  * where registration is followed by a first-bind invitation through the
  * existing invitation machinery. Real migrations 001 through 039, real
  * endpoints, in-memory R2.
@@ -64,8 +64,8 @@ const migrationNames = [
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql', '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
-  '035_artwork_catalog_snapshots.sql', '036_piece_records.sql',
-  '038_piece_media.sql', '039_artist_messages.sql',
+  '036_artwork_catalog_snapshots.sql', '037_piece_records.sql',
+  '039_piece_media.sql', '040_artist_messages.sql',
 ];
 
 type Fixture = ReturnType<typeof fixtureEnvironment>;
@@ -405,7 +405,7 @@ describe('POST /api/admin/artworks/[id]/story', () => {
   });
 });
 
-describe('artist messages (migration 039): sealed until the caretaker unlocks', () => {
+describe('artist messages (migration 040): sealed until the caretaker unlocks', () => {
   it('creates, supersedes on rewrite, and reveals exactly once', async () => {
     const fixture = fixtureEnvironment();
     try {

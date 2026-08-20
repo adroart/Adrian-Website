@@ -14,6 +14,10 @@ const migration = readFileSync(
   new URL('../migrations/028_collector_privacy.sql', import.meta.url),
   'utf8',
 );
+const cityFloorRemoval = readFileSync(
+  new URL('../migrations/035_city_floor_removal.sql', import.meta.url),
+  'utf8',
+);
 
 function database() {
   const db = new DatabaseSync(':memory:');
@@ -42,6 +46,7 @@ function database() {
     );
   `);
   db.exec(migration);
+  db.exec(cityFloorRemoval);
   db.prepare(
     'INSERT INTO users (auth_user_id, clerk_user_id, email) VALUES (?1, ?1, ?2)',
   ).run('auth-adult', 'adult@example.com');
@@ -135,7 +140,7 @@ describe('collector privacy rings', () => {
     }
   });
 
-  it('accepts only a curated, population-qualified city ID and keeps it independent of identity', async () => {
+  it('accepts only a curated, active city ID and keeps it independent of identity', async () => {
     const db = database();
     try {
       const env = { DB: d1(db) };
@@ -173,6 +178,34 @@ describe('collector privacy rings', () => {
       assert.equal(result.ring2.shareCity, true);
       assert.equal(result.ring2.cityId, 'denpasar-id');
       assert.equal(result.ring4.shareName, false);
+    } finally {
+      db.close();
+    }
+  });
+
+  it('lists and consents to a curated city under 50k population (floor removed 2026-08-20)', async () => {
+    const db = database();
+    try {
+      const env = { DB: d1(db) };
+      db.prepare(`
+        INSERT INTO collector_curated_cities (id, label, population, active)
+        VALUES ('ubud-id', 'Ubud, Bali, Indonesia', 35000, 1)
+      `).run();
+      db.prepare(`
+        INSERT INTO collector_curated_cities (id, label, population, active)
+        VALUES ('sayulita-mx', 'Sayulita, Mexico', 4000, 1)
+      `).run();
+      assert.deepEqual(await listCollectorCuratedCities(env), [
+        { id: 'sayulita-mx', label: 'Sayulita, Mexico' },
+        { id: 'ubud-id', label: 'Ubud, Bali, Indonesia' },
+      ]);
+      const result = await updateCollectorPrivacy(env, {
+        userId: 'auth-adult', policyVersion: 'collector-privacy-v1',
+        changedAt: '2026-08-20T12:00:00.000Z',
+        piece: { keeperPieceId: 'kp-adult-piece', shareCity: true, cityId: 'ubud-id' },
+      });
+      assert.equal(result.ring2.shareCity, true);
+      assert.equal(result.ring2.cityId, 'ubud-id');
     } finally {
       db.close();
     }

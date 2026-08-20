@@ -1,5 +1,5 @@
 /**
- * The artist's message, sealed until its caretaker unlocks (migration 039,
+ * The artist's message, sealed until its caretaker unlocks (migration 040,
  * table artist_messages).
  *
  * A message belongs to exactly one physical instance (keeper_piece_id).
@@ -19,7 +19,7 @@ function codedError(code) {
 const FORBIDDEN_BODY_PREFIXES = ['auth-', 'kp-', 'tp-', 'dream-', 'consent-'];
 
 /**
- * Validate a message body against the exact discipline migration 039 (and 031
+ * Validate a message body against the exact discipline migration 040 (and 031
  * before it) enforces: plain single-paragraph text, 1 to 2000 characters
  * after trimming equality, no '@', no newlines, no internal id prefixes.
  */

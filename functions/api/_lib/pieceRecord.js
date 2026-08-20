@@ -245,7 +245,7 @@ async function gatherLineage(env, piece) {
  * mark (a row in collector_shine_removals), which is excluded going forward.
  * Words appear with no name, ever.
  *
- * Migration 041 adds `tier <> 'seal'` as defense in depth: a sealed body can
+ * Migration 042 adds `tier <> 'seal'` as defense in depth: a sealed body can
  * never enter a regenerated record even if its share columns were ever
  * wrong. The guard is deliberately NOT `tier = 'shine'` -- rows shone under
  * the pre-tier rules and later closed (revoked, or fail-safe-closed) carry

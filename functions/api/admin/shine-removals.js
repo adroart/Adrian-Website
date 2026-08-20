@@ -6,7 +6,7 @@
  * publication: nothing here can prevent a piece of content from shining in
  * the first place, only remove it from view once it has.
  *
- * POST records one removal (migration 040, collector_shine_removals) against
+ * POST records one removal (migration 041, collector_shine_removals) against
  * a shone collector_dreams row, and writes a registry_maintenance_events
  * audit row (event_type 'shine_removal') in the house append-only shape
  * (migration 017 / _lib/registryMaintenance.js): idempotency_key, before/

@@ -31,15 +31,15 @@ import { buildPieceRecord } from '../functions/api/_lib/pieceRecord.js';
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
 
 /**
- * Every migration numbered 001 through 040, applied in file order. Migration
- * 037 (and, before this test was written, 038/039) is owned by another agent
+ * Every migration numbered 001 through 041, applied in file order. Migration
+ * 038 (and, before this test was written, 039/040) is owned by another agent
  * authoring concurrently with this file: whichever of them exist on disk at
  * test-run time are picked up, so this suite is green whether or not they
  * have landed yet.
  */
-function migrationsThrough040() {
+function migrationsThrough041() {
   return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 40)
+    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 41)
     .sort()
     .map((name) => readFileSync(path.join(MIGRATIONS_DIR, name), 'utf8'))
     .join('\n');
@@ -172,7 +172,7 @@ function seedRegistry(db: DatabaseSync) {
 
 async function fixtureEnv() {
   const database = new DatabaseSync(':memory:');
-  database.exec(migrationsThrough040());
+  database.exec(migrationsThrough041());
   seedRegistry(database);
   const env = {
     DB: d1(database),

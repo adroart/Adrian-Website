@@ -126,7 +126,7 @@ async function generateKinLetters(db, keeperPieceId, now) {
         ON privacy.keeper_piece_id = piece.id AND privacy.user_id = account.id
        AND privacy.share_city = 1
       JOIN collector_curated_cities AS city
-        ON city.id = privacy.city_id AND city.active = 1 AND city.population >= 50000
+        ON city.id = privacy.city_id AND city.active = 1
      WHERE piece.id = ?1 AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
   `).bind(source.id, now).first();
@@ -184,7 +184,7 @@ async function currentPublicCity(db, keeperPieceId, now) {
         ON privacy.keeper_piece_id = piece.id AND privacy.user_id = account.id
        AND privacy.share_city = 1
       JOIN collector_curated_cities AS city
-        ON city.id = privacy.city_id AND city.active = 1 AND city.population >= 50000
+        ON city.id = privacy.city_id AND city.active = 1
      WHERE piece.id = ?1 AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
   `).bind(keeperPieceId, now).first();

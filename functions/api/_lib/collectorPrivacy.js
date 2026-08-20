@@ -94,7 +94,7 @@ export async function getCollectorPrivacy(env, { userId, keeperPieceId = null })
   if (keeperPieceId) {
     piece = await db.prepare(`
       SELECT privacy.share_city, privacy.city_id, privacy.policy_version,
-             CASE WHEN city.active = 1 AND city.population >= 50000
+             CASE WHEN city.active = 1
                   THEN 1 ELSE 0 END AS city_eligible
         FROM collector_piece_privacy AS privacy
         LEFT JOIN collector_curated_cities AS city ON city.id = privacy.city_id
@@ -120,7 +120,7 @@ export async function listCollectorCuratedCities(env) {
   const db = requiredDatabase(env);
   const result = await db.prepare(`
     SELECT id, label FROM collector_curated_cities
-     WHERE active = 1 AND population >= 50000
+     WHERE active = 1
      ORDER BY label COLLATE NOCASE, id
   `).all();
   return (result?.results ?? []).map((row) => ({ id: row.id, label: row.label }));
@@ -211,13 +211,13 @@ export async function updateCollectorPrivacy(env, input) {
     if (input.piece.shareCity) {
       const city = await db.prepare(`
         SELECT id FROM collector_curated_cities
-         WHERE id = ?1 AND active = 1 AND population >= 50000
+         WHERE id = ?1 AND active = 1
       `).bind(input.piece.cityId).first();
       if (!city) throw new Error('city_not_curated');
     }
     const currentRow = await db.prepare(`
       SELECT privacy.share_city, privacy.city_id,
-             CASE WHEN city.active = 1 AND city.population >= 50000
+             CASE WHEN city.active = 1
                   THEN 1 ELSE 0 END AS city_eligible
         FROM collector_piece_privacy AS privacy
         LEFT JOIN collector_curated_cities AS city ON city.id = privacy.city_id

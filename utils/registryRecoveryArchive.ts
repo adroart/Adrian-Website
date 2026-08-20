@@ -817,7 +817,7 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
           (payload.tables as { collector_dreams?: RecoveryRow[] }).collector_dreams ?? []
         ).map((row) => ({
           ...row,
-          // Mirrors migration 041's ALTER TABLE defaults exactly: every row
+          // Mirrors migration 042's ALTER TABLE defaults exactly: every row
           // gets heirs_may_share = 1 (the column default), and the tier
           // backfill UPDATE sets tier = 'shine' for exactly the rows already
           // standing in the light (an open, non-revoked anonymous/attributed
@@ -1625,14 +1625,14 @@ BEGIN
   );
 END;`;
 
-// Migration 041's tier-model triggers, recreated verbatim (see
-// migrations/041_collector_dream_tiers.sql). collector_dreams_tier_transitions
+// Migration 042's tier-model triggers, recreated verbatim (see
+// migrations/042_collector_dream_tiers.sql). collector_dreams_tier_transitions
 // and collector_dreams_seal_entry_coherence fire only BEFORE UPDATE, and
 // collector_dreams_seal_pins_heirs_update likewise -- restore never updates a
 // collector_dreams row, so none of the three can block a restore INSERT.
 // They are still dropped and recreated around the bulk insert below, exactly
 // like the 029 guards, so the live trigger set is fully accounted for and
-// stays byte-identical to a fresh 001-041 migration run.
+// stays byte-identical to a fresh 001-042 migration run.
 const DREAM_TIER_TRANSITIONS_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_tier_transitions
 BEFORE UPDATE ON collector_dreams
 WHEN NEW.tier IS NOT OLD.tier
