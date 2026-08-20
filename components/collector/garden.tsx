@@ -30,7 +30,7 @@
  * intended shape and are marked as placeholders.
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PLACEHOLDERS } from './copy';
 import { Area, Brass, Eyebrow, Flag, Ground, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
@@ -85,6 +85,13 @@ export const Garden: React.FC<{
   const [view, setView] = useState<View>('ask');
   const [which, setWhich] = useState(live ? 0 : 3);
 
+  /* forward and back through the eight questions, both wrapping. "Next" is
+     the cycle the file already had (askOwn kept wired to it, unchanged); the
+     ask screen's chevrons, swipe, and arrow keys get both directions. */
+  const questionCount = COPY.garden.questions.length;
+  const goNext = () => setWhich(i => (i + 1) % questionCount);
+  const goPrev = () => setWhich(i => (i - 1 + questionCount) % questionCount);
+
   if (view === 'index') {
     return (
       <GardenIndex
@@ -120,7 +127,9 @@ export const Garden: React.FC<{
       index={which}
       onSeeAll={() => setView('index')}
       onWrite={() => setView('write')}
-      onAnother={() => setWhich(i => (i + 1) % COPY.garden.questions.length)}
+      onAnother={goNext}
+      onPrev={goPrev}
+      onNext={goNext}
     />
   );
 };
@@ -130,65 +139,180 @@ export const Garden: React.FC<{
  * voice. Nothing else on the screen.
  * ------------------------------------------------------------------ */
 
+/** swipe past this many px, horizontally-dominant, to turn the question */
+const SWIPE_THRESHOLD = 48;
+
 const GardenAsk: React.FC<{
   index: number;
   onSeeAll: () => void;
   onWrite: () => void;
   onAnother: () => void;
-}> = ({ index, onSeeAll, onWrite, onAnother }) => (
-  <Ground light="b" pad="44px 30px 30px">
-    <div style={{ flex: 'none', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14 }}>
-      <Eyebrow>{COPY.garden.asks}</Eyebrow>
-      <button
-        type="button"
-        onClick={onSeeAll}
-        style={{ background: 'none', border: 0, cursor: 'pointer', fontFamily: F.body, fontSize: 13.5, color: C.brass }}
-      >
-        {COPY.garden.seeAll}
-      </button>
-    </div>
+  onPrev: () => void;
+  onNext: () => void;
+}> = ({ index, onSeeAll, onWrite, onAnother, onPrev, onNext }) => {
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <p
-        style={{
-          margin: 0,
-          fontFamily: F.display,
-          fontWeight: 300,
-          fontSize: 37,
-          lineHeight: 1.14,
-          color: C.ink,
-          textWrap: 'pretty',
-        }}
-      >
-        <Flag text={COPY.garden.questions[index]} />
-      </p>
-      <p style={{ margin: '22px 0 0', fontFamily: F.body, fontSize: 14.5, lineHeight: 1.7, color: C.inkBody }}>
-        <Flag text={COPY.garden.frames[0]} />
-      </p>
-    </div>
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    touchStart.current = t ? { x: t.clientX, y: t.clientY } : null;
+  };
 
-    <div
-      style={{
-        flex: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 16,
-        paddingTop: 18,
-        borderTop: `1px solid ${C.hair}`,
-      }}
-    >
-      <TLink onClick={onAnother}>{COPY.garden.askOwn}</TLink>
-      <button
-        type="button"
-        onClick={onWrite}
-        style={{ background: 'none', border: 0, cursor: 'pointer', fontFamily: F.body, fontSize: 15.5, color: C.brass }}
-      >
-        {COPY.garden.writeIt} →
-      </button>
-    </div>
-  </Ground>
-);
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    /* a mostly-vertical drag is a scroll attempt, not a page turn */
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx < 0) onNext();
+    else onPrev();
+  };
+
+  /* ArrowLeft/Right turn the question while any control on this screen holds
+     focus; nothing here grabs focus itself, so Tab order is untouched. */
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') onPrev();
+    else if (e.key === 'ArrowRight') onNext();
+  };
+
+  return (
+    <Ground light="b" pad="44px 30px 30px">
+      <div style={{ display: 'contents' }} onKeyDown={handleKeyDown}>
+        <div style={{ flex: 'none' }}>
+          <Eyebrow>{COPY.garden.asks}</Eyebrow>
+        </div>
+
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div
+            style={{ position: 'relative' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* the app's one deliberate arrow exception: whisper quiet, brass,
+                low opacity until touched. Font glyphs, not an icon set. */}
+            <button
+              type="button"
+              onClick={onPrev}
+              aria-label="Previous question"
+              className="garden-chevron"
+              style={{
+                position: 'absolute',
+                left: -30,
+                top: 0,
+                bottom: 0,
+                width: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'none',
+                border: 0,
+                padding: 0,
+                margin: 0,
+                cursor: 'pointer',
+                color: C.brass,
+                fontFamily: F.body,
+                fontSize: 18,
+                lineHeight: 1,
+              }}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              aria-label="Next question"
+              className="garden-chevron"
+              style={{
+                position: 'absolute',
+                right: -30,
+                top: 0,
+                bottom: 0,
+                width: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'none',
+                border: 0,
+                padding: 0,
+                margin: 0,
+                cursor: 'pointer',
+                color: C.brass,
+                fontFamily: F.body,
+                fontSize: 18,
+                lineHeight: 1,
+              }}
+            >
+              ›
+            </button>
+
+            {/* keyed on the question so it re-mounts and re-fades on every
+                turn; the file's existing quiet-entry idiom (ceremony/styles.tsx
+                `ignite`), just short enough to read as a swap, not a scene.
+                Reduced motion is handled globally by .collector-root's rule. */}
+            <div key={index} style={{ animation: 'ignite .2s ease-out both' }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: F.display,
+                  fontWeight: 300,
+                  fontSize: 37,
+                  lineHeight: 1.14,
+                  color: C.ink,
+                  textWrap: 'pretty',
+                }}
+              >
+                <Flag text={COPY.garden.questions[index]} />
+              </p>
+              <p style={{ margin: '22px 0 0', fontFamily: F.body, fontSize: 14.5, lineHeight: 1.7, color: C.inkBody }}>
+                <Flag text={COPY.garden.frames[0]} />
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onWrite}
+            style={{
+              alignSelf: 'flex-start',
+              marginTop: 22,
+              background: 'none',
+              border: 0,
+              cursor: 'pointer',
+              fontFamily: F.body,
+              fontSize: 15.5,
+              color: C.brass,
+            }}
+          >
+            {COPY.garden.writeIt}
+          </button>
+        </div>
+
+        <div
+          style={{
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            paddingTop: 18,
+            borderTop: `1px solid ${C.hair}`,
+          }}
+        >
+          <TLink onClick={onSeeAll}>{COPY.garden.seeAll}</TLink>
+          <TLink onClick={onAnother}>{COPY.garden.askOwn}</TLink>
+        </div>
+      </div>
+
+      <style>{`
+        .garden-chevron { opacity: .35; transition: opacity .15s ease; }
+        .garden-chevron:hover, .garden-chevron:focus-visible { opacity: .7; }
+      `}</style>
+    </Ground>
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * The index. A numbered list with the first line of what was written
