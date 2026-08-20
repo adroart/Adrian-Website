@@ -126,8 +126,12 @@ describe('the vault is gated on a bound outcome', () => {
     assert.equal(vaultFires.length, 2);
     assert.match(source, /outcome\.kind === 'vault'\) \{\s*\n\s*setVault\(true\)/);
     assert.match(source, /value === PIECE\.code\) \{\s*\n\s*setVault\(true\)/);
-    // the completion effect only schedules the answer; it never opens the vault
-    assert.match(source, /if \(filled !== 16 \|\| wrong \|\| vault\) return;\s*\n\s*const t = window\.setTimeout\(\(\) => answer\(code\), PAUSE_MS\);/);
+    // pinned mechanic superseded by Adrian 2026-08-20, see wording record §7:
+    // the sixteenth keystroke no longer auto-fires the answer on a timer: no
+    // setTimeout-answer pattern exists at all, and the readout's own brass
+    // press is the only thing that calls answer(), gated on all sixteen read.
+    assert.doesNotMatch(source, /window\.setTimeout\(\(\) => answer\(code\)/);
+    assert.match(source, /filled === 16 && !wrong && !vault[\s\S]{0,100}answer\(code\)/);
   });
 
   it('maps every bind outcome kind to a screen', () => {

@@ -8,11 +8,11 @@
  * The unlock is its own page, reached by pressing Begin. The rows, the dream and
  * the status give way; the field is what the page is for.
  *
- * THE LAST CHARACTER IS THE PRESS. No second button. The code is either true or
- * it is not, so there is nothing to confirm. But there is a deliberate pause
- * before it fires: at sixteen characters a mistype is likely, and firing the
- * instant the last character lands would reject someone mid-correction, before
- * they had seen what they typed.
+ * Adrian's ruling, 2026-08-20 (see collector-screen-wording.md §7): a tap on any
+ * already-read box selects it, and typing there replaces just that character
+ * and steps forward, keeping every other value — there is no more press on the
+ * sixteenth keystroke. At sixteen the `{filled} / 16` readout becomes, in its
+ * own slot, a quiet brass press that fires the answer.
  *
  * The motion, LOCKED and Adrian's spec: the characters resolve one at a time,
  * like tumblers finding their places, a pause, one soft click as the last one
@@ -27,11 +27,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { C, F } from './tokens';
-import { COPY, PIECE } from './copy';
+import { COPY, PIECE, placeholder } from './copy';
 import { Brass, Eyebrow, Ground, TLink } from './ui';
-
-/** how long the piece waits after the sixteenth character before it answers */
-const PAUSE_MS = 620;
 
 /**
  * What a wired submit resolved to. The vault fires ONLY on 'vault' — an
@@ -85,6 +82,9 @@ export const CodePage: React.FC<Props> = ({
   );
   const [wrong, setWrong] = useState(Boolean(initialWrong));
   const [vault, setVault] = useState(false);
+  /* the box currently selected for per-character editing. Set by a tap on an
+     already-read box; null is the ordinary append/paste mode. */
+  const [editIndex, setEditIndex] = useState<number | null>(null);
   const answering = useRef(false);
   const input = useRef<HTMLInputElement>(null);
 
@@ -105,6 +105,7 @@ export const CodePage: React.FC<Props> = ({
               window.setTimeout(onTrue, 1300);
             } else if (outcome.kind === 'wrong') {
               setWrong(true);
+              setEditIndex(null);
             }
             /* 'handled': the parent moved the journey; this page is leaving */
           })
@@ -122,29 +123,63 @@ export const CodePage: React.FC<Props> = ({
         window.setTimeout(onTrue, 1300);
       } else {
         setWrong(true);
+        setEditIndex(null);
       }
     },
     [onSubmit, onTrue],
   );
 
   useEffect(() => {
-    if (filled !== 16 || wrong || vault) return;
-    const t = window.setTimeout(() => answer(code), PAUSE_MS);
-    return () => window.clearTimeout(t);
-  }, [code, filled, wrong, vault, answer]);
-
-  useEffect(() => {
     input.current?.focus();
   }, []);
 
+  /* ordinary append/paste path. Only live while nothing is selected for
+     per-character editing — a tap on a box owns the keystrokes until it is
+     answered by onKeyDown below or the selection is cleared. */
   const type = (raw: string) => {
-    if (wrong) return;
+    if (wrong || editIndex !== null) return;
     setCode(raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16));
+  };
+
+  /* a tap on an already-read box: select it, and hand the hidden input's
+     next keystroke to the splice-in-place path below. Boxes ahead of what
+     has been read carry nothing to edit yet, so they stay inert. */
+  const selectBox = (index: number) => {
+    if (wrong || vault || index >= filled) return;
+    setEditIndex(index);
+    input.current?.focus();
+  };
+
+  /* Adrian's ruling, 2026-08-20: while a box is selected, a single
+     alphanumeric key replaces just that character (after the same A-Z0-9
+     normalization the append path uses) and the selection steps forward one
+     box, clamped to the last box and cleared once there is nothing further
+     already read to continue into. Backspace clears the selected slot
+     instead — the characters after it close the gap — and steps back;
+     stepping back off the first box leaves editing. Every other key is left
+     alone for the browser to handle normally. */
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (editIndex === null || wrong) return;
+    const at = editIndex;
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      setCode(prev => prev.slice(0, at) + prev.slice(at + 1));
+      setEditIndex(at === 0 ? null : at - 1);
+      return;
+    }
+    if (e.key.length !== 1) return;
+    const upper = e.key.toUpperCase();
+    if (!/^[A-Z0-9]$/.test(upper)) return;
+    e.preventDefault();
+    setCode(prev => prev.slice(0, at) + upper + prev.slice(at + 1));
+    const advanced = at + 1;
+    setEditIndex(advanced >= filled ? null : Math.min(advanced, 15));
   };
 
   const retry = () => {
     setWrong(false);
     setCode('');
+    setEditIndex(null);
     input.current?.focus();
   };
 
@@ -276,38 +311,85 @@ export const CodePage: React.FC<Props> = ({
             />
           ))}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* the hidden input below sits absolutely over the whole plate so a
+              tap anywhere still focuses it; the boxes now carry real buttons
+              of their own, so they need to sit above that overlay in the
+              stacking order or the invisible input would eat every tap. */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[rowOne, rowTwo].map((row, r) => (
               <div key={r} style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                 {row.map((glyph, i) => {
                   const index = r * 8 + i;
                   const on = index < filled;
-                  return (
+                  const selected = editIndex === index;
+                  const boxStyle: React.CSSProperties = {
+                    flex: 1,
+                    height: 44,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: wrong
+                      ? 'rgba(196,90,60,.06)'
+                      : selected
+                        ? 'rgba(212,184,138,.1)'
+                        : on
+                          ? 'rgba(0,0,0,.42)'
+                          : 'rgba(0,0,0,.3)',
+                    boxShadow: wrong
+                      ? `inset 0 0 0 1px ${C.wrongEdge}, inset 0 2px 4px rgba(0,0,0,.55)`
+                      : selected
+                        ? `inset 0 0 0 1.5px ${C.brassEdge}, inset 0 2px 4px rgba(0,0,0,.55), 0 0 8px rgba(212,184,138,.28)`
+                        : on
+                          ? 'inset 0 0 0 1px rgba(237,233,226,.22), inset 0 2px 4px rgba(0,0,0,.55)'
+                          : 'inset 0 0 0 1px rgba(237,233,226,.1), inset 0 2px 4px rgba(0,0,0,.55)',
+                  };
+                  const glyphEl = (
                     <span
-                      key={i}
                       style={{
-                        flex: 1,
-                        height: 44,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: wrong ? 'rgba(196,90,60,.06)' : on ? 'rgba(0,0,0,.42)' : 'rgba(0,0,0,.3)',
-                        boxShadow: `inset 0 0 0 1px ${wrong ? C.wrongEdge : on ? 'rgba(237,233,226,.22)' : 'rgba(237,233,226,.1)'}, inset 0 2px 4px rgba(0,0,0,.55)`,
+                        display: 'block',
+                        fontFamily: F.mono,
+                        fontSize: 17,
+                        color: wrong ? C.wrong : selected ? C.brass : C.inkBody,
+                        animation: on && !wrong ? 'tumble .22s cubic-bezier(.22,.61,.36,1) both' : undefined,
                       }}
                     >
-                      <span
-                        style={{
-                          display: 'block',
-                          fontFamily: F.mono,
-                          fontSize: 17,
-                          color: wrong ? C.wrong : C.inkBody,
-                          animation: on && !wrong ? 'tumble .22s cubic-bezier(.22,.61,.36,1) both' : undefined,
-                        }}
-                      >
-                        {glyph.trim()}
-                      </span>
+                      {glyph.trim()}
                     </span>
+                  );
+                  /* only an already-read box has a character to edit, so only
+                     that box becomes a real, tappable button; a box ahead of
+                     what has been read stays the plain readout it always was
+                     — a native `disabled` button would silently swallow the
+                     tap instead of letting it bubble to "tap anywhere on the
+                     plate focuses the input" on the wrapper below. */
+                  if (!on) {
+                    return (
+                      <span key={i} style={boxStyle}>
+                        {glyphEl}
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => selectBox(index)}
+                      aria-label={`Edit character ${index + 1} of 16`}
+                      aria-pressed={selected}
+                      style={{
+                        ...boxStyle,
+                        margin: 0,
+                        border: 0,
+                        borderRadius: 0,
+                        padding: 0,
+                        font: 'inherit',
+                        appearance: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {glyphEl}
+                    </button>
                   );
                 })}
               </div>
@@ -315,36 +397,49 @@ export const CodePage: React.FC<Props> = ({
           </div>
 
           {/* the tumbler readout. It states how far the code has been read, not
-              how close the person is or how many times they have tried. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 20 }}>
-            <span
-              style={{
-                flex: 1,
-                height: 3,
-                background: 'rgba(0,0,0,.5)',
-                boxShadow: 'inset 0 0 0 1px rgba(237,233,226,.1)',
-                overflow: 'hidden',
-                display: 'block',
-              }}
-            >
-              <span
-                style={{
-                  display: 'block',
-                  height: '100%',
-                  width: `${(filled / 16) * 100}%`,
-                  background: 'repeating-linear-gradient(90deg,rgba(237,233,226,.5) 0 3px,transparent 3px 6px)',
-                }}
-              />
-            </span>
-            <span style={{ fontFamily: F.mono, fontSize: 9.5, letterSpacing: '.14em', color: C.inkQuiet, flex: 'none' }}>
-              {filled} / 16
-            </span>
+              how close the person is or how many times they have tried. At
+              sixteen it gives up its slot to the unlock press itself: Adrian's
+              ruling, 2026-08-20, retires the auto-fire on the last keystroke.
+              Same stacking note as the boxes above: the press needs to sit
+              above the hidden input's overlay to receive its own tap. */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, paddingTop: 20 }}>
+            {filled === 16 && !wrong && !vault ? (
+              <Brass full onClick={() => answer(code)}>
+                {placeholder('Unlock')}
+              </Brass>
+            ) : (
+              <>
+                <span
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    background: 'rgba(0,0,0,.5)',
+                    boxShadow: 'inset 0 0 0 1px rgba(237,233,226,.1)',
+                    overflow: 'hidden',
+                    display: 'block',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      height: '100%',
+                      width: `${(filled / 16) * 100}%`,
+                      background: 'repeating-linear-gradient(90deg,rgba(237,233,226,.5) 0 3px,transparent 3px 6px)',
+                    }}
+                  />
+                </span>
+                <span style={{ fontFamily: F.mono, fontSize: 9.5, letterSpacing: '.14em', color: C.inkQuiet, flex: 'none' }}>
+                  {filled} / 16
+                </span>
+              </>
+            )}
           </div>
 
           <input
             ref={input}
             value={code}
             onChange={e => type(e.target.value)}
+            onKeyDown={onKeyDown}
             maxLength={16}
             autoComplete="off"
             autoCorrect="off"
