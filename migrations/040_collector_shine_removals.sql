@@ -56,10 +56,11 @@ CREATE INDEX idx_collector_shine_removals_piece
 CREATE TRIGGER collector_shine_removals_content_belongs_to_piece
 BEFORE INSERT ON collector_shine_removals
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'shine removal content must belong to the named piece')
+   WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams
      WHERE id = NEW.content_id AND keeper_piece_id = NEW.keeper_piece_id
-  ) THEN RAISE(ABORT, 'shine removal content must belong to the named piece') END;
+  );
 END;
 
 CREATE TRIGGER collector_shine_removals_no_update

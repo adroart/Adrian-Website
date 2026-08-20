@@ -116,8 +116,8 @@ END;
 CREATE TRIGGER piece_media_removal_only_update
 BEFORE UPDATE ON piece_media
 BEGIN
-  SELECT CASE WHEN
-    NEW.id IS NOT OLD.id
+  SELECT RAISE(ABORT, 'piece_media_update_must_be_a_first_soft_removal')
+   WHERE NEW.id IS NOT OLD.id
     OR NEW.keeper_piece_id IS NOT OLD.keeper_piece_id
     OR NEW.artwork_id IS NOT OLD.artwork_id
     OR NEW.kind IS NOT OLD.kind
@@ -128,8 +128,7 @@ BEGIN
     OR NEW.created_at IS NOT OLD.created_at
     OR OLD.removed_at IS NOT NULL
     OR NEW.removed_at IS NULL
-    OR NEW.removed_reason IS NULL
-  THEN RAISE(ABORT, 'piece_media_update_must_be_a_first_soft_removal') END;
+    OR NEW.removed_reason IS NULL;
 END;
 
 CREATE TRIGGER piece_media_no_delete

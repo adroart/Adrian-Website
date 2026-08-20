@@ -73,14 +73,13 @@ CREATE UNIQUE INDEX idx_artist_messages_one_active
 CREATE TRIGGER artist_messages_update_guard
 BEFORE UPDATE ON artist_messages
 BEGIN
-  SELECT CASE WHEN
-    NEW.id IS NOT OLD.id
+  SELECT RAISE(ABORT, 'artist message update must be a first reveal or a first supersede')
+   WHERE NEW.id IS NOT OLD.id
     OR NEW.keeper_piece_id IS NOT OLD.keeper_piece_id
     OR NEW.body IS NOT OLD.body
     OR NEW.created_at IS NOT OLD.created_at
     OR (OLD.revealed_at IS NOT NULL AND NEW.revealed_at IS NOT OLD.revealed_at)
-    OR (OLD.superseded_at IS NOT NULL AND NEW.superseded_at IS NOT OLD.superseded_at)
-  THEN RAISE(ABORT, 'artist message update must be a first reveal or a first supersede') END;
+    OR (OLD.superseded_at IS NOT NULL AND NEW.superseded_at IS NOT OLD.superseded_at);
 END;
 
 CREATE TRIGGER artist_messages_no_delete

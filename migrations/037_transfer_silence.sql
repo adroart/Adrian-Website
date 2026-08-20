@@ -98,14 +98,15 @@ CREATE INDEX idx_claim_silence_reminders_window
 CREATE TRIGGER claim_silence_windows_insert_guard
 BEFORE INSERT ON claim_silence_windows
 BEGIN
-  SELECT CASE WHEN NEW.status <> 'open' THEN
-    RAISE(ABORT, 'silence windows are born open') END;
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'silence windows are born open')
+   WHERE NEW.status <> 'open';
+  SELECT RAISE(ABORT, 'silence window requires a pending claim on the same piece')
+   WHERE NOT EXISTS (
     SELECT 1 FROM artwork_claim_requests claim
      WHERE claim.id = NEW.claim_request_id
        AND claim.keeper_piece_id = NEW.keeper_piece_id
        AND claim.status = 'pending'
-  ) THEN RAISE(ABORT, 'silence window requires a pending claim on the same piece') END;
+  );
 END;
 
 -- Windows are never deleted: the schedule is part of the record.
@@ -120,42 +121,45 @@ END;
 CREATE TRIGGER claim_silence_windows_transition_guard
 BEFORE UPDATE ON claim_silence_windows
 BEGIN
-  SELECT CASE WHEN NEW.id <> OLD.id
+  SELECT RAISE(ABORT, 'silence window identity is immutable')
+   WHERE NEW.id <> OLD.id
     OR NEW.claim_request_id <> OLD.claim_request_id
     OR NEW.keeper_piece_id <> OLD.keeper_piece_id
     OR NEW.opened_at <> OLD.opened_at
-    OR NEW.deadline_at <> OLD.deadline_at
-  THEN RAISE(ABORT, 'silence window identity is immutable') END;
-  SELECT CASE WHEN OLD.status IN ('passed', 'refused', 'withdrawn', 'superseded')
-  THEN RAISE(ABORT, 'terminal silence window is immutable') END;
-  SELECT CASE WHEN NOT (
+    OR NEW.deadline_at <> OLD.deadline_at;
+  SELECT RAISE(ABORT, 'terminal silence window is immutable')
+   WHERE OLD.status IN ('passed', 'refused', 'withdrawn', 'superseded');
+  SELECT RAISE(ABORT, 'illegal silence window transition')
+   WHERE NOT (
     (OLD.status = 'open'
       AND NEW.status IN ('reminded', 'passed', 'refused', 'withdrawn', 'superseded'))
     OR (OLD.status = 'reminded'
       AND NEW.status IN ('passed', 'refused', 'withdrawn', 'superseded'))
-  ) THEN RAISE(ABORT, 'illegal silence window transition') END;
+  );
   -- The pass only after the stored deadline (against the supplied passed_at;
   -- wall-clock truthfulness stays app-side) and never without more than one
   -- recorded reminder. The table CHECKs already force passed_at/refused_at
   -- presence to match the status.
-  SELECT CASE WHEN NEW.status = 'passed'
-    AND julianday(NEW.passed_at) < julianday(OLD.deadline_at)
-  THEN RAISE(ABORT, 'silence pass requires the deadline to have lapsed') END;
-  SELECT CASE WHEN NEW.status = 'passed' AND (
+  SELECT RAISE(ABORT, 'silence pass requires the deadline to have lapsed')
+   WHERE NEW.status = 'passed'
+    AND julianday(NEW.passed_at) < julianday(OLD.deadline_at);
+  SELECT RAISE(ABORT, 'silence pass requires more than one reminder')
+   WHERE NEW.status = 'passed' AND (
     SELECT COUNT(*) FROM claim_silence_reminders reminder
      WHERE reminder.window_id = OLD.id
-  ) < 2 THEN RAISE(ABORT, 'silence pass requires more than one reminder') END;
+  ) < 2;
 END;
 
 -- Reminders are append-only and only land on a still-active window.
 CREATE TRIGGER claim_silence_reminders_active_window_guard
 BEFORE INSERT ON claim_silence_reminders
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'reminders require an active silence window')
+   WHERE NOT EXISTS (
     SELECT 1 FROM claim_silence_windows window
      WHERE window.id = NEW.window_id
        AND window.status IN ('open', 'reminded')
-  ) THEN RAISE(ABORT, 'reminders require an active silence window') END;
+  );
 END;
 
 CREATE TRIGGER claim_silence_reminders_no_update
