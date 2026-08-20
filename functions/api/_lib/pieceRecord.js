@@ -244,21 +244,33 @@ async function gatherLineage(env, piece) {
  * state later changed, EXCEPT content carrying an abuse-management removal
  * mark (a row in collector_shine_removals), which is excluded going forward.
  * Words appear with no name, ever.
+ *
+ * Migration 041 adds `tier <> 'seal'` as defense in depth: a sealed body can
+ * never enter a regenerated record even if its share columns were ever
+ * wrong. The guard is deliberately NOT `tier = 'shine'` -- rows shone under
+ * the pre-tier rules and later closed (revoked, or fail-safe-closed) carry
+ * tier 'keep' after the 041 backfill, and once-shone-stays-shone keeps their
+ * words in the record; structurally, nothing shone can ever become 'seal'
+ * (041 seal-entry coherence), so the seal exclusion can never contradict
+ * that rule. The tier-less query below covers only the deploy window where
+ * 041 has not been applied yet.
  */
 async function gatherShines(env, keeperPieceId) {
-  let rows = [];
-  try {
-    rows = await allRows(
-      env,
-      `SELECT id, body, scope, public_shared_at
+  const shinesSql = (tierGuard) => `SELECT id, body, scope, public_shared_at
          FROM collector_dreams
         WHERE keeper_piece_id = ?1
           AND public_shared_at IS NOT NULL
-        ORDER BY public_shared_at ASC, created_at ASC, id ASC`,
-      keeperPieceId,
-    );
+          ${tierGuard}
+        ORDER BY public_shared_at ASC, created_at ASC, id ASC`;
+  let rows = [];
+  try {
+    rows = await allRows(env, shinesSql("AND tier <> 'seal'"), keeperPieceId);
   } catch (error) {
-    if (!isMissingTableError(error)) throw error;
+    if (error instanceof Error && /no such column:.*\btier\b/i.test(error.message)) {
+      rows = await allRows(env, shinesSql(''), keeperPieceId);
+    } else if (!isMissingTableError(error)) {
+      throw error;
+    }
   }
   let removed = new Set();
   try {

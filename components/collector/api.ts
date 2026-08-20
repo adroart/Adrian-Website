@@ -802,6 +802,16 @@ export type CollectorDreamScope = 'self' | 'family' | 'community' | 'planet';
 export type CollectorDreamVisibility = 'private' | 'anonymous' | 'attributed';
 export type CollectorDreamMarkerKind = 'milestone' | 'change' | 'encounter' | 'fulfillment';
 
+/**
+ * The three tiers, named for what they actually do (migration 041,
+ * todo/plans/collector-screen-wording.md §6 "Three tiers"): 'shine' is read
+ * by anyone who meets the piece and is permanent once entered; 'keep'
+ * travels with the piece and opens only to whoever holds it; 'seal' opens to
+ * nobody but its writer, ever. Allowed transitions: keep->shine, keep->seal,
+ * seal->shine.
+ */
+export type DreamTier = 'shine' | 'keep' | 'seal';
+
 export interface CollectorDream {
   id: string;
   keeperPieceId: string;
@@ -815,6 +825,28 @@ export interface CollectorDream {
   revokedAt: string | null;
   fulfilledAt: string | null;
   archivedAt: string | null;
+  /** Present once migration 041 is applied server-side. */
+  tier?: DreamTier;
+  /** "The ones who come after may share this" -- pinned false on 'seal'. */
+  heirsMayShare?: boolean;
+  /** Convenience mirror of tier === 'seal'. When the signed-in account may
+   * not read a body (someone else's sealed words, or another writer's kept
+   * words on a piece you no longer hold), the server sends `body` as null;
+   * use TieredCollectorDream where that possibility must be typed. */
+  sealed?: boolean;
+}
+
+/**
+ * The post-041 dream shape, precise about withheld bodies: the server sends
+ * `body: null` for words the requesting account may not read (seal-tier
+ * bodies belong to their writer alone; keep-tier bodies open only to the
+ * piece's current holder). The writer always receives their own words.
+ */
+export interface TieredCollectorDream extends Omit<CollectorDream, 'body' | 'tier' | 'heirsMayShare' | 'sealed'> {
+  body: string | null;
+  tier: DreamTier;
+  heirsMayShare: boolean;
+  sealed: boolean;
 }
 
 export interface CollectorDreamMarker {
@@ -911,6 +943,33 @@ export async function revokeCollectorDreamSharing(input: {
       action: 'revoke',
       keeperPieceId: input.keeperPieceId,
       visibility: 'private',
+      idempotencyKey: dreamIdempotencyKey(input.idempotencyKey),
+    }),
+  });
+}
+
+/**
+ * POST action:'tier' — move the standing dream between tiers
+ * (functions/api/collector/dreams.js -> collectorDreams.js
+ * setCollectorDreamTier). 'keep' is never a destination: shine is permanent
+ * and seal->keep is forbidden, so only 'shine' and 'seal' can be asked for.
+ * Documented rejections (all 409): shine_is_permanent, shone_cannot_seal,
+ * tier_unchanged, dream_sealed, version_conflict, idempotency_conflict;
+ * 503 dream_tiers_unavailable while migration 041 has not been applied.
+ * Tier changes are not gated by the yearly birthday window.
+ */
+export async function setCollectorDreamTier(input: {
+  keeperPieceId: string;
+  tier: Exclude<DreamTier, 'keep'>;
+  idempotencyKey?: string;
+}): Promise<ApiOutcome<CollectorDreamState>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest<CollectorDreamState>('/api/collector/dreams', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'tier',
+      keeperPieceId: input.keeperPieceId,
+      tier: input.tier,
       idempotencyKey: dreamIdempotencyKey(input.idempotencyKey),
     }),
   });

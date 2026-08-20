@@ -3,6 +3,11 @@ const DREAM_SCOPES = new Set([
 ]);
 const DREAM_VISIBILITIES = new Set(['private', 'anonymous', 'attributed']);
 const PUBLIC_DREAM_VISIBILITIES = new Set(['anonymous', 'attributed']);
+// Three tiers, named for what they actually do (migration 041,
+// collector-screen-wording.md §6 "Three tiers, and what outlives you"):
+// shine is public forever, keep travels with the piece and opens to whoever
+// holds it, seal opens to nobody but its writer, ever.
+const DREAM_TIERS = new Set(['shine', 'keep', 'seal']);
 const MARKER_KINDS = new Set(['milestone', 'change', 'encounter', 'fulfillment']);
 const RITUAL_ACTIONS = new Set(['reinforce', 'plant-new', 'fulfilled']);
 export const COLLECTOR_RITUAL_WINDOW_DAYS = 15;
@@ -45,12 +50,58 @@ function mutationId() {
   return `dream-mutation-${crypto.randomUUID().replaceAll('-', '')}`;
 }
 
-function dreamFromRow(row) {
+function tierChangeId() {
+  return `dream-tier-${crypto.randomUUID().replaceAll('-', '')}`;
+}
+
+/**
+ * True once migration 041 (tier / heirs_may_share / the tier-change ledger)
+ * has been applied to this database. Pages deploys and D1 migrations are not
+ * atomic, so every tier behavior below is gated on the schema actually being
+ * there; a pre-041 database keeps the exact pre-tier behavior.
+ */
+async function dreamTierSchemaPresent(db) {
+  try {
+    await db.prepare('SELECT tier FROM collector_dreams LIMIT 1').first();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function rowHasTier(row) {
+  return Boolean(row) && Object.hasOwn(row, 'tier') && row.tier != null;
+}
+
+function openPublicShare(row) {
+  return Boolean(row?.public_shared_at) && !row?.public_revoked_at
+    && PUBLIC_DREAM_VISIBILITIES.has(row?.visibility);
+}
+
+/**
+ * Project one dream row for one viewer. Post-041 the body obeys the tier:
+ * the writer always reads their own words (every tier, forever, even after
+ * the piece transfers); shine is readable by anyone the state is served to;
+ * keep opens only to the piece's current holder; seal opens to nobody but
+ * the writer -- not the next caretaker, not heirs. A withheld body is null.
+ * Without a viewer (internal holder-only paths) the body passes through
+ * unredacted, matching pre-041 behavior.
+ */
+function dreamFromRow(row, viewer) {
   if (!row) return null;
-  return {
+  const tiered = rowHasTier(row);
+  let body = row.body;
+  if (viewer && tiered) {
+    const own = row.author_user_id === viewer.viewerId;
+    const readable = own
+      || row.tier === 'shine'
+      || (row.tier === 'keep' && viewer.holds === true);
+    if (!readable) body = null;
+  }
+  const projected = {
     id: row.id,
     keeperPieceId: row.keeper_piece_id,
-    body: row.body,
+    body,
     scope: row.scope,
     visibility: row.visibility,
     version: Number(row.record_version),
@@ -61,6 +112,12 @@ function dreamFromRow(row) {
     fulfilledAt: row.fulfilled_at ?? null,
     archivedAt: row.archived_at ?? null,
   };
+  if (tiered) {
+    projected.tier = row.tier;
+    projected.heirsMayShare = Number(row.heirs_may_share) === 1;
+    projected.sealed = row.tier === 'seal';
+  }
+  return projected;
 }
 
 function markerFromRow(row) {
@@ -84,12 +141,12 @@ async function heldPiece(db, keeperPieceId, userId) {
   return piece;
 }
 
+// SELECT * on purpose: this must read identically on a pre-041 database (no
+// tier / heirs_may_share columns yet) and a post-041 one, during the window
+// where the deploy and the D1 migration have not both landed.
 async function currentDreamRow(db, keeperPieceId) {
   return db.prepare(`
-    SELECT id, keeper_piece_id, author_user_id, body, scope, visibility, record_version,
-           created_at, updated_at, public_shared_at, public_revoked_at,
-           fulfilled_at, archived_at
-      FROM collector_dreams
+    SELECT * FROM collector_dreams
      WHERE keeper_piece_id = ?1 AND archived_at IS NULL
   `).bind(keeperPieceId).first();
 }
@@ -191,18 +248,42 @@ export async function getCollectorDreamState(env, { userId, keeperPieceId }) {
   const db = requiredDatabase(env);
   const pieceId = requiredId(keeperPieceId, 'invalid_keeper_piece_id');
   const holderId = requiredId(userId, 'invalid_user');
-  await heldPiece(db, pieceId, holderId);
-  const current = await currentDreamRow(db, pieceId);
+  let holds = true;
+  try {
+    await heldPiece(db, pieceId, holderId);
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== 'piece_not_held') throw error;
+    holds = false;
+  }
+  if (!holds) {
+    // The writer always keeps access to their own words, every tier
+    // including seal, even after the piece transfers (041). A non-holder who
+    // never wrote into this piece stays exactly where they were: not held.
+    if (!(await dreamTierSchemaPresent(db))) throw new Error('piece_not_held');
+    const authored = await db.prepare(`
+      SELECT 1 AS present FROM collector_dreams
+       WHERE keeper_piece_id = ?1 AND author_user_id = ?2 LIMIT 1
+    `).bind(pieceId, holderId).first();
+    if (!authored) throw new Error('piece_not_held');
+  }
+  const viewer = { viewerId: holderId, holds };
+  let current = await currentDreamRow(db, pieceId);
   const historyResult = await db.prepare(`
-    SELECT id, keeper_piece_id, author_user_id, body, scope, visibility, record_version,
-           created_at, updated_at, public_shared_at, public_revoked_at,
-           fulfilled_at, archived_at
-      FROM collector_dreams
+    SELECT * FROM collector_dreams
      WHERE keeper_piece_id = ?1 AND archived_at IS NOT NULL
      ORDER BY created_at, id
   `).bind(pieceId).all();
+  let historyRows = historyResult?.results ?? [];
+  if (!holds) {
+    // A past writer sees their own rows and what shines -- never the shape,
+    // dates, or existence of another person's private writing.
+    const visibleToPastWriter = (row) => row.author_user_id === holderId
+      || (rowHasTier(row) && row.tier === 'shine');
+    historyRows = historyRows.filter(visibleToPastWriter);
+    if (current && !visibleToPastWriter(current)) current = null;
+  }
   let markers = [];
-  if (current) {
+  if (current && holds) {
     const markerResult = await db.prepare(`
       SELECT id, dream_id, marker_kind, body, created_at
         FROM collector_dream_markers
@@ -212,8 +293,8 @@ export async function getCollectorDreamState(env, { userId, keeperPieceId }) {
   }
   return {
     keeperPieceId: pieceId,
-    current: dreamFromRow(current),
-    history: (historyResult?.results ?? []).map(dreamFromRow),
+    current: dreamFromRow(current, viewer),
+    history: historyRows.map((row) => dreamFromRow(row, viewer)),
     markers,
   };
 }
@@ -227,44 +308,121 @@ export async function createCollectorDream(env, input) {
   if (idempotencyKey.length < 8) throw new Error('invalid_idempotency_key');
   if (!DREAM_SCOPES.has(input?.scope)) throw new Error('invalid_dream_scope');
   if (!validIso(input?.now)) throw new Error('invalid_timestamp');
+  const tier = input?.tier === undefined ? 'keep' : input.tier;
+  if (!DREAM_TIERS.has(tier)) throw new Error('invalid_dream_tier');
+  const heirsMayShare = input?.heirsMayShare === undefined ? true : input.heirsMayShare;
+  if (typeof heirsMayShare !== 'boolean') throw new Error('invalid_heirs_choice');
   await heldPiece(db, keeperPieceId, userId);
+  const tiered = await dreamTierSchemaPresent(db);
+  if (!tiered && (tier !== 'keep' || heirsMayShare !== true)) {
+    throw new Error('dream_tiers_unavailable');
+  }
+  // Seal answers the heirs question by itself: the sub-choice is hidden on
+  // that tier and the stored flag is pinned to 0 (migration 041).
+  const storedHeirs = tier === 'seal' ? 0 : (heirsMayShare ? 1 : 0);
 
+  const matchesReplay = (row) => row.keeper_piece_id === keeperPieceId
+    && row.body === body && row.scope === input.scope
+    && (!rowHasTier(row) || row.tier === tier);
   const replay = await db.prepare(`
-    SELECT keeper_piece_id, body, scope FROM collector_dreams
+    SELECT * FROM collector_dreams
      WHERE author_user_id = ?1 AND idempotency_key = ?2
   `).bind(userId, idempotencyKey).first();
   if (replay) {
-    if (replay.keeper_piece_id !== keeperPieceId
-      || replay.body !== body || replay.scope !== input.scope) {
-      throw new Error('idempotency_conflict');
-    }
+    if (!matchesReplay(replay)) throw new Error('idempotency_conflict');
     return getCollectorDreamState(env, { userId, keeperPieceId });
   }
   if (await currentDreamRow(db, keeperPieceId)) throw new Error('current_dream_exists');
-  try {
-    await db.prepare(`
+  const newDreamId = dreamId();
+  const statements = [];
+  if (!tiered) {
+    statements.push(db.prepare(`
       INSERT INTO collector_dreams
         (id, keeper_piece_id, author_user_id, body, scope, idempotency_key,
          created_at, updated_at)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)
     `).bind(
-      dreamId(), keeperPieceId, userId, body, input.scope, idempotencyKey, input.now,
-    ).run();
+      newDreamId, keeperPieceId, userId, body, input.scope, idempotencyKey, input.now,
+    ));
+  } else {
+    // Placing a shine dream IS the choice to show it: the row is planted at
+    // keep, shared through the audited share mutation, then flipped
+    // keep->shine by the audited tier change, all in one transaction, so the
+    // public projection and the tier can never disagree.
+    const insertTier = tier === 'shine' ? 'keep' : tier;
+    const insertHeirs = tier === 'shine' ? 1 : storedHeirs;
+    statements.push(db.prepare(`
+      INSERT INTO collector_dreams
+        (id, keeper_piece_id, author_user_id, body, scope, idempotency_key,
+         created_at, updated_at, tier, heirs_may_share)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, ?8, ?9)
+    `).bind(
+      newDreamId, keeperPieceId, userId, body, input.scope, idempotencyKey,
+      input.now, insertTier, insertHeirs,
+    ));
+    if (tier === 'shine') {
+      await requireAdult(db, userId, input.now);
+      statements.push(db.prepare(`
+        INSERT INTO collector_dream_mutations
+          (id, dream_id, author_user_id, action, idempotency_key, request_json,
+           resulting_version, created_at)
+        VALUES (?1, ?2, ?3, 'share', ?4, ?5, 2, ?6)
+      `).bind(
+        mutationId(), newDreamId, userId, idempotencyKey,
+        JSON.stringify({ visibility: 'anonymous' }), input.now,
+      ));
+      statements.push(db.prepare(`
+        INSERT INTO collector_dream_tier_changes
+          (id, dream_id, author_user_id, from_tier, to_tier, idempotency_key,
+           resulting_version, created_at)
+        VALUES (?1, ?2, ?3, 'keep', 'shine', ?4, 3, ?5)
+      `).bind(tierChangeId(), newDreamId, userId, idempotencyKey, input.now));
+    }
+  }
+  try {
+    if (statements.length === 1) {
+      await statements[0].run();
+    } else {
+      if (typeof db.batch !== 'function') throw new Error('atomic_batch_unavailable');
+      await db.batch(statements);
+    }
   } catch (error) {
     const latestReplay = await db.prepare(`
-      SELECT keeper_piece_id, body, scope FROM collector_dreams
+      SELECT * FROM collector_dreams
        WHERE author_user_id = ?1 AND idempotency_key = ?2
     `).bind(userId, idempotencyKey).first();
     if (!latestReplay) {
       if (await currentDreamRow(db, keeperPieceId)) throw new Error('current_dream_exists');
       throw error;
     }
-    if (latestReplay.keeper_piece_id !== keeperPieceId
-      || latestReplay.body !== body || latestReplay.scope !== input.scope) {
-      throw new Error('idempotency_conflict');
-    }
+    if (!matchesReplay(latestReplay)) throw new Error('idempotency_conflict');
   }
   return getCollectorDreamState(env, { userId, keeperPieceId });
+}
+
+/**
+ * The anchor for the yearly window: the birth profile when one is on file
+ * and readable, otherwise the piece's claim anniversary (keeper_pieces.
+ * claimed_at, same window math over UTC). Callers can never tell which
+ * anchor answered -- "they never see a difference". Returns the matched
+ * window ({year, distance}) or null when today is outside it.
+ */
+async function yearlyWindowFor(db, userId, keeperPieceId, now) {
+  const user = await authorInternalUser(db, userId);
+  const profile = user ? await db.prepare(
+    'SELECT birth_date, tz_id FROM profiles WHERE user_id = ?1',
+  ).bind(user.id).first() : null;
+  if (profile && validBirthParts(profile.birth_date) && localDateParts(now, profile.tz_id)) {
+    return birthdayWindow(profile.birth_date, now, profile.tz_id);
+  }
+  const piece = await db.prepare(
+    'SELECT claimed_at FROM keeper_pieces WHERE id = ?1',
+  ).bind(keeperPieceId).first();
+  const claimedDate = typeof piece?.claimed_at === 'string'
+    ? piece.claimed_at.slice(0, 10)
+    : null;
+  if (!claimedDate || !validBirthParts(claimedDate)) return null;
+  return birthdayWindow(claimedDate, now, 'UTC');
 }
 
 export async function updateCollectorDream(env, input) {
@@ -285,6 +443,15 @@ export async function updateCollectorDream(env, input) {
     db, userId, idempotencyKey, current.id, 'edit', requestJson,
   )) {
     return getCollectorDreamState(env, { userId, keeperPieceId });
+  }
+  // The yearly lock (§6, "It can be changed once a year, on the birthday"):
+  // editing the standing dream's words opens only inside the person's own
+  // window. First placement (create) is ungated, and so are tier changes --
+  // the lock is what makes the words worth reading, not a lock on choosing
+  // where they live. Ships with migration 041.
+  if (rowHasTier(current)) {
+    const window = await yearlyWindowFor(db, userId, keeperPieceId, input.now);
+    if (!window) throw new Error('outside_birthday_window');
   }
   const nextVersion = input.expectedVersion + 1;
   const newMutationId = mutationId();
@@ -321,23 +488,148 @@ export async function setCollectorDreamSharing(env, input) {
   )) {
     return getCollectorDreamState(env, { userId, keeperPieceId });
   }
+  const tiered = rowHasTier(current);
+  if (action === 'revoke' && tiered && current.tier === 'shine') {
+    // Once it shines it stays shining, always (§6). The audited admin abuse
+    // removal (migration 040, functions/api/admin/shine-removals.js) is the
+    // only path off display, and it never runs through here.
+    throw new Error('shine_is_permanent');
+  }
+  if (action === 'share' && tiered && current.tier === 'seal') {
+    // Opening a sealed dream toward the light is a deliberate tier act:
+    // setCollectorDreamTier(tier: 'shine'), never a plain share.
+    throw new Error('dream_sealed');
+  }
   if (input.visibility !== 'private') await requireAdult(db, userId, input.now);
   if (input.visibility === 'attributed') await requireNameConsent(db, userId);
   if (input.visibility === 'private' && !current.public_shared_at) throw new Error('dream_not_shared');
   const nextVersion = Number(current.record_version) + 1;
   const newMutationId = mutationId();
-  try {
-    await db.prepare(`
-      INSERT INTO collector_dream_mutations
-        (id, dream_id, author_user_id, action, idempotency_key, request_json,
+  const statements = [db.prepare(`
+    INSERT INTO collector_dream_mutations
+      (id, dream_id, author_user_id, action, idempotency_key, request_json,
+       resulting_version, created_at)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+  `).bind(
+    newMutationId, current.id, userId, action, idempotencyKey, requestJson,
+    nextVersion, input.now,
+  )];
+  if (action === 'share' && tiered && current.tier === 'keep') {
+    // Sharing IS shining (§6): the share and the keep->shine flip land in
+    // one transaction so the tier and the public projection never disagree.
+    statements.push(db.prepare(`
+      INSERT INTO collector_dream_tier_changes
+        (id, dream_id, author_user_id, from_tier, to_tier, idempotency_key,
          resulting_version, created_at)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+      VALUES (?1, ?2, ?3, 'keep', 'shine', ?4, ?5, ?6)
     `).bind(
-      newMutationId, current.id, userId, action, idempotencyKey, requestJson,
-      nextVersion, input.now,
-    ).run();
+      tierChangeId(), current.id, userId, idempotencyKey, nextVersion + 1, input.now,
+    ));
+  }
+  try {
+    if (statements.length === 1) {
+      await statements[0].run();
+    } else {
+      if (typeof db.batch !== 'function') throw new Error('atomic_batch_unavailable');
+      await db.batch(statements);
+    }
   } catch (error) {
-    if (error instanceof Error && error.message.includes('dream mutation did not apply')) {
+    if (error instanceof Error && (
+      error.message.includes('dream mutation did not apply')
+      || error.message.includes('dream tier change did not apply')
+    )) {
+      throw new Error('version_conflict');
+    }
+    throw error;
+  }
+  return getCollectorDreamState(env, { userId, keeperPieceId });
+}
+
+/**
+ * Move the standing dream between tiers, following the settled matrix:
+ * keep->shine, keep->seal, seal->shine. shine is terminal (once public,
+ * never private again) and seal->keep is forbidden. Entering shine routes
+ * through the existing audited share path in the same transaction, so the
+ * public projection (public_shared_at / visibility) and the tier can never
+ * disagree; entering seal requires a dream that has never shone (words that
+ * already entered the permanent Piece Record cannot be sealed). Tier changes
+ * are NOT gated by the yearly window -- only the words are.
+ */
+export async function setCollectorDreamTier(env, input) {
+  const db = requiredDatabase(env);
+  const { userId, keeperPieceId, idempotencyKey } = requiredMutationInput(input);
+  const tier = input?.tier;
+  if (!DREAM_TIERS.has(tier)) throw new Error('invalid_dream_tier');
+  if (tier === 'keep') throw new Error('forbidden_tier_transition');
+  await heldPiece(db, keeperPieceId, userId);
+  if (!(await dreamTierSchemaPresent(db))) throw new Error('dream_tiers_unavailable');
+  const current = await currentDreamRow(db, keeperPieceId);
+  if (!current) throw new Error('current_dream_missing');
+  const replay = await db.prepare(`
+    SELECT dream_id, to_tier FROM collector_dream_tier_changes
+     WHERE author_user_id = ?1 AND idempotency_key = ?2
+  `).bind(userId, idempotencyKey).first();
+  if (replay) {
+    if (replay.dream_id !== current.id || replay.to_tier !== tier) {
+      throw new Error('idempotency_conflict');
+    }
+    return getCollectorDreamState(env, { userId, keeperPieceId });
+  }
+  if (current.tier === tier) throw new Error('tier_unchanged');
+  if (current.tier === 'shine') throw new Error('shine_is_permanent');
+  if (tier === 'seal') {
+    if (current.tier !== 'keep') throw new Error('forbidden_tier_transition');
+    if (current.public_shared_at) throw new Error('shone_cannot_seal');
+  }
+  const statements = [];
+  let version = Number(current.record_version);
+  if (tier === 'shine') {
+    await requireAdult(db, userId, input.now);
+    if (!openPublicShare(current)) {
+      version += 1;
+      statements.push(db.prepare(`
+        INSERT INTO collector_dream_mutations
+          (id, dream_id, author_user_id, action, idempotency_key, request_json,
+           resulting_version, created_at)
+        VALUES (?1, ?2, ?3, 'share', ?4, ?5, ?6, ?7)
+      `).bind(
+        mutationId(), current.id, userId, idempotencyKey,
+        JSON.stringify({ visibility: 'anonymous' }), version, input.now,
+      ));
+    }
+  }
+  version += 1;
+  statements.push(db.prepare(`
+    INSERT INTO collector_dream_tier_changes
+      (id, dream_id, author_user_id, from_tier, to_tier, idempotency_key,
+       resulting_version, created_at)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+  `).bind(
+    tierChangeId(), current.id, userId, current.tier, tier, idempotencyKey,
+    version, input.now,
+  ));
+  try {
+    if (statements.length === 1) {
+      await statements[0].run();
+    } else {
+      if (typeof db.batch !== 'function') throw new Error('atomic_batch_unavailable');
+      await db.batch(statements);
+    }
+  } catch (error) {
+    const raced = await db.prepare(`
+      SELECT dream_id, to_tier FROM collector_dream_tier_changes
+       WHERE author_user_id = ?1 AND idempotency_key = ?2
+    `).bind(userId, idempotencyKey).first();
+    if (raced) {
+      if (raced.dream_id !== current.id || raced.to_tier !== tier) {
+        throw new Error('idempotency_conflict');
+      }
+      return getCollectorDreamState(env, { userId, keeperPieceId });
+    }
+    if (error instanceof Error && (
+      error.message.includes('dream mutation did not apply')
+      || error.message.includes('dream tier change did not apply')
+    )) {
       throw new Error('version_conflict');
     }
     throw error;
@@ -393,7 +685,11 @@ export async function appendCollectorDreamMarker(env, input) {
 export async function getPublicCollectorDream(env, { keeperPieceId, now = new Date().toISOString() }) {
   const db = requiredDatabase(env);
   const pieceId = requiredId(keeperPieceId, 'invalid_keeper_piece_id');
-  const row = await db.prepare(`
+  // Post-041 the public read also demands tier = 'shine' (defense in depth:
+  // a keep or seal body can never surface here even if the share columns
+  // were ever wrong). The tier-less query is kept only for the deploy window
+  // where migration 041 has not landed yet.
+  const publicDreamSql = (tierGuard) => `
     SELECT dream.id, dream.keeper_piece_id, dream.author_user_id, dream.body,
            dream.scope, dream.visibility, dream.public_shared_at
       FROM collector_dreams dream
@@ -405,12 +701,22 @@ export async function getPublicCollectorDream(env, { keeperPieceId, now = new Da
        AND dream.visibility IN ('anonymous', 'attributed')
        AND dream.public_shared_at IS NOT NULL
        AND dream.public_revoked_at IS NULL
+       ${tierGuard}
        AND piece.keeper_user_id = dream.author_user_id
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND piece.plate_status NOT IN ('void', 'superseded')
        AND (dream.visibility = 'anonymous' OR privacy.share_name = 1)
-  `).bind(pieceId).first();
+  `;
+  let row;
+  try {
+    row = await db.prepare(publicDreamSql("AND dream.tier = 'shine'")).bind(pieceId).first();
+  } catch (error) {
+    if (!(error instanceof Error) || !/no such column:.*\btier\b/i.test(error.message)) {
+      throw error;
+    }
+    row = await db.prepare(publicDreamSql('')).bind(pieceId).first();
+  }
   if (!row) return null;
   try {
     await requireAdult(db, row.author_user_id, now);
@@ -477,22 +783,45 @@ export async function getYearlyRitualEligibility(env, { userId, keeperPieceId, n
   const pieceId = requiredId(keeperPieceId, 'invalid_keeper_piece_id');
   if (!validIso(now)) throw new Error('invalid_timestamp');
   await heldPiece(db, pieceId, holderId);
+  const tiered = await dreamTierSchemaPresent(db);
   const user = await authorInternalUser(db, holderId);
-  if (!user) throw new Error('user_not_synced');
-  const profile = await db.prepare(
+  if (!user && !tiered) throw new Error('user_not_synced');
+  const profile = user ? await db.prepare(
     'SELECT birth_date, tz_id FROM profiles WHERE user_id = ?1',
-  ).bind(user.id).first();
-  if (!profile) {
-    return {
-      eligible: false, reason: 'birth_profile_missing', birthdayYear: null,
-      actions: [], currentDream: null,
-    };
-  }
-  if (!validBirthParts(profile.birth_date) || !localDateParts(now, profile.tz_id)) {
-    return {
-      eligible: false, reason: 'birth_profile_invalid', birthdayYear: null,
-      actions: [], currentDream: null,
-    };
+  ).bind(user.id).first() : null;
+  const profileUsable = Boolean(profile)
+    && Boolean(validBirthParts(profile.birth_date))
+    && Boolean(localDateParts(now, profile.tz_id));
+  let anchorDate = profileUsable ? profile.birth_date : null;
+  let anchorTz = profileUsable ? profile.tz_id : null;
+  if (!profileUsable) {
+    if (!tiered) {
+      // Pre-041 behavior, unchanged.
+      if (!profile) {
+        return {
+          eligible: false, reason: 'birth_profile_missing', birthdayYear: null,
+          actions: [], currentDream: null,
+        };
+      }
+      return {
+        eligible: false, reason: 'birth_profile_invalid', birthdayYear: null,
+        actions: [], currentDream: null,
+      };
+    }
+    // Anniversary fallback (041): no readable birth profile means the window
+    // anchors on the piece's claim anniversary instead -- same math, same
+    // response shape, and nothing in the payload says which anchor answered.
+    const piece = await db.prepare(
+      'SELECT claimed_at FROM keeper_pieces WHERE id = ?1',
+    ).bind(pieceId).first();
+    anchorDate = typeof piece?.claimed_at === 'string' ? piece.claimed_at.slice(0, 10) : null;
+    anchorTz = 'UTC';
+    if (!anchorDate || !validBirthParts(anchorDate)) {
+      return {
+        eligible: false, reason: 'outside_birthday_window', birthdayYear: null,
+        actions: [], currentDream: dreamFromRow(await currentDreamRow(db, pieceId)),
+      };
+    }
   }
   const current = await currentDreamRow(db, pieceId);
   if (!current) {
@@ -501,7 +830,7 @@ export async function getYearlyRitualEligibility(env, { userId, keeperPieceId, n
       actions: [], currentDream: null,
     };
   }
-  const window = birthdayWindow(profile.birth_date, now, profile.tz_id);
+  const window = birthdayWindow(anchorDate, now, anchorTz);
   if (!window) {
     return {
       eligible: false, reason: 'outside_birthday_window', birthdayYear: null,
@@ -656,6 +985,7 @@ export async function completeYearlyRitual(env, input) {
 
 export {
   DREAM_SCOPES,
+  DREAM_TIERS,
   DREAM_VISIBILITIES,
   MARKER_KINDS,
   PUBLIC_DREAM_VISIBILITIES,
