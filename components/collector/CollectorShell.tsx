@@ -19,12 +19,13 @@
  * pressing through the flow to get there.
  */
 
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { C, F } from './tokens';
 import { MARKS_DEFAULT } from './copy';
 import { CollectorStyles } from './styles';
 import { PiecePage, Relationship } from './PiecePage';
 import { CodePage } from './CodePage';
+import { VaultArrival } from './vaultArrival';
 import { Room } from './rooms';
 import { StateScreen } from './states';
 import { LetterScreen } from './letters';
@@ -87,6 +88,12 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
      revisited. So back lives in the harness, under the phone, and it restores
      who was looking as well as which surface, because the two travel together. */
   const [trail, setTrail] = useState<{ view: View; relationship: Relationship }[]>([]);
+
+  /* the vault arrival's own once-only guard: true the first time this shell
+     reaches codetrue, false on every return to it after. Read once per
+     mount by VaultArrival itself; see its header for why that reading is
+     frozen rather than reactive. */
+  const arrivalPlayedRef = useRef(false);
 
   /** go somewhere, and remember where we were */
   const visit = (next: View, who?: Relationship) => {
@@ -205,7 +212,16 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
           onBack={() => visit({ kind: 'piece' })}
         />
       )}
-      {view.kind === 'walk' && (
+      {view.kind === 'walk' && view.key === 'codetrue' && (() => {
+        /* codetrue's entrance dress, not a separate route: `play` is read
+           once per mount (see the ref above and VaultArrival's own header)
+           so a return to this exact key later in the same walk (or the
+           walkthrough rail stepping back to it) renders already settled. */
+        const play = !arrivalPlayedRef.current;
+        arrivalPlayedRef.current = true;
+        return <VaultArrival play={play} onGo={go} screen={WALK.codetrue} />;
+      })()}
+      {view.kind === 'walk' && view.key !== 'codetrue' && (
         <WalkScreen
           screen={WALK[view.key]}
           onGo={go}

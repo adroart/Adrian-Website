@@ -173,5 +173,30 @@ export const CeremonyStyles: React.FC<{ theme?: CeremonyTheme }> = ({ theme = es
     @media (prefers-reduced-motion: reduce) {
       .glow-dot-breathe { animation: none; transform: none; opacity: 1 }
     }
+
+    /* ── the one vault arrival (components/collector/vaultArrival.tsx),
+       2026-08-20 ──────────────────────────────────────────────────────
+       Adrian's ruling, deciding among the three arrival studies above:
+       "the center should be the glowing dot not a vector.. the dot is your
+       interactions with the art." Variants B and C are retired; this
+       section is additive-only, so their own keyframes (arrivalRingGrow,
+       the .arrival-draw-late stroke timing) stay above, unreferenced,
+       rather than being removed. The one arrival reuses arrivalLightFade
+       and riseIn as they already stand — the vault's own light gives itself
+       up while the dot below blooms in its place, and the locked words rise
+       beneath it the same way every other screen's words do. Only the dot's
+       own bloom and settle are new, and they are split across two elements
+       (see vaultArrival.tsx) because a single element cannot carry two
+       animations that each touch \`transform\` without one overwriting the
+       other. */
+    @keyframes arrivalDotBloom {
+      0% { opacity: 0; transform: scale(.5) }
+      70% { opacity: 1; transform: scale(1.05) }
+      100% { opacity: 1; transform: scale(1) }
+    }
+    @keyframes arrivalDotSettle {
+      from { transform: translateY(18px) }
+      to { transform: translateY(0) }
+    }
   `}</style>
 );

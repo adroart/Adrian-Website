@@ -54,6 +54,7 @@ import { PiecePage, Relationship } from './PiecePage';
 import type { GroundInputs } from './PiecePage';
 import { CodePage, CodeSubmitOutcome } from './CodePage';
 import { WALK, WalkScreen, Screen, SHOW_LAMPS_DEFAULT } from './walk';
+import { VaultArrival } from './vaultArrival';
 import { StateScreen } from './states';
 import type { RoomKey } from './rooms';
 import { PendingBindProvider, usePendingBind, normalizeTypedCode } from './pendingBind';
@@ -296,6 +297,13 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
      'codetrue' (e.g. back from 'fork') never re-triggers the detour. */
   const [giftMessageBody, setGiftMessageBody] = useState<string | null>(null);
   const giftPendingRef = useRef(false);
+
+  /* the vault arrival's own once-only guard: true the first time this
+     journey reaches codetrue (the real unlock), false on every return to it
+     after (fork's back link, transfer's "I didn't mean to", gift's reveal
+     continuing on). Read once per mount by VaultArrival itself; see its
+     header for why that reading is frozen rather than reactive. */
+  const arrivalPlayedRef = useRef(false);
 
   /* ---------------- data, all through api.ts ---------------- */
 
@@ -1335,6 +1343,15 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           />
         );
       }
+    } else if (step.key === 'codetrue') {
+      /* codetrue's entrance dress, not a separate route: the same screen
+         WalkScreen would otherwise render for this key, dressed with the
+         vault arrival. `play` is read once per mount (see the ref above and
+         VaultArrival's own header) so a return to this exact key later in
+         the same journey renders already settled. */
+      const play = !arrivalPlayedRef.current;
+      arrivalPlayedRef.current = true;
+      surface = <VaultArrival play={play} onGo={go} screen={wiredScreen('codetrue')} />;
     } else {
       surface = (
         <WalkScreen

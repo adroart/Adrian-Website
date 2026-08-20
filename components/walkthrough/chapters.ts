@@ -25,9 +25,12 @@ import { PLACEHOLDERS } from '../collector/copy';
 import { Station, stationFor, walkChain } from './stations';
 import { CeremonyChapter, ceremonyChapters } from './ceremonyChapters';
 
-/** one station of the arrival chapter: which of the three vault-arrival
- *  studies to mount, and how the rail names and captions it */
-export type ArrivalStationSpec = { variant: 'a' | 'b' | 'c'; label: string; notice: string };
+/** the arrival chapter's one station: `variant` narrows to a single literal
+ *  now that Adrian's ruling settled on the one true arrival (2026-08-20) —
+ *  kept, rather than dropped, because Walkthrough.tsx (owned elsewhere)
+ *  still reads `chapter.stations[stationIndex].variant` to pass through to
+ *  ArrivalStation. `label` and `notice` still name and caption it. */
+export type ArrivalStationSpec = { variant: 'true'; label: string; notice: string };
 
 /** which half of the walk a chapter belongs to: the making of a piece and
  *  its codes, or the collector's own journey through one already made */
@@ -142,14 +145,18 @@ const OTHER_CHAPTERS: Chapter[] = JUMP.flatMap(([section, items]) => {
 const CEREMONY: Chapter[] = ceremonyChapters.map(c => ({ ...c, kind: 'ceremony' as const, section: 'making' as const }));
 
 /* ------------------------------------------------------------------ *
- * the arrival studies, spliced in right after "Registering it, all the
- * way" (see the final-order block below), not appended at the end
+ * the arrival, spliced in right after "Registering it, all the way" (see
+ * the final-order block below), not appended at the end
  *
  * Adrian's ruling (wording record §7, item 2, 2026-08-20): the unlock must
- * arrive somewhere and stay; three arrivals are built for his walkthrough
- * and his verdict picks one. Each station mounts one self-contained study
- * from `components/collector/vaultArrival.tsx`, so Back/Next simply swap
- * studies — nothing here is a view the collector shell can be pointed at.
+ * arrive somewhere and stay. Three studies were built for his walkthrough;
+ * his verdict (2026-08-20, glowDot.tsx's own header) picked the glowing
+ * dot over a vector, a ring, or a light bar. One chapter, one station now:
+ * it mounts the built arrival from `components/collector/vaultArrival.tsx`,
+ * with the same self-contained Replay control the studies always carried —
+ * nothing here is a view the collector shell can be pointed at. The id
+ * stays 'arrival-choose', unchanged from when there was a choice to make,
+ * so Adrian's saved notes on this chapter stay attached to it.
  * ------------------------------------------------------------------ */
 
 /** the walk.tsx idiom: unwritten caption copy, registered so it reads as
@@ -162,24 +169,14 @@ const ph = (s: string): string => {
 const ARRIVAL: Chapter = {
   kind: 'arrival',
   id: 'arrival-choose',
-  title: 'Choose the arrival',
-  note: 'One of these becomes the way the vault opens; walk each and say which is true.',
+  title: ph('The arrival'),
+  note: 'The vault opens onto this, and stays: the glowing dot is the piece’s presence, not a vector.',
   section: 'collecting',
   stations: [
     {
-      variant: 'a',
-      label: 'It parts and settles',
-      notice: ph('The panels part over the piece page itself, and the true words settle into it.'),
-    },
-    {
-      variant: 'b',
-      label: 'Inside the opened vault',
-      notice: ph('The ring stays standing, and for one beat the vault is the room the journey stands in.'),
-    },
-    {
-      variant: 'c',
-      label: 'The piece is the proof',
-      notice: ph('The vault light resolves into the piece’s own drawing, and the true words follow it.'),
+      variant: 'true',
+      label: 'The vault opens onto this',
+      notice: ph('The light gathers into the dot as the vault opens, and the words for a true code rise beneath it.'),
     },
   ],
 };
