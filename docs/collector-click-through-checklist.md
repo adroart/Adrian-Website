@@ -45,6 +45,9 @@ This checklist can now be walked as a guided clickable rail that steps through e
 - [ ] Story, certificate, history (dark reads as quiet absence until launch), dreams.
 - [ ] Garden: one question per screen, place it or not now, the three states none of which is a failure.
 - [ ] The yearly ritual door appears only when eligible.
+- [ ] The three-tier control (Let it shine · Keep it with the piece · Seal it) with the heirs choice and once-shone-is-permanent.
+- [ ] The yearly lock note appears outside your birthday window.
+- [ ] The ground warms quietly with years held on a long-kept piece.
 
 ## 6. The artist ceremony
 
@@ -73,10 +76,13 @@ Locked copy was never paraphrased. These are the open items:
 6. Invitation-proof wording on the existing-owner path (placeholder shipped).
 7. All artist-side ceremony copy (threshold, unlock, confirm, code reveal, record lines) and Add to this piece copy: written plain, none of it locked, all replaceable by your words.
 8. The verification-prompt screen reuses the held-code copy: needs your line.
+9. The seal writer-access line: "You can always open your own. You can let it shine one day. Once it shines, it stays."
+10. The split privacy lamp labels (currently plain placeholders) need your voice.
+11. The shows screen now scrolls and needs your layout ruling.
 
 ## Still demo-only (deliberate, later passes)
 
-The passing walk beyond the contested state, the household and heirs screens, gift wishes, letters, the Resonant Grid room, What was paid, region-grain widening, the Your links backend, and video capture.
+Caretaker-initiated transfer to move a piece beyond the not-yet state, gift wishes from givers, the family approval pair, the succession mark's real store, per-person birthday windows, collaborator accounts, region-grain widening, What was paid, video capture, letters authoring, and the interface inversion.
 
 ## The gate
 

@@ -31,13 +31,23 @@ The rehearsal at `/admin/rehearsal` walks eight real steps of the artist side, e
 
 Each step leads directly into the next. You cannot skip or reorder.
 
+## Leaving notes
+
+The walkthrough includes a notes tool for your verdicts and impressions on each screen. The notes feature:
+
+- **Verdicts**: mark each screen as right or not right yet using the two-button panel.
+- **Note field**: type your observations; the field autosaves as you write.
+- **Notes drawer**: open the full list of all notes you've written so far.
+- **Copy all notes**: select and copy every note at once to paste into a document or email.
+- **Send the notes**: the notes stay with the page when opened from a published link; copy and paste from the standalone file if you want to send them separately.
+
 ## Three deliberate limitations (by design)
 
 The following are not bugs. They are intentional simplifications for this walkthrough:
 
 1. **The garden holds its own state.** The Ask, Index, and Write steps live inside one station because the garden room maintains its own internal state. You cannot jump into the middle of garden choices from the caption rail. This reflects how the production flow works: the garden is a single integrated room, not separate screens.
 
-2. **The ceremony chapters advance only by button.** The caption rail displays the current chapter but cannot jump forward to a later chapter or jump backward. You must press the real Next or Continue button to advance. This ensures you encounter every screen and button in the order a real collector would.
+2. **The ceremony chapters advance only by button.** The caption rail displays the current chapter but cannot jump forward to a later chapter or jump backward. You must press the real Next or Continue button to advance. This ensures you encounter every screen and button in the order a real collector would. The ceremony chapters remain observe-only in the walkthrough.
 
 3. **The gathering is self-reported.** Step 6 of the rehearsal (the gathering, where the collector signs the record) has no admin-visible signal. You report completion when you have walked through it. The ceremony state stays private on the collector side, so there is no "gathering complete" webhook or admin readout. You verify manually.
 
