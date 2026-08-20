@@ -1285,33 +1285,33 @@ END;`;
 
 const DREAM_INSERT_KEEPER_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_insert_current_keeper
 BEFORE INSERT ON collector_dreams BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream requires current keeper') WHERE NOT EXISTS (
     SELECT 1 FROM keeper_pieces piece
      WHERE piece.id = NEW.keeper_piece_id
        AND piece.keeper_user_id = NEW.author_user_id
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND piece.plate_status NOT IN ('void', 'superseded')
-  ) THEN RAISE(ABORT, 'dream requires current keeper') END;
-  SELECT CASE WHEN NEW.visibility IN ('anonymous', 'attributed')
+  );
+  SELECT RAISE(ABORT, 'public dream requires established adult') WHERE NEW.visibility IN ('anonymous', 'attributed')
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN profiles profile ON profile.user_id = person.id
        WHERE person.auth_user_id = NEW.author_user_id
          AND date(profile.birth_date, '+18 years') <= date(NEW.created_at)
-    ) THEN RAISE(ABORT, 'public dream requires established adult') END;
-  SELECT CASE WHEN NEW.visibility = 'attributed'
+    );
+  SELECT RAISE(ABORT, 'attributed dream requires name consent') WHERE NEW.visibility = 'attributed'
     AND NOT EXISTS (
       SELECT 1 FROM users person
       JOIN collector_person_privacy privacy ON privacy.user_id = person.id
        WHERE person.auth_user_id = NEW.author_user_id
          AND privacy.share_name = 1
-    ) THEN RAISE(ABORT, 'attributed dream requires name consent') END;
+    );
 END;`;
 
 const DREAM_MARKER_KEEPER_TRIGGER_SQL = `CREATE TRIGGER collector_dream_markers_current_keeper
 BEFORE INSERT ON collector_dream_markers BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream marker requires current keeper') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams dream
     JOIN keeper_pieces piece ON piece.id = dream.keeper_piece_id
      WHERE dream.id = NEW.dream_id
@@ -1321,12 +1321,12 @@ BEFORE INSERT ON collector_dream_markers BEGIN
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND piece.plate_status NOT IN ('void', 'superseded')
-  ) THEN RAISE(ABORT, 'dream marker requires current keeper') END;
+  );
 END;`;
 
 const DREAM_RITUAL_COMPLETION_TRIGGER_SQL = `CREATE TRIGGER collector_dream_rituals_valid_completion
 BEFORE INSERT ON collector_dream_rituals BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invalid dream ritual completion') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams prior
     JOIN collector_dreams resulting ON resulting.id = NEW.resulting_dream_id
     JOIN keeper_pieces piece ON piece.id = NEW.keeper_piece_id
@@ -1347,13 +1347,13 @@ BEFORE INSERT ON collector_dream_rituals BEGIN
            AND resulting.archived_at IS NULL
            AND resulting.created_at = NEW.completed_at)
        )
-  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+  );
 END;`;
 
 const DREAM_MUTATION_EXACT_TRIGGER_SQL = `CREATE TRIGGER collector_dream_mutation_exact_application
 BEFORE INSERT ON collector_dream_mutations
 BEGIN
-  SELECT CASE WHEN NEW.request_json IS NULL
+  SELECT RAISE(ABORT, 'dream mutation did not apply exactly') WHERE NEW.request_json IS NULL
     OR json_valid(NEW.request_json) = 0
     OR json_type(NEW.request_json) <> 'object'
     OR NOT EXISTS (
@@ -1393,7 +1393,7 @@ BEGIN
              AND dream.public_shared_at IS NOT NULL
            )
          )
-    ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+    );
 END;`;
 
 const DREAM_MUTATION_APPLY_TRIGGER_SQL = `CREATE TRIGGER collector_dream_mutation_apply_exactly
@@ -1437,7 +1437,7 @@ BEGIN
      AND public_shared_at IS NOT NULL
      AND record_version + 1 = NEW.resulting_version;
 
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'dream mutation did not apply exactly') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams dream
      WHERE dream.id = NEW.dream_id
        AND dream.last_mutation_id = NEW.id
@@ -1456,13 +1456,13 @@ BEGIN
            AND dream.public_shared_at IS NOT NULL
            AND dream.public_revoked_at = NEW.created_at)
        )
-  ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+  );
 END;`;
 
 const DREAM_RUNTIME_UPDATE_GUARD_SQL = `CREATE TRIGGER collector_dreams_runtime_update_guard
 BEFORE UPDATE ON collector_dreams
 BEGIN
-  SELECT CASE WHEN NOT (
+  SELECT RAISE(ABORT, 'dream update requires exact authorization') WHERE NOT (
     EXISTS (
       SELECT 1 FROM collector_dream_mutations mutation
        WHERE mutation.id = NEW.last_mutation_id
@@ -1529,8 +1529,7 @@ BEGIN
       AND NEW.public_shared_at IS OLD.public_shared_at
       AND NEW.public_revoked_at IS (
         CASE WHEN OLD.public_shared_at IS NOT NULL
-          THEN NEW.archived_at ELSE OLD.public_revoked_at END
-      )
+          THEN NEW.archived_at ELSE OLD.public_revoked_at END)
       AND NEW.fulfilled_at IS OLD.fulfilled_at
       AND NEW.keeper_piece_id = OLD.keeper_piece_id
       AND NEW.author_user_id = OLD.author_user_id
@@ -1553,7 +1552,7 @@ BEGIN
       AND NEW.created_at = OLD.created_at
       AND NEW.last_mutation_id IS OLD.last_mutation_id
     )
-  ) THEN RAISE(ABORT, 'dream update requires exact authorization') END;
+  );
 END;`;
 
 const DREAM_RITUAL_FULFILL_TRIGGER_SQL = `CREATE TRIGGER collector_dream_ritual_fulfill_exactly
@@ -1569,18 +1568,18 @@ BEGIN
      AND keeper_piece_id = NEW.keeper_piece_id
      AND archived_at IS NULL
      AND fulfilled_at IS NULL;
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invalid dream ritual completion') WHERE NOT EXISTS (
     SELECT 1 FROM collector_dreams
      WHERE id = NEW.prior_dream_id
        AND fulfilled_at = NEW.completed_at
-  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+  );
 END;`;
 
 const CONTRIBUTOR_RESTORE_TRIGGER_SQL = [
   `CREATE TRIGGER artwork_contributor_invitation_insert_guard
 BEFORE INSERT ON artwork_contributor_invitations
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') WHERE NOT EXISTS (
     SELECT 1
       FROM keeper_pieces AS piece
       JOIN user AS recipient ON recipient.id = NEW.intended_recipient_user_id
@@ -1592,16 +1591,16 @@ BEGIN
        AND recipient.emailVerified = 1
        AND lower(recipient.email) = NEW.intended_recipient_email
        AND recipient.id <> piece.keeper_user_id
-  ) THEN RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') END;
-  SELECT CASE WHEN EXISTS (
+  );
+  SELECT RAISE(ABORT, 'contributor already active') WHERE EXISTS (
     SELECT 1
       FROM artwork_contributor_current_access AS access
      WHERE access.keeper_piece_id = NEW.keeper_piece_id
        AND access.keeper_user_id = NEW.keeper_user_id
        AND access.steward_version = NEW.steward_version
        AND access.contributor_user_id = NEW.intended_recipient_user_id
-  ) THEN RAISE(ABORT, 'contributor already active') END;
-  SELECT CASE WHEN EXISTS (
+  );
+  SELECT RAISE(ABORT, 'contributor already invited') WHERE EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
@@ -1628,12 +1627,12 @@ BEGIN
             AND prior_grant.steward_version = invitation.steward_version
             AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
        )
-  ) THEN RAISE(ABORT, 'contributor already invited') END;
+  );
 END;`,
   `CREATE TRIGGER artwork_contributor_invitation_accept_guard
 BEFORE INSERT ON artwork_contributor_invitation_acceptances
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation is not available') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
@@ -1670,7 +1669,7 @@ BEGIN
        )
        AND julianday(invitation.invited_at) <= julianday(NEW.accepted_at)
        AND julianday(invitation.expires_at) > julianday(NEW.accepted_at)
-  ) THEN RAISE(ABORT, 'contributor invitation is not available') END;
+  );
 END;`,
   `CREATE TRIGGER artwork_contributor_invitation_accept_grant
 AFTER INSERT ON artwork_contributor_invitation_acceptances
@@ -1687,7 +1686,7 @@ END;`,
   `CREATE TRIGGER artwork_contributor_grant_guard
 BEFORE INSERT ON artwork_contributor_access_grants
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor access grant lacks accepted proof') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitation_acceptances AS acceptance
       JOIN artwork_contributor_invitations AS invitation
@@ -1703,13 +1702,13 @@ BEGIN
           WHERE current_access.keeper_piece_id = NEW.keeper_piece_id
             AND current_access.contributor_user_id = NEW.contributor_user_id
        )
-  ) THEN RAISE(ABORT, 'contributor access grant lacks accepted proof') END;
+  );
 END;`,
   `CREATE TRIGGER artwork_contributor_invitation_revoke_guard
 BEFORE INSERT ON artwork_contributor_revocations
 WHEN NEW.revocation_kind = 'invitation'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation cannot be revoked') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
@@ -1726,20 +1725,20 @@ BEGIN
          SELECT 1 FROM artwork_contributor_invitation_acceptances AS acceptance
           WHERE acceptance.invitation_id = invitation.id
        )
-  ) THEN RAISE(ABORT, 'contributor invitation cannot be revoked') END;
+  );
 END;`,
   `CREATE TRIGGER artwork_contributor_access_revoke_guard
 BEFORE INSERT ON artwork_contributor_revocations
 WHEN NEW.revocation_kind = 'access'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor access cannot be revoked') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_current_access AS access
      WHERE access.invitation_id = NEW.invitation_id
        AND access.keeper_user_id = NEW.revoked_by_keeper_user_id
        AND access.steward_version = NEW.steward_version
        AND julianday(NEW.revoked_at) >= julianday(access.granted_at)
-  ) THEN RAISE(ABORT, 'contributor access cannot be revoked') END;
+  );
 END;`,
 ] as const;
 
@@ -1760,7 +1759,7 @@ WHEN EXISTS (
    WHERE idempotency_key = NEW.idempotency_key
 )
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invite reservation unavailable') WHERE NOT EXISTS (
     SELECT 1 FROM artwork_contributor_invite_reservations
      WHERE idempotency_key = NEW.idempotency_key
        AND request_fingerprint = NEW.request_fingerprint
@@ -1768,7 +1767,7 @@ BEGIN
        AND reservation_status = 'reserved'
        AND completed_invitation_id IS NULL
        AND julianday(lease_expires_at) > julianday('now')
-  ) THEN RAISE(ABORT, 'contributor invite reservation unavailable') END;
+  );
 END;`,
   `CREATE TRIGGER artwork_contributor_invite_rate_limit_guard
 BEFORE INSERT ON artwork_contributor_invitations
@@ -1798,8 +1797,7 @@ BEGIN
       AND artwork_contributor_invite_rate_limits.attempt_count < 10
     )
   );
-  SELECT CASE WHEN changes() <> 1
-    THEN RAISE(ABORT, 'contributor invite rate limited') END;
+  SELECT RAISE(ABORT, 'contributor invite rate limited') WHERE changes() <> 1;
 END;`,
   `CREATE TRIGGER artwork_contributor_invite_reservation_complete
 AFTER INSERT ON artwork_contributor_invitations
@@ -1816,8 +1814,7 @@ BEGIN
      AND request_fingerprint = NEW.request_fingerprint
      AND keeper_user_id = NEW.keeper_user_id
      AND reservation_status = 'reserved';
-  SELECT CASE WHEN changes() <> 1
-    THEN RAISE(ABORT, 'contributor invite reservation completion failed') END;
+  SELECT RAISE(ABORT, 'contributor invite reservation completion failed') WHERE changes() <> 1;
 END;`,
 ] as const;
 
