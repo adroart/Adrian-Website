@@ -90,6 +90,16 @@ export const COPY = {
        same as holding this piece. */
     doorHold: locked('I hold this piece'),
 
+    /* the short line beneath Begin on an unclaimed piece. Proposals doc
+       2026-08-12, "The arrivals," Spot 1 — Adrian chose Option B, 2026-08-20. */
+    unclaimedNote: locked('This piece has no home yet. Begin gives it one.'),
+    /* the short line beneath the two doors, registered-not-yours state.
+       Proposals doc 2026-08-12, "The arrivals," Spot 2 — Adrian chose
+       Option A, 2026-08-20. */
+    registeredNotYoursNote: locked(
+      'Someone already tends this piece. Look through it, or say it is yours.',
+    ),
+
     back: locked('Back to the piece'),
     close: locked('Close'),
     open: locked('Open'),
@@ -271,6 +281,8 @@ export const COPY = {
     bornBody: locked(
       'For the piece’s astrology, and for the ones who will find you through it.',
     ),
+    /* character-diffed 2026-08-20 against collector-primitives.html's
+       `eyebrow:'Born'` — identical, no change. */
     bornEyebrow: locked('Born'),
     bornNote: locked(
       'A full reading needs all three. They are never shown to anyone; only what they produce can be, and only if you choose.',
@@ -304,8 +316,13 @@ export const COPY = {
     linksWhich: locked('Which one'),
 
     showsHead: locked('What shows'),
+    /* §6 line "your piece shines; here is what shows, and anything you
+       would rather keep quiet, uncheck." — character-diffed 2026-08-20:
+       the record uses a semicolon and lowercase "here" mid-sentence; the
+       prior copy here used a period and a capital "Here" (two sentences).
+       Corrected to match. */
     showsBody: locked(
-      'Your piece shines. Here is what shows, and anything you would rather keep quiet, uncheck.',
+      'Your piece shines; here is what shows, and anything you would rather keep quiet, uncheck.',
     ),
     showsPill: locked('Keep these choices'),
     showPlaced: locked('What you place in it'),
@@ -316,6 +333,11 @@ export const COPY = {
     showNameNote: locked('Off until you tick it. Your links and your work are separate ticks.'),
     /* birth details are shown to nobody, ever. No switch exists. §6 */
     showBirth: locked('Your birth details'),
+    /* character-diffed 2026-08-20: no verbatim UI-drawn line for this exact
+       sentence exists in §6 or collector-primitives.html to diff against
+       (only the descriptive rule "Birth details are shown to nobody, ever
+       ... There is no switch for it anywhere," §6 lines 738/803). Left
+       unchanged — nothing to correct it against. */
     showBirthNote: locked('Shown to nobody, ever. There is no switch.'),
     showShows: locked('shows'),
     showQuiet: locked('quiet'),
@@ -392,6 +414,14 @@ export const COPY = {
     familyNote: locked(
       'They are known by name and relation. Placing love in a piece is never ownership of it.',
     ),
+    /* §6 "The passing, the household, the collaborator, the heir", verbatim:
+       "Being on it promises nothing and most people on it will never carry
+       the piece." Sits on the room-list screen (rooms.tsx), the household's
+       own room — not the yearly-ritual screen (walk.tsx's `ritual` family
+       keys above), which already has its own head/body/note. */
+    familyPromise: locked(
+      'Being on it promises nothing and most people on it will never carry the piece.',
+    ),
     familyInvite: locked('Invite someone'),
     familyWaiting: locked('Waiting for you'),
     familyShine: locked('Let it shine'),
@@ -427,11 +457,66 @@ export const COPY = {
     ownHint: ph('What do you want the piece to hold?'),
     answerHint: locked('However much or little you want. You can come back to it.'),
 
-    /* Sharing is the default; the button is how you withhold. §6 */
+    /* Sharing is the default; the button is how you withhold. §6
+       DEPRECATED 2026-08-20: this two-option capsule is superseded by the
+       three-tier control below (tierShineTitle / tierKeepTitle /
+       tierSealTitle), per §6 "Three tiers, and what outlives you". Kept
+       exported so nothing currently reading these keys breaks; do not wire
+       new screens to them. */
     whereLabel: locked('Where these words go'),
     whereShine: locked('Shows on the page'),
     whereKeep: locked('Kept in the record'),
     whereNote: locked('Shown words carry no name. Either way they stay in the piece.'),
+
+    /* the L1 pair: the share-choice control's own state line, lit vs
+       tapped. §6 "A question, opened," verbatim — the same paragraph that
+       names this capsule "the control" and "the button is how you
+       withhold." Companion to whereNote above; belongs to the (now
+       deprecated) two-option capsule, not the Lamp/"What shows"
+       registration screen and not the new three-tier control's own
+       (non-verbatim) state captions. */
+    shareOnLine: locked('This will shine with the piece · words with no name.'),
+    shareOffLine: locked('This stays yours alone · nobody sees it but you.'),
+
+    /* the three tiers. §6 "Three tiers, and what outlives you", titles and
+       bodies lifted verbatim from collector-primitives.html's drawn tier
+       block (~lines 2536-2610), which matches §6's wording exactly. The
+       "Keep it with the piece" body must carry "They may choose to let it
+       shine one day" per §6's explicit instruction that the clause "must
+       appear on the control." */
+    tierShineTitle: locked('Let it shine'),
+    tierShineBody: locked(
+      'Anyone who meets the piece reads it, as words with no name. Once it shines it stays shining, always.',
+    ),
+    tierKeepTitle: locked('Keep it with the piece'),
+    tierKeepBody: locked(
+      'It travels with the piece and only whoever holds it can open it. They may choose to let it shine one day.',
+    ),
+    tierSealTitle: locked('Seal it'),
+    tierSealBody: locked(
+      'Nobody opens it again. Not the next caretaker, not your family, not ever. The piece still holds it.',
+    ),
+
+    /* the heirs' sub-choice, on by default, hidden when the tier is Seal
+       it. §6 "The heirs' right", strings as drawn in collector-primitives.html
+       (~lines 2553-2610). */
+    heirsOnTitle: locked('The ones who come after may share this'),
+    heirsOnNote: locked('On, unless you turn it off for this one thing.'),
+    heirsOffTitle: locked('This one goes no further than you'),
+    heirsOffNote: locked(
+      'Off. It stays with the piece, unopened by anyone after you.',
+    ),
+
+    /* Adrian's spoken ruling, 2026-08-20 session, on the writer's own access
+       to what they sealed or kept: no verbatim §6 line exists for this, so
+       the on-screen line is crafted in §6's diction from his words rather
+       than quoted. FLAG FOR ADRIAN'S REVIEW — this exact string has not been
+       read back to him. His words: "The writer can always access theirs.
+       The writer can always make it go public, but they can never make it
+       go private again. Once it's public, it's out there." */
+    tierSealWriterNote: locked(
+      'You can always open your own. You can let it shine one day. Once it shines, it stays.',
+    ),
 
     place: locked('Place it'),
     finishLater: locked('Finish later'),
@@ -473,7 +558,10 @@ export const COPY = {
    * ---------------------------------------------------------------- */
   ritual: {
     head: locked('The year turns'),
-    body: locked(
+    /* text unchanged; Adrian has not ruled on it, so it moves to ph() rather
+       than staying marked as settled. §5 "The yearly ritual" gives only the
+       eyebrow/headline/body sketch, not this full paragraph — placeholder. */
+    body: ph(
       'Near your birthday the piece asks once. What it holds for the year ahead is yours to place now, and it will be read by everyone who meets the piece until the next time it asks.',
     ),
     note: locked(
@@ -482,12 +570,22 @@ export const COPY = {
     field: locked('the one thing it holds this year'),
     keep: locked('Keep last year’s'),
 
+    /* the ritual's three choices, plus the decline. §5 "The yearly ritual",
+       verbatim: "Reinforce the dream it holds · Plant a new dream · Mark it
+       fulfilled" and "Secondary: Not this year". */
+    reinforce: locked('Reinforce the dream it holds'),
+    plantNew: locked('Plant a new dream'),
+    markFulfilled: locked('Mark it fulfilled'),
+    notThisYear: locked('Not this year'),
+
     familyHead: locked('The people you love'),
+    /* Adrian chose Option A, proposals doc 2026-08-12 "The household" — 2026-08-20 */
     familyBody: locked(
-      'Each person you have invited is asked near their own birthday, and each places one thing for the year. Theirs pass through you once before they show, for typos and judgement, never for permission.',
+      'Everyone you have invited is asked at their own birthday, and each places one thing for the year. What they write passes through you once, for typos, never for permission.',
     ),
+    /* Option A, same doc/date */
     familyNote: locked(
-      'Anything not passed simply does not show this year. Nothing is lost; it waits. A child’s words never carry a name, whatever is chosen.',
+      'Nothing not passed this year is lost, only waiting. A child’s words never carry a name.',
     ),
   },
 
@@ -496,13 +594,16 @@ export const COPY = {
    * ---------------------------------------------------------------- */
   passing: {
     forkHead: locked('Passing it on'),
-    forkBody: locked('Two ways a piece moves, and they are not the same act.'),
+    /* Adrian chose Option A, proposals doc 2026-08-12 "The passing" — 2026-08-20 */
+    forkBody: locked('A piece moves in one of two ways, and they are not the same act.'),
     forkLove: locked('To someone you love'),
-    forkLoveNote: locked(
-      'they are already on the piece, and it stays inside the house',
-    ),
+    /* Option A, same doc/date */
+    forkLoveNote: locked('already on the piece; it stays inside the house'),
     forkSell: locked('To someone buying it'),
-    forkSellNote: locked('a stranger receives it, and what travels is decided now'),
+    /* Option A, same doc/date */
+    forkSellNote: locked(
+      'a stranger receives it, and what travels is stated now, not decided later',
+    ),
 
     nameHead: locked('It stays in the house'),
     nameBody: locked(
@@ -638,6 +739,8 @@ export const COPY = {
     keptBody: locked(
       'Earth’s Breath is yours to carry now. He wrote things into it that nobody has read, and they are yours to open.',
     ),
+    /* character-diffed 2026-08-20 against collector-primitives.html's
+       `inherit.note` (~line 2383) — identical, no change. */
     keptNote: locked(
       'You can let any of it shine, and once it shines it stays shining. What he sealed is sealed, and you will not see it: that was his to decide, and he did.',
     ),
