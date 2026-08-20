@@ -4,7 +4,7 @@
  *
  * It is not a second design of the journey. The phone is either the real
  * `CollectorShell` (`chrome="tour"`, no harness of its own) pointed at one
- * real `View`, or the real `CeremonyStation` running one of the two
+ * real `View`, or the real `CeremonyStation` running one of the four
  * artist-ceremony demos. The rail only ever narrates and steers what is
  * already true on the real screen: it advances the moment the real screen
  * reports it moved to the next station on its own (a tap inside the phone),
@@ -28,11 +28,14 @@
  * ruling, 2026-08-20: the rail assumes a note is coming — no "Leave a note"
  * press, no sheet to summon first. The box is simply there, waiting.
  *
- * Chapters come from `chapters.ts`: the twelve real journeys, the surfaces
- * none of them passes through, and the two ceremony demos, in that order.
- * Moving between chapters always opens on that chapter's first station,
- * whichever direction you came from; moving station to station inside one
- * chapter is what Back and Next are for.
+ * Chapters come from `chapters.ts` in two sections: the four ceremony demos
+ * lead as 'making', then 'collecting' holds the twelve real journeys (the
+ * arrival studies spliced in right after "Registering it, all the way"),
+ * followed by the surfaces none of the twelve passes through. The chapter
+ * list headers both sections; the chapter strip carries the current one as
+ * a small eyebrow line. Moving between chapters always opens on that
+ * chapter's first station, whichever direction you came from; moving
+ * station to station inside one chapter is what Back and Next are for.
  *
  * Layered on top of that walk is the feedback rail: a verdict and a note per
  * station, kept by `notes.ts` and reviewed all at once in `NotesDrawer`, so
@@ -46,7 +49,7 @@ import CollectorShell, { CollectorShellHandle } from '../collector/CollectorShel
 import type { View } from '../collector/tourData';
 import CeremonyStation from './CeremonyStation';
 import ArrivalStation from './ArrivalStation';
-import { CHAPTERS, Chapter } from './chapters';
+import { CHAPTERS, Chapter, Section } from './chapters';
 import { sameView } from './stations';
 import { NoteField, NotesDrawer, VerdictPair } from './NotesDrawer';
 import * as notes from './notes';
@@ -132,6 +135,39 @@ const stationCountStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   color: C.inkGhost,
   fontVariantNumeric: 'tabular-nums',
+};
+
+/** the two halves of the walk, named the way the chapter list headers them
+ *  and the way the strip's eyebrow line names the current one. Adrian never
+ *  found the ceremony chapters when they sat unsignaled at the tail of the
+ *  list; these two labels are the signal. */
+const SECTION_LABEL: Record<Section, string> = {
+  making: 'The making · how a piece and its codes are born',
+  collecting: "The collector's walk",
+};
+
+/** the section header the chapter list plants above the first chapter of
+ *  each section: quiet, uppercase, no icon, with generous top padding
+ *  between groups so the two halves read apart without a rule between them */
+const sectionHeaderStyle = (isFirst: boolean): React.CSSProperties => ({
+  margin: 0,
+  padding: isFirst ? '0 4px 6px' : '22px 4px 6px',
+  fontFamily: F.label,
+  fontSize: 9.5,
+  letterSpacing: '.14em',
+  textTransform: 'uppercase',
+  color: C.inkQuiet,
+});
+
+/** the strip's own tiny eyebrow line: one quiet line naming the current
+ *  chapter's section, sitting above the · title · N of M · row itself */
+const eyebrowStyle: React.CSSProperties = {
+  width: '100%',
+  fontFamily: F.label,
+  fontSize: 9,
+  letterSpacing: '.14em',
+  textTransform: 'uppercase',
+  color: C.inkGhost,
 };
 
 /* ------------------------------------------------------------------ *
@@ -384,33 +420,39 @@ export const Walkthrough: React.FC = () => {
 
   /* the compact chapter strip: the same shape regardless of what kind of
      chapter is on screen. Above the phone when narrow; folded into the top
-     of the docked rail when wide. */
+     of the docked rail when wide. A tiny eyebrow line names the current
+     chapter's section — the signal Adrian was missing when the ceremony
+     chapters sat unlabeled at the tail of one long list. */
   const strip = (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: wide ? 'flex-start' : 'center',
-        flexWrap: 'wrap',
-        gap: 6,
-        width: '100%',
-        maxWidth: wide ? 'none' : 460,
-        paddingBottom: wide ? 14 : 16,
-        fontFamily: F.label,
-        fontSize: 10,
-        letterSpacing: '.12em',
-        textTransform: 'uppercase',
-      }}
-    >
-      <StripLink onClick={() => hasPrevChapter && goToChapter(chapterIndex - 1)} disabled={!hasPrevChapter}>
-        ‹ previous
-      </StripLink>
-      <span style={{ color: C.inkGhost }}>
-        · {chapter.title} · {chapterIndex + 1} of {CHAPTERS.length} ·
-      </span>
-      <StripLink onClick={() => hasNextChapter && goToChapter(chapterIndex + 1)} disabled={!hasNextChapter}>
-        next ›
-      </StripLink>
+    <div style={{ width: '100%', maxWidth: wide ? 'none' : 460 }}>
+      <div style={{ ...eyebrowStyle, textAlign: wide ? 'left' : 'center', paddingBottom: 4 }}>
+        {SECTION_LABEL[chapter.section]}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: wide ? 'flex-start' : 'center',
+          flexWrap: 'wrap',
+          gap: 6,
+          width: '100%',
+          paddingBottom: wide ? 14 : 16,
+          fontFamily: F.label,
+          fontSize: 10,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+        }}
+      >
+        <StripLink onClick={() => hasPrevChapter && goToChapter(chapterIndex - 1)} disabled={!hasPrevChapter}>
+          ‹ previous
+        </StripLink>
+        <span style={{ color: C.inkGhost }}>
+          · {chapter.title} · {chapterIndex + 1} of {CHAPTERS.length} ·
+        </span>
+        <StripLink onClick={() => hasNextChapter && goToChapter(chapterIndex + 1)} disabled={!hasNextChapter}>
+          next ›
+        </StripLink>
+      </div>
     </div>
   );
 
@@ -473,52 +515,59 @@ export const Walkthrough: React.FC = () => {
   );
 
   /* the chapter list itself, identical inline (wide) and in the sheet
-     (narrow) */
+     (narrow). A quiet section header plants above the first chapter of each
+     section — 'making' then 'collecting' — so the ceremony chapters read as
+     their own deliberate group up top rather than blending into the list. */
   const chapterList = (
     <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {CHAPTERS.map((c, i) => (
-        <button
-          key={c.id}
-          type="button"
-          onClick={() => goToChapter(i)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            width: '100%',
-            border: 0,
-            background: 'none',
-            padding: '7px 4px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            textAlign: 'left',
-            fontFamily: F.body,
-            fontSize: 13,
-            color: i === chapterIndex ? C.brass : C.inkBody,
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            {c.title}
-            {notes.chapterHasEntries(notesStore, c.id) && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  background: C.brass,
-                }}
-              />
-            )}
-          </span>
-          {c.kind === 'ceremony' && (
-            <span style={{ fontFamily: F.label, fontSize: 9, letterSpacing: '.1em', color: C.inkGhost }}>
-              ceremony
-            </span>
-          )}
-        </button>
-      ))}
+      {CHAPTERS.map((c, i) => {
+        const newSection = i === 0 || CHAPTERS[i - 1].section !== c.section;
+        return (
+          <React.Fragment key={c.id}>
+            {newSection && <div style={sectionHeaderStyle(i === 0)}>{SECTION_LABEL[c.section]}</div>}
+            <button
+              type="button"
+              onClick={() => goToChapter(i)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                width: '100%',
+                border: 0,
+                background: 'none',
+                padding: '7px 4px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontFamily: F.body,
+                fontSize: 13,
+                color: i === chapterIndex ? C.brass : C.inkBody,
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                {c.title}
+                {notes.chapterHasEntries(notesStore, c.id) && (
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: 4,
+                      height: 4,
+                      borderRadius: '50%',
+                      background: C.brass,
+                    }}
+                  />
+                )}
+              </span>
+              {c.kind === 'ceremony' && (
+                <span style={{ fontFamily: F.label, fontSize: 9, letterSpacing: '.1em', color: C.inkGhost }}>
+                  ceremony
+                </span>
+              )}
+            </button>
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 

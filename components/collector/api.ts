@@ -482,6 +482,18 @@ export function stewardClaimDeepLink(artworkId: string, publicCode: string): str
 // functions/api/keeper/piece.js. Gated by livingLegacy.
 // ============================================================================
 
+/**
+ * Present only for the piece's own steward (byYou), and only while a
+ * thirty-day silence window is open against this piece
+ * (functions/api/_lib/claimSilence.js). remindersSent is a count only —
+ * nothing about the claimant is ever included here.
+ */
+export interface KeeperPendingClaim {
+  openedAt: string;
+  deadline: string;
+  remindersSent: number;
+}
+
 export interface KeeperPieceStatus {
   kept: boolean;
   byYou: boolean;
@@ -489,6 +501,7 @@ export interface KeeperPieceStatus {
   keeperPieceId?: string;
   currentDisplayLocation?: string | null;
   stewardHistory?: PublicCreatorHistoryEntry[];
+  pendingClaim?: KeeperPendingClaim;
 }
 
 /** GET /api/keeper/piece?publicCode=. Requires a signed-in session. */
@@ -518,6 +531,44 @@ export async function setKeeperDisplayLocation(
     method: 'PUT',
     body: JSON.stringify({ publicCode, currentDisplayLocation }),
   }).then((outcome) => (outcome.ok ? { ok: true, status: outcome.status, data: outcome.data } : outcome));
+}
+
+// ============================================================================
+// keeper/claim-refusal — the steward's one door to refuse an open silence-pass
+// window (functions/api/keeper/claim-refusal.js,
+// functions/api/_lib/claimSilence.js#refuseSilencePass). Gated by
+// livingLegacy, like every other keeper/* endpoint.
+// ============================================================================
+
+export interface ClaimRefusalResult {
+  publicCode: string;
+  /** How many open windows this call closed (ordinarily 1). */
+  windows: number;
+  refusedAt: string;
+}
+
+/**
+ * POST /api/keeper/claim-refusal. Requires a signed-in, verified-email
+ * session belonging to the piece's current live steward. Errors: 404
+ * not_registered (no such piece), 403 not_steward, 404 no_open_claim (no
+ * open silence window against this piece), 405 method_not_allowed. Never
+ * retried by this file, matching bindKeeper's stance on mutating calls.
+ */
+export async function refuseClaim(
+  publicCode: string,
+  note?: string,
+): Promise<ApiOutcome<ClaimRefusalResult>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  if (!isValidPublicCode(publicCode)) {
+    return { ok: false, status: 400, error: 'valid publicCode is required' };
+  }
+  return unwrapField(
+    jsonRequest<{ ok: true; refused: ClaimRefusalResult }>('/api/keeper/claim-refusal', {
+      method: 'POST',
+      body: JSON.stringify({ publicCode, ...(note?.trim() ? { note: note.trim() } : {}) }),
+    }),
+    'refused',
+  );
 }
 
 // ============================================================================

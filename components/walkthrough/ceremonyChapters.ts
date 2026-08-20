@@ -1,11 +1,16 @@
 /**
- * The artist-ceremony DEMO chapters for the guided walkthrough: how Adrian
- * himself creates and registers a piece, in what order the codes are born,
- * how a piece already out in the world joins through an invitation instead
- * of a fresh unboxing, how the physical plate comes out of those same two
- * codes, and last, adding to a piece already registered. Each is played out
- * station by station inside a `CeremonyStation` running against the
- * browser-only demo fetch stub (`demoFetchStub.ts`), never a real backend.
+ * The four artist-ceremony DEMO chapters for the guided walkthrough: how
+ * Adrian himself creates and registers a piece, in what order the codes are
+ * born, how a piece already out in the world joins through an invitation
+ * instead of a fresh unboxing, how the physical plate comes out of those
+ * same two codes, and last, placing more into a piece already registered.
+ * Each is played out station by station inside a `CeremonyStation` running
+ * against the browser-only demo fetch stub (`demoFetchStub.ts`), never a
+ * real backend.
+ *
+ * `chapters.ts` leads the whole walkthrough with these four, under the
+ * 'making' section — this is the process that creates a piece and its
+ * codes, not the collector's own journey through one already made.
  */
 
 export type CeremonyChapter = {
@@ -136,7 +141,11 @@ const plateCeremonyChapter: CeremonyChapter = {
 
 const addToPieceCeremonyChapter: CeremonyChapter = {
   id: 'ceremony-add',
-  title: 'Adding to your piece',
+  /* deliberately not "Adding to your piece" — that title belongs to the
+     collector-facing chapter built from the same-named FLOWS entry (the
+     garden). This is the artist-ceremony demo of the same surface, so it
+     gets a quieter, distinct title rather than colliding with it verbatim. */
+  title: 'Placing more into a piece',
   surface: 'addtopiece',
   stations: [
     {
