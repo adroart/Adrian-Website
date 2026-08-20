@@ -56,16 +56,25 @@ export const VerdictPair: React.FC<{ value?: Verdict; onChange: (v?: Verdict) =>
 const NOTE_DEBOUNCE_MS = 400;
 const KEPT_VISIBLE_MS = 1800;
 
+/* a growing field stops at this height and scrolls inside itself, so a very
+   long note never pushes the surface it sits on */
+const MAX_GROW_PX = 320;
+
 export const NoteField: React.FC<{
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   rows?: number;
-}> = ({ value, onChange, placeholder, rows = 3 }) => {
+  /** grow with the text as it is written, up to MAX_GROW_PX, instead of
+   *  offering a resize handle — the rail and the note sheet use this so a
+   *  long note expands in place and never asks the page to scroll */
+  autoGrow?: boolean;
+}> = ({ value, onChange, placeholder, rows = 3, autoGrow = false }) => {
   const [text, setText] = useState(value);
   const [kept, setKept] = useState(false);
   const debounceRef = useRef<number | undefined>(undefined);
   const keptRef = useRef<number | undefined>(undefined);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(
     () => () => {
@@ -74,6 +83,15 @@ export const NoteField: React.FC<{
     },
     [],
   );
+
+  /* size the field to its text after every render that changed it; height is
+     set imperatively so React's style diffing never fights it */
+  useEffect(() => {
+    const el = areaRef.current;
+    if (!el || !autoGrow) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight + 2, MAX_GROW_PX)}px`;
+  }, [text, autoGrow]);
 
   const handleChange = (next: string) => {
     setText(next);
@@ -90,6 +108,7 @@ export const NoteField: React.FC<{
   return (
     <div>
       <textarea
+        ref={areaRef}
         value={text}
         onChange={e => handleChange(e.target.value)}
         placeholder={placeholder}
@@ -97,7 +116,12 @@ export const NoteField: React.FC<{
         style={{
           width: '100%',
           boxSizing: 'border-box',
-          resize: 'vertical',
+          resize: autoGrow ? 'none' : 'vertical',
+          /* the growing field never starts smaller than its rows ask for:
+             rows × line-height × font-size, plus the padding and border */
+          minHeight: autoGrow ? Math.round(rows * 13 * 1.55) + 18 : undefined,
+          maxHeight: autoGrow ? MAX_GROW_PX : undefined,
+          overflowY: 'auto',
           background: 'rgba(237,233,226,.04)',
           border: `1px solid ${C.hair}`,
           borderRadius: 8,
