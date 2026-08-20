@@ -218,7 +218,7 @@ export const PiecePage: React.FC<Props> = ({
       </div>
 
       {/* the foot: the only part that differs across the four */}
-      <Foot relationship={relationship} onBegin={onBegin} onSignIn={onSignIn} />
+      <Foot relationship={relationship} onBegin={onBegin} onSignIn={onSignIn} onOpenRoom={setRoom} />
     </Ground>
   );
 };
@@ -229,10 +229,11 @@ export const PiecePage: React.FC<Props> = ({
  * Held while the page works out who is holding the phone: absent, and the page
  * is otherwise whole. Never a spinner and never a guess.
  */
-const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignIn?: () => void }> = ({
+const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignIn?: () => void; onOpenRoom?: (room: RoomKey) => void }> = ({
   relationship,
   onBegin,
   onSignIn,
+  onOpenRoom,
 }) => {
   if (relationship === 'loading') {
     return (
@@ -278,11 +279,11 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
         gap: 16,
       }}
     >
-      <TLink tone={C.inkBody} onClick={onBegin}>
+      <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
         {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
       </TLink>
       <span style={{ width: 1, height: 16, background: C.hairStrong, display: 'block' }} />
-      <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : onSignIn}>
+      <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
         {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
       </TLink>
     </div>
