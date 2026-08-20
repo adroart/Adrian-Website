@@ -8,9 +8,15 @@
  * `BrowserRouter` for the first time (see the ceremony-chapter test below for
  * what that surfaces).
  *
- * See `components/walkthrough/Walkthrough.tsx`, `chapters.ts`, `stations.ts`,
- * `ceremonyChapters.ts` and `CeremonyStation.tsx` for the rail's own design;
- * this spec never duplicates their wording, only walks the real screens.
+ * Layered over the walk is the feedback rail — a verdict pair and a debounced
+ * note per station (`notes.ts`, key `walkthrough-notes:v1`), the station
+ * scrubber, the chapter strip, keyboard arrows, and the "Your notes" drawer
+ * with its copy-the-digest exit — all covered here too.
+ *
+ * See `components/walkthrough/Walkthrough.tsx`, `NotesDrawer.tsx`, `notes.ts`,
+ * `chapters.ts`, `stations.ts`, `ceremonyChapters.ts` and `CeremonyStation.tsx`
+ * for the rail's own design; this spec never duplicates their wording, only
+ * walks the real screens.
  */
 
 import { expect, Page, test } from '@playwright/test';
@@ -40,6 +46,13 @@ const openChapter = async (page: Page, title: string) => {
   await page.getByRole('button', { name: title, exact: true }).click();
 };
 
+/** the notes store exactly as `notes.ts` keeps it */
+const readNotesStore = (page: Page) =>
+  page.evaluate(() => JSON.parse(window.localStorage.getItem('walkthrough-notes:v1') ?? 'null'));
+
+/** chapter id for chapter 1, as `chapters.ts`'s slug() derives it */
+const CH1 = 'registering-it-all-the-way';
+
 /* ------------------------------------------------------------------ *
  * 1. loads at chapter 1, station 1
  * ------------------------------------------------------------------ */
@@ -49,9 +62,15 @@ test('the walkthrough loads at /dev/walkthrough on chapter 1, station 1', async 
   page.on('pageerror', e => errors.push(e.message));
 
   await page.goto('/dev/walkthrough');
-  await expect(page.getByText('Registering it, all the way')).toBeVisible();
+  // the title shows twice now: the compact chapter strip and the caption rail
+  await expect(page.getByText('Registering it, all the way').first()).toBeVisible();
   await expect(station(page, 1, 14)).toBeVisible();
   await assertPhoneAlive(page);
+
+  // the unclaimed foot carries its arrival line under Begin — and only that
+  // one: the registered-not-yours line belongs to a different foot entirely
+  await expect(page.getByText('This piece has no home yet. Begin gives it one.')).toBeVisible();
+  await expect(page.getByText(/Someone already tends this piece/)).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });
@@ -142,14 +161,56 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   await expect(st(14)).toBeVisible();
   await assertPhoneAlive(page);
 
-  // relationship really did flip: the unclaimed Begin is gone
+  // relationship really did flip: the unclaimed Begin and its arrival line are
+  // gone, and the caretaker's foot carries no arrival line at all
   await expect(page.getByRole('button', { name: 'Begin', exact: true })).toHaveCount(0);
+  await expect(page.getByText('This piece has no home yet. Begin gives it one.')).toHaveCount(0);
+  await expect(page.getByText(/Someone already tends this piece/)).toHaveCount(0);
+
+  // the caretaker's light is a door: pressing the Orbit opens Add to your
+  // piece, in place, without moving the rail
+  await page.getByLabel('Add to your piece').click();
+  await expect(page.getByRole('button', { name: 'See all of them', exact: true })).toBeVisible();
+  await expect(st(14)).toBeVisible();
+  await assertPhoneAlive(page);
 
   expect(errors).toEqual([]);
 });
 
 /* ------------------------------------------------------------------ *
- * 3. every other collector chapter, via the rail's own Next control
+ * 3. the ritual chapter: three rows now, none required
+ * ------------------------------------------------------------------ */
+
+test('the year turning opens on three ritual rows and walks to the household', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto('/dev/walkthrough');
+  await openChapter(page, 'The year turning');
+  await expect(station(page, 1, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // the three choices, a hairline-divided list, plus the quiet decline
+  await expect(page.getByRole('button', { name: /^Reinforce the dream it holds/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Plant a new dream/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Mark it fulfilled/ })).toBeVisible();
+  await expect(page.getByText('Not this year')).toBeVisible();
+
+  const next = page.getByRole('button', { name: 'Next', exact: true });
+  await next.click();
+  await expect(station(page, 2, 3)).toBeVisible();
+  await expect(page.getByText('The people you love').first()).toBeVisible();
+  await assertPhoneAlive(page);
+
+  await next.click();
+  await expect(station(page, 3, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  expect(errors).toEqual([]);
+});
+
+/* ------------------------------------------------------------------ *
+ * 4. every other collector chapter, via the rail's own Next control
  * ------------------------------------------------------------------ */
 
 /** every FLOW and JUMP-leftover chapter besides "Registering it, all the
@@ -172,14 +233,15 @@ const OTHER_COLLECTOR_CHAPTERS: [title: string, stations: number][] = [
   ['The door', 5],
   ['The threshold', 1],
   ['The gathering', 1],
-  ['Inside the page', 8],
-  ['The year turns', 2],
-  ['Asking someone on', 3],
+  ['Inside the page', 9],
+  ['The year turns', 3],
+  ['The passing', 1],
+  ['Asking someone on', 4],
   ['Signing in', 1],
 ];
 
 test('every other collector chapter walks by Next with a live phone and no page errors', async ({ page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
 
@@ -189,6 +251,7 @@ test('every other collector chapter walks by Next with a live phone and no page 
     // choosing a chapter closes the list, so reopen it for each one
     await page.getByRole('button', { name: /^Chapters/ }).click();
     await page.getByRole('button', { name: title, exact: true }).click();
+    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     await expect(station(page, 1, total)).toBeVisible();
     await assertPhoneAlive(page);
 
@@ -199,14 +262,196 @@ test('every other collector chapter walks by Next with a live phone and no page 
       await expect(station(page, n, total)).toBeVisible();
       await assertPhoneAlive(page);
     }
-    await expect(next).toBeDisabled();
+
+    // at a chapter's final station the control stops reading Next and starts
+    // reading Next chapter — every chapter here has a chapter after it
+    await expect(next).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Next chapter', exact: true })).toBeVisible();
   }
 
   expect(errors).toEqual([]);
 });
 
 /* ------------------------------------------------------------------ *
- * 4. the two ceremony chapters
+ * 5. the demo garden's write screen: the three-tier control
+ * ------------------------------------------------------------------ */
+
+test('the garden write screen holds three tiers, Keep reveals the heirs, Seal takes two presses', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto('/dev/walkthrough');
+  await openChapter(page, 'Adding to your piece');
+  await expect(station(page, 1, 1)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // the piece asks -> the write screen
+  await page.getByRole('button', { name: /^Write it/ }).click();
+
+  // the three stacked choices, all present at once — never the old capsule
+  const shine = page.getByRole('button', { name: /^Let it shine/ });
+  const keep = page.getByRole('button', { name: /^Keep it with the piece/ });
+  const seal = page.getByRole('button', { name: /^Seal it/ });
+  await expect(shine).toBeVisible();
+  await expect(keep).toBeVisible();
+  await expect(seal).toBeVisible();
+
+  // shine is the default, its state line under it, and no heirs' choice yet
+  await expect(page.getByText('This will shine with the piece · words with no name.')).toBeVisible();
+  const heirsOn = page.getByRole('button', { name: /The ones who come after may share this/ });
+  const heirsOff = page.getByRole('button', { name: /This one goes no further than you/ });
+  await expect(heirsOn).toHaveCount(0);
+
+  // Keep reveals the heirs' sub-choice, on by default, and it toggles
+  await keep.click();
+  await expect(heirsOn).toBeVisible();
+  await heirsOn.click();
+  await expect(heirsOff).toBeVisible();
+  await expect(heirsOn).toHaveCount(0);
+
+  // Seal hides the heirs' choice entirely — the seal already answers it
+  await seal.click();
+  await expect(heirsOn).toHaveCount(0);
+  await expect(heirsOff).toHaveCount(0);
+  await expect(page.getByText('This stays yours alone · nobody sees it but you.')).toBeVisible();
+
+  // sealing is a vow: the first press arms the grave confirm, nothing moves
+  const place = page.getByRole('button', { name: 'Place it', exact: true });
+  await place.click();
+  await expect(page.getByText(/Sealing is a vow\. Press Place it once more/)).toBeVisible();
+  await expect(place).toBeVisible();
+
+  // the second press commits, landing back on the garden index
+  await place.click();
+  await expect(page.getByText('I saw it in the hallway of a house I was leaving…')).toBeVisible();
+  await expect(place).toHaveCount(0);
+  await expect(station(page, 1, 1)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  expect(errors).toEqual([]);
+});
+
+/* ------------------------------------------------------------------ *
+ * 6. the feedback rail: a verdict marks the scrubber, a note autosaves
+ * ------------------------------------------------------------------ */
+
+test('a verdict lights the scrubber dot and a note autosaves to localStorage and survives reload', async ({ page }) => {
+  await page.goto('/dev/walkthrough');
+  await expect(station(page, 1, 14)).toBeVisible();
+
+  // the verdict pair under the phone: "right" persists instantly
+  await page.getByRole('button', { name: 'right', exact: true }).click();
+
+  // the scrubber's station-1 dot lights brass (espresso.palette.brass)
+  const dot = page.locator('button[title="Nobody holds it"] span').nth(1);
+  await expect(dot).toHaveCSS('background-color', 'rgb(212, 184, 138)');
+
+  let store = await readNotesStore(page);
+  expect(store?.[CH1]?.[0]?.verdict).toBe('right');
+  expect(store?.[CH1]?.[0]?.label).toBe('Nobody holds it');
+
+  // the note, saved through the field's own debounce: "Kept." is the signal
+  await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
+  await page.locator('textarea').fill('The door reads honest.');
+  await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
+
+  store = await readNotesStore(page);
+  expect(store?.[CH1]?.[0]?.note).toBe('The door reads honest.');
+  expect(store?.[CH1]?.[0]?.verdict).toBe('right');
+
+  // reload: the note field reopens itself with the text, the entry counted
+  await page.reload();
+  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(page.locator('textarea')).toHaveValue('The door reads honest.');
+  await expect(page.getByRole('button', { name: 'Your notes · 1', exact: true })).toBeVisible();
+
+  store = await readNotesStore(page);
+  expect(store?.[CH1]?.[0]?.note).toBe('The door reads honest.');
+});
+
+/* ------------------------------------------------------------------ *
+ * 7. the notes drawer: the digest, copied whole
+ * ------------------------------------------------------------------ */
+
+test.describe('the notes drawer', () => {
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+
+  test('lists the entry and Copy all notes puts the digest on the clipboard', async ({ page }) => {
+    await page.goto('/dev/walkthrough');
+    await expect(station(page, 1, 14)).toBeVisible();
+
+    await page.getByRole('button', { name: 'right', exact: true }).click();
+    await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
+    await page.locator('textarea').fill('The door reads honest.');
+    await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Your notes · 1', exact: true }).click();
+    const drawer = page.getByRole('dialog', { name: 'Your notes' });
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByText('1 entry', { exact: true })).toBeVisible();
+    await expect(drawer.getByText('Station 1 · Nobody holds it')).toBeVisible();
+
+    await drawer.getByRole('button', { name: 'Copy all notes', exact: true }).click();
+    await expect(drawer.getByText('Copied. Paste it to Claude in the chat.')).toBeVisible();
+
+    // the digest itself, read back off the clipboard the drawer wrote to
+    const digest = await page.evaluate(() => navigator.clipboard.readText());
+    expect(digest).toContain('# Walkthrough notes');
+    expect(digest).toContain('## Registering it, all the way');
+    expect(digest).toContain('- Station 1 · Nobody holds it · right');
+    expect(digest).toContain('The door reads honest.');
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * 8. keyboard: arrows move a station, shifted arrows move a chapter
+ * ------------------------------------------------------------------ */
+
+test('ArrowRight advances a station and Shift+ArrowRight advances a chapter', async ({ page }) => {
+  await page.goto('/dev/walkthrough');
+  await expect(station(page, 1, 14)).toBeVisible();
+
+  await page.keyboard.press('ArrowRight');
+  await expect(station(page, 2, 14)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // station 2 is the code page, which focuses its own input on mount, and
+  // the rail's keyboard handler deliberately stays silent while an input
+  // holds focus — step out of the field before asking for the chapter jump
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Shift+ArrowRight');
+  await expect(page.getByText('Giving it as a gift').first()).toBeVisible();
+  await expect(station(page, 1, 14)).toBeVisible();
+  await assertPhoneAlive(page);
+});
+
+/* ------------------------------------------------------------------ *
+ * 9. at the final station, Next becomes Next chapter and leaves
+ * ------------------------------------------------------------------ */
+
+test('at a chapter\'s final station the control reads Next chapter and advances', async ({ page }) => {
+  await page.goto('/dev/walkthrough');
+  await openChapter(page, 'Selling it to a stranger');
+  await expect(station(page, 1, 4)).toBeVisible();
+
+  const next = page.getByRole('button', { name: 'Next', exact: true });
+  for (let n = 2; n <= 4; n++) {
+    await next.click();
+    await expect(station(page, n, 4)).toBeVisible();
+  }
+
+  await expect(next).toHaveCount(0);
+  const nextChapter = page.getByRole('button', { name: 'Next chapter', exact: true });
+  await expect(nextChapter).toBeVisible();
+  await nextChapter.click();
+
+  await expect(page.getByText('Accepting a piece passed to you').first()).toBeVisible();
+  await expect(station(page, 1, 2)).toBeVisible();
+  await assertPhoneAlive(page);
+});
+
+/* ------------------------------------------------------------------ *
+ * 10. the two ceremony chapters
  *
  * CeremonyStation.tsx carries its own <MemoryRouter>, so the walkthrough
  * must never mount under the site's BrowserRouter (a Router cannot render
@@ -279,7 +524,7 @@ test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to
 });
 
 /* ------------------------------------------------------------------ *
- * 5. localStorage progress survives a reload
+ * 11. localStorage progress survives a reload
  * ------------------------------------------------------------------ */
 
 test('reloading mid-walk restores the same chapter and station', async ({ page }) => {
@@ -294,7 +539,7 @@ test('reloading mid-walk restores the same chapter and station', async ({ page }
 
   await page.reload();
 
-  await expect(page.getByText('Selling it to a stranger')).toBeVisible();
+  await expect(page.getByText('Selling it to a stranger').first()).toBeVisible();
   await expect(station(page, 3, 4)).toBeVisible();
   await assertPhoneAlive(page);
 });
