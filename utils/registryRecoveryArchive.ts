@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 8 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 9 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -153,10 +153,16 @@ export const REGISTRY_RECOVERY_V7_TABLES = [
   'artwork_contributor_access_grants',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+/** The exact schema-v8 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V8_TABLES = [
   ...REGISTRY_RECOVERY_V7_TABLES,
   'artwork_catalog_snapshots',
   'piece_records',
+] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V8_TABLES,
+  'collector_dream_tier_changes',
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -262,7 +268,7 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'id', 'keeper_piece_id', 'author_user_id', 'body', 'scope', 'visibility',
     'idempotency_key', 'record_version', 'created_at', 'updated_at',
     'public_shared_at', 'public_revoked_at', 'fulfilled_at', 'archived_at',
-    'last_mutation_id',
+    'last_mutation_id', 'tier', 'heirs_may_share',
   ],
   collector_dream_markers: [
     'id', 'dream_id', 'keeper_piece_id', 'author_user_id', 'marker_kind', 'body',
@@ -404,6 +410,10 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
   piece_records: [
     'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
   ],
+  collector_dream_tier_changes: [
+    'id', 'dream_id', 'author_user_id', 'from_tier', 'to_tier', 'idempotency_key',
+    'resulting_version', 'created_at',
+  ],
 };
 
 export type PrivateRecoveryPayload = {
@@ -415,7 +425,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -443,7 +453,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -536,6 +546,8 @@ const V4_KEEPER_COLUMNS = new Set([
   'identity_backup_reference', 'identity_backup_sha256', 'identity_backup_at',
 ]);
 
+const V9_DREAM_COLUMNS = new Set(['tier', 'heirs_may_share']);
+
 export const REGISTRY_RECOVERY_ORDER_COLUMNS: Record<RegistryRecoveryTable, readonly string[]> = {
   ...Object.fromEntries(REGISTRY_RECOVERY_TABLES.map((table) => [table, ['id']])) as unknown as Record<RegistryRecoveryTable, readonly string[]>,
   users: ['id'],
@@ -589,6 +601,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 5) return REGISTRY_RECOVERY_V5_TABLES;
   if (schemaVersion === 6) return REGISTRY_RECOVERY_V6_TABLES;
   if (schemaVersion === 7) return REGISTRY_RECOVERY_V7_TABLES;
+  if (schemaVersion === 8) return REGISTRY_RECOVERY_V8_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -596,6 +609,10 @@ function recoveryColumns(table: RegistryRecoveryTable, schemaVersion: number) {
   if (table === 'keeper_pieces' && schemaVersion < 4) {
     return REGISTRY_RECOVERY_COLUMNS.keeper_pieces.filter((column) =>
       !V4_KEEPER_COLUMNS.has(column) && (schemaVersion >= 3 || column !== 'last_transfer_id'));
+  }
+  if (table === 'collector_dreams' && schemaVersion < 9) {
+    return REGISTRY_RECOVERY_COLUMNS.collector_dreams.filter(
+      (column) => !V9_DREAM_COLUMNS.has(column));
   }
   return REGISTRY_RECOVERY_COLUMNS[table];
 }
@@ -659,7 +676,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, 6, 7, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, 7, 8, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -791,8 +808,29 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         artwork_contributor_invitation_acceptances: [],
         artwork_contributor_access_grants: [],
       } : {}),
-      artwork_catalog_snapshots: [],
-      piece_records: [],
+      ...(payload.schemaVersion < 8 ? {
+        artwork_catalog_snapshots: [],
+        piece_records: [],
+      } : {}),
+      ...(payload.schemaVersion < 9 ? {
+        collector_dreams: (
+          (payload.tables as { collector_dreams?: RecoveryRow[] }).collector_dreams ?? []
+        ).map((row) => ({
+          ...row,
+          // Mirrors migration 041's ALTER TABLE defaults exactly: every row
+          // gets heirs_may_share = 1 (the column default), and the tier
+          // backfill UPDATE sets tier = 'shine' for exactly the rows already
+          // standing in the light (an open, non-revoked anonymous/attributed
+          // share); every other pre-tier row lands on 'keep' (the column
+          // default), never 'seal' -- sealing did not exist before this
+          // schema version, so no archived row can already be sealed.
+          tier: (row.visibility === 'anonymous' || row.visibility === 'attributed')
+            && row.public_shared_at !== null
+            ? 'shine' : 'keep',
+          heirs_may_share: 1,
+        })),
+        collector_dream_tier_changes: [],
+      } : {}),
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -813,7 +851,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, 6, 7, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, 7, 8, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -1391,6 +1429,7 @@ BEGIN
              AND json_remove(NEW.request_json, '$.visibility') = '{}'
              AND json_extract(NEW.request_json, '$.visibility') = 'private'
              AND dream.public_shared_at IS NOT NULL
+             AND dream.tier <> 'shine'
            )
          )
     );
@@ -1475,6 +1514,8 @@ BEGIN
          AND NEW.author_user_id = OLD.author_user_id
          AND NEW.idempotency_key = OLD.idempotency_key
          AND NEW.created_at = OLD.created_at
+         AND NEW.tier = OLD.tier
+         AND NEW.heirs_may_share = OLD.heirs_may_share
          AND (
            (mutation.action = 'edit'
              AND NEW.body = json_extract(mutation.request_json, '$.body')
@@ -1501,6 +1542,29 @@ BEGIN
          )
     )
     OR EXISTS (
+      SELECT 1 FROM collector_dream_tier_changes change
+       WHERE change.dream_id = OLD.id
+         AND change.author_user_id = OLD.author_user_id
+         AND change.from_tier = OLD.tier
+         AND change.to_tier = NEW.tier
+         AND change.resulting_version = OLD.record_version + 1
+         AND NEW.record_version = change.resulting_version
+         AND NEW.updated_at = change.created_at
+         AND NEW.heirs_may_share = CASE
+           WHEN change.to_tier = 'seal' THEN 0 ELSE OLD.heirs_may_share END
+         AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+         AND NEW.visibility = OLD.visibility
+         AND NEW.public_shared_at IS OLD.public_shared_at
+         AND NEW.public_revoked_at IS OLD.public_revoked_at
+         AND NEW.fulfilled_at IS OLD.fulfilled_at
+         AND NEW.archived_at IS OLD.archived_at
+         AND NEW.keeper_piece_id = OLD.keeper_piece_id
+         AND NEW.author_user_id = OLD.author_user_id
+         AND NEW.idempotency_key = OLD.idempotency_key
+         AND NEW.created_at = OLD.created_at
+         AND NEW.last_mutation_id IS OLD.last_mutation_id
+    )
+    OR EXISTS (
       SELECT 1 FROM collector_dream_rituals ritual
        WHERE ritual.action = 'fulfilled'
          AND ritual.prior_dream_id = OLD.id
@@ -1519,6 +1583,8 @@ BEGIN
          AND NEW.last_mutation_id IS OLD.last_mutation_id
          AND NEW.updated_at = ritual.completed_at
          AND NEW.record_version = OLD.record_version + 1
+         AND NEW.tier = OLD.tier
+         AND NEW.heirs_may_share = OLD.heirs_may_share
     )
     OR (
       OLD.archived_at IS NULL AND NEW.archived_at IS NOT NULL
@@ -1536,6 +1602,8 @@ BEGIN
       AND NEW.idempotency_key = OLD.idempotency_key
       AND NEW.created_at = OLD.created_at
       AND NEW.last_mutation_id IS OLD.last_mutation_id
+      AND NEW.tier = OLD.tier
+      AND NEW.heirs_may_share = OLD.heirs_may_share
     )
     OR (
       OLD.public_revoked_at IS NULL AND NEW.public_revoked_at IS NOT NULL
@@ -1551,7 +1619,118 @@ BEGIN
       AND NEW.idempotency_key = OLD.idempotency_key
       AND NEW.created_at = OLD.created_at
       AND NEW.last_mutation_id IS OLD.last_mutation_id
+      AND NEW.tier = OLD.tier
+      AND NEW.heirs_may_share = OLD.heirs_may_share
     )
+  );
+END;`;
+
+// Migration 041's tier-model triggers, recreated verbatim (see
+// migrations/041_collector_dream_tiers.sql). collector_dreams_tier_transitions
+// and collector_dreams_seal_entry_coherence fire only BEFORE UPDATE, and
+// collector_dreams_seal_pins_heirs_update likewise -- restore never updates a
+// collector_dreams row, so none of the three can block a restore INSERT.
+// They are still dropped and recreated around the bulk insert below, exactly
+// like the 029 guards, so the live trigger set is fully accounted for and
+// stays byte-identical to a fresh 001-041 migration run.
+const DREAM_TIER_TRANSITIONS_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_tier_transitions
+BEFORE UPDATE ON collector_dreams
+WHEN NEW.tier IS NOT OLD.tier
+BEGIN
+  SELECT RAISE(ABORT, 'forbidden dream tier transition') WHERE NOT (
+    (OLD.tier = 'keep' AND NEW.tier IN ('shine', 'seal'))
+    OR (OLD.tier = 'seal' AND NEW.tier = 'shine')
+  );
+END;`;
+
+const DREAM_SEAL_ENTRY_COHERENCE_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_seal_entry_coherence
+BEFORE UPDATE ON collector_dreams
+WHEN NEW.tier = 'seal' AND OLD.tier IS NOT 'seal'
+BEGIN
+  SELECT RAISE(ABORT, 'sealing requires a private never-shone dream')
+   WHERE NEW.visibility <> 'private' OR NEW.public_shared_at IS NOT NULL;
+END;`;
+
+// BEFORE INSERT: every archived sealed dream already satisfies this shape
+// (it is a structural invariant of the live tables the export was taken
+// from), so it never blocks a restore INSERT in practice; dropped and
+// recreated anyway to mirror collector_dreams_insert_current_keeper above.
+const DREAM_SEAL_PINS_HEIRS_INSERT_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_seal_pins_heirs_insert
+BEFORE INSERT ON collector_dreams
+WHEN NEW.tier = 'seal'
+BEGIN
+  SELECT RAISE(ABORT, 'a sealed dream pins heirs_may_share to 0')
+   WHERE NEW.heirs_may_share <> 0;
+  SELECT RAISE(ABORT, 'sealing requires a private never-shone dream')
+   WHERE NEW.visibility <> 'private' OR NEW.public_shared_at IS NOT NULL;
+END;`;
+
+const DREAM_SEAL_PINS_HEIRS_UPDATE_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_seal_pins_heirs_update
+BEFORE UPDATE ON collector_dreams
+WHEN NEW.tier = 'seal' AND NEW.heirs_may_share <> 0
+BEGIN
+  SELECT RAISE(ABORT, 'a sealed dream pins heirs_may_share to 0');
+END;`;
+
+// The tier-change ledger's exact-application pair, shaped exactly like
+// DREAM_MUTATION_EXACT_TRIGGER_SQL / DREAM_MUTATION_APPLY_TRIGGER_SQL above:
+// BEFORE INSERT checks the live dream is at the expected from_tier, AFTER
+// INSERT performs the one authorized tier flip. Both must be dropped before
+// the bulk collector_dream_tier_changes insert below (a restored ledger row
+// already reflects a dream row that restore inserted directly at its final
+// tier, not the pre-transition from_tier these triggers expect to find).
+// collector_dream_tier_changes_no_update / _no_delete are append-only guards
+// like the artwork_catalog_snapshots / piece_records ones noted below --
+// they never fire on INSERT, so they are left untouched throughout.
+const DREAM_TIER_CHANGE_EXACT_APPLICATION_TRIGGER_SQL = `CREATE TRIGGER collector_dream_tier_change_exact_application
+BEFORE INSERT ON collector_dream_tier_changes
+BEGIN
+  SELECT RAISE(ABORT, 'dream tier change did not apply exactly') WHERE NOT EXISTS (
+    SELECT 1
+      FROM collector_dreams dream
+      JOIN keeper_pieces piece ON piece.id = dream.keeper_piece_id
+     WHERE dream.id = NEW.dream_id
+       AND dream.author_user_id = NEW.author_user_id
+       AND dream.archived_at IS NULL
+       AND dream.tier = NEW.from_tier
+       AND dream.record_version + 1 = NEW.resulting_version
+       AND piece.keeper_user_id = NEW.author_user_id
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND piece.plate_status NOT IN ('void', 'superseded')
+       AND (
+         (NEW.to_tier = 'shine'
+           AND dream.visibility IN ('anonymous', 'attributed')
+           AND dream.public_shared_at IS NOT NULL
+           AND dream.public_revoked_at IS NULL)
+         OR (NEW.to_tier = 'seal'
+           AND dream.visibility = 'private'
+           AND dream.public_shared_at IS NULL)
+       )
+  );
+END;`;
+
+const DREAM_TIER_CHANGE_APPLY_EXACTLY_TRIGGER_SQL = `CREATE TRIGGER collector_dream_tier_change_apply_exactly
+AFTER INSERT ON collector_dream_tier_changes
+BEGIN
+  UPDATE collector_dreams
+     SET tier = NEW.to_tier,
+         heirs_may_share = CASE WHEN NEW.to_tier = 'seal' THEN 0 ELSE heirs_may_share END,
+         updated_at = NEW.created_at,
+         record_version = record_version + 1
+   WHERE id = NEW.dream_id
+     AND author_user_id = NEW.author_user_id
+     AND archived_at IS NULL
+     AND tier = NEW.from_tier
+     AND record_version + 1 = NEW.resulting_version;
+
+  SELECT RAISE(ABORT, 'dream tier change did not apply exactly') WHERE NOT EXISTS (
+    SELECT 1 FROM collector_dreams dream
+     WHERE dream.id = NEW.dream_id
+       AND dream.tier = NEW.to_tier
+       AND dream.record_version = NEW.resulting_version
+       AND dream.updated_at = NEW.created_at
+       AND (NEW.to_tier <> 'seal' OR dream.heirs_may_share = 0)
   );
 END;`;
 
@@ -1936,9 +2115,15 @@ function buildRegistryRestoreSqlInternal(
   statements.push('DROP TRIGGER collector_dream_mutation_apply_exactly;');
   statements.push('DROP TRIGGER collector_dreams_runtime_update_guard;');
   statements.push('DROP TRIGGER collector_dream_ritual_fulfill_exactly;');
+  statements.push('DROP TRIGGER collector_dreams_tier_transitions;');
+  statements.push('DROP TRIGGER collector_dreams_seal_entry_coherence;');
+  statements.push('DROP TRIGGER collector_dreams_seal_pins_heirs_insert;');
+  statements.push('DROP TRIGGER collector_dreams_seal_pins_heirs_update;');
+  statements.push('DROP TRIGGER collector_dream_tier_change_exact_application;');
+  statements.push('DROP TRIGGER collector_dream_tier_change_apply_exactly;');
   insertTables([
     'collector_dreams', 'collector_dream_markers', 'collector_dream_mutations',
-    'collector_dream_rituals',
+    'collector_dream_rituals', 'collector_dream_tier_changes',
   ]);
   statements.push(DREAM_INSERT_KEEPER_TRIGGER_SQL);
   statements.push(DREAM_MARKER_KEEPER_TRIGGER_SQL);
@@ -1947,6 +2132,15 @@ function buildRegistryRestoreSqlInternal(
   statements.push(DREAM_MUTATION_APPLY_TRIGGER_SQL);
   statements.push(DREAM_RUNTIME_UPDATE_GUARD_SQL);
   statements.push(DREAM_RITUAL_FULFILL_TRIGGER_SQL);
+  statements.push(DREAM_TIER_TRANSITIONS_TRIGGER_SQL);
+  statements.push(DREAM_SEAL_ENTRY_COHERENCE_TRIGGER_SQL);
+  statements.push(DREAM_SEAL_PINS_HEIRS_INSERT_TRIGGER_SQL);
+  statements.push(DREAM_SEAL_PINS_HEIRS_UPDATE_TRIGGER_SQL);
+  statements.push(DREAM_TIER_CHANGE_EXACT_APPLICATION_TRIGGER_SQL);
+  statements.push(DREAM_TIER_CHANGE_APPLY_EXACTLY_TRIGGER_SQL);
+  // collector_dream_tier_changes_no_update / _no_delete never fire on
+  // INSERT (mirrors the artwork_catalog_snapshots / piece_records note
+  // below), so they stay untouched throughout.
   insertTables(['collector_letters']);
   insertTables(['artist_reconnection_cases']);
   statements.push(...artworkRecordRestoreStatements(payload));
