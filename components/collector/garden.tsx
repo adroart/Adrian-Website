@@ -5,12 +5,16 @@
  * from the day of registration onward: fill one now, five next month, the rest
  * across years. Nothing is required and nothing expires.
  *
- * Three surfaces, and the design file picked the first two:
- *   ask   — the piece asks a single thing, full screen, in its own voice
- *   index — a numbered list carrying the first line of each answer, the piece's
- *           own table of contents
- *   write — the page the garden hands you to: one question, a plain rule, and
- *           the one real decision under it
+ * Four surfaces. The design file picked the first two; Adrian's walkthrough
+ * ruling (§7 "The lock line moves; the placing gets a review") added the last:
+ *   ask    — the piece asks a single thing, full screen, in its own voice
+ *   index  — a numbered list carrying the first line of each answer, the piece's
+ *            own table of contents
+ *   write  — the page the garden hands you to: one question, a plain rule, and
+ *            the one real decision under it. Place it here commits NOTHING.
+ *   review — gardenReview.tsx: the words read back whole, the tier restated,
+ *            the warning and the honesty, and the one press that actually
+ *            places. The seal's second press lives there too.
  *
  * The card-stack arrangement (14b in the design file) predates these two and is
  * marked superseded there. It is not built.
@@ -34,21 +38,29 @@ import React, { useRef, useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PLACEHOLDERS } from './copy';
 import { Area, Brass, Eyebrow, Flag, Ground, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
+import { GARDEN_HELD_LINE, GardenReview, type GardenDraft } from './gardenReview';
 import type { GardenLive } from './live';
 import type { DreamTier } from './api';
 
 /**
- * The grave confirm before a seal commits. Sealing is a vow, so it takes one
- * extra deliberate press of the same brass — never a browser confirm(). No
- * locked line exists for this moment and copy.ts is frozen this pass, so the
- * string lives here, registered as a placeholder so it can never reach Adrian
- * disguised as finished copy. T2b: hoist into copy.ts's garden table.
+ * The §7 reminder where the name will shine: when the placing would shine and
+ * the person's name is set to show, this small line sits under the two footer
+ * buttons. Drafted, not Adrian's — registered as a placeholder so it can never
+ * reach him disguised as finished copy. T2b: hoist into copy.ts's garden table.
  */
-const SEAL_CONFIRM =
-  'Sealing is a vow. Press Place it once more, and nobody but you opens these words again, not ever.';
-PLACEHOLDERS.add(SEAL_CONFIRM);
+const NAME_WILL_SHINE =
+  'Your name is set to shine with this one. What shows holds the switch.';
+PLACEHOLDERS.add(NAME_WILL_SHINE);
 
-type View = 'ask' | 'index' | 'write';
+/**
+ * The demo caretaker's name lamp: lit, so the reminder is reviewable in the
+ * walkthrough. Wired, the lamp state lives in wired.tsx and no wire reaches
+ * the garden yet, so the reminder stays dark there until `nameShines` is
+ * threaded through the props.
+ */
+const DEMO_NAME_SHINES = true;
+
+type View = 'ask' | 'index' | 'write' | 'review';
 
 /** what the piece already holds, for the shell */
 const PLACED: (string | null)[] = [
@@ -81,9 +93,16 @@ export const Garden: React.FC<{
   onClose?: () => void;
   /** wired: the real dream state and the place call. Absent, demo unchanged. */
   live?: GardenLive;
-}> = ({ onClose, live }) => {
+  /** whether the caretaker's name lamp is lit, for the write screen's §7
+   *  reminder. Absent, the demo flag answers; wired callers thread it in
+   *  once a wire from the lamps exists. */
+  nameShines?: boolean;
+}> = ({ onClose, live, nameShines }) => {
   const [view, setView] = useState<View>('ask');
   const [which, setWhich] = useState(live ? 0 : 3);
+  /** the words in flight between write and review; the review page commits,
+   *  and going back hands every choice to the write screen intact */
+  const [draft, setDraft] = useState<GardenDraft | null>(null);
 
   /* forward and back through the eight questions, both wrapping. "Next" is
      the cycle the file already had (askOwn kept wired to it, unchanged); the
@@ -98,6 +117,7 @@ export const Garden: React.FC<{
         onBack={() => setView('ask')}
         onPick={i => {
           setWhich(i);
+          setDraft(null);
           setView('write');
         }}
         onClose={onClose}
@@ -106,13 +126,36 @@ export const Garden: React.FC<{
     );
   }
 
-  if (view === 'write') {
+  if (view === 'review' && draft) {
+    return (
+      <GardenReview
+        question={COPY.garden.questions[which]}
+        draft={draft}
+        live={live}
+        onBack={() => setView('write')}
+        onDone={() => {
+          setDraft(null);
+          setView('index');
+        }}
+      />
+    );
+  }
+
+  if (view === 'write' || view === 'review') {
     return (
       <QuestionPage
         index={which}
-        onBack={() => setView('index')}
-        onPlace={() => setView('index')}
+        onBack={() => {
+          setDraft(null);
+          setView('index');
+        }}
+        onReview={d => {
+          setDraft(d);
+          setView('review');
+        }}
         live={live}
+        nameShines={nameShines}
+        draft={draft}
         initialText={
           live && which === 0 && live.dreams.status === 'ready'
             ? live.dreams.data?.current?.body ?? ''
@@ -535,21 +578,32 @@ const TierControl: React.FC<{
 
 /* ------------------------------------------------------------------ *
  * A question, opened. One question, a plain rule, and the one real
- * decision under it.
+ * decision under it. Place it commits NOTHING here: it carries the
+ * draft to the review page, where the words are read back whole and
+ * the one real press lives (§7).
  * ------------------------------------------------------------------ */
 
 export const QuestionPage: React.FC<{
   index: number;
   onBack: () => void;
-  onPlace: () => void;
-  /** wired: place the words for real through api.ts; absent, demo unchanged */
+  /** hand the draft to the review page; the actual placement happens there */
+  onReview: (draft: GardenDraft) => void;
+  /** wired: the standing dream and the yearly gate; the place call itself
+   *  now belongs to the review page */
   live?: GardenLive;
+  /** the caretaker's name lamp, for the §7 shine reminder. Absent, the
+   *  demo flag answers in demo and the line stays dark when wired. */
+  nameShines?: boolean;
+  /** coming back from the review page: everything intact */
+  draft?: GardenDraft | null;
   initialText?: string;
 }> = ({
   index,
   onBack,
-  onPlace,
+  onReview,
   live,
+  nameShines,
+  draft = null,
   initialText = '',
 }) => {
   /* the standing dream, when the garden is wired. The dreams contract holds
@@ -565,46 +619,24 @@ export const QuestionPage: React.FC<{
      window reads open here and `place` answers 'locked' if it was not. */
   const bodyLocked = Boolean(live && current && !live.editWindowOpen);
 
-  const [text, setText] = useState(initialText);
-  const [tier, setTierState] = useState<DreamTier>(settled ?? 'shine');
-  const [heirs, setHeirs] = useState(true);
-  const [placing, setPlacing] = useState(false);
-  const [held, setHeld] = useState<'held' | 'locked' | null>(null);
-  /* sealing is a vow: the first press arms, the second commits */
-  const [sealArmed, setSealArmed] = useState(false);
+  /* a draft coming back from the review page wins: everything intact */
+  const [text, setText] = useState(draft?.body ?? initialText);
+  const [tier, setTier] = useState<DreamTier>(draft?.tier ?? settled ?? 'shine');
+  const [heirs, setHeirs] = useState(draft?.heirsMayShare ?? true);
 
-  const setTier = (t: DreamTier) => {
-    setSealArmed(false);
-    setTierState(t);
-  };
+  const heirsChoosable = !live || settled === null;
 
-  const sealing = tier === 'seal' && settled !== 'seal';
+  /* whether the name would ride along with a shining placement: wired, only
+     a threaded prop can say so (GardenLive carries no lamp state); demo, the
+     flag keeps the reminder reviewable */
+  const nameLit = nameShines ?? (!live && DEMO_NAME_SHINES);
 
-  const place = () => {
-    if (!live) {
-      /* demo: same control, same grave confirm, nothing stored anywhere */
-      if (sealing && !sealArmed) {
-        setSealArmed(true);
-        return;
-      }
-      onPlace();
-      return;
-    }
+  /* no commit here, and no outcome: the review page owns both. Empty words
+     go nowhere, quietly, in demo and wired alike. */
+  const toReview = () => {
     const body = bodyLocked ? current?.body ?? '' : text.trim();
-    if (placing || !body) return;
-    if (sealing && !sealArmed) {
-      setSealArmed(true);
-      return;
-    }
-    setPlacing(true);
-    setHeld(null);
-    void live
-      .place(body, tier, heirs)
-      .then(outcome => {
-        if (outcome === 'landed') onPlace();
-        else setHeld(outcome);
-      })
-      .finally(() => setPlacing(false));
+    if (!body) return;
+    onReview({ body, tier, heirsMayShare: heirs, heirsShown: heirsChoosable });
   };
 
   return (
@@ -618,25 +650,17 @@ export const QuestionPage: React.FC<{
 
         {bodyLocked ? (
           /* outside the window the words are readable, never editable: the
-             standing body as plain text and the lock as a quiet note. No
+             standing body as plain text and a quiet held line under it. No
              field, no greyed field, no error. Tier moves below stay open. */
           <div className="collector-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 18 }}>
             <p style={{ margin: 0, fontFamily: F.body, fontSize: 15, lineHeight: 1.7, color: C.inkBody }}>
               {current?.body}
             </p>
-            <Note top={14}>{COPY.garden.lock}</Note>
+            <Note top={14}>{GARDEN_HELD_LINE}</Note>
           </div>
         ) : (
           <div style={{ flex: 1, minHeight: 0 }}>
-            <Area
-              value={text}
-              hint={COPY.garden.answerHint}
-              rows={5}
-              onChange={v => {
-                setSealArmed(false);
-                setText(v);
-              }}
-            />
+            <Area value={text} hint={COPY.garden.answerHint} rows={5} onChange={setText} />
           </div>
         )}
 
@@ -649,33 +673,13 @@ export const QuestionPage: React.FC<{
             settled={settled}
             heirs={heirs}
             onHeirs={setHeirs}
-            heirsChoosable={!live || settled === null}
+            heirsChoosable={heirsChoosable}
           />
         </div>
 
-        {/* the lock is a single line, deliberately, so the mechanic can change
-            without touching anything else on this screen */}
-        {!bodyLocked && (
-          <div style={{ flex: 'none', paddingTop: 14 }}>
-            <Note>{COPY.garden.lock}</Note>
-          </div>
-        )}
-
-        {/* the grave confirm: one more deliberate press of the same brass */}
-        {sealArmed && sealing && (
-          <div style={{ flex: 'none', paddingTop: 12 }}>
-            <Note>{SEAL_CONFIRM}</Note>
-          </div>
-        )}
-
-        {/* the quiet failure: a receipt, never an error. The words stay on the
-            phone and the same brass tries again. The yearly gate is a state,
-            not a failure: the lock line itself answers it. */}
-        {held && (
-          <div style={{ flex: 'none', paddingTop: 12 }}>
-            <Note>{held === 'locked' ? COPY.garden.lock : COPY.states.offlineBody}</Note>
-          </div>
-        )}
+        {/* no lock line here any more (§7: it left the writing screen
+            entirely), no seal arm, no outcomes: the review page carries the
+            warning, the honesty, the vow, and every landing. */}
       </div>
 
       <div
@@ -690,8 +694,16 @@ export const QuestionPage: React.FC<{
         }}
       >
         <TLink onClick={onBack}>{COPY.garden.finishLater}</TLink>
-        <Brass onClick={place}>{COPY.garden.place}</Brass>
+        <Brass onClick={toReview}>{COPY.garden.place}</Brass>
       </div>
+
+      {/* the §7 reminder, under the two buttons: only when this placing
+          would shine and the name is set to show */}
+      {tier === 'shine' && nameLit && (
+        <div style={{ flex: 'none', paddingTop: 10 }}>
+          <Note>{NAME_WILL_SHINE}</Note>
+        </div>
+      )}
     </Ground>
   );
 };
