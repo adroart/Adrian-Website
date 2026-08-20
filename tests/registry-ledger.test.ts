@@ -289,16 +289,21 @@ describe('complete registry ledger file verification', () => {
         ['verify', truncatedPath],
         ['diff', validPath, truncatedPath],
       ];
+      // `node --import tsx` rather than `npx tsx`: npx's wrapper binds an IPC
+      // socket, which sandboxed runs refuse (EPERM), killing the subprocess
+      // before the ledger code ever runs. This form executes the same script.
       for (const args of commands) {
-        const result = spawnSync('npx', ['tsx', 'scripts/registry-ledger.ts', ...args], {
+        const result = spawnSync(process.execPath, [
+          '--import', 'tsx', 'scripts/registry-ledger.ts', ...args,
+        ], {
           cwd: process.cwd(),
           encoding: 'utf8',
         });
         assert.notEqual(result.status, 0, `${args[0]} unexpectedly accepted an incomplete ledger`);
         assert.match(result.stderr, /record_count/);
       }
-      const retired = spawnSync('npx', [
-        'tsx', 'scripts/registry-ledger.ts', 'to-sql', validPath,
+      const retired = spawnSync(process.execPath, [
+        '--import', 'tsx', 'scripts/registry-ledger.ts', 'to-sql', validPath,
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(retired.status, 0);
       assert.match(retired.stderr, /restore-sql <private-recovery>/);
