@@ -1046,6 +1046,40 @@ accounts is clean.
 
 ---
 
+## 7. Adrian's walkthrough rulings, 2026-08-20
+
+These five rulings came out of Adrian's first walkthrough pass through the built flow, and
+where they touch section 6, they supersede it.
+
+**The code press, superseded.** Section 6 held that "the last character is the press." My
+walkthrough replaces it: tapping any box selects it, retyping a character replaces just that
+one and moves on to the next, and once all sixteen are filled, the progress readout itself
+becomes the one deliberate press that unlocks. The exact word on that press is still mine to
+choose.
+
+**The unlock arrives and stays.** The vault must open directly onto the destination itself.
+The words that say the code is true belong to the arrival, not to a page that follows it.
+Three arrivals are built for my walkthrough, and my verdict picks one.
+
+**The gathering, re-ordered.** The piece's own facts, the artwork, its image, its sales
+record, are not optional and never were choices; only what concerns the person is chosen.
+The path becomes: sign its record, then where it lives (city, or the area marked less
+accurate), then one final page holding who you are and your links together, each with its
+own light on the map, on by default. The birthday stays private always, is never shown and
+never sold, and quietly feeds the Oracle and the Dream. What shows leaves the required path
+and remains as a kept surface for later changing.
+
+**The lock line moves; the placing gets a review.** The line about a placed answer settling
+until the birthday leaves the writing screen entirely. Placing now passes through one grave
+page first: the words read back whole, a warning that placing locks them into the record,
+the honesty that the editing mechanics are still being decided, and the one press that
+commits. The seal's second press lives on that same page.
+
+**A reminder where the name will shine.** When a placing would shine and the name is set to
+show, a small line under the two buttons says so. The wording is drafted and awaits my word.
+
+---
+
 ## Design rules shared by every screen
 
 - **Shape:** one line drawing in the upper third, headline short, body brief, one brass pill
