@@ -14,6 +14,11 @@
  * sixteenth keystroke. At sixteen the `{filled} / 16` readout becomes, in its
  * own slot, a quiet brass press that fires the answer.
  *
+ * Every box, read or not, is a real button. An empty/future box has no
+ * character of its own to correct, so tapping it simply hands focus back to
+ * the ordinary append/paste path, same as tapping anywhere else on the plate
+ * — it never sits inert.
+ *
  * The motion, LOCKED and Adrian's spec: the characters resolve one at a time,
  * like tumblers finding their places, a pause, one soft click as the last one
  * seats. Then the screen itself opens like a vault and the light carries you
@@ -85,6 +90,9 @@ export const CodePage: React.FC<Props> = ({
   /* the box currently selected for per-character editing. Set by a tap on an
      already-read box; null is the ordinary append/paste mode. */
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  /* whether the hidden input currently holds focus, so the next box to be
+     filled can carry a momentary lit treatment while typing is live there. */
+  const [inputFocused, setInputFocused] = useState(true);
   const answering = useRef(false);
   const input = useRef<HTMLInputElement>(null);
 
@@ -147,6 +155,16 @@ export const CodePage: React.FC<Props> = ({
   const selectBox = (index: number) => {
     if (wrong || vault || index >= filled) return;
     setEditIndex(index);
+    input.current?.focus();
+  };
+
+  /* a tap on an empty/future box: there is nothing there yet to edit, so it
+     behaves like a tap anywhere else on the plate — leave per-character
+     editing, if any was active, and hand focus back to the ordinary
+     append/paste path at the end of what has been read. */
+  const focusAppend = () => {
+    if (wrong || vault) return;
+    setEditIndex(null);
     input.current?.focus();
   };
 
@@ -322,6 +340,11 @@ export const CodePage: React.FC<Props> = ({
                   const index = r * 8 + i;
                   const on = index < filled;
                   const selected = editIndex === index;
+                  /* the next empty box, while the append path is live there,
+                     borrows the same lit treatment as a selected box — a
+                     quiet "type here next" without owning any edit state. */
+                  const nextUp = !on && !wrong && !vault && editIndex === null && inputFocused && index === filled;
+                  const lit = selected || nextUp;
                   const boxStyle: React.CSSProperties = {
                     flex: 1,
                     height: 44,
@@ -331,14 +354,14 @@ export const CodePage: React.FC<Props> = ({
                     justifyContent: 'center',
                     background: wrong
                       ? 'rgba(196,90,60,.06)'
-                      : selected
+                      : lit
                         ? 'rgba(212,184,138,.1)'
                         : on
                           ? 'rgba(0,0,0,.42)'
                           : 'rgba(0,0,0,.3)',
                     boxShadow: wrong
                       ? `inset 0 0 0 1px ${C.wrongEdge}, inset 0 2px 4px rgba(0,0,0,.55)`
-                      : selected
+                      : lit
                         ? `inset 0 0 0 1.5px ${C.brassEdge}, inset 0 2px 4px rgba(0,0,0,.55), 0 0 8px rgba(212,184,138,.28)`
                         : on
                           ? 'inset 0 0 0 1px rgba(237,233,226,.22), inset 0 2px 4px rgba(0,0,0,.55)'
@@ -357,25 +380,19 @@ export const CodePage: React.FC<Props> = ({
                       {glyph.trim()}
                     </span>
                   );
-                  /* only an already-read box has a character to edit, so only
-                     that box becomes a real, tappable button; a box ahead of
-                     what has been read stays the plain readout it always was
-                     — a native `disabled` button would silently swallow the
-                     tap instead of letting it bubble to "tap anywhere on the
-                     plate focuses the input" on the wrapper below. */
-                  if (!on) {
-                    return (
-                      <span key={i} style={boxStyle}>
-                        {glyphEl}
-                      </span>
-                    );
-                  }
+                  /* every box is a real, tappable button. An already-read box
+                     opens the per-character correction path (selectBox); an
+                     empty/future box has no character to edit, so it simply
+                     hands focus back to the append/paste path, the same as
+                     tapping anywhere else on the plate. Either way the tap is
+                     handled here rather than left to bubble, so a native
+                     `disabled` state is never used — that would swallow it. */
                   return (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => selectBox(index)}
-                      aria-label={`Edit character ${index + 1} of 16`}
+                      onClick={() => (on ? selectBox(index) : focusAppend())}
+                      aria-label={on ? `Edit character ${index + 1} of 16` : `Character ${index + 1} of 16, not yet entered`}
                       aria-pressed={selected}
                       style={{
                         ...boxStyle,
@@ -440,6 +457,8 @@ export const CodePage: React.FC<Props> = ({
             value={code}
             onChange={e => type(e.target.value)}
             onKeyDown={onKeyDown}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             maxLength={16}
             autoComplete="off"
             autoCorrect="off"
@@ -483,12 +502,11 @@ export const CodePage: React.FC<Props> = ({
             <p
               style={{
                 margin: '9px 0 0',
-                fontFamily: F.mono,
-                fontSize: 10,
-                letterSpacing: '.1em',
-                textTransform: 'uppercase',
+                fontFamily: F.body,
+                fontSize: 12.5,
+                lineHeight: 1.6,
                 color: C.inkQuiet,
-                maxWidth: '30ch',
+                maxWidth: '28ch',
               }}
             >
               {COPY.code.warn}
