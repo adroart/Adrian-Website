@@ -93,5 +93,22 @@ export const CeremonyStyles: React.FC<{ theme?: CeremonyTheme }> = ({ theme = es
       }
       .cad-draw path, .cad-draw circle, .cad-draw line { stroke-dashoffset: 0 }
     }
+
+    /* the orbit's own door: opening a room from the light gets one quiet
+       entrance, a settle rather than a jump, so the light's transition into
+       the questions reads as continuous rather than a hard cut. Everything
+       else that opens a room stays the instant, un-animated swap it always
+       was. */
+    @keyframes collectorRoomEnter {
+      from { opacity: 0; transform: scale(.97) }
+      to { opacity: 1; transform: scale(1) }
+    }
+    .collector-room-enter {
+      animation: collectorRoomEnter .38s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .collector-room-enter { animation: none; opacity: 1; transform: none }
+    }
   `}</style>
 );

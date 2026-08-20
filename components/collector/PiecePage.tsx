@@ -87,6 +87,15 @@ export const PiecePage: React.FC<Props> = ({
   ground = null,
 }) => {
   const [room, setRoom] = useState<RoomKey | null>(initialRoom);
+  /* true only while the room now showing was opened by pressing the orbit
+     itself, per Adrian: the light should carry you into the questions with a
+     transitional animation. Every other door into a room (a row, a sibling
+     room reopening another) stays the instant swap it always was. */
+  const [roomFromOrbit, setRoomFromOrbit] = useState(false);
+  const closeRoom = () => {
+    setRoom(null);
+    setRoomFromOrbit(false);
+  };
   const liveDream = live
     ? (live.dream.status === 'ready' ? live.dream.data : null)
     : undefined;
@@ -112,7 +121,11 @@ export const PiecePage: React.FC<Props> = ({
   /* a room opens in place: the body gives way, the room becomes the surface,
      and closing returns to the page. Nothing navigates. */
   if (room) {
-    return <Room room={room} onClose={() => setRoom(null)} onWalk={onWalk} onOpenRoom={setRoom} live={live} />;
+    return (
+      <div className={roomFromOrbit ? 'collector-room-enter' : undefined} style={{ position: 'absolute', inset: 0 }}>
+        <Room room={room} onClose={closeRoom} onWalk={onWalk} onOpenRoom={setRoom} live={live} />
+      </div>
+    );
   }
 
   return (
@@ -126,7 +139,7 @@ export const PiecePage: React.FC<Props> = ({
           alignItems: 'center',
           gap: 13,
           paddingBottom: 13,
-          borderBottom: `1px solid ${C.hairStrong}`,
+          borderBottom: `1px solid ${C.hairMid}`,
         }}
       >
         <Drawing motif="piece" size={40} lit draw label={`${live ? live.identity.title : PIECE.name}, line drawing`} />
@@ -216,7 +229,10 @@ export const PiecePage: React.FC<Props> = ({
                invitation and nothing here may read as a prompt. */
             <button
               type="button"
-              onClick={() => setRoom('garden')}
+              onClick={() => {
+                setRoomFromOrbit(true);
+                setRoom('garden');
+              }}
               aria-label={COPY.page.rowGarden}
               style={{
                 position: 'absolute',
@@ -359,7 +375,7 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
         <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
           {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
         </TLink>
-        <span style={{ width: 1, height: 16, background: C.hairStrong, display: 'block' }} />
+        <span style={{ width: 1, height: 16, background: C.hair, display: 'block' }} />
         <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
           {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
         </TLink>

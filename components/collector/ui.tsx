@@ -19,6 +19,7 @@ import React from 'react';
 import { espresso } from '../ceremony/tokens';
 import { createCeremonyUI } from '../ceremony/ui';
 import { isPlaceholder } from './copy';
+import { C, F } from './tokens';
 
 const kit = createCeremonyUI(espresso, { isPlaceholder });
 
@@ -91,3 +92,56 @@ export const {
   Plus,
   Spacer,
 } = kit;
+
+/**
+ * SegmentedTabs: the pill toggle lifted verbatim from the history room's tab
+ * strip (rooms.tsx's HistoryRoom, before this extraction), so any screen that
+ * needs a two-or-more-way segmented choice wears the same glass instead of
+ * re-deriving it. Options and the active index are the only inputs; callers
+ * own the labels and where the state lives. Built from plain buttons, so
+ * keyboard reach and the shared `.collector-root :focus-visible` ring (see
+ * ceremony/styles.tsx) come for free.
+ */
+export const SegmentedTabs: React.FC<{
+  options: string[];
+  active: number;
+  onChange: (i: number) => void;
+}> = ({ options, active, onChange }) => (
+  <div
+    style={{
+      display: 'flex',
+      padding: 4,
+      borderRadius: 999,
+      background: 'rgba(52,43,34,.34)',
+      backdropFilter: 'blur(30px) saturate(140%)',
+      boxShadow: 'inset 0 0 0 1px rgba(237,233,226,.06)',
+    }}
+  >
+    {options.map((label, i) => (
+      <button
+        key={label}
+        type="button"
+        onClick={() => onChange(i)}
+        style={{
+          flex: 1,
+          border: 0,
+          borderRadius: 999,
+          padding: '10px 12px',
+          cursor: 'pointer',
+          fontFamily: F.label,
+          fontSize: 10,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+          background: i === active ? 'rgba(212,170,110,.13)' : 'none',
+          boxShadow:
+            i === active
+              ? 'inset 0 .5px 0 rgba(255,244,220,.18),inset 0 0 0 1px rgba(226,190,134,.11)'
+              : undefined,
+          color: i === active ? C.inkBrass : '#a1968a',
+        }}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+);
