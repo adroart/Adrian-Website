@@ -965,8 +965,8 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       };
       /* Sign its record is auto-satisfied by the verified session the bind
          required, so the first reachable gathering screen has nothing behind
-         it to correct */
-      if (key === 'born') screen.back = undefined;
+         it to correct. §7, 2026-08-20: that screen is now lives, not born. */
+      if (key === 'lives') screen.back = undefined;
 
       /* the ritual's one-press answers become real actions: the demo rows
          walk straight to ritualfamily, the wired rows submit first. Matched
@@ -1045,7 +1045,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           }
         });
       }
-      if (from === 'lives' && key === 'links') void resolveCity();
+      /* §7, 2026-08-20: lives now leads straight into who, the gathering's
+         final page, rather than into links. */
+      if (from === 'lives' && key === 'who') void resolveCity();
       if (from === 'shows' && key === 'light47') {
         void submitShows(lamps).then(result => {
           if (result === 'dropped') {
@@ -1056,6 +1058,37 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
                 ? [[G.fieldCity, typed[G.fieldCity]]]
                 : []) as [string, string][],
               onRetry: () => setStep({ kind: 'walk', key: 'shows' }),
+            });
+          }
+        });
+      }
+      /* who → light47: fires both submissions the who page now carries.
+         shareIntention and shareCity go true always (the piece's own facts
+         are not optional, §7); the five identity lamps come from the who
+         page's own state, at indices 2..6 of the shared lamps array. */
+      if (from === 'who' && key === 'light47') {
+        void submitBorn().then(result => {
+          if (result === 'dropped') {
+            setStep({
+              kind: 'state',
+              key: 'offline',
+              receipt: [
+                [G.fieldDate, typed[G.fieldDate] ?? ''],
+                [G.fieldPlace, typed[G.fieldPlace] ?? ''],
+              ].filter(([, value]) => value) as [string, string][],
+              onRetry: () => setStep({ kind: 'walk', key: 'who' }),
+            });
+          }
+        });
+        void submitShows(lamps.map((v, i) => (i < 2 ? true : v))).then(result => {
+          if (result === 'dropped') {
+            setStep({
+              kind: 'state',
+              key: 'offline',
+              receipt: (typed[G.fieldCity]
+                ? [[G.fieldCity, typed[G.fieldCity]]]
+                : []) as [string, string][],
+              onRetry: () => setStep({ kind: 'walk', key: 'who' }),
             });
           }
         });
@@ -1110,8 +1143,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
       if (key === 'sign') {
-        /* the account already exists — the bind required it */
-        setStep({ kind: 'walk', key: 'born' });
+        /* the account already exists — the bind required it. §7,
+           2026-08-20: the chain is sign → lives → who → light47 now. */
+        setStep({ kind: 'walk', key: 'lives' });
         return;
       }
       if (key === 'passfork') {

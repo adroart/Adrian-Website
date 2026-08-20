@@ -64,6 +64,9 @@ export const SOURCE: Record<string, string | null> = {
   love: null,
   carries: null,
   forgot: null,
+  /* who you are · your links, §7 2026-08-20's re-ordered gathering. Built
+     fresh from Adrian's walkthrough ruling; no card exists to compare it to. */
+  who: null,
   ritual: null,
   ritualplant: null,
   ritualfamily: null,
@@ -132,7 +135,7 @@ export const FLOWS: [label: string, start: View, note: string][] = [
   [
     'Registering it, all the way',
     { kind: 'piece' },
-    'Begin, sixteen ones, the vault, the four, all five gathering screens, and out onto the page as yours.',
+    'Begin, sixteen ones, the vault, the four, all three gathering screens (sign, where it lives, then who you are and your links together), and out onto the page as yours.',
   ],
   ['Giving it as a gift', { kind: 'walk', key: 'fork' }, 'The giver seals words into it and the record never moves.'],
   ['Receiving one that was a gift', { kind: 'walk', key: 'sealed' }, 'Arrives right after the vault, before everything else.'],
@@ -184,13 +187,16 @@ export const JUMP: [string, Jump[]][] = [
   [
     'The gathering',
     [
+      /* the real chain, §7 2026-08-20: sign → lives → who → light47 */
       ['Sign its record', { kind: 'walk', key: 'sign' }],
-      ['Who you are', { kind: 'walk', key: 'born' }],
       ['Where it lives', { kind: 'walk', key: 'lives' }],
+      ['Who you are · Your links', { kind: 'walk', key: 'who' }],
+      ['You are Light 47', { kind: 'walk', key: 'light47' }],
+      /* leftover chapters: still defined, no longer on the required path */
+      ['Who you are', { kind: 'walk', key: 'born' }],
       ['Your links', { kind: 'walk', key: 'links' }],
       ['What shows', { kind: 'walk', key: 'shows' }],
       ['What this is for', { kind: 'walk', key: 'explain' }],
-      ['You are Light 47', { kind: 'walk', key: 'light47' }],
     ],
   ],
   [

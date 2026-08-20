@@ -302,8 +302,14 @@ export const COPY = {
     ),
     fieldCity: locked('City'),
     hintCity: locked('where the art hangs'),
-    grainCity: locked('Show my city'),
-    grainRegion: locked('Widen to the region'),
+    /* relabeled 2026-08-20, §7 "The gathering, re-ordered": the ruling names
+       the pair only descriptively, "city, or the area marked less
+       accurate," not as exact chip words, so City / Area are placeholders
+       here rather than locked, until Adrian settles the labels themselves. */
+    grainCity: ph('City'),
+    grainRegion: ph('Area'),
+    /* the small annotation under the Area chip once it is picked */
+    grainAreaNote: ph('less accurate'),
 
     linksHead: locked('Your links'),
     linksBody: locked(

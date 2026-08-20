@@ -19,7 +19,7 @@ import React, { useState } from 'react';
 import { C, F, VIGNETTE } from './tokens';
 import { COPY, PLACEHOLDERS } from './copy';
 import { Motif } from './drawings';
-import { Body, Brass, ChoiceRow, Eyebrow, Field, Flag, Ground, Head, Lamp, Note, Plus, TLink } from './ui';
+import { Body, Brass, ChoiceRow, Eyebrow, Field, Flag, Ground, Head, Lamp, Note, Plus, SegmentedTabs, TLink } from './ui';
 import { Drawing } from './drawings';
 import { Star } from './Orbit';
 
@@ -59,6 +59,15 @@ export type Screen = {
   grain?: boolean;
   /** the add-a-link tile */
   tiles?: boolean;
+  /**
+   * The gathering's final page, per Adrian's ruling (§7, 2026-08-20): who
+   * you are and your links, held on one page as two SegmentedTabs sections,
+   * with the five identity lamps (name, face, chart, work, mission) rendered
+   * inline in the first section. Renders its own bespoke content rather than
+   * composing from `fields`/`lamps`/`tiles`, because no other screen shares
+   * its shape.
+   */
+  who?: boolean;
   /** the one brass act */
   pill?: string;
   to?: Target;
@@ -153,8 +162,32 @@ export const SHOW_LAMPS: [title: string, note: string][] = [
 /** the drawn defaults: the piece shines, the person opts in */
 export const SHOW_LAMPS_DEFAULT: boolean[] = [true, true, false, false, false, false, false];
 
+/**
+ * The five identity lamps, indices 2..6 of SHOW_LAMPS in wire order, for the
+ * who page (§7, 2026-08-20). The two piece-fact lamps at indices 0 and 1
+ * (shareIntention, shareCity) disappear as choices there: the piece's own
+ * facts are not optional, and default true always.
+ */
+export const WHO_LAMPS: [title: string, note: string][] = SHOW_LAMPS.slice(2);
+
 /** the succession sub-screen's own line: no data model behind it yet */
 const SUCCESSION_SOON = ph('Where they stand in the line will be kept privately here soon.');
+
+/* the who page: built fresh for §7, "the gathering, re-ordered" (2026-08-20).
+   No card was drawn and no copy.ts key exists yet, so every string here is a
+   placeholder awaiting Adrian, registered the same way as the lamp notes
+   above. */
+const WHO_HEAD = ph('Who you are · Your links');
+const WHO_BODY = ph('Held together now, each with its own light on the map, on by default.');
+/* the birthday privacy line, beneath the birth fields */
+const WHO_BIRTHDAY_NOTE = ph(
+  'Private, always. Never shown, never sold. It quietly feeds the Oracle and the Dream.',
+);
+/* the links section's map-light toggle: an honest unwired placeholder. No
+   shareLinks field exists on the wire, so the choice stores client-side only
+   until one does. */
+const WHO_LINKS_SHOW_LABEL = ph('Show on the map');
+const WHO_LINKS_SHOW_NOTE = ph('Not connected yet. It will hold your choice here soon.');
 
 export const WALK = {
   /* ── the threshold ───────────────────────────────────────────── */
@@ -293,7 +326,7 @@ export const WALK = {
     hints: { [G.fieldEmail]: G.hintEmail, [G.fieldPassword]: G.hintPassword },
     note: G.signNote,
     pill: G.signPill,
-    to: 'born',
+    to: 'lives',
     required: true,
     light: 'o',
     caption: 'Required · one account across everything',
@@ -322,11 +355,16 @@ export const WALK = {
     eyebrow: G.eyebrow,
     fields: [[G.fieldCity]],
     hints: { [G.fieldCity]: G.hintCity },
-    back: 'born',
+    /* §7, 2026-08-20: sign its record is auto-satisfied by the verified
+       session the bind required, so this is now the first reachable
+       gathering screen. wired.tsx suppresses this back at runtime exactly
+       as it did for born before the reorder; the demo shell still shows it,
+       correcting into sign, the true previous step. */
+    back: 'sign',
     note: G.livesNote,
     grain: true,
     pill: G.continue,
-    to: 'links',
+    to: 'who',
     required: true,
     light: 'q',
     caption: 'Required · a light must live somewhere',
@@ -366,11 +404,36 @@ export const WALK = {
     body: G.explainBody,
     sheet: true,
     pill: G.explainAdd,
-    to: 'born',
+    /* §7, 2026-08-20: both doors of the sheet lead back to the who page now,
+       the only screen that still asks for the birthday and the links this
+       sheet explains. */
+    to: 'who',
     link: G.explainSkip,
-    linkTo: 'lives',
+    linkTo: 'who',
     light: 'k',
     caption: 'The explainer · one sheet, two doors',
+  },
+
+  /* §7, 2026-08-20: "The gathering, re-ordered." The piece's own facts are
+     not optional and never were choices; only what concerns the person is
+     chosen. The path becomes sign → lives → who → light47, and this is the
+     final page, holding who you are and your links together, each with its
+     own light on the map, on by default. required stays true because the
+     page itself sits in the required path; the personal fields inside it
+     stay optional (skippable by simply staying empty — no skip link, no
+     gate). born, links, and shows survive untouched below, as leftover
+     chapters no longer on the required path. */
+  who: {
+    head: WHO_HEAD,
+    body: WHO_BODY,
+    eyebrow: G.eyebrow,
+    who: true,
+    back: 'lives',
+    pill: G.continue,
+    to: 'light47',
+    required: true,
+    light: 'p',
+    caption: 'Required · who you are and your links, held on one page',
   },
 
   /* ── ignition ────────────────────────────────────────────────── */
@@ -739,6 +802,12 @@ export const WalkScreen: React.FC<Props> = ({
   const [ownGrain, setOwnGrain] = useState<0 | 1>(0);
   const [ownLamps, setOwnLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
   const [linksOpen, setLinksOpen] = useState(false);
+  /* the who page's own two bits of state: which SegmentedTabs section is
+     open, and the links section's map-light toggle. Neither is lifted,
+     because the tab is pure navigation and the toggle is the honest unwired
+     placeholder (§7): it stores here, client-side, until a wire exists. */
+  const [whoTab, setWhoTab] = useState<0 | 1>(0);
+  const [linksShow, setLinksShow] = useState(true);
   const grain = grainValue ?? ownGrain;
   const setGrain = onGrain ?? setOwnGrain;
   const lamps = lampsValue ?? ownLamps;
@@ -750,7 +819,8 @@ export const WalkScreen: React.FC<Props> = ({
   const advance = () => screen.to && onGo(screen.to);
 
   /* words alone sit in the middle of the page; anything read downward does not */
-  const centred = !screen.fields && !screen.rows && !screen.lamps && !screen.tiles && !screen.grain;
+  const centred =
+    !screen.fields && !screen.rows && !screen.lamps && !screen.tiles && !screen.grain && !screen.who;
 
   /* the explainer is a sheet lifted over the page, not a page of its own */
   if (screen.sheet) {
@@ -864,9 +934,9 @@ export const WalkScreen: React.FC<Props> = ({
         <div
           style={{
             position: 'relative',
-            /* a lamps screen lets its one scrolling rail take the band, so
-               the wrapper must be allowed to fill and shrink */
-            flex: centred ? 1 : screen.lamps ? '1 1 auto' : 'none',
+            /* a lamps or who screen lets its one scrolling rail take the
+               band, so the wrapper must be allowed to fill and shrink */
+            flex: centred ? 1 : screen.lamps || screen.who ? '1 1 auto' : 'none',
             minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -917,62 +987,139 @@ export const WalkScreen: React.FC<Props> = ({
           )}
 
           {screen.grain && (
-            <div style={{ position: 'relative', flex: 'none', display: 'flex', gap: 8, paddingTop: 20 }}>
-              <GrainChip label={G.grainCity} on={grain === 0} onClick={() => setGrain(0)} />
-              <GrainChip label={G.grainRegion} on={grain === 1} onClick={() => setGrain(1)} />
+            <div style={{ position: 'relative', flex: 'none', paddingTop: 20 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <GrainChip label={G.grainCity} on={grain === 0} onClick={() => setGrain(0)} />
+                <GrainChip label={G.grainRegion} on={grain === 1} onClick={() => setGrain(1)} />
+              </div>
+              {/* the "less accurate" annotation, under the Area chip once it is
+                  picked (§7's own words for the region option) */}
+              {grain === 1 && (
+                <div style={{ paddingTop: 8 }}>
+                  <Eyebrow size={9.5}>{G.grainAreaNote}</Eyebrow>
+                </div>
+              )}
             </div>
           )}
 
           {screen.tiles && (
             <div style={{ position: 'relative', flex: 'none', paddingTop: 22 }}>
-              <button
-                type="button"
-                onClick={() => setLinksOpen(v => !v)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 13,
-                  width: '100%',
-                  border: 0,
-                  background: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
+              <LinkTiles open={linksOpen} onToggle={() => setLinksOpen(v => !v)} />
+            </div>
+          )}
+
+          {/* the who page: born's fields and the identity lamps in one
+              section, the links field, tiles and the map-light toggle in the
+              other. §7, 2026-08-20. */}
+          {screen.who && (
+            <div
+              style={{
+                position: 'relative',
+                flex: '1 1 auto',
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                paddingTop: 26,
+              }}
+            >
+              <SegmentedTabs options={[G.bornHead, G.linksHead]} active={whoTab} onChange={i => setWhoTab(i as 0 | 1)} />
+
+              <div
+                className="collector-scroll"
+                style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, overflowY: 'auto', paddingTop: 28 }}
               >
-                <Plus />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontFamily: F.body, fontSize: 15, color: C.ink }}>{G.linksAdd}</span>
-                  <span style={{ display: 'block', paddingTop: 3 }}>
-                    <Eyebrow size={9.5}>{G.linksAddNote}</Eyebrow>
-                  </span>
-                </span>
-              </button>
-              {linksOpen && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 18px', paddingTop: 12 }}>
-                  {['Instagram', 'X', 'Facebook', 'YouTube', 'TikTok', 'LinkedIn'].map(name => (
+                {whoTab === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+                      <div style={{ display: 'flex', gap: 16 }}>
+                        <Field
+                          label={G.fieldDate}
+                          hint={G.hintDate}
+                          lit
+                          value={values?.[G.fieldDate] ?? ''}
+                          onChange={v => onType?.(G.fieldDate, v)}
+                        />
+                        <Field
+                          label={G.fieldTime}
+                          hint={G.hintTime}
+                          value={values?.[G.fieldTime] ?? ''}
+                          onChange={v => onType?.(G.fieldTime, v)}
+                        />
+                      </div>
+                      <Field
+                        label={G.fieldPlace}
+                        hint={G.hintPlace}
+                        value={values?.[G.fieldPlace] ?? ''}
+                        onChange={v => onType?.(G.fieldPlace, v)}
+                      />
+                    </div>
+
+                    {/* the birthday annotation: private, always, quietly
+                        feeding the Oracle and the Dream. Flagged for Adrian. */}
+                    <Note>{WHO_BIRTHDAY_NOTE}</Note>
+
+                    {/* the why door, the same sheet the skip on the leftover
+                        born screen opens */}
                     <button
-                      key={name}
                       type="button"
+                      onClick={() => onGo('explain')}
                       style={{
-                        display: 'block',
-                        width: '100%',
-                        border: 0,
-                        borderBottom: `1px solid ${C.hair}`,
+                        alignSelf: 'flex-start',
                         background: 'none',
-                        padding: '13px 2px',
-                        textAlign: 'left',
+                        border: 0,
                         fontFamily: F.body,
-                        fontSize: 15,
-                        color: C.ink,
+                        fontStyle: 'italic',
+                        fontSize: 14,
+                        color: C.inkBody,
+                        borderBottom: '1px solid rgba(196,190,180,.4)',
+                        paddingBottom: 2,
                         cursor: 'pointer',
                       }}
                     >
-                      {name}
+                      {G.bornWhy}
                     </button>
-                  ))}
-                </div>
-              )}
+
+                    {/* the five identity lamps, inline. The two piece-fact
+                        lamps (what you place in it, the light on the map) do
+                        not appear here: they are not optional, and default
+                        true always. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {WHO_LAMPS.map(([title, note], i) => {
+                        const idx = i + 2;
+                        return (
+                          <Lamp
+                            key={title}
+                            title={title}
+                            note={note}
+                            on={Boolean(lamps[idx])}
+                            onToggle={() => setLamps(l => l.map((v, j) => (j === idx ? !v : v)))}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    <Field
+                      label={G.fieldSite}
+                      hint={G.hintSite}
+                      lit
+                      value={values?.[G.fieldSite] ?? ''}
+                      onChange={v => onType?.(G.fieldSite, v)}
+                    />
+                    <LinkTiles open={linksOpen} onToggle={() => setLinksOpen(v => !v)} />
+                    {/* the section-level show-on-the-map toggle, on by
+                        default (§7). Honest and unwired: no shareLinks field
+                        exists, so it stores client-side only for now. */}
+                    <Lamp
+                      title={WHO_LINKS_SHOW_LABEL}
+                      note={WHO_LINKS_SHOW_NOTE}
+                      on={linksShow}
+                      onToggle={() => setLinksShow(v => !v)}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1055,7 +1202,7 @@ export const WalkScreen: React.FC<Props> = ({
         </div>
       )}
 
-      {!centred && !screen.lamps && <div style={{ position: 'relative', flex: 1, minHeight: 0 }} />}
+      {!centred && !screen.lamps && !screen.who && <div style={{ position: 'relative', flex: 1, minHeight: 0 }} />}
 
       {!screen.tap && (screen.pill || screen.link) && (
         <div
@@ -1098,4 +1245,62 @@ const GrainChip: React.FC<{ label: string; on: boolean; onClick: () => void }> =
   >
     {label}
   </button>
+);
+
+/**
+ * The add-a-link tile: a plus, a label, and the note that opens onto the
+ * service grid. Lifted out of the `links` screen's inline block so the who
+ * page's links section can share it exactly rather than re-derive it.
+ */
+const LinkTiles: React.FC<{ open: boolean; onToggle: () => void }> = ({ open, onToggle }) => (
+  <div style={{ position: 'relative' }}>
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 13,
+        width: '100%',
+        border: 0,
+        background: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        textAlign: 'left',
+      }}
+    >
+      <Plus />
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontFamily: F.body, fontSize: 15, color: C.ink }}>{G.linksAdd}</span>
+        <span style={{ display: 'block', paddingTop: 3 }}>
+          <Eyebrow size={9.5}>{G.linksAddNote}</Eyebrow>
+        </span>
+      </span>
+    </button>
+    {open && (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 18px', paddingTop: 12 }}>
+        {['Instagram', 'X', 'Facebook', 'YouTube', 'TikTok', 'LinkedIn'].map(name => (
+          <button
+            key={name}
+            type="button"
+            style={{
+              display: 'block',
+              width: '100%',
+              border: 0,
+              borderBottom: `1px solid ${C.hair}`,
+              background: 'none',
+              padding: '13px 2px',
+              textAlign: 'left',
+              fontFamily: F.body,
+              fontSize: 15,
+              color: C.ink,
+              cursor: 'pointer',
+            }}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
 );

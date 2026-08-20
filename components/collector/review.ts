@@ -104,10 +104,18 @@ export const REVIEW: Record<string, Note[]> = {
   born: [
     { kind: 'gap', text: 'Order changed. The wording record’s map puts Who you are second of five; the interactive spec skipped it entirely. Built in the record’s order, so a full walk reaches every gathering screen.' },
   ],
-  lives: [{ kind: 'call', text: 'Call 4. This is required either way. What call 4 decides is whether What shows is required too.' }],
-  links: [{ kind: 'gap', text: 'Three services plus an add another, which the handoff lists as an open call against five named services.' }],
+  lives: [
+    {
+      kind: 'gap',
+      text: 'Call 4 is settled by §7 (2026-08-20, "the gathering, re-ordered"): this stays required either way, and leads into who now, not links. The grain chips read City / Area, and the words themselves are placeholder, not locked, since Adrian named the pair only descriptively ("city, or the area marked less accurate").',
+    },
+  ],
+  links: [{ kind: 'gap', text: 'Three services plus an add another, which the handoff lists as an open call against five named services. Superseded on the required path by the links section of who; survives here as a kept chapter.' }],
   shows: [
-    { kind: 'call', text: 'Call 4 decides whether this screen is one registration cannot proceed without.' },
+    {
+      kind: 'gap',
+      text: 'Superseded by who (§7, 2026-08-20): shareIntention and shareCity now default true always through registration, and the five identity lamps live on who instead. This screen leaves the required path and stands as a kept surface, for changing any of the seven choices later.',
+    },
     {
       kind: 'call',
       text: 'Your chart, Your work and Your mission are placeholder titles, and the seven lamps now outgrow the band, so this screen scrolls against the house law that no setup screen scrolls. Both want your layout ruling.',
@@ -115,6 +123,16 @@ export const REVIEW: Record<string, Note[]> = {
     {
       kind: 'gap',
       text: 'The lamps always open at the drawn default, never reading back what was actually saved, so a returning caretaker sees settings that may not be theirs until they retouch every one.',
+    },
+  ],
+  who: [
+    {
+      kind: 'unwritten',
+      text: 'No card was drawn; built fresh from §7 (2026-08-20, "the gathering, re-ordered"). The head, the birthday privacy line, and both links-section strings (the add-a-link note aside) are placeholder, awaiting Adrian.',
+    },
+    {
+      kind: 'gap',
+      text: 'The links section’s show-on-the-map toggle is an honest unwired placeholder: no shareLinks field exists on the wire, so the choice stores client-side only, and its own note says so.',
     },
   ],
   explain: [],
