@@ -87,21 +87,32 @@ const reviewKeyFor = (view: View): string => {
 };
 
 /**
+ * How severe a note is, most to least: an open call decides the screen, a
+ * known gap is knowingly wrong, unwritten copy is missing but harmless to
+ * the walk, and `mine` is only about who drew the look. Lower number wins.
+ */
+const SEVERITY: Record<Note['kind'], number> = { call: 0, gap: 1, unwritten: 2, mine: 3 };
+
+/**
  * The notice under one station.
  *
- * The surface's own first review note wins, because that is the thing most
- * worth reading before judging what is on the screen. It carries its
- * `KIND_LABEL` prefix for the three kinds that mean "this isn't settled
- * yet" — unwritten copy, a known gap, or an open call — because those change
- * how the screen should be read; a `mine` note is about who drew the look,
- * not about the screen misleading anyone, so it appears bare. Failing a
- * review note, the chapter's own note stands in, but only for the chapter's
- * first station: every other station stays quiet rather than repeat it.
+ * The surface's most severe review note wins, because that is the thing
+ * most worth reading before judging what is on the screen: an open call
+ * outranks a known gap, which outranks missing copy, which outranks a note
+ * that is only about who drew the look. Ties within a kind keep the first
+ * note of that kind, so the order authored in `review.ts` still matters
+ * when two notes carry the same weight. It carries its `KIND_LABEL` prefix
+ * for the three kinds that mean "this isn't settled yet" — unwritten copy,
+ * a known gap, or an open call — because those change how the screen
+ * should be read; a `mine` note is about who drew the look, not about the
+ * screen misleading anyone, so it appears bare. Failing a review note, the
+ * chapter's own note stands in, but only for the chapter's first station:
+ * every other station stays quiet rather than repeat it.
  */
 const noticeFor = (view: View, isFirst: boolean, chapterNote: string): string | undefined => {
   const notes: Note[] = REVIEW[reviewKeyFor(view)] ?? [];
   if (notes.length) {
-    const n = notes[0];
+    const n = notes.reduce((worst, cur) => (SEVERITY[cur.kind] < SEVERITY[worst.kind] ? cur : worst));
     return n.kind === 'mine' ? n.text : `${KIND_LABEL[n.kind]}: ${n.text}`;
   }
   return isFirst ? chapterNote : undefined;

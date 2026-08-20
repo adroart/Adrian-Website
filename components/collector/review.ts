@@ -50,6 +50,18 @@ export const REVIEW: Record<string, Note[]> = {
       kind: 'unwritten',
       text: 'The dream is placeholder. Its prompt is the highest stakes line in the flow: every guest reads it, and it locks for a year once placed.',
     },
+    {
+      kind: 'mine',
+      text: 'The ground’s warmth curve is mine: roughly 0.6 at ten years held, a season and hour tint of a few hundredths, a birthday bump worth up to .15. Every constant is named and reasoned in utils/collectorGround.ts, for your eye.',
+    },
+    {
+      kind: 'gap',
+      text: 'The season and hour tint reads neutral on every real piece today. It needs a latitude, and no curated city carries coordinates yet, so nothing tints by season until one does.',
+    },
+    {
+      kind: 'gap',
+      text: 'Section 6’s deep-in inversion, where the page slowly becomes the person and the piece becomes the frame, is not built. One fixed weighting stands at every stage today.',
+    },
   ],
 
   code: [
@@ -95,11 +107,15 @@ export const REVIEW: Record<string, Note[]> = {
   lives: [{ kind: 'call', text: 'Call 4. This is required either way. What call 4 decides is whether What shows is required too.' }],
   links: [{ kind: 'gap', text: 'Three services plus an add another, which the handoff lists as an open call against five named services.' }],
   shows: [
+    { kind: 'call', text: 'Call 4 decides whether this screen is one registration cannot proceed without.' },
     {
       kind: 'call',
-      text: 'Call 5 lives here, and it is the biggest one. Section 6 settles three tiers, Let it shine, Keep it with the piece, and Seal it, with the heirs’ right on by default. This screen has the design’s two way capsule and no third tier anywhere.',
+      text: 'Your chart, Your work and Your mission are placeholder titles, and the seven lamps now outgrow the band, so this screen scrolls against the house law that no setup screen scrolls. Both want your layout ruling.',
     },
-    { kind: 'call', text: 'Call 4 decides whether this screen is one registration cannot proceed without.' },
+    {
+      kind: 'gap',
+      text: 'The lamps always open at the drawn default, never reading back what was actually saved, so a returning caretaker sees settings that may not be theirs until they retouch every one.',
+    },
   ],
   explain: [],
   light47: [],
@@ -108,8 +124,12 @@ export const REVIEW: Record<string, Note[]> = {
 
   ritual: [
     { kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE },
-    { kind: 'unwritten', text: 'What the birthday moment actually is stays open: a rewrite, a check in, an amendment, or an addition. Built as a single line so the mechanic can change without touching the screen.' },
+    {
+      kind: 'unwritten',
+      text: 'The body paragraph is placeholder; Adrian has not ruled on it. The mechanic itself is settled now: three real actions, reinforce, plant anew, mark fulfilled, and each one submits for real.',
+    },
   ],
+  ritualplant: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
   ritualfamily: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
 
   passfork: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
@@ -125,6 +145,7 @@ export const REVIEW: Record<string, Note[]> = {
   invite: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
   invitesent: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
   person: [{ kind: 'mine', text: 'No card was drawn. Where she stands is the private succession mark, and she is never told.' }],
+  personSuccession: [{ kind: 'mine', text: 'No card was drawn. One tap deeper than the person row, on purpose: no toggle here, nothing behind it wired yet.' }],
 
   joinletter: [{ kind: 'mine', text: 'No card was drawn. It arrives from outside the app, because she has no account until she accepts.' }],
   joinhello: [{ kind: 'mine', text: 'No card was drawn. ' + FROM_THE_SHAPE }],
@@ -148,10 +169,22 @@ export const REVIEW: Record<string, Note[]> = {
   garden: [
     { kind: 'call', text: 'Call 7. Built as one at a time plus the index, which the design marks as picked. The card stack, 14b, is marked superseded there and is not built.' },
     { kind: 'unwritten', text: 'All eight questions are placeholder, and so is the guidance under them. They are Adrian’s, and which of them wait for the birthday is still open.' },
-    { kind: 'call', text: 'Call 5 again: the share control here is the two way capsule, so Seal it and the heirs’ right have nowhere to live.' },
+    {
+      kind: 'gap',
+      text: 'The index carries only the one dream slot the wire holds today; the other seven rows read waiting until a real multi-answer model exists behind them.',
+    },
+    {
+      kind: 'gap',
+      text: 'Once a dream is first placed there is no wire to change the heirs’ choice again, so the row hides after that rather than pretend a later toggle would save anything.',
+    },
+    {
+      kind: 'call',
+      text: 'The writer’s-own-access line under Seal it is Adrian’s spoken ruling, crafted in his diction rather than quoted verbatim, and this exact string has not been read back to him.',
+    },
   ],
   family: [{ kind: 'unwritten', text: 'The household and the waiting words are samples. The letter wording has not been worked.' }],
   account: [],
+  letters: [{ kind: 'mine', text: 'No card was drawn. Read-only, generated by the backend; the empty line and every letter-kind word are placeholders under the copy freeze.' }],
   /* keyed apart from the walked screen of the same name, which is the second
      of the four */
   grid_room: [
@@ -168,6 +201,7 @@ export const REVIEW: Record<string, Note[]> = {
   plate: [{ kind: 'unwritten', text: 'Card 20f’s copy is the designer’s, and it carries an explicit placeholder for why a plate is replaced.' }],
   offline: [{ kind: 'unwritten', text: 'Card 20g’s copy is the designer’s. The law it keeps is that the screen is a receipt, not a failure.' }],
   recordonly: [{ kind: 'gap', text: 'This is what a scan lands on while the livingLegacy flag is false, which is its state today. No door, no error, no hint that a registry is coming.' }],
+  notyet: [{ kind: 'mine', text: 'No card was drawn. The honest door while the passing is unwired: deliberate, not a gap to close, until the transfer backend lands.' }],
 
   letter: [{ kind: 'unwritten', text: 'Every line is placeholder. Letters have not been worked, and the video capsule’s wording waits on cost research and appears nowhere.' }],
   email: [{ kind: 'unwritten', text: 'Every line is placeholder. The two choices at the foot are the settled mechanic; the words around them are not.' }],
