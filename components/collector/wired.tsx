@@ -68,6 +68,7 @@ import {
   getCollectorDreamState,
   getCollectorLetters,
   getCollectorOnboarding,
+  getCurrentKeeperPriceHistory,
   getKeeperMessage,
   getKeeperPieceStatus,
   getLineage,
@@ -92,6 +93,7 @@ import type {
   CollectorOnboardingState,
   CollectorRitualAction,
   CollectorRitualEligibility,
+  CurrentKeeperPriceEntry,
   DreamTier,
   KeeperContributorList,
   KeeperPieceStatus,
@@ -379,6 +381,21 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       throw outcome;
     },
     [keeperPieceId, refreshTick],
+  );
+
+  /* what was paid: the keeper certificate ledger, fetched for the caretaker
+     ALONE (guests never ask, and the server answers 403 to anyone but the
+     current keeper anyway). Failure stays quiet — the merged information
+     room renders a plain retry line, never an error wall. */
+  const priceHistory = useQuiet<CurrentKeeperPriceEntry[]>(
+    signedIn && isYours,
+    async () => {
+      const outcome = await getCurrentKeeperPriceHistory(publicCode);
+      if (outcome.ok) return outcome.data;
+      if (outcome.status === 404) return [];
+      throw outcome;
+    },
+    [publicCode, refreshTick],
   );
 
   /* the caretaker's birth profile, read for exactly one derived value: the
@@ -923,6 +940,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       ordinal: ordinalValue,
       story,
       displayLocation: keeperStatus?.currentDisplayLocation ?? null,
+      priceHistory: isYours ? priceHistory : null,
       accountEmail: account.email,
       ritual: ritual.status === 'ready' ? ritual.data : null,
       garden: gardenLive,
@@ -930,7 +948,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       letters: isYours ? letters : null,
       setDisplayLocation: isYours ? setDisplayLocation : null,
     }),
-    [identity, dream, certificate, lineage, ordinalValue, story, keeperStatus, account.email, ritual, gardenLive, familyLive, isYours, letters, setDisplayLocation],
+    [identity, dream, certificate, lineage, ordinalValue, story, keeperStatus, account.email, ritual, gardenLive, familyLive, isYours, letters, priceHistory, setDisplayLocation],
   );
 
   /* ---------------- copy, dressed with the real piece ----------------

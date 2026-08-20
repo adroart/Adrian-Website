@@ -251,6 +251,52 @@ export async function getCertificate(
   );
 }
 
+// ============================================================================
+// keeper/certificate-ledger — what was paid, for the current keeper alone
+// functions/api/keeper/certificate-ledger.js. NOT gated by livingLegacy
+// (verified directly against the source: requireUser, then straight to D1).
+// STEWARD-ONLY: the endpoint resolves price history strictly for the piece's
+// current keeper (functions/api/_lib/certificateContent.js
+// resolveCurrentKeeperPriceHistory) and answers 403 not_current_keeper for
+// anyone else — a guest or a past keeper never receives an amount. Callers
+// must not fetch this for a piece the signed-in account does not hold.
+// ============================================================================
+
+export type PriceOccurrencePrecision = 'exact' | 'month' | 'year' | 'unknown';
+
+export interface CurrentKeeperPriceEntry {
+  /** minor units (cents for USD) — never a float of major units */
+  amountMinor: number;
+  /** ISO 4217 code, e.g. 'USD' */
+  currency: string;
+  /**
+   * When it was paid, as precisely as the ledger knows it: 'exact' carries
+   * YYYY-MM-DD, 'month' YYYY-MM, 'year' YYYY, and 'unknown' carries null.
+   */
+  occurrence: { precision: PriceOccurrencePrecision; value: string | null };
+  recordedAt: string;
+}
+
+/**
+ * GET /api/keeper/certificate-ledger?publicCode=. Requires a signed-in
+ * session belonging to the piece's CURRENT keeper; entries come back in the
+ * server's occurrence order, oldest known date first, unknown-dated entries
+ * last. Errors: 404 not_found (bad/missing publicCode), 403
+ * not_current_keeper, 503 ledger_unavailable, 405 method_not_allowed.
+ */
+export async function getCurrentKeeperPriceHistory(
+  publicCode: string,
+): Promise<ApiOutcome<CurrentKeeperPriceEntry[]>> {
+  if (!isValidPublicCode(publicCode)) return { ok: false, status: 404, error: 'not_found' };
+  const query = new URLSearchParams({ publicCode });
+  return unwrapField(
+    jsonRequest<{ ok: true; priceHistory: CurrentKeeperPriceEntry[] }>(
+      `/api/keeper/certificate-ledger?${query.toString()}`,
+    ),
+    'priceHistory',
+  );
+}
+
 export type LineageEventType =
   | 'issued' | 'activated' | 'link_corrected' | 'voided' | 'superseded'
   | 'transferred' | 'fulfillment_started' | 'fulfillment_completed'

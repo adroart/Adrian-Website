@@ -203,7 +203,6 @@ export const JUMP: [string, Jump[]][] = [
     'Inside the page',
     [
       ['The story', { kind: 'room', key: 'story' }],
-      ['The certificate', { kind: 'room', key: 'certificate' }],
       ['The history', { kind: 'room', key: 'history' }],
       ['The dreams', { kind: 'room', key: 'dreams' }],
       ['Piece information', { kind: 'room', key: 'information' }],

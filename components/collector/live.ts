@@ -16,6 +16,7 @@ import type {
   CollectorDreamState,
   CollectorLetter,
   CollectorRitualEligibility,
+  CurrentKeeperPriceEntry,
   DreamTier,
   LineageOutcome,
 } from './api';
@@ -98,10 +99,22 @@ export type PieceLive = {
   lineage: Quiet<LineageOutcome>;
   /** the real claim ordinal (Light N), when the atlas has projected it */
   ordinal: number | null;
-  /** the caretaker's story text for the piece, from the catalog record */
-  story: { lead: string | null; paragraphs: string[] } | null;
+  /**
+   * The caretaker's story text for the piece, from the catalog record.
+   * `commissioned` is the commissioner's own paragraph, why they asked for
+   * the piece — TODO(server): no wire supplies it yet; it is a future field
+   * on the catalog/registry record, typed now so the story room can render
+   * it the day it lands.
+   */
+  story: { lead: string | null; paragraphs: string[]; commissioned?: string | null } | null;
   /** caretaker-only extras */
   displayLocation: string | null;
+  /**
+   * What was paid, from the keeper certificate ledger. Non-null ONLY when
+   * the piece is yours — guests and past keepers never fetch or carry it.
+   * The room renders the latest entry masked until the caretaker reveals it.
+   */
+  priceHistory: Quiet<CurrentKeeperPriceEntry[]> | null;
   accountEmail: string | null;
   ritual: CollectorRitualEligibility | null;
   garden: GardenLive | null;

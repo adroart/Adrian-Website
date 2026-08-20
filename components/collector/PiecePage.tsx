@@ -258,7 +258,7 @@ export const PiecePage: React.FC<Props> = ({
       </div>
 
       {/* the rows. The public four are on every relationship; the caretaker's
-          five exist ONLY when the piece is theirs, and are never greyed,
+          own rows exist ONLY when the piece is theirs, and are never greyed,
           hinted at, or shown as locked.
 
           On the caretaker's page the ROWS scroll, not the page: the head, the
@@ -273,15 +273,17 @@ export const PiecePage: React.FC<Props> = ({
             : { position: 'relative', flex: 'none' }
         }
       >
+        {/* the certificate IS the piece information: one room, one row, the
+            record's preferred label. Everyone opens it; what each viewer
+            sees inside is the room's business. */}
         <Row label={COPY.page.rowStory} onClick={() => setRoom('story')} />
-        <Row label={COPY.page.rowCertificate} onClick={() => setRoom('certificate')} />
+        <Row label={COPY.page.rowInformation} onClick={() => setRoom('information')} />
         <Row label={COPY.page.rowHistory} onClick={() => setRoom('history')} />
         <Row label={COPY.page.rowDreams} onClick={() => setRoom('dreams')} last={!isCaretaker} />
 
         {isCaretaker && (
           <>
             <Row label={COPY.page.rowGarden} warm onClick={() => setRoom('garden')} />
-            <Row label={COPY.page.rowInformation} onClick={() => setRoom('information')} />
             <Row label={COPY.page.rowFamily} onClick={() => setRoom('family')} />
             <Row label={COPY.page.rowPassing} onClick={() => onWalk?.('passfork')} />
             <Row label={COPY.page.rowAccount} onClick={() => setRoom('account')} last />

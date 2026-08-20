@@ -5,21 +5,24 @@
  * use: one motion vocabulary everywhere. Closing returns to the page. Nothing
  * here navigates.
  *
- * The split that keeps the privacy model honest:
- *   the certificate shows materials and making to everyone;
- *   what was paid lives in Piece information, which is caretaker-only;
- *   birth details are shown to nobody, ever, on either surface;
+ * The shape that keeps the privacy model honest (Adrian's ruling: the
+ * certificate IS the piece information — one room, not two):
+ *   everyone who scans the piece sees the public certificate content;
+ *   the caretaker alone additionally sees the private rows, and what was
+ *   paid stays masked even for them until they choose to reveal it;
+ *   birth details are shown to nobody, ever, on any surface;
  *   the provenance chain is public.
  */
 
 import React, { useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PIECE, PLACEHOLDERS } from './copy';
-import { Body, Brass, Eyebrow, Field, Ground, Ledger, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
+import { Body, Brass, Eyebrow, Field, Flag, Ground, Ledger, Note, Plus, RoomBody, RoomHead, SegmentedTabs, TLink } from './ui';
 import { Drawing } from './drawings';
 import { ResonantGrid } from './ResonantGrid';
 import { Garden } from './garden';
 import type { FamilyPerson, PieceLive } from './live';
+import type { CurrentKeeperPriceEntry } from './api';
 import { formatLineageEventLabel } from '../../utils/publicLineage';
 
 /**
@@ -48,6 +51,26 @@ const ACCOUNT_LIVES_LABEL = ph('Where the art lives');
    registration": empty sections carry one quiet line), and a plain word per
    letter kind. None of these is Adrian's yet. */
 const LETTERS_EMPTY = ph('Nothing written yet.');
+
+/* the story's second voice: the commissioner's paragraph. The label and the
+   demo paragraph are both samples — the wire that carries a real
+   commissioner's words does not exist yet (live.ts story.commissioned). */
+const STORY_COMMISSIONED_LABEL = ph('From the one who asked for it');
+const STORY_COMMISSIONED_SAMPLE = ph(
+  'Sample, a commissioner might write: I asked for this piece the year the family workshop was sold, so that one made thing would still hold the smell of that room.',
+);
+
+/* the history room: the two tab words were inline in the old tab strip, and
+   the rest are the written items' honest lines */
+const HISTORY_TAB_MOVED = ph('How it moved');
+const HISTORY_TAB_WRITTEN = ph('What was written');
+const HISTORY_BACK = ph('Back to the history');
+const WRITTEN_SHINES_TEXT = ph('A dream was placed in it');
+const WRITTEN_SHINES_NOTE = ph('shining · words with no name');
+const WRITTEN_SHINES_WORD = ph('shining');
+const WRITTEN_KEPT_TEXT = ph('Your words were placed in it');
+const WRITTEN_KEPT_NOTE = ph('kept with the piece');
+const WRITTEN_SEALED_NOTE = ph('sealed · words for you alone');
 const LETTER_KIND_WORD: Record<string, string> = {
   'kin-claim': ph('Asking someone on'),
   anniversary: ph('The year turning'),
@@ -56,7 +79,6 @@ const LETTER_KIND_WORD: Record<string, string> = {
 
 export type RoomKey =
   | 'story'
-  | 'certificate'
   | 'history'
   | 'dreams'
   | 'information'
@@ -68,7 +90,6 @@ export type RoomKey =
 
 const TITLES: Record<RoomKey, string> = {
   story: COPY.page.rowStory,
-  certificate: COPY.page.rowCertificate,
   history: COPY.page.rowHistory,
   dreams: COPY.page.rowDreams,
   information: COPY.page.rowInformation,
@@ -81,7 +102,6 @@ const TITLES: Record<RoomKey, string> = {
 
 const LIGHT: Record<RoomKey, string> = {
   story: 'a',
-  certificate: 'b',
   history: 'n',
   dreams: 'i',
   information: 'i',
@@ -115,7 +135,6 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live 
     <Ground light={LIGHT[room] as never} pad="44px 30px 30px">
       <RoomHead title={TITLES[room]} onBack={onClose} />
       {room === 'story' && (live ? <LiveStoryRoom live={live} /> : <StoryRoom />)}
-      {room === 'certificate' && (live ? <LiveCertificateRoom live={live} /> : <CertificateRoom />)}
       {room === 'history' && (live ? <LiveHistoryRoom live={live} /> : <HistoryRoom />)}
       {room === 'dreams' && (live ? <LiveDreamsRoom live={live} /> : <DreamsRoom />)}
       {room === 'information' && (live ? <LiveInformationRoom live={live} /> : <InformationRoom />)}
@@ -133,7 +152,8 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live 
 };
 
 /* ------------------------------------------------------------------ *
- * The story: the public row every guest reads, in Adrian's voice.
+ * The story: the public row every guest reads. Adrian's voice leads, and
+ * the commissioner's paragraph follows when the piece was asked for.
  * ------------------------------------------------------------------ */
 
 const StoryRoom: React.FC = () => (
@@ -152,33 +172,14 @@ const StoryRoom: React.FC = () => (
     </p>
     <Body top={18}>{COPY.rooms.storyBody1}</Body>
     <Body top={16}>{COPY.rooms.storyBody2}</Body>
+    {/* the commissioner's voice: why the piece was asked for. Sample only —
+        clearly a placeholder, never Adrian's or a real commissioner's words. */}
+    <div style={{ paddingTop: 26 }}>
+      <Eyebrow>{STORY_COMMISSIONED_LABEL}</Eyebrow>
+    </div>
+    <Body top={10}>{STORY_COMMISSIONED_SAMPLE}</Body>
     <Note top={22}>{COPY.rooms.storyNote}</Note>
   </RoomBody>
-);
-
-/* ------------------------------------------------------------------ *
- * The certificate: authenticity, for anyone who scans it. What was paid
- * is not here, and the room says so plainly rather than hiding the gap.
- * ------------------------------------------------------------------ */
-
-const CertificateRoom: React.FC = () => (
-  <>
-    <div style={{ flex: 'none', paddingTop: 11 }}>
-      <Note>{COPY.rooms.certNote}</Note>
-    </div>
-    <RoomBody>
-      <div style={{ display: 'grid', placeItems: 'center', height: 118, marginBottom: 18 }}>
-        <Drawing motif="piece" size={92} lit draw />
-      </div>
-      <Ledger label="Series" value="Universal Language, 1 of 64" />
-      <Ledger label="Made" value="2024" />
-      <Ledger label="Material" value="Claro walnut, brass inlay" />
-      <Ledger label="Dimensions" value="420 × 420 × 90 mm" />
-      <Ledger label="Finish" value="Hard wax oil, hand rubbed" />
-      <Ledger label="Registered" value={`Light ${PIECE.ordinal}`} />
-      <Note top={18}>{COPY.rooms.certFoot}</Note>
-    </RoomBody>
-  </>
 );
 
 /* ------------------------------------------------------------------ *
@@ -186,92 +187,185 @@ const CertificateRoom: React.FC = () => (
  * appear only where a caretaker chose to be seen.
  * ------------------------------------------------------------------ */
 
-const MOVED = [
-  ['2024', 'Made in the workshop', 'Sonoma County'],
-  ['2024', 'Registered by its first caretaker', 'named by choice'],
-  ['2025', 'The plate was replaced', 'the record is the same record'],
-  ['2026', 'Still held', 'Sonoma County'],
+/* the demo spine. The demo entries only ever had years, so the months here
+   are plausible sample data, ph-marked, never presented as record truth. */
+const MOVED: { year: string; month: string; text: string; note: string }[] = [
+  { year: '2024', month: ph('February'), text: 'Made in the workshop', note: 'Sonoma County' },
+  { year: '2024', month: ph('April'), text: 'Registered by its first caretaker', note: 'named by choice' },
+  { year: '2025', month: ph('June'), text: 'The plate was replaced', note: 'the record is the same record' },
+  { year: '2026', month: ph('August'), text: 'Still held', note: 'Sonoma County' },
 ];
 
-const WRITTEN = [
-  ['2024', 'A dream was placed in it', 'shining · words with no name'],
-  ['2025', 'Someone in the house wrote into it', 'kept with the piece'],
-  ['2026', 'The dream was placed again', 'shining · words with no name'],
+/* the demo written items. A body means the words shine and the entry opens;
+   the kept entry carries no body here, exactly as a guest would meet it. */
+const WRITTEN: { year: string; month: string; text: string; note: string; body: string | null }[] = [
+  {
+    year: '2024',
+    month: ph('April'),
+    text: 'A dream was placed in it',
+    note: 'shining · words with no name',
+    body: COPY.page.dreamSample,
+  },
+  {
+    year: '2025',
+    month: ph('March'),
+    text: 'Someone in the house wrote into it',
+    note: 'kept with the piece',
+    body: null,
+  },
+  {
+    year: '2026',
+    month: ph('April'),
+    text: 'The dream was placed again',
+    note: 'shining · words with no name',
+    body: ph('That the ones who visit this house leave lighter than they came.'),
+  },
 ];
+
+/* the date column: the year eyebrow stays where it always sat, and the month
+   word sits directly beneath it in the same quiet label face. Either half
+   renders only when the entry actually carries that data. */
+const HistoryDate: React.FC<{ year: string | null; month: string | null }> = ({ year, month }) => (
+  <div style={{ paddingTop: 4 }}>
+    {year && (
+      <div>
+        <Eyebrow>{year}</Eyebrow>
+      </div>
+    )}
+    {month && (
+      <div style={{ paddingTop: 3 }}>
+        <Eyebrow size={9}>{month}</Eyebrow>
+      </div>
+    )}
+  </div>
+);
+
+/* one entry on the spine. With onOpen it is a real button and the whole line
+   is the press target; without, it is the same quiet line it always was. */
+const HistoryEntry: React.FC<{
+  year: string | null;
+  month: string | null;
+  text: string;
+  note?: string | null;
+  onOpen?: () => void;
+}> = ({ year, month, text, note, onOpen }) => {
+  const line = (
+    <>
+      <span
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 7,
+          width: 5,
+          height: 5,
+          borderRadius: '50%',
+          background: C.brass,
+          boxShadow: '0 0 9px 3px rgba(212,184,138,.4)',
+          display: 'block',
+        }}
+      />
+      <span
+        style={{ position: 'absolute', left: 2, top: 16, bottom: -26, width: 1, background: C.hair, display: 'block' }}
+      />
+      <div style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink }}>{text}</div>
+      {note && <div style={{ paddingTop: 4, fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet }}>{note}</div>}
+    </>
+  );
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '52px minmax(0,1fr)', gap: 16, paddingBottom: 26 }}>
+      <HistoryDate year={year} month={month} />
+      {onOpen ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          style={{
+            position: 'relative',
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            background: 'none',
+            border: 0,
+            padding: '0 0 0 20px',
+            cursor: 'pointer',
+          }}
+        >
+          {line}
+        </button>
+      ) : (
+        <div style={{ position: 'relative', paddingLeft: 20 }}>{line}</div>
+      )}
+    </div>
+  );
+};
+
+/* a written item opened: the words whole, in the dream-reading typography the
+   garden's review page settled (F.display 300 at 23, the writer's line breaks
+   kept). Rendered in the room itself; the quiet link returns to the spine. */
+type HistoryReading = { eyebrow: string | null; body: string };
+
+const HistoryReadingView: React.FC<{ reading: HistoryReading; onBack: () => void }> = ({ reading, onBack }) => (
+  <RoomBody top={16}>
+    <div>
+      <TLink onClick={onBack}>{HISTORY_BACK}</TLink>
+    </div>
+    {reading.eyebrow && (
+      <div style={{ paddingTop: 14 }}>
+        <Eyebrow>{reading.eyebrow}</Eyebrow>
+      </div>
+    )}
+    <p
+      style={{
+        margin: '14px 0 0',
+        fontFamily: F.display,
+        fontWeight: 300,
+        fontSize: 23,
+        lineHeight: 1.36,
+        color: C.inkWarm,
+        textWrap: 'pretty',
+        whiteSpace: 'pre-wrap',
+      }}
+    >
+      <Flag text={reading.body} />
+    </p>
+  </RoomBody>
+);
 
 const HistoryRoom: React.FC = () => {
-  const [tab, setTab] = useState<0 | 1>(0);
-  const entries = tab === 0 ? MOVED : WRITTEN;
+  const [tab, setTab] = useState(0);
+  const [reading, setReading] = useState<HistoryReading | null>(null);
   return (
     <>
       <div style={{ flex: 'none', paddingTop: 10 }}>
         <Note>{COPY.rooms.historyNote}</Note>
       </div>
-      <div style={{ flex: 'none', paddingTop: 18 }}>
-        <div
-          style={{
-            display: 'flex',
-            padding: 4,
-            borderRadius: 999,
-            background: 'rgba(52,43,34,.34)',
-            backdropFilter: 'blur(30px) saturate(140%)',
-            boxShadow: 'inset 0 0 0 1px rgba(237,233,226,.06)',
-          }}
-        >
-          {['How it moved', 'What was written'].map((label, i) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setTab(i as 0 | 1)}
-              style={{
-                flex: 1,
-                border: 0,
-                borderRadius: 999,
-                padding: '10px 12px',
-                cursor: 'pointer',
-                fontFamily: F.label,
-                fontSize: 10,
-                letterSpacing: '.12em',
-                textTransform: 'uppercase',
-                background: i === tab ? 'rgba(212,170,110,.13)' : 'none',
-                boxShadow: i === tab ? 'inset 0 .5px 0 rgba(255,244,220,.18),inset 0 0 0 1px rgba(226,190,134,.11)' : undefined,
-                color: i === tab ? C.inkBrass : '#a1968a',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <RoomBody top={24}>
-        {entries.map(([year, text, note], i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '52px minmax(0,1fr)', gap: 16, paddingBottom: 26 }}>
-            <div style={{ paddingTop: 4 }}>
-              <Eyebrow>{year}</Eyebrow>
-            </div>
-            <div style={{ position: 'relative', paddingLeft: 20 }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 7,
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: C.brass,
-                  boxShadow: '0 0 9px 3px rgba(212,184,138,.4)',
-                  display: 'block',
-                }}
-              />
-              <span
-                style={{ position: 'absolute', left: 2, top: 16, bottom: -26, width: 1, background: C.hair, display: 'block' }}
-              />
-              <div style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink }}>{text}</div>
-              <div style={{ paddingTop: 4, fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet }}>{note}</div>
-            </div>
+      {reading ? (
+        <HistoryReadingView reading={reading} onBack={() => setReading(null)} />
+      ) : (
+        <>
+          <div style={{ flex: 'none', paddingTop: 18 }}>
+            <SegmentedTabs options={[HISTORY_TAB_MOVED, HISTORY_TAB_WRITTEN]} active={tab} onChange={setTab} />
           </div>
-        ))}
-      </RoomBody>
+          <RoomBody top={24}>
+            {tab === 0 &&
+              MOVED.map(entry => (
+                <HistoryEntry key={`${entry.year}-${entry.text}`} year={entry.year} month={entry.month} text={entry.text} note={entry.note} />
+              ))}
+            {tab === 1 &&
+              WRITTEN.map(entry => (
+                <HistoryEntry
+                  key={`${entry.year}-${entry.text}`}
+                  year={entry.year}
+                  month={entry.month}
+                  text={entry.text}
+                  note={entry.note}
+                  /* only words that shine open for a guest; the kept entry
+                     carries no press at all */
+                  onOpen={entry.body ? () => setReading({ eyebrow: entry.note, body: entry.body as string }) : undefined}
+                />
+              ))}
+          </RoomBody>
+        </>
+      )}
     </>
   );
 };
@@ -331,8 +425,57 @@ const DreamsRoom: React.FC = () => (
 );
 
 /* ------------------------------------------------------------------ *
- * Piece information: caretaker-only, and the one place price appears.
+ * Piece information: the certificate and the record are one room. Everyone
+ * who scans the piece reads the public certificate content; the caretaker
+ * alone sees the private rows beneath it, and what was paid stays masked
+ * even for them until they choose to look.
  * ------------------------------------------------------------------ */
+
+/** '· · · · ·' in the Ledger idiom: an amount held, not an amount missing. */
+const PAID_MASK = '· · · · ·';
+
+/**
+ * The one place price appears, masked by default. The whole row is a real
+ * button and works exactly like a show-password control: one press reveals,
+ * the same press re-masks, aria-pressed carries the state.
+ */
+const PaidLedger: React.FC<{ amount: string }> = ({ amount }) => {
+  const [shown, setShown] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => setShown(s => !s)}
+      aria-pressed={shown}
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        gap: 16,
+        width: '100%',
+        textAlign: 'left',
+        background: 'none',
+        border: 0,
+        borderBottom: `1px solid ${C.hair}`,
+        padding: '13px 0',
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{ flex: 'none' }}>
+        <Eyebrow>What was paid</Eyebrow>
+      </span>
+      <span
+        style={{
+          fontFamily: F.body,
+          fontSize: 14.5,
+          color: shown ? C.inkWarm : C.inkQuiet,
+          textAlign: 'right',
+        }}
+      >
+        {shown ? amount : PAID_MASK}
+      </span>
+    </button>
+  );
+};
 
 const InformationRoom: React.FC = () => (
   <>
@@ -366,7 +509,7 @@ const InformationRoom: React.FC = () => (
       <Ledger label="First caretaker" value="Adrian Rasmussen" />
       <Ledger label="Shown publicly" value="Not yet · open it in What shows" />
       <Ledger label="Where it lives" value="Sonoma County" />
-      <Ledger label="What was paid" value="$14,000" warm />
+      <PaidLedger amount="$14,000" />
       <Note top={18}>{COPY.rooms.infoFoot}</Note>
     </RoomBody>
   </>
@@ -547,84 +690,138 @@ const LiveStoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
       {paragraphs.map((text, i) => (
         <Body key={i} top={i === 0 && !live.story?.lead ? 4 : 16}>{text}</Body>
       ))}
+      {/* the commissioner's paragraph, when the record carries one.
+          TODO(server): nothing supplies story.commissioned yet — it is a
+          future field on the catalog/registry record (live.ts), rendered
+          here the day a wire fills it. */}
+      {live.story?.commissioned && (
+        <>
+          <div style={{ paddingTop: 26 }}>
+            <Eyebrow>{STORY_COMMISSIONED_LABEL}</Eyebrow>
+          </div>
+          <Body top={10}>{live.story.commissioned}</Body>
+        </>
+      )}
     </RoomBody>
   );
 };
 
-const LiveCertificateRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
-  const { identity, certificate, ordinal } = live;
-  const ready = certificate.status === 'ready' ? certificate.data : null;
-  return (
-    <>
-      <div style={{ flex: 'none', paddingTop: 11 }}>
-        <Note>{COPY.rooms.certNote}</Note>
-      </div>
-      <RoomBody>
-        <div style={{ display: 'grid', placeItems: 'center', height: 118, marginBottom: 18 }}>
-          <Drawing motif="piece" size={92} lit draw />
-        </div>
-        {identity.series && <Ledger label="Series" value={identity.series} />}
-        <Ledger label="Edition" value={identity.edition.label} />
-        {ready?.yearWording && <Ledger label="Made" value={ready.yearWording} />}
-        {ready?.materials && ready.materials.length > 0 && (
-          <Ledger label="Material" value={ready.materials.join(', ')} />
-        )}
-        {ready?.origin && <Ledger label="Origin" value={ready.origin} />}
-        {ready?.techniques && ready.techniques.length > 0 && (
-          <Ledger label="Technique" value={ready.techniques.join(', ')} />
-        )}
-        {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
-        {certificate.status === 'failed' && (
-          <div style={{ paddingTop: 16 }}>
-            <TLink onClick={certificate.retry}>{COPY.code.tryAgain}</TLink>
-          </div>
-        )}
-        <Note top={18}>{COPY.rooms.certFoot}</Note>
-      </RoomBody>
-    </>
-  );
+/** year and month straight off an ISO instant; either half absent is absent */
+const isoDateParts = (iso: string): { year: string | null; month: string | null } => {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return { year: null, month: null };
+  return {
+    year: String(at.getFullYear()),
+    month: at.toLocaleDateString('en-GB', { month: 'long' }),
+  };
 };
 
 const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+  const [tab, setTab] = useState(0);
+  const [reading, setReading] = useState<HistoryReading | null>(null);
   const { lineage } = live;
   const outcome = lineage.status === 'ready' ? lineage.data : null;
   /* the dark lineage is the quiet absence the design prescribes: the note
      stands alone and nothing reads as an error */
   const events = outcome && outcome.kind === 'ok' ? outcome.events : [];
+
+  /* what was written, from live data that already exists. The shining public
+     dream is readable by anyone and opens for anyone; the caretaker's own
+     standing words that do NOT shine come from the garden's dream state,
+     which only ever reaches the caretaker's hands — so a guest never meets
+     a kept entry at all, clickable or otherwise. */
+  const shining = live.dream.status === 'ready' ? live.dream.data : null;
+  const gardenDreams =
+    live.garden && live.garden.dreams.status === 'ready' ? live.garden.dreams.data : null;
+  const kept =
+    gardenDreams?.current && gardenDreams.current.visibility === 'private' && gardenDreams.current.body
+      ? gardenDreams.current
+      : null;
+  const keptSealed = kept?.tier === 'seal';
+
   return (
     <>
       <div style={{ flex: 'none', paddingTop: 10 }}>
         <Note>{COPY.rooms.historyNote}</Note>
       </div>
-      <RoomBody top={24}>
-        {events.map((event) => (
-          <div
-            key={event.eventHash}
-            style={{ display: 'grid', gridTemplateColumns: '52px minmax(0,1fr)', gap: 16, paddingBottom: 26 }}
-          >
-            <div style={{ paddingTop: 4 }}>
-              <Eyebrow>{String(new Date(event.eventAt).getFullYear() || '')}</Eyebrow>
-            </div>
-            <div style={{ position: 'relative', paddingLeft: 20 }}>
-              <span
-                style={{
-                  position: 'absolute', left: 0, top: 7, width: 5, height: 5, borderRadius: '50%',
-                  background: C.brass, boxShadow: '0 0 9px 3px rgba(212,184,138,.4)', display: 'block',
-                }}
-              />
-              <span style={{ position: 'absolute', left: 2, top: 16, bottom: -26, width: 1, background: C.hair, display: 'block' }} />
-              <div style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink }}>
-                {formatLineageEventLabel(event.eventType)}
-              </div>
-            </div>
+      {reading ? (
+        <HistoryReadingView reading={reading} onBack={() => setReading(null)} />
+      ) : (
+        <>
+          <div style={{ flex: 'none', paddingTop: 18 }}>
+            <SegmentedTabs options={[HISTORY_TAB_MOVED, HISTORY_TAB_WRITTEN]} active={tab} onChange={setTab} />
           </div>
-        ))}
-        {lineage.status === 'failed' && (
-          <div style={{ paddingTop: 6 }}>
-            <TLink onClick={lineage.retry}>{COPY.code.tryAgain}</TLink>
-          </div>
-        )}
-      </RoomBody>
+          <RoomBody top={24}>
+            {tab === 0 && (
+              <>
+                {events.map((event) => {
+                  const { year, month } = isoDateParts(event.eventAt);
+                  return (
+                    <HistoryEntry
+                      key={event.eventHash}
+                      year={year}
+                      month={month}
+                      text={formatLineageEventLabel(event.eventType)}
+                    />
+                  );
+                })}
+                {lineage.status === 'failed' && (
+                  <div style={{ paddingTop: 6 }}>
+                    <TLink onClick={lineage.retry}>{COPY.code.tryAgain}</TLink>
+                  </div>
+                )}
+              </>
+            )}
+            {tab === 1 && (
+              <>
+                {/* the public dream carries no date on this wire, and the
+                    entry says nothing rather than inventing one */}
+                {shining && (
+                  <HistoryEntry
+                    year={null}
+                    month={null}
+                    text={WRITTEN_SHINES_TEXT}
+                    note={
+                      shining.attribution
+                        ? `${WRITTEN_SHINES_WORD} · ${shining.attribution}`
+                        : WRITTEN_SHINES_NOTE
+                    }
+                    onOpen={() =>
+                      setReading({
+                        eyebrow: shining.attribution
+                          ? `${WRITTEN_SHINES_WORD} · ${shining.attribution}`
+                          : WRITTEN_SHINES_NOTE,
+                        body: shining.body,
+                      })
+                    }
+                  />
+                )}
+                {kept && (
+                  /* only the caretaker holds this data, so only the caretaker
+                     passes through */
+                  <HistoryEntry
+                    year={isoDateParts(kept.createdAt).year}
+                    month={isoDateParts(kept.createdAt).month}
+                    text={WRITTEN_KEPT_TEXT}
+                    note={keptSealed ? WRITTEN_SEALED_NOTE : WRITTEN_KEPT_NOTE}
+                    onOpen={() =>
+                      setReading({
+                        eyebrow: keptSealed ? WRITTEN_SEALED_NOTE : WRITTEN_KEPT_NOTE,
+                        body: kept.body,
+                      })
+                    }
+                  />
+                )}
+                {live.dream.status === 'failed' && (
+                  <div style={{ paddingTop: 6 }}>
+                    <TLink onClick={live.dream.retry}>{COPY.code.tryAgain}</TLink>
+                  </div>
+                )}
+              </>
+            )}
+          </RoomBody>
+        </>
+      )}
     </>
   );
 };
@@ -660,29 +857,92 @@ const LiveDreamsRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
   );
 };
 
+/**
+ * How the ledger's minor units become the room's amount. Kept deliberately
+ * plain: the registry records minor units (cents), Intl renders the currency,
+ * and a round amount drops its cents the way the demo's $14,000 does.
+ */
+const formatPaid = (entry: CurrentKeeperPriceEntry): string => {
+  const major = entry.amountMinor / 100;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: entry.currency,
+      maximumFractionDigits: entry.amountMinor % 100 === 0 ? 0 : 2,
+    }).format(major);
+  } catch {
+    return `${major} ${entry.currency}`;
+  }
+};
+
+/** the latest entry: the server orders known dates ascending with
+ *  unknown-dated entries last, so the newest known date is the last known
+ *  row; a ledger of only unknowns falls back to its final row */
+const latestPaid = (entries: CurrentKeeperPriceEntry[]): CurrentKeeperPriceEntry | null => {
+  for (let i = entries.length - 1; i >= 0; i -= 1) {
+    if (entries[i].occurrence.precision !== 'unknown') return entries[i];
+  }
+  return entries.length > 0 ? entries[entries.length - 1] : null;
+};
+
+/**
+ * The merged live room. Everyone reads the public certificate content; the
+ * caretaker (the only relationship whose live object carries priceHistory)
+ * additionally sees where it lives and the masked paid line. The demo's
+ * first-caretaker and shown-publicly rows have no wire yet, so here they are
+ * honestly absent rather than staged.
+ */
 const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
-  const { identity, ordinal, displayLocation } = live;
-  const ready = live.certificate.status === 'ready' ? live.certificate.data : null;
+  const { identity, certificate, ordinal, displayLocation, priceHistory } = live;
+  const ready = certificate.status === 'ready' ? certificate.data : null;
+  const caretaker = priceHistory !== null;
+  const paid =
+    priceHistory && priceHistory.status === 'ready' ? latestPaid(priceHistory.data) : null;
   return (
-    <RoomBody top={16}>
-      <div
-        style={{
-          position: 'relative', width: 240, height: 240, margin: '6px auto 22px',
-          display: 'grid', placeItems: 'center', borderRadius: 2,
-          boxShadow: `inset 0 0 0 1px ${C.hairStrong}`,
-        }}
-      >
-        <Drawing motif="piece" size={120} />
+    <>
+      <div style={{ flex: 'none', paddingTop: 10 }}>
+        {/* each viewer gets the locked line that is true for them: the guest's
+            says the paid line is not here, the caretaker's says it is */}
+        <Note>{caretaker ? COPY.rooms.infoNote : COPY.rooms.certNote}</Note>
       </div>
-      {identity.series && <Ledger label="Series" value={identity.series} />}
-      <Ledger label="Edition" value={identity.edition.label} />
-      {ready?.yearWording && <Ledger label="Made" value={ready.yearWording} />}
-      {ready?.materials && ready.materials.length > 0 && (
-        <Ledger label="Material" value={ready.materials.join(', ')} />
-      )}
-      {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
-      {displayLocation && <Ledger label="Where it lives" value={displayLocation} />}
-    </RoomBody>
+      <RoomBody>
+        <div
+          style={{
+            position: 'relative', width: 240, height: 240, margin: '6px auto 22px',
+            display: 'grid', placeItems: 'center', borderRadius: 2,
+            boxShadow: `inset 0 0 0 1px ${C.hairStrong}`,
+          }}
+        >
+          <Drawing motif="piece" size={120} />
+        </div>
+        {identity.series && <Ledger label="Series" value={identity.series} />}
+        <Ledger label="Edition" value={identity.edition.label} />
+        {ready?.yearWording && <Ledger label="Made" value={ready.yearWording} />}
+        {ready?.materials && ready.materials.length > 0 && (
+          <Ledger label="Material" value={ready.materials.join(', ')} />
+        )}
+        {ready?.origin && <Ledger label="Origin" value={ready.origin} />}
+        {ready?.techniques && ready.techniques.length > 0 && (
+          <Ledger label="Technique" value={ready.techniques.join(', ')} />
+        )}
+        {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
+        {caretaker && displayLocation && <Ledger label="Where it lives" value={displayLocation} />}
+        {/* what was paid: caretaker only, latest entry, masked until pressed.
+            An empty ledger is an absence, never an empty row. */}
+        {paid && <PaidLedger amount={formatPaid(paid)} />}
+        {priceHistory && priceHistory.status === 'failed' && (
+          <div style={{ paddingTop: 16 }}>
+            <TLink onClick={priceHistory.retry}>{COPY.code.tryAgain}</TLink>
+          </div>
+        )}
+        {certificate.status === 'failed' && (
+          <div style={{ paddingTop: 16 }}>
+            <TLink onClick={certificate.retry}>{COPY.code.tryAgain}</TLink>
+          </div>
+        )}
+        <Note top={18}>{caretaker ? COPY.rooms.infoFoot : COPY.rooms.certFoot}</Note>
+      </RoomBody>
+    </>
   );
 };
 
