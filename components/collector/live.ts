@@ -14,6 +14,7 @@ import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import type {
   CertificateContent,
   CollectorDreamState,
+  CollectorLetter,
   CollectorRitualEligibility,
   DreamTier,
   LineageOutcome,
@@ -54,7 +55,38 @@ export type GardenLive = {
    * permanent and keep is never a destination once the dream stands.
    * Un-shining does not exist anywhere.
    */
-  place: (body: string, tier: DreamTier) => Promise<GardenPlaceOutcome>;
+  place: (
+    body: string,
+    tier: DreamTier,
+    /**
+     * "The ones who come after may share this," meaningful only on the FIRST
+     * placement (the create call carries it; no wire exists to change it on
+     * a standing dream). Omitted, the server default (ON) stands.
+     */
+    heirsMayShare?: boolean,
+  ) => Promise<GardenPlaceOutcome>;
+};
+
+/**
+ * One person on the piece: an active contributor, or an invitation still
+ * waiting for its answer. Email and status are ALL the registry holds —
+ * utils/artworkContributors.ts's verified wire shape has no name, relation,
+ * or words model, and no screen may pretend otherwise.
+ */
+export type FamilyPerson =
+  | { kind: 'contributor'; accessId: string; email: string; grantedAt: string }
+  | { kind: 'invited'; invitationId: string; email: string; invitedAt: string };
+
+/**
+ * What the wired household room reads. The WRITES (invite, the grave
+ * two-press removal) live on the walked screens, orchestrated by wired.tsx
+ * through api.ts — the room itself only lists and opens.
+ */
+export type FamilyLive = {
+  /** everyone on the piece, quiet-presented; an empty list is an absence */
+  people: Quiet<FamilyPerson[]>;
+  /** open one person's screen (wired.tsx holds the selection) */
+  open: (person: FamilyPerson) => void;
 };
 
 /** Everything the live piece page and its rooms read. */
@@ -73,4 +105,13 @@ export type PieceLive = {
   accountEmail: string | null;
   ritual: CollectorRitualEligibility | null;
   garden: GardenLive | null;
+  /** the household, when the piece is yours */
+  family: FamilyLive | null;
+  /** what the piece has written, read-only, when the piece is yours */
+  letters: Quiet<CollectorLetter[]> | null;
+  /**
+   * Move the light: PUT the display location through api.ts. Resolves true
+   * when it landed; the caller keeps the typed value either way.
+   */
+  setDisplayLocation: ((value: string) => Promise<boolean>) | null;
 };

@@ -17,7 +17,7 @@
 
 import React, { useState } from 'react';
 import { C, F, VIGNETTE } from './tokens';
-import { COPY } from './copy';
+import { COPY, PLACEHOLDERS } from './copy';
 import { Motif } from './drawings';
 import { Body, Brass, ChoiceRow, Eyebrow, Field, Flag, Ground, Head, Lamp, Note, Plus, TLink } from './ui';
 import { Drawing } from './drawings';
@@ -102,6 +102,59 @@ export type Screen = {
 };
 
 const G = COPY.gathering;
+
+/**
+ * Strings no copy.ts key exists for yet. copy.ts is frozen this pass, so they
+ * live here, registered as placeholders so none can reach Adrian disguised as
+ * finished copy (the states.tsx / garden.tsx idiom). T3-COPY: hoist into
+ * copy.ts and have Adrian settle them.
+ */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+
+/* What shows, split per the real privacy fields (functions/api/collector/
+ * privacy.js): shareIntention, shareCity, shareName, shareFace,
+ * shareDerivedChart, shareBusiness, shareMission. Name and face are separate
+ * lamps because they are separate consents on the wire; the locked combined
+ * line ("Your name and face") stays in copy.ts untouched for Adrian to
+ * resettle. There is NO links lamp — no privacy field exists for links. */
+const LAMP_NAME = ph('Your name');
+const LAMP_NAME_NOTE = ph('Off until you tick it. Your face is its own tick.');
+const LAMP_FACE = ph('Your face');
+const LAMP_FACE_NOTE = ph('Off until you tick it, and separate from your name.');
+const LAMP_CHART = ph('Your chart');
+const LAMP_CHART_NOTE = ph(
+  'What your birth details produce, never the details themselves. Off until you tick it.',
+);
+const LAMP_WORK = ph('Your work');
+const LAMP_WORK_NOTE = ph('Your business, for the people your piece moves. Off until you tick it.');
+const LAMP_MISSION = ph('Your mission');
+const LAMP_MISSION_NOTE = ph('Off until you tick it.');
+
+/**
+ * The What shows lamps, in wire order. Index N here is index N of the lamps
+ * boolean array everywhere (walk state, wired.tsx's submitShows mapping):
+ *   0 shareIntention · 1 shareCity · 2 shareName · 3 shareFace ·
+ *   4 shareDerivedChart · 5 shareBusiness · 6 shareMission
+ * The birth-details row is not in this list: it is fixed, never a lamp.
+ */
+export const SHOW_LAMPS: [title: string, note: string][] = [
+  [G.showPlaced, G.showPlacedNote],
+  [G.showLight, G.showLightNote],
+  [LAMP_NAME, LAMP_NAME_NOTE],
+  [LAMP_FACE, LAMP_FACE_NOTE],
+  [LAMP_CHART, LAMP_CHART_NOTE],
+  [LAMP_WORK, LAMP_WORK_NOTE],
+  [LAMP_MISSION, LAMP_MISSION_NOTE],
+];
+
+/** the drawn defaults: the piece shines, the person opts in */
+export const SHOW_LAMPS_DEFAULT: boolean[] = [true, true, false, false, false, false, false];
+
+/** the succession sub-screen's own line: no data model behind it yet */
+const SUCCESSION_SOON = ph('Where they stand in the line will be kept privately here soon.');
 
 export const WALK = {
   /* ── the threshold ───────────────────────────────────────────── */
@@ -334,18 +387,34 @@ export const WALK = {
 
   /* ── the year turns ──────────────────────────────────────────── */
 
+  /* the three choices, never a blank form (§5 "The yearly ritual"): a
+     hairline-divided list. Reinforce and fulfilled are one press; only
+     planting anew opens a field, on its own screen. */
   ritual: {
     head: COPY.ritual.head,
     body: COPY.ritual.body,
     art: 'piece',
-    preNote: COPY.ritual.note,
-    fields: [[COPY.ritual.field]],
-    pill: COPY.garden.place,
-    to: 'ritualfamily',
-    link: COPY.ritual.keep,
+    rows: [
+      [COPY.ritual.reinforce, '', 'ritualfamily'],
+      [COPY.ritual.plantNew, '', 'ritualplant'],
+      [COPY.ritual.markFulfilled, '', 'ritualfamily'],
+    ],
+    link: COPY.ritual.notThisYear,
     linkTo: '__home',
     light: 'a',
-    caption: 'The year turns · one occasion, once a year',
+    caption: 'The year turns · three ways to answer, none required',
+  },
+
+  ritualplant: {
+    head: COPY.ritual.plantNew,
+    art: 'piece',
+    preNote: COPY.ritual.note,
+    fields: [[COPY.ritual.field]],
+    back: 'ritual',
+    pill: COPY.garden.place,
+    to: 'ritualfamily',
+    light: 'a',
+    caption: 'The year turns · the new dream, and placing it is the choosing',
   },
 
   ritualfamily: {
@@ -358,6 +427,8 @@ export const WALK = {
     ],
     back: 'ritual',
     note: COPY.ritual.familyNote,
+    link: COPY.threshold.writtenReturn,
+    linkTo: '__home',
     light: 'l',
     caption: 'The year turns · each person at their own birthday',
   },
@@ -488,13 +559,25 @@ export const WALK = {
     body: COPY.people.personBody,
     rows: [
       [COPY.people.personApprove, COPY.people.personApproveNote, 'ritualfamily'],
-      [COPY.people.personStands, COPY.people.personStandsNote, 'person'],
+      [COPY.people.personStands, COPY.people.personStandsNote, 'personSuccession'],
       [COPY.people.personRemove, COPY.people.personRemoveNote, 'person'],
     ],
     back: '__family',
     note: COPY.people.personNote,
     light: 'm',
     caption: 'One person · the line is private, the removal is total',
+  },
+
+  /* the succession mark: private, one tap deeper, inside a person, never on
+     the row (§6). NO toggle — naming someone next is a will, not a switch,
+     and nothing behind it is wired yet. */
+  personSuccession: {
+    head: COPY.people.personStands,
+    body: COPY.passing.nameNote,
+    note: SUCCESSION_SOON,
+    back: 'person',
+    light: 'm',
+    caption: 'The succession mark · private, one tap deeper, never on the row',
   },
 
   /* ── arriving by letter ──────────────────────────────────────── */
@@ -654,7 +737,7 @@ export const WalkScreen: React.FC<Props> = ({
   onGrain,
 }) => {
   const [ownGrain, setOwnGrain] = useState<0 | 1>(0);
-  const [ownLamps, setOwnLamps] = useState<boolean[]>([true, true, false]);
+  const [ownLamps, setOwnLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
   const [linksOpen, setLinksOpen] = useState(false);
   const grain = grainValue ?? ownGrain;
   const setGrain = onGrain ?? setOwnGrain;
@@ -781,7 +864,9 @@ export const WalkScreen: React.FC<Props> = ({
         <div
           style={{
             position: 'relative',
-            flex: centred ? 1 : 'none',
+            /* a lamps screen lets its one scrolling rail take the band, so
+               the wrapper must be allowed to fill and shrink */
+            flex: centred ? 1 : screen.lamps ? '1 1 auto' : 'none',
             minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -891,29 +976,34 @@ export const WalkScreen: React.FC<Props> = ({
             </div>
           )}
 
-          {/* What shows. The piece shines and the person opts in; the birth
-              details row states itself and carries no switch, because they are
-              shown to nobody, ever. */}
+          {/* What shows. The piece shines and the person opts in; one lamp per
+              real privacy field (SHOW_LAMPS, wire order). The birth details
+              row states itself and carries no switch, because they are shown
+              to nobody, ever. Seven lamps outgrow the band, so this one list
+              scrolls inside its own rail — the screen's head and foot hold. */}
           {screen.lamps && (
-            <div style={{ position: 'relative', flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 34 }}>
-              <Lamp
-                title={G.showPlaced}
-                note={G.showPlacedNote}
-                on={lamps[0]}
-                onToggle={() => setLamps(l => [!l[0], l[1], l[2]])}
-              />
-              <Lamp
-                title={G.showLight}
-                note={G.showLightNote}
-                on={lamps[1]}
-                onToggle={() => setLamps(l => [l[0], !l[1], l[2]])}
-              />
-              <Lamp
-                title={G.showName}
-                note={G.showNameNote}
-                on={lamps[2]}
-                onToggle={() => setLamps(l => [l[0], l[1], !l[2]])}
-              />
+            <div
+              className="collector-scroll"
+              style={{
+                position: 'relative',
+                flex: '1 1 auto',
+                minHeight: 0,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                paddingTop: 34,
+              }}
+            >
+              {SHOW_LAMPS.map(([title, note], i) => (
+                <Lamp
+                  key={title}
+                  title={title}
+                  note={note}
+                  on={Boolean(lamps[i])}
+                  onToggle={() => setLamps(l => l.map((v, j) => (j === i ? !v : v)))}
+                />
+              ))}
               <Lamp title={G.showBirth} note={G.showBirthNote} on={false} fixed fixedWord={G.showNever} />
             </div>
           )}
@@ -965,7 +1055,7 @@ export const WalkScreen: React.FC<Props> = ({
         </div>
       )}
 
-      {!centred && <div style={{ position: 'relative', flex: 1, minHeight: 0 }} />}
+      {!centred && !screen.lamps && <div style={{ position: 'relative', flex: 1, minHeight: 0 }} />}
 
       {!screen.tap && (screen.pill || screen.link) && (
         <div

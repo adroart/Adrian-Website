@@ -878,6 +878,18 @@ export async function createCollectorDream(input: {
   keeperPieceId: string;
   body: string;
   scope: CollectorDreamScope;
+  /**
+   * The destination tier, planted in ONE create (migration 041's optional
+   * allowlist fields on action:'create'). Omitted, the server plants at keep
+   * with heirs ON — the exact pre-041 body shape. On a pre-041 registry a
+   * create asking for anything beyond that default answers 503
+   * dream_tiers_unavailable BEFORE inserting anything, so a caller may fall
+   * back to the two-step (plain create, then the tier verb) safely.
+   */
+  tier?: DreamTier;
+  /** "The ones who come after may share this." Meaningful on keep; the
+   * server pins it false on seal regardless of what is sent. */
+  heirsMayShare?: boolean;
   idempotencyKey?: string;
 }): Promise<ApiOutcome<CollectorDreamState>> {
   if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
@@ -888,6 +900,8 @@ export async function createCollectorDream(input: {
       keeperPieceId: input.keeperPieceId,
       body: input.body,
       scope: input.scope,
+      ...(input.tier !== undefined ? { tier: input.tier } : {}),
+      ...(input.heirsMayShare !== undefined ? { heirsMayShare: input.heirsMayShare } : {}),
       idempotencyKey: dreamIdempotencyKey(input.idempotencyKey),
     }),
   });

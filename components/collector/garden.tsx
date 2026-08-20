@@ -370,10 +370,11 @@ const TierControl: React.FC<{
   onHeirs: (on: boolean) => void;
   /**
    * Whether the heirs' choice can actually be kept. The demo always shows it
-   * (the design is reviewable); the wired path hides it until api.ts carries
-   * heirsMayShare on create — the server already accepts and defaults it ON,
-   * so a wired placement gets the drawn default, and a toggle that silently
-   * saved nothing would be a lie. T2b threads it through.
+   * (the design is reviewable); the wired path shows it on the FIRST
+   * placement, where the create call now carries heirsMayShare through
+   * api.ts. Once a dream stands there is no wire to change the choice, so
+   * the row hides rather than pretending — a toggle that silently saved
+   * nothing would be a lie.
    */
   heirsChoosable: boolean;
 }> = ({ tier, onTier, settled, heirs, onHeirs, heirsChoosable }) => {
@@ -474,7 +475,7 @@ export const QuestionPage: React.FC<{
     setPlacing(true);
     setHeld(null);
     void live
-      .place(body, tier)
+      .place(body, tier, heirs)
       .then(outcome => {
         if (outcome === 'landed') onPlace();
         else setHeld(outcome);
@@ -524,7 +525,7 @@ export const QuestionPage: React.FC<{
             settled={settled}
             heirs={heirs}
             onHeirs={setHeirs}
-            heirsChoosable={!live}
+            heirsChoosable={!live || settled === null}
           />
         </div>
 

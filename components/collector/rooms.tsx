@@ -14,13 +14,45 @@
 
 import React, { useState } from 'react';
 import { C, F } from './tokens';
-import { COPY, PIECE } from './copy';
-import { Body, Brass, Eyebrow, Ground, Ledger, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
+import { COPY, PIECE, PLACEHOLDERS } from './copy';
+import { Body, Brass, Eyebrow, Field, Ground, Ledger, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
 import { Drawing } from './drawings';
 import { ResonantGrid } from './ResonantGrid';
 import { Garden } from './garden';
-import type { PieceLive } from './live';
+import type { FamilyPerson, PieceLive } from './live';
 import { formatLineageEventLabel } from '../../utils/publicLineage';
+
+/**
+ * Strings no copy.ts key exists for yet. copy.ts is frozen this pass, so they
+ * live here, registered as placeholders so none can reach Adrian disguised as
+ * finished copy (the states.tsx / garden.tsx idiom). T3-COPY: hoist and settle.
+ */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+
+/* the household's honest status words: email and status are all the registry
+   holds for a person, so the rows say exactly that and nothing warmer */
+const FAMILY_ON_PIECE = ph('On the piece');
+const FAMILY_INVITED = ph('Invited');
+
+/* the account room's rows and its one kept line */
+const ACCOUNT_KEPT = ph('Kept. The light moves with you.');
+const ACCOUNT_KEEP_ACTION = ph('Keep it');
+const ACCOUNT_SHOWS_ROW = ph('What shows');
+const ACCOUNT_LETTERS_ROW = ph('Letters');
+const ACCOUNT_LIVES_LABEL = ph('Where the art lives');
+
+/* the letters room: the record's own empty line (§5 "the piece page after
+   registration": empty sections carry one quiet line), and a plain word per
+   letter kind. None of these is Adrian's yet. */
+const LETTERS_EMPTY = ph('Nothing written yet.');
+const LETTER_KIND_WORD: Record<string, string> = {
+  'kin-claim': ph('Asking someone on'),
+  anniversary: ph('The year turning'),
+  transfer: ph('A passing'),
+};
 
 export type RoomKey =
   | 'story'
@@ -31,6 +63,7 @@ export type RoomKey =
   | 'garden'
   | 'family'
   | 'account'
+  | 'letters'
   | 'grid';
 
 const TITLES: Record<RoomKey, string> = {
@@ -42,6 +75,7 @@ const TITLES: Record<RoomKey, string> = {
   garden: COPY.garden.title,
   family: COPY.page.rowFamily,
   account: COPY.page.rowAccount,
+  letters: ACCOUNT_LETTERS_ROW,
   grid: 'The Resonant Grid',
 };
 
@@ -54,6 +88,7 @@ const LIGHT: Record<RoomKey, string> = {
   garden: 'j',
   family: 'l',
   account: 'm',
+  letters: 'g',
   grid: 'n',
 };
 
@@ -61,18 +96,20 @@ type Props = {
   room: RoomKey;
   onClose: () => void;
   onWalk?: (key: string) => void;
+  /** open a sibling room in place (the account room's Letters row) */
+  onOpenRoom?: (room: RoomKey) => void;
   /** wired: the real piece. Absent, every room renders the demo unchanged. */
   live?: PieceLive;
 };
 
-export const Room: React.FC<Props> = ({ room, onClose, onWalk, live }) => {
+export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live }) => {
   /* the garden brings its own ground: its first surface is the piece asking a
      single thing full screen, which has no room header to sit under */
   if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} live={live?.garden ?? undefined} />;
 
   /* rooms that end in a list, rather than in something to close, carry their
      own way out and take no brass */
-  const listRoom = room === 'family' || room === 'account';
+  const listRoom = room === 'family' || room === 'account' || room === 'letters';
 
   return (
     <Ground light={LIGHT[room] as never} pad="44px 30px 30px">
@@ -82,8 +119,9 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, live }) => {
       {room === 'history' && (live ? <LiveHistoryRoom live={live} /> : <HistoryRoom />)}
       {room === 'dreams' && (live ? <LiveDreamsRoom live={live} /> : <DreamsRoom />)}
       {room === 'information' && (live ? <LiveInformationRoom live={live} /> : <InformationRoom />)}
-      {room === 'family' && (live ? <LiveFamilyRoom onWalk={onWalk} /> : <FamilyRoom onWalk={onWalk} />)}
-      {room === 'account' && (live ? <LiveAccountRoom live={live} /> : <AccountRoom />)}
+      {room === 'family' && (live ? <LiveFamilyRoom live={live} onWalk={onWalk} /> : <FamilyRoom onWalk={onWalk} />)}
+      {room === 'account' && (live ? <LiveAccountRoom live={live} onWalk={onWalk} onOpenRoom={onOpenRoom} /> : <AccountRoom />)}
+      {room === 'letters' && <LettersRoom live={live} />}
       {room === 'grid' && <GridRoom />}
       {!listRoom && (
         <div style={{ flex: 'none', marginTop: 'auto', paddingTop: 18, display: 'flex', justifyContent: 'flex-end' }}>
@@ -349,6 +387,9 @@ const FamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) =>
   <>
     <div style={{ flex: 'none', paddingTop: 10 }}>
       <Note>{COPY.rooms.familyNote}</Note>
+      {/* §6, verbatim, on the household's own room: the list is love, never
+          a promise of succession */}
+      <Note top={6}>{COPY.rooms.familyPromise}</Note>
     </div>
     <RoomBody top={18}>
       {HOUSEHOLD.map(([name, relation, note]) => (
@@ -645,45 +686,193 @@ const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
   );
 };
 
-const LiveFamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) => (
-  <>
-    <div style={{ flex: 'none', paddingTop: 10 }}>
-      <Note>{COPY.rooms.familyNote}</Note>
-    </div>
-    <RoomBody top={18}>
-      <button
-        type="button"
-        onClick={() => onWalk?.('invite')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 13, width: '100%',
-          background: 'none', border: 0, padding: '8px 0 0', cursor: 'pointer', textAlign: 'left',
-        }}
-      >
-        <Plus />
-        <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{COPY.rooms.familyInvite}</span>
-      </button>
-    </RoomBody>
-  </>
-);
-
-const LiveAccountRoom: React.FC<{ live: PieceLive }> = ({ live }) => (
-  <>
-    <div style={{ flex: 'none', paddingTop: 11 }}>
-      <Note>{COPY.rooms.accountNote}</Note>
-    </div>
-    <RoomBody top={18}>
-      {live.accountEmail && (
-        <div style={{ borderBottom: `1px solid ${C.hair}`, padding: '15px 0' }}>
-          <Eyebrow>Email</Eyebrow>
-          <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>
-            {live.accountEmail}
+/**
+ * The wired household. Email and status only — the verified contributor wire
+ * (utils/artworkContributors.ts) carries no name, relation, or words model,
+ * so the rows carry exactly what is real and nothing invented. The waiting
+ * shine/keep pair from the demo does not render here at all: no approval data
+ * model exists in the wired era, and an honest absence beats a staged card.
+ */
+const LiveFamilyRoom: React.FC<{ live: PieceLive; onWalk?: (key: string) => void }> = ({ live, onWalk }) => {
+  const family = live.family;
+  const people = family?.people;
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 10 }}>
+        <Note>{COPY.rooms.familyNote}</Note>
+        {/* §6, verbatim, on the household's own room */}
+        <Note top={6}>{COPY.rooms.familyPromise}</Note>
+      </div>
+      <RoomBody top={18}>
+        {people?.status === 'ready' &&
+          people.data.map(person => (
+            <button
+              key={person.kind === 'contributor' ? person.accessId : person.invitationId}
+              type="button"
+              onClick={() => family?.open(person)}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                background: 'none',
+                border: 0,
+                borderBottom: `1px solid ${C.hair}`,
+                padding: '15px 0',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14 }}>
+                <span style={{ fontFamily: F.body, fontSize: 16, color: C.ink, minWidth: 0, overflowWrap: 'anywhere' }}>
+                  {person.email}
+                </span>
+                <Eyebrow>{person.kind === 'contributor' ? FAMILY_ON_PIECE : FAMILY_INVITED}</Eyebrow>
+              </span>
+              {person.kind === 'invited' && (
+                <span style={{ display: 'block', paddingTop: 5, fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet }}>
+                  {COPY.people.sentBody}
+                </span>
+              )}
+            </button>
+          ))}
+        {people?.status === 'failed' && (
+          <div style={{ paddingTop: 6 }}>
+            <TLink onClick={people.retry}>{COPY.code.tryAgain}</TLink>
           </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => onWalk?.('invite')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 13, width: '100%',
+            background: 'none', border: 0, padding: '20px 0 0', cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <Plus />
+          <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{COPY.rooms.familyInvite}</span>
+        </button>
+      </RoomBody>
+    </>
+  );
+};
+
+/**
+ * The wired account room. The one editable thing today is where the art
+ * lives (presentation state, PUT through api.ts); everything else reads, and
+ * the rows that have a real surface elsewhere link out to it: What shows
+ * opens the lamps screen, Letters opens the letters room in place.
+ */
+const LiveAccountRoom: React.FC<{
+  live: PieceLive;
+  onWalk?: (key: string) => void;
+  onOpenRoom?: (room: RoomKey) => void;
+}> = ({ live, onWalk, onOpenRoom }) => {
+  const [location, setLocation] = useState(live.displayLocation ?? '');
+  const [kept, setKept] = useState(false);
+  const save = live.setDisplayLocation;
+
+  const keep = () => {
+    if (!save) return;
+    void save(location.trim()).then(landed => setKept(landed));
+  };
+
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 11 }}>
+        <Note>{COPY.rooms.accountNote}</Note>
+      </div>
+      <RoomBody top={18}>
+        {live.accountEmail && (
+          <div style={{ borderBottom: `1px solid ${C.hair}`, padding: '15px 0' }}>
+            <Eyebrow>Email</Eyebrow>
+            <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>
+              {live.accountEmail}
+            </div>
+          </div>
+        )}
+
+        {save && (
+          <div style={{ borderBottom: `1px solid ${C.hair}`, padding: '15px 0 13px' }}>
+            <Field
+              label={ACCOUNT_LIVES_LABEL}
+              value={location}
+              hint={COPY.gathering.hintCity}
+              onChange={value => {
+                setKept(false);
+                setLocation(value);
+              }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingTop: 8 }}>
+              {kept ? <Note>{ACCOUNT_KEPT}</Note> : <span />}
+              <TLink onClick={keep}>{ACCOUNT_KEEP_ACTION}</TLink>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => onWalk?.('shows')}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
+            width: '100%', textAlign: 'left', background: 'none', border: 0,
+            borderBottom: `1px solid ${C.hair}`, padding: '15px 0', cursor: 'pointer',
+          }}
+        >
+          <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{ACCOUNT_SHOWS_ROW}</span>
+          <span style={{ fontFamily: F.body, fontSize: 15, color: C.inkQuiet, flex: 'none' }}>›</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onOpenRoom?.('letters')}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
+            width: '100%', textAlign: 'left', background: 'none', border: 0,
+            borderBottom: `1px solid ${C.hair}`, padding: '15px 0', cursor: 'pointer',
+          }}
+        >
+          <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{ACCOUNT_LETTERS_ROW}</span>
+          <span style={{ fontFamily: F.body, fontSize: 15, color: C.inkQuiet, flex: 'none' }}>›</span>
+        </button>
+
+        <Note top={20}>{COPY.rooms.accountFoot}</Note>
+      </RoomBody>
+    </>
+  );
+};
+
+/* ------------------------------------------------------------------ *
+ * Letters: what the piece has written, read-only. Generated by the
+ * backend on lineage events; this room only reads.
+ * ------------------------------------------------------------------ */
+
+const LettersRoom: React.FC<{ live?: PieceLive }> = ({ live }) => {
+  const letters = live?.letters ?? null;
+  const rows = letters?.status === 'ready' ? letters.data : [];
+  return (
+    <RoomBody top={18}>
+      {rows.map(letter => (
+        <Ledger
+          key={letter.id}
+          label={LETTER_KIND_WORD[letter.kind] ?? letter.kind}
+          value={new Date(letter.createdAt).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}
+        />
+      ))}
+      {letters?.status === 'failed' && (
+        <div style={{ paddingTop: 6 }}>
+          <TLink onClick={letters.retry}>{COPY.code.tryAgain}</TLink>
         </div>
       )}
-      <Note top={20}>{COPY.rooms.accountFoot}</Note>
+      {(!letters || (letters.status === 'ready' && rows.length === 0)) && (
+        <Note top={4}>{LETTERS_EMPTY}</Note>
+      )}
     </RoomBody>
-  </>
-);
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * The Resonant Grid.

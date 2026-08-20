@@ -65,6 +65,7 @@ export const SOURCE: Record<string, string | null> = {
   carries: null,
   forgot: null,
   ritual: null,
+  ritualplant: null,
   ritualfamily: null,
   passfork: null,
   passname: null,
@@ -74,6 +75,7 @@ export const SOURCE: Record<string, string | null> = {
   invite: null,
   invitesent: null,
   person: null,
+  personSuccession: null,
   joinletter: null,
   joinhello: null,
   joinwho: null,
@@ -91,6 +93,9 @@ export const SOURCE: Record<string, string | null> = {
   garden: '15g · 15e · 14c',
   family: '14d',
   account: '19g',
+  /* not drawn: the read-only listing of what the piece has written. Reached
+     from the account room — letters is not one of §6's six caretaker rows. */
+  letters: null,
 
   /* the states, all drawn */
   recordonly: '20b',
@@ -199,6 +204,7 @@ export const JUMP: [string, Jump[]][] = [
       ['Add to your piece', { kind: 'room', key: 'garden' }],
       ['The people you love', { kind: 'room', key: 'family' }],
       ['Your account', { kind: 'room', key: 'account' }],
+      ['Letters', { kind: 'room', key: 'letters' }],
       ['The Resonant Grid', { kind: 'room', key: 'grid' }],
     ],
   ],
@@ -206,6 +212,7 @@ export const JUMP: [string, Jump[]][] = [
     'The year turns',
     [
       ['The year turns', { kind: 'walk', key: 'ritual' }],
+      ['Plant a new dream', { kind: 'walk', key: 'ritualplant' }],
       ['Each at their own birthday', { kind: 'walk', key: 'ritualfamily' }],
       ['A letter from the piece', { kind: 'letter', key: 'letter' }],
       ['Someone placed something', { kind: 'letter', key: 'email' }],
@@ -230,6 +237,7 @@ export const JUMP: [string, Jump[]][] = [
       ['Ask them onto the piece', { kind: 'walk', key: 'invite' }],
       ['The letter is sent', { kind: 'walk', key: 'invitesent' }],
       ['One person', { kind: 'walk', key: 'person' }],
+      ['Where she stands', { kind: 'walk', key: 'personSuccession' }],
     ],
   ],
   [

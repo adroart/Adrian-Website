@@ -47,16 +47,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount } from '../../lib/account/useAccount';
 import SignInModal from '../account/SignInModal';
 import { C } from './tokens';
-import { COPY, PIECE } from './copy';
+import { COPY, PIECE, PLACEHOLDERS } from './copy';
 import { CollectorStyles } from './styles';
 import { Ground } from './ui';
 import { PiecePage, Relationship } from './PiecePage';
+import type { GroundInputs } from './PiecePage';
 import { CodePage, CodeSubmitOutcome } from './CodePage';
-import { WALK, WalkScreen, Screen } from './walk';
+import { WALK, WalkScreen, Screen, SHOW_LAMPS_DEFAULT } from './walk';
 import { StateScreen } from './states';
 import type { RoomKey } from './rooms';
 import { PendingBindProvider, usePendingBind, normalizeTypedCode } from './pendingBind';
-import type { GardenLive, PieceLive, Quiet } from './live';
+import type { FamilyLive, FamilyPerson, GardenLive, PieceLive, Quiet } from './live';
 import {
   bindKeeper,
   completeYearlyRitual,
@@ -65,14 +66,20 @@ import {
   getCertificate,
   getCollectorCuratedCities,
   getCollectorDreamState,
+  getCollectorLetters,
+  getCollectorOnboarding,
   getKeeperMessage,
   getKeeperPieceStatus,
   getLineage,
   getPublicDream,
   getRegistryIdentity,
   getYearlyRitualEligibility,
+  inviteKeeperContributor,
+  listKeeperContributors,
+  revokeKeeperContributor,
   saveCollectorBirthProfile,
   setCollectorDreamTier,
+  setKeeperDisplayLocation,
   shareCollectorDream,
   updateCollectorDream,
   updateCollectorPrivacy,
@@ -81,8 +88,12 @@ import {
 import type {
   CertificateContent,
   CollectorDreamState,
+  CollectorLetter,
+  CollectorOnboardingState,
+  CollectorRitualAction,
   CollectorRitualEligibility,
   DreamTier,
+  KeeperContributorList,
   KeeperPieceStatus,
   LineageOutcome,
   PublicCollectorDream,
@@ -91,6 +102,37 @@ import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import { searchPlaces } from '../../lib/astrology/places';
 
 const G = COPY.gathering;
+
+/**
+ * Strings no copy.ts key exists for yet. copy.ts is frozen this pass, so they
+ * live here, registered as placeholders so none can reach Adrian disguised as
+ * finished copy (the states.tsx / garden.tsx idiom). T3-COPY: hoist and settle.
+ */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+
+/* the invite screen keeps its name and relation fields for the settled shape,
+   but the wire stores email alone today, and the screen must say so */
+const INVITE_EMAIL_ONLY = ph(
+  'Today only their email is kept. Their name and what they are to you will have their own place here soon.',
+);
+
+/* the grave two-press confirm before a removal commits (the seal-confirm
+   idiom from garden.tsx: the first press arms, the same row pressed again
+   commits — never a browser confirm()) */
+const REMOVE_CONFIRM = ph(
+  'Removing them is total. Press it once more, and their access ends.',
+);
+
+/* the wired person screen's honest lines: email and status are all the
+   registry holds, so nothing warmer is claimed */
+const PERSON_INVITED_LINE = ph('Invited. The piece has written to them, and nothing more until they answer.');
+const PERSON_STANDS_QUIET = ph('private to you, and they are not told');
+
+/* how long an invitation letter waits before it lapses (the server caps at 31 days) */
+const INVITE_DAYS = 30;
 
 /* ------------------------------------------------------------------ *
  * A network-backed value with the quiet presentation: loading renders as
@@ -212,11 +254,20 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   );
   const [authOpen, setAuthOpen] = useState(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
-  const [lamps, setLamps] = useState<boolean[]>([true, true, false]);
+  const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
   const [grain, setGrain] = useState<0 | 1>(0);
   const [cityId, setCityId] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
+
+  /* the household: which person's screen is open, and whether the removal
+     has been armed by its first press (the grave two-press confirm) */
+  const [person, setPerson] = useState<FamilyPerson | null>(null);
+  const [removeArmed, setRemoveArmed] = useState(false);
+
+  /* one notion of now per mounted journey, threaded down as data so the
+     piece page itself never reads the clock */
+  const groundNow = useMemo(() => new Date().toISOString(), []);
 
   /* the sealed artist message: fetched once, right on a bound outcome,
      before the code-is-true screen. giftMessageBody holds the real body for
@@ -301,6 +352,53 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     },
     [keeperPieceId, refreshTick],
   );
+
+  /* the household: active contributors and the letters still waiting for an
+     answer. Caretaker-only, like the room that reads it. */
+  const contributors = useQuiet<KeeperContributorList | null>(
+    Boolean(keeperPieceId) && isYours,
+    async () => {
+      if (!keeperPieceId) return null;
+      const outcome = await listKeeperContributors(keeperPieceId);
+      if (outcome.ok) return outcome.data;
+      if (outcome.status === 404) return null;
+      throw outcome;
+    },
+    [keeperPieceId, refreshTick],
+  );
+
+  /* what the piece has written: read-only, generated by the backend on
+     lineage events, never by this client */
+  const letters = useQuiet<CollectorLetter[]>(
+    Boolean(keeperPieceId) && isYours,
+    async () => {
+      if (!keeperPieceId) return [];
+      const outcome = await getCollectorLetters(keeperPieceId);
+      if (outcome.ok) return outcome.data;
+      if (outcome.status === 404) return [];
+      throw outcome;
+    },
+    [keeperPieceId, refreshTick],
+  );
+
+  /* the caretaker's birth profile, read for exactly one derived value: the
+     birth MONTH, which warms the ground near the birthday. The details
+     themselves reach no screen from here. */
+  const onboarding = useQuiet<CollectorOnboardingState | null>(
+    signedIn && isYours,
+    async () => {
+      const outcome = await getCollectorOnboarding();
+      return outcome.ok ? outcome.data : null;
+    },
+    [account.userId, isYours],
+  );
+  const birthMonthIndex = useMemo(() => {
+    if (onboarding.status !== 'ready' || !onboarding.data) return null;
+    const state = onboarding.data;
+    if (state.status !== 'current') return null;
+    const month = Number(state.inputs.date.slice(5, 7));
+    return Number.isInteger(month) && month >= 1 && month <= 12 ? month - 1 : null;
+  }, [onboarding]);
 
   /* ---------------- relationship derivation ----------------
    * Signed in: /api/keeper/piece answers directly (byYou / kept).
@@ -514,6 +612,10 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     }
   }, [typed]);
 
+  /* the lamps, one per real privacy field, in SHOW_LAMPS wire order:
+     0 shareIntention · 1 shareCity (the piece ring) · 2 shareName ·
+     3 shareFace · 4 shareDerivedChart · 5 shareBusiness · 6 shareMission.
+     No links lamp exists because no links field exists. */
   const submitShows = useCallback(
     async (chosen: boolean[]): Promise<'landed' | 'kept' | 'dropped'> => {
       let landed = false;
@@ -524,17 +626,17 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           });
           landed = landed || outcome.ok;
         }
-        const person = await updateCollectorPrivacy({
+        const personRings = await updateCollectorPrivacy({
           person: {
-            shareDerivedChart: false,
-            shareFace: Boolean(chosen[2]),
-            shareName: Boolean(chosen[2]),
             shareIntention: Boolean(chosen[0]),
-            shareBusiness: false,
-            shareMission: false,
+            shareName: Boolean(chosen[2]),
+            shareFace: Boolean(chosen[3]),
+            shareDerivedChart: Boolean(chosen[4]),
+            shareBusiness: Boolean(chosen[5]),
+            shareMission: Boolean(chosen[6]),
           },
         });
-        landed = landed || person.ok;
+        landed = landed || personRings.ok;
         return landed ? 'landed' : 'kept';
       } catch (cause) {
         if (cause instanceof CollectorApiNetworkError) return 'dropped';
@@ -544,21 +646,72 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     [keeperPieceId, cityId],
   );
 
-  const submitRitual = useCallback(async () => {
+  /* the year's answer, whichever of the three it is. plant-new carries the
+     field's words; reinforce and fulfilled carry nothing, exactly as the
+     endpoint takes them (api.ts completeYearlyRitual). */
+  const submitRitual = useCallback(async (action: CollectorRitualAction) => {
+    if (!keeperPieceId) return;
     const body = (typed[COPY.ritual.field] ?? '').trim();
-    if (!keeperPieceId || !body) return;
+    if (action === 'plant-new' && !body) return;
     try {
-      await completeYearlyRitual({
-        keeperPieceId,
-        action: 'plant-new',
-        body,
-        scope: 'self',
-      });
+      await completeYearlyRitual(
+        action === 'plant-new'
+          ? { keeperPieceId, action, body, scope: 'self' }
+          : { keeperPieceId, action },
+      );
       refresh();
     } catch {
       /* the words stay in the field; the door reopens from the piece */
     }
   }, [keeperPieceId, typed, refresh]);
+
+  /* ---------------- the household submissions ---------------- */
+
+  const submitInvite = useCallback(async () => {
+    const email = (typed[COPY.people.inviteEmail] ?? '').trim();
+    if (!keeperPieceId || !email) return;
+    try {
+      const outcome = await inviteKeeperContributor({
+        keeperPieceId,
+        intendedRecipientEmail: email,
+        expiresAt: new Date(Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      if (outcome.ok) {
+        refresh();
+        setStep({ kind: 'walk', key: 'invitesent' });
+      }
+      /* a server refusal keeps them on the screen with everything typed */
+    } catch (cause) {
+      if (cause instanceof CollectorApiNetworkError) {
+        setStep({
+          kind: 'state',
+          key: 'offline',
+          receipt: [[COPY.people.inviteEmail, email]],
+          onRetry: () => setStep({ kind: 'walk', key: 'invite' }),
+        });
+      }
+    }
+  }, [keeperPieceId, typed, refresh]);
+
+  const submitRemove = useCallback(async (target: FamilyPerson) => {
+    if (!keeperPieceId) return;
+    try {
+      const outcome = await revokeKeeperContributor({
+        keeperPieceId,
+        ...(target.kind === 'contributor'
+          ? { accessId: target.accessId }
+          : { invitationId: target.invitationId }),
+      });
+      if (outcome.ok) {
+        setPerson(null);
+        setRemoveArmed(false);
+        refresh();
+        setStep({ kind: 'piece', room: 'family' });
+      }
+    } catch {
+      /* the quiet failure: the screen stands, the same press tries again */
+    }
+  }, [keeperPieceId, refresh]);
 
   /* ---------------- garden live ----------------
    * The three tiers (§6 "Three tiers, and what outlives you"), mirrored from
@@ -595,7 +748,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
          standing BODY settles. Unknown eligibility reads open — the server
          is the real gate, and `place` answers 'locked' when it refuses. */
       editWindowOpen: ritualEligibility?.eligible !== false,
-      place: async (body: string, tier: DreamTier) => {
+      place: async (body: string, tier: DreamTier, heirsMayShare = true) => {
         try {
           const current = dreams.status === 'ready' ? dreams.data?.current ?? null : null;
           /* whether anything already landed, so a half-landed placement
@@ -603,22 +756,35 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           let landedAny = false;
 
           if (!current) {
-            /* first placement: the dream is planted (the server plants at
-               keep with heirs ON), then moved to the asked-for tier.
-               api.ts's create does not carry tier/heirsMayShare yet (T2b);
-               the two-step lands the identical end state. */
-            const planted = await createCollectorDream({ keeperPieceId, body, scope: 'self' });
-            if (!planted.ok) return 'held';
-            landedAny = true;
-            if (tier === 'shine' && !(await enterShine(false))) {
-              refresh();
-              return 'held';
-            }
-            if (tier === 'seal') {
-              const sealed = failCode(await setCollectorDreamTier({ keeperPieceId, tier: 'seal' }));
-              if (sealed !== null && sealed !== 'tier_unchanged') {
+            /* first placement: ONE create carrying tier and the heirs'
+               choice (migration 041's optional create fields). A pre-041
+               registry answers 503 dream_tiers_unavailable BEFORE inserting
+               anything (and an older handler 400s the unknown fields), so
+               the fallback below retries the pre-041 two-step safely:
+               plain create at keep, then the tier verb / audited share. */
+            const planted = await createCollectorDream({
+              keeperPieceId,
+              body,
+              scope: 'self',
+              tier,
+              heirsMayShare: tier === 'seal' ? false : heirsMayShare,
+            });
+            if (!planted.ok) {
+              const code = failCode(planted);
+              if (code !== 'dream_tiers_unavailable' && code !== 'invalid_input') return 'held';
+              const fallback = await createCollectorDream({ keeperPieceId, body, scope: 'self' });
+              if (!fallback.ok) return 'held';
+              landedAny = true;
+              if (tier === 'shine' && !(await enterShine(false))) {
                 refresh();
                 return 'held';
+              }
+              if (tier === 'seal') {
+                const sealed = failCode(await setCollectorDreamTier({ keeperPieceId, tier: 'seal' }));
+                if (sealed !== null && sealed !== 'tier_unchanged') {
+                  refresh();
+                  return 'held';
+                }
               }
             }
           } else {
@@ -669,7 +835,75 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     };
   }, [isYours, keeperPieceId, dreams, ritualEligibility, refresh]);
 
+  /* ---------------- the household the room reads ----------------
+   * Real people only: active contributors and letters still waiting for an
+   * answer, email and status verbatim off the wire. Nothing is invented —
+   * the contributor model holds no names, relations, or words. */
+
+  const familyLive: FamilyLive | null = useMemo(() => {
+    if (!isYours || !keeperPieceId) return null;
+    const people: Quiet<FamilyPerson[]> =
+      contributors.status === 'ready'
+        ? {
+            status: 'ready',
+            data: [
+              ...(contributors.data?.contributors ?? []).map(active => ({
+                kind: 'contributor' as const,
+                accessId: active.accessId,
+                email: active.recipientEmail,
+                grantedAt: active.grantedAt,
+              })),
+              ...(contributors.data?.invitations ?? [])
+                .filter(invitation => invitation.status === 'available')
+                .map(invitation => ({
+                  kind: 'invited' as const,
+                  invitationId: invitation.invitationId,
+                  email: invitation.recipientEmail,
+                  invitedAt: invitation.invitedAt,
+                })),
+            ],
+          }
+        : contributors;
+    return {
+      people,
+      open: opened => {
+        setPerson(opened);
+        setRemoveArmed(false);
+        setStep({ kind: 'walk', key: 'person' });
+      },
+    };
+  }, [isYours, keeperPieceId, contributors]);
+
+  /* ---------------- the ground reading's inputs ----------------
+   * The GROUND axis (utils/collectorGround.ts): first binding from the
+   * public lineage, the one notion of now this journey holds, and the birth
+   * MONTH alone from onboarding. No curated-city coordinates exist on this
+   * wire, so latitude stays null and the season tint reads neutral. */
+
+  const groundInputs: GroundInputs = useMemo(() => {
+    const events = lineage.status === 'ready' && lineage.data.kind === 'ok'
+      ? lineage.data.events
+      : [];
+    const firstBound = events.find(event => event.eventType === 'first_bound');
+    return {
+      firstBoundAt: firstBound ? firstBound.eventAt : null,
+      now: groundNow,
+      latitude: null,
+      birthMonthIndex,
+    };
+  }, [lineage, groundNow, birthMonthIndex]);
+
   /* ---------------- the live object the screens read ---------------- */
+
+  const setDisplayLocation = useCallback(async (value: string): Promise<boolean> => {
+    try {
+      const outcome = await setKeeperDisplayLocation(publicCode, value);
+      if (outcome.ok) refresh();
+      return outcome.ok;
+    } catch {
+      return false;
+    }
+  }, [publicCode, refresh]);
 
   const live: PieceLive = useMemo(
     () => ({
@@ -692,8 +926,11 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       accountEmail: account.email,
       ritual: ritual.status === 'ready' ? ritual.data : null,
       garden: gardenLive,
+      family: familyLive,
+      letters: isYours ? letters : null,
+      setDisplayLocation: isYours ? setDisplayLocation : null,
     }),
-    [identity, dream, certificate, lineage, ordinalValue, story, keeperStatus, account.email, ritual, gardenLive],
+    [identity, dream, certificate, lineage, ordinalValue, story, keeperStatus, account.email, ritual, gardenLive, familyLive, isYours, letters, setDisplayLocation],
   );
 
   /* ---------------- copy, dressed with the real piece ----------------
@@ -730,9 +967,57 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
          required, so the first reachable gathering screen has nothing behind
          it to correct */
       if (key === 'born') screen.back = undefined;
+
+      /* the ritual's one-press answers become real actions: the demo rows
+         walk straight to ritualfamily, the wired rows submit first. Matched
+         by their locked titles, which are the stable thing about them. */
+      if (key === 'ritual' && screen.rows) {
+        screen.rows = screen.rows.map(([title, note, to]) => [
+          title,
+          note,
+          title === COPY.ritual.reinforce
+            ? '__ritualReinforce'
+            : title === COPY.ritual.markFulfilled
+              ? '__ritualFulfilled'
+              : to,
+        ]);
+      }
+
+      /* each person at their own birthday: the demo's sample household gives
+         way to the real one. Real people, or nothing pending at all — zero
+         fabricated waiting items, because no family-words model exists on
+         the wire yet. */
+      if (key === 'ritualfamily') {
+        const people = familyLive?.people;
+        const rows: [string, string, string][] =
+          people?.status === 'ready'
+            ? people.data.map(member => [member.email, '', '__home'] as [string, string, string])
+            : [];
+        screen.rows = rows.length > 0 ? rows : undefined;
+      }
+
+      /* the invitation stores email alone today; the kept name and relation
+         fields say so instead of pretending */
+      if (key === 'invite') screen.preNote = INVITE_EMAIL_ONLY;
+
+      /* one person, real: their email as the head, their true status as the
+         body, and only the two rows that do something — the approval pair is
+         demo-only, honestly absent here (no approval data model). The remove
+         row arms on its first press and commits on its second. */
+      if (key === 'person' && person) {
+        screen.head = person.email;
+        screen.body = person.kind === 'invited'
+          ? PERSON_INVITED_LINE
+          : undefined;
+        screen.rows = [
+          [COPY.people.personStands, PERSON_STANDS_QUIET, 'personSuccession'],
+          [COPY.people.personRemove, COPY.people.personRemoveNote, '__personRemove'],
+        ];
+        screen.note = removeArmed ? REMOVE_CONFIRM : COPY.people.personNote;
+      }
       return screen;
     },
-    [swap],
+    [swap, familyLive, person, removeArmed],
   );
 
   /* ---------------- navigation ---------------- */
@@ -740,6 +1025,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const go = useCallback(
     (key: string) => {
       const from = step.kind === 'walk' ? step.key : null;
+
+      /* the armed removal disarms the moment any other press happens */
+      if (key !== '__personRemove' && removeArmed) setRemoveArmed(false);
 
       /* side effects on leaving a gathering screen by its own brass */
       if (from === 'born' && key === 'lives') {
@@ -772,9 +1060,40 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           }
         });
       }
-      if (from === 'ritual' && key === 'ritualfamily') {
-        void submitRitual();
-        setStep({ kind: 'piece' });
+      /* the year's three answers. Planting anew submits the field's words on
+         the way out of its own screen; the one-press answers submit here.
+         All three walk on into ritualfamily — no skip, the household screen
+         is real now. */
+      if (from === 'ritualplant' && key === 'ritualfamily') {
+        void submitRitual('plant-new');
+      }
+      if (key === '__ritualReinforce') {
+        void submitRitual('reinforce');
+        setStep({ kind: 'walk', key: 'ritualfamily' });
+        return;
+      }
+      if (key === '__ritualFulfilled') {
+        void submitRitual('fulfilled');
+        setStep({ kind: 'walk', key: 'ritualfamily' });
+        return;
+      }
+
+      /* the invitation: email required, sent through api.ts, and the sent
+         screen is reached only once the letter actually left */
+      if (from === 'invite' && key === 'invitesent') {
+        void submitInvite();
+        return;
+      }
+
+      /* the removal: the grave two-press confirm (the seal-confirm idiom).
+         First press arms and the screen says what a second press does;
+         the same row pressed again commits through api.ts. */
+      if (key === '__personRemove') {
+        if (!removeArmed) {
+          setRemoveArmed(true);
+          return;
+        }
+        if (person) void submitRemove(person);
         return;
       }
 
@@ -822,7 +1141,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       }
       if (key in WALK) setStep({ kind: 'walk', key: key as keyof typeof WALK });
     },
-    [step, submitBorn, resolveCity, submitShows, submitRitual, lamps, typed, refresh],
+    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, person, removeArmed, lamps, typed, refresh],
   );
 
   /* ---------------- the account bridge ---------------- */
@@ -852,6 +1171,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         near={near}
         live={live}
         initialRoom={step.room ?? null}
+        ground={groundInputs}
         onBegin={() => setStep({ kind: 'code' })}
         onSignIn={() => setAuthOpen(true)}
         onWalk={go}

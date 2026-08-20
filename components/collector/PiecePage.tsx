@@ -20,16 +20,40 @@
  * for exactly that reason.
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PIECE } from './copy';
-import { Brass, Eyebrow, Flag, Ground, Row, TLink } from './ui';
+import { Brass, Eyebrow, Flag, Ground, Note, Row, TLink } from './ui';
 import { Drawing } from './drawings';
 import { Orbit } from './Orbit';
 import { Room, RoomKey } from './rooms';
 import type { PieceLive } from './live';
+import { composeGround } from '../../utils/collectorGround';
 
 export type Relationship = 'loading' | 'unclaimed' | 'registered' | 'signedin' | 'yours';
+
+/**
+ * The GROUND axis inputs (utils/collectorGround.ts). Everything arrives from
+ * above as data — `now` is an ISO string handed in by the caller, and this
+ * file NEVER reads the system clock, so demo renders are reproducible and
+ * the wired page has exactly one notion of now per render.
+ */
+export type GroundInputs = {
+  /** the piece's first binding, ISO; null renders a fully neutral ground */
+  firstBoundAt: string | null;
+  now: string;
+  latitude: number | null;
+  birthMonthIndex: number | null;
+};
+
+/** the demo shell's fixed ground: the sample piece, registered 9 April 2026,
+ *  looked at on one fixed summer day. Never Date.now(). */
+const DEMO_GROUND: GroundInputs = {
+  firstBoundAt: '2026-04-09T12:00:00.000Z',
+  now: '2026-08-20T12:00:00.000Z',
+  latitude: null,
+  birthMonthIndex: null,
+};
 
 type Props = {
   relationship: Relationship;
@@ -47,6 +71,8 @@ type Props = {
   live?: PieceLive;
   /** open with one room already showing (a caretaker door re-entered) */
   initialRoom?: RoomKey | null;
+  /** the ground reading's inputs; absent, the fixed demo ground stands */
+  ground?: GroundInputs | null;
 };
 
 export const PiecePage: React.FC<Props> = ({
@@ -58,6 +84,7 @@ export const PiecePage: React.FC<Props> = ({
   onWalk,
   live,
   initialRoom = null,
+  ground = null,
 }) => {
   const [room, setRoom] = useState<RoomKey | null>(initialRoom);
   const liveDream = live
@@ -67,14 +94,29 @@ export const PiecePage: React.FC<Props> = ({
   const isCaretaker = relationship === 'yours';
   const registered = relationship !== 'unclaimed' && relationship !== 'loading';
 
+  /* the GROUND reading, once per render-inputs: years held warm it, season
+     and hour tint it, the birthday month is the warmest it ever gets. It
+     feeds two CSS custom properties on the page Ground and nothing else —
+     never brass, never the light. */
+  const inputs = ground ?? DEMO_GROUND;
+  const tint = useMemo(() => {
+    if (!inputs.firstBoundAt) return null;
+    return composeGround({
+      firstBoundAt: inputs.firstBoundAt,
+      now: inputs.now,
+      latitude: inputs.latitude,
+      birthMonthIndex: inputs.birthMonthIndex,
+    });
+  }, [inputs.firstBoundAt, inputs.now, inputs.latitude, inputs.birthMonthIndex]);
+
   /* a room opens in place: the body gives way, the room becomes the surface,
      and closing returns to the page. Nothing navigates. */
   if (room) {
-    return <Room room={room} onClose={() => setRoom(null)} onWalk={onWalk} live={live} />;
+    return <Room room={room} onClose={() => setRoom(null)} onWalk={onWalk} onOpenRoom={setRoom} live={live} />;
   }
 
   return (
-    <Ground light={relationship === 'yours' ? 'l' : 'a'} pad="40px 28px 26px">
+    <Ground light={relationship === 'yours' ? 'l' : 'a'} pad="40px 28px 26px" tint={registered ? tint : null}>
       {/* the head. Identical in all four. */}
       <div
         style={{
@@ -108,7 +150,7 @@ export const PiecePage: React.FC<Props> = ({
       </div>
 
       {/* the authenticity line, visible to anyone */}
-      <div style={{ flex: 'none', paddingTop: 8, fontFamily: F.body, fontSize: 11.5, color: C.inkQuiet }}>
+      <div style={{ position: 'relative', flex: 'none', paddingTop: 8, fontFamily: F.body, fontSize: 11.5, color: C.inkQuiet }}>
         {registered ? COPY.page.statusRegistered : COPY.page.statusUnclaimed}
       </div>
 
@@ -117,7 +159,7 @@ export const PiecePage: React.FC<Props> = ({
           wrote them does not show. On the wired page a piece with nothing
           shared simply has no dream block: a quiet absence, never a prompt. */}
       {registered && (live === undefined || liveDream) && (
-        <blockquote style={{ margin: 0, flex: 'none', paddingTop: 20 }}>
+        <blockquote style={{ position: 'relative', margin: 0, flex: 'none', paddingTop: 20 }}>
           <p
             style={{
               margin: 0,
@@ -167,7 +209,31 @@ export const PiecePage: React.FC<Props> = ({
         }}
       >
         {registered ? (
-          <Orbit placed={placed} near={near} />
+          isCaretaker ? (
+            /* the caretaker's light is a door: pressing it opens Add to your
+               piece. A real button, keyboard reachable, focus ring kept —
+               and visually still just the light, because the light is the
+               invitation and nothing here may read as a prompt. */
+            <button
+              type="button"
+              onClick={() => setRoom('garden')}
+              aria-label={COPY.page.rowGarden}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'block',
+                width: '100%',
+                background: 'none',
+                border: 0,
+                padding: 0,
+                cursor: 'pointer',
+              }}
+            >
+              <Orbit placed={placed} near={near} />
+            </button>
+          ) : (
+            <Orbit placed={placed} near={near} />
+          )
         ) : (
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
             <Drawing motif="piece" size={128} draw />
@@ -255,10 +321,23 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
      the arrival, not being wider than everything else. */
   if (relationship === 'unclaimed') {
     return (
-      <div style={{ position: 'relative', flex: 'none', paddingTop: 22, display: 'flex', justifyContent: 'center' }}>
+      <div
+        style={{
+          position: 'relative',
+          flex: 'none',
+          paddingTop: 22,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <Brass lifted onClick={onBegin}>
           {COPY.page.begin}
         </Brass>
+        {/* the short line beneath Begin — Adrian's chosen wording, 2026-08-20 */}
+        <div style={{ textAlign: 'center', maxWidth: '34ch' }}>
+          <Note top={10}>{COPY.page.unclaimedNote}</Note>
+        </div>
       </div>
     );
   }
@@ -268,24 +347,27 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
      is bent here and nowhere else, because it is the only screen where the
      system genuinely does not know who is holding the phone. */
   return (
-    <div
-      style={{
-        position: 'relative',
-        flex: 'none',
-        paddingTop: 22,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 16,
-      }}
-    >
-      <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
-        {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
-      </TLink>
-      <span style={{ width: 1, height: 16, background: C.hairStrong, display: 'block' }} />
-      <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
-        {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
-      </TLink>
+    <div style={{ position: 'relative', flex: 'none', paddingTop: 22 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+        }}
+      >
+        <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
+          {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
+        </TLink>
+        <span style={{ width: 1, height: 16, background: C.hairStrong, display: 'block' }} />
+        <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
+          {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
+        </TLink>
+      </div>
+      {/* the short line beneath the two doors — Adrian's chosen wording, 2026-08-20 */}
+      <div style={{ textAlign: 'center', maxWidth: '40ch', margin: '0 auto' }}>
+        <Note top={8}>{COPY.page.registeredNotYoursNote}</Note>
+      </div>
     </div>
   );
 };
