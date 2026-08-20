@@ -21,7 +21,9 @@
 
 ## Part 1 · Direct rewrites
 
-The screens Adrian flagged by name on the walkthrough.
+The screens Adrian flagged by name on the walkthrough. Numbering follows his notes in
+walk order; entries 11 and 12 are not missing, they sit in Part 2 because they are
+system rulings first and screens second.
 
 ### 1. Gift · "Leave your wishes" head and body
 **Where** `components/collector/copy.ts`, `threshold.giftHead` / `threshold.giftBody`
@@ -389,9 +391,9 @@ more of these every year."
 §7 "The unlock arrives and stays" (the vault opens directly onto the destination) and the §8
 ruling that the piece page's center is a glowing dot, not a vector, and the dot is the
 caretaker's interactions with the art.
-**Adrian's note** From the walkthrough directives: the vault must open directly onto the
-destination itself; separately, the center of the piece page is a glowing dot standing for the
-caretaker's interactions with the art, not a decorative graphic.
+**Adrian's note, verbatim** "the center should be the glowing dot not a vector.. the dot is
+your interactions with the art." (And from wave one, on the arrival itself: "It should go
+there and stay there.")
 **Why it needs rewriting** These are new lines, not rewrites: a short line for what the dot
 means the first time someone sees it arrive, so it reads as meaningful rather than
 ornamental.
@@ -441,18 +443,20 @@ your Oracle reading and the piece's Dream, quietly, in the background."
 
 ---
 
-### 20. The dream reminder pair
-**Where** `components/collector/rooms.tsx`, demo history entries: `WRITTEN_SHINES_TEXT`
-("A dream was placed in it") and the second entry's inline text "The dream was placed again"
-**Now** (placeholder) "A dream was placed in it" / "The dream was placed again"
-**Adrian's note** Carried over from wave one, awaiting his word.
-**Why it needs rewriting** These are the history-log labels for the first time a dream shines
-on a piece and every time after; "was placed again" reads slightly flat next to the rest of
-the history spine's voice ("Still held," "The plate was replaced").
+### 20. The dream-entry reminder line
+**Where** `components/collector/garden.tsx`, the small line under the two footer buttons on
+the write screen, shown when the tier is shine and the name is currently set to show
+**Now** (placeholder) "Your name is set to shine with this one. What shows holds the switch."
+**Adrian's note** Carried over from wave one: "if your default is that to show your
+information with it there's a little reminder there underneath the two buttons."
+**Why it needs rewriting** Two candidates were drafted in wave one and neither has his word
+yet; the line has to warn without scolding, and point at What shows as the place the choice
+lives.
 
-**Option A** — "A dream was placed in it" / "Another dream was placed"
+**Option A** — "Your name is set to shine with this one. What shows holds the switch."
 
-**Option B** — "It was given a dream" / "It was given a dream again"
+**Option B** — "This one will shine, and your name is set to show with it. What shows is
+where that changes."
 
 ---
 
