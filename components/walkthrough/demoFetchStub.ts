@@ -51,11 +51,16 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 function requestUrl(input: RequestInfo | URL): URL | null {
+  /* The base is the page's href, not its origin: on a file:// page (the
+     double-clickable walkthrough) origin is the literal string "null", which
+     makes URL parsing throw, the stub never intercept, and the underlying
+     fetch('/api/...') itself reject. href works as a base on file:// and
+     http alike, so the demo answers offline too. */
   try {
-    if (typeof input === 'string') return new URL(input, window.location.origin);
-    if (input instanceof URL) return new URL(input.toString(), window.location.origin);
+    if (typeof input === 'string') return new URL(input, window.location.href);
+    if (input instanceof URL) return new URL(input.toString(), window.location.href);
     if (typeof Request !== 'undefined' && input instanceof Request) {
-      return new URL(input.url, window.location.origin);
+      return new URL(input.url, window.location.href);
     }
   } catch {
     return null;
