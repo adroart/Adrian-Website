@@ -229,22 +229,22 @@ components/AdminLogin.tsx → safeAdminDestination
 components/AdminPieces.tsx → registryKeeperPieceSelection
 components/ArtImage.tsx → ArtVariant, ArtImageProps
 components/Breadcrumb.tsx → Crumb
-components/collector/ArrivalScreen.tsx → ArrivalScreen, default
-components/collector/CertificateLedger.tsx → CertificateLedger, default
-components/collector/CertificateScreen.tsx → useEffectiveCertificate, CertificateScreen, default
-components/collector/CollectorFieldPage.tsx → CollectorFieldPageView, CollectorFieldPage, default
-components/collector/CollectorFlow.tsx → CollectorFlow, default
-components/collector/CollectorLife.tsx → CollectorLife, default
-components/collector/DreamScreen.tsx → DreamScreenView, DreamScreen, default
-components/collector/FieldBrowse.tsx → FieldBrowse, default
-components/collector/FieldExperience.tsx → CollectorFieldIdentity, CollectorFieldArtwork, CollectorFieldData, FieldItem, FieldFilters, FilteredFieldItem, FieldExperienceProps, flattenFieldData, filterFieldItems, FieldExperience, markerPresentation, default
-components/collector/FieldMap.tsx → markerPresentation, FieldMap, default
-components/collector/InvitationDoor.tsx → InvitationDoor
-components/collector/OpeningScreen.tsx → DEFAULT_OPENING_WORDING, OpeningScreen, default
-components/collector/PieceLetters.tsx → PieceLettersProps, PieceLetters, default
-components/collector/PrivacyAndBirth.tsx → CuratedCityChoice, PrivacyAndBirth, default
-components/collector/PublicDream.tsx → PublicDreamView, PublicDream, default
-components/collector/YearlyRitualScreen.tsx → YearlyRitualView, YearlyRitualScreen, default
+components/collector/legacy/ArrivalScreen.tsx → ArrivalScreen, default
+components/collector/legacy/CertificateLedger.tsx → CertificateLedger, default
+components/collector/legacy/CertificateScreen.tsx → useEffectiveCertificate, CertificateScreen, default
+components/collector/legacy/CollectorFieldPage.tsx → CollectorFieldPageView, CollectorFieldPage, default
+components/collector/legacy/CollectorFlow.tsx → CollectorFlow, default
+components/collector/legacy/CollectorLife.tsx → CollectorLife, default
+components/collector/legacy/DreamScreen.tsx → DreamScreenView, DreamScreen, default
+components/collector/legacy/FieldBrowse.tsx → FieldBrowse, default
+components/collector/legacy/FieldExperience.tsx → CollectorFieldIdentity, CollectorFieldArtwork, CollectorFieldData, FieldItem, FieldFilters, FilteredFieldItem, FieldExperienceProps, flattenFieldData, filterFieldItems, FieldExperience, markerPresentation, default
+components/collector/legacy/FieldMap.tsx → markerPresentation, FieldMap, default
+components/collector/legacy/InvitationDoor.tsx → InvitationDoor
+components/collector/legacy/OpeningScreen.tsx → DEFAULT_OPENING_WORDING, OpeningScreen, default
+components/collector/legacy/PieceLetters.tsx → PieceLettersProps, PieceLetters, default
+components/collector/legacy/PrivacyAndBirth.tsx → CuratedCityChoice, PrivacyAndBirth, default
+components/collector/legacy/PublicDream.tsx → PublicDreamView, PublicDream, default
+components/collector/legacy/YearlyRitualScreen.tsx → YearlyRitualView, YearlyRitualScreen, default
 components/invoices/invoiceTypes.ts → InvoiceStatus, PaymentMethod, PaymentTermMode, PaymentPreset, InvoiceLineItemVariant, InvoiceLineItem, InvoiceScheduleItem, InvoicePaymentOption, Invoice, InvoiceDraft
 components/invoices/invoiceUtils.ts → WISE_REFERRAL_URL, isWiseMethod, PAYMENT_TERM_LABELS, parseMoneyToCents, centsToInput, formatMoney, lineItemsTotal, splitAmount, buildPaymentSchedule, inferPaymentTermMode, publicInvoiceUrl, methodLabel
 components/legacy/ArrivalGate.tsx → ArrivalGate, default
