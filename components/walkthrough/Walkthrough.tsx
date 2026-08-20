@@ -41,6 +41,7 @@ import { espresso } from '../ceremony/tokens';
 import CollectorShell, { CollectorShellHandle } from '../collector/CollectorShell';
 import type { View } from '../collector/tourData';
 import CeremonyStation from './CeremonyStation';
+import ArrivalStation from './ArrivalStation';
 import { CHAPTERS, Chapter } from './chapters';
 import { sameView } from './stations';
 import { NoteField, NotesDrawer, VerdictPair } from './NotesDrawer';
@@ -256,6 +257,12 @@ export const Walkthrough: React.FC = () => {
       shellRef.current?.jumpTo(chapter.stations[idx].view);
       return;
     }
+    /* an arrival chapter's stations are self-contained studies: stepping
+       back simply mounts the previous one, with no shell to point */
+    if (chapter.kind === 'arrival' && stationIndex > 0) {
+      setStationIndex(i => i - 1);
+      return;
+    }
     /* a ceremony chapter cannot be rewound a station at a time (nothing
        drives CeremonyStation backward), and a collector chapter's own first
        station has nothing behind it either: both fall through to leaving
@@ -270,6 +277,12 @@ export const Walkthrough: React.FC = () => {
        next arrow, or the chapter list, would already take you. */
     if (atFinalStation) {
       if (hasNextChapter) goToChapter(chapterIndex + 1);
+      return;
+    }
+    /* an arrival chapter's stations are each their own self-contained
+       study, so Next simply mounts the following one */
+    if (chapter.kind === 'arrival') {
+      setStationIndex(i => i + 1);
       return;
     }
     /* short of the final station, inside a ceremony chapter the real button
@@ -290,8 +303,11 @@ export const Walkthrough: React.FC = () => {
     shellRef.current?.jumpTo(chapter.stations[idx].view);
   };
 
-  const canBack = (chapter.kind === 'collector' && stationIndex > 0) || hasPrevChapter;
-  const canNext = atFinalStation ? hasNextChapter : chapter.kind === 'collector';
+  const canBack =
+    ((chapter.kind === 'collector' || chapter.kind === 'arrival') && stationIndex > 0) ||
+    hasPrevChapter;
+  const canNext =
+    atFinalStation ? hasNextChapter : chapter.kind === 'collector' || chapter.kind === 'arrival';
   const nextLabel = atFinalStation && hasNextChapter ? 'Next chapter' : 'Next';
 
   const startOver = () => {
@@ -558,6 +574,13 @@ export const Walkthrough: React.FC = () => {
     >
       {chapter.kind === 'ceremony' ? (
         <CeremonyStation key={chapter.id} surface={chapter.surface} onStepChange={onCeremonyStep} />
+      ) : chapter.kind === 'arrival' ? (
+        /* keyed per station so each arrival study plays from its first
+           frame whenever the rail moves to it */
+        <ArrivalStation
+          key={`${chapter.id}:${stationIndex}`}
+          variant={chapter.stations[stationIndex].variant}
+        />
       ) : (
         <CollectorShell
           key={chapter.id}

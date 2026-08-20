@@ -110,5 +110,54 @@ export const CeremonyStyles: React.FC<{ theme?: CeremonyTheme }> = ({ theme = es
     @media (prefers-reduced-motion: reduce) {
       .collector-room-enter { animation: none; opacity: 1; transform: none }
     }
+
+    /* ── the three arrival studies (collector/vaultArrival.tsx) ─────────
+       What stands after the vault opens, per Adrian's ruling (§7, item 2,
+       2026-08-20): the unlock arrives somewhere and stays. New names only;
+       the vault's own seam / vaultLight / ringTurn / vaultTop / vaultBot
+       keyframes above are reused by the studies, never redefined. */
+
+    /* variant A: the true words appear as a line across the opening, hold
+       there while the panels finish, then glide up into their slot on the
+       page beneath. The 178px is the drop from that slot to the opening. */
+    @keyframes arrivalSettle {
+      0% { opacity: 0; transform: translateY(178px) }
+      16% { opacity: 1; transform: translateY(178px) }
+      60% { opacity: 1; transform: translateY(178px) }
+      100% { opacity: 1; transform: none }
+    }
+
+    /* variant B: the ring stops being the vault's dial and becomes the
+       standing frame the words compose inside */
+    @keyframes arrivalRingGrow { from { transform: scale(.62) } to { transform: scale(1) } }
+
+    /* variant C: the vault light gives itself up to the drawing */
+    @keyframes arrivalLightFade { to { opacity: 0 } }
+
+    /* variant C: the piece's strokes begin only once the light has carried
+       them in — the same cadDraw animation the drawing always plays, started
+       later and a touch quicker so the whole passage stays inside four
+       seconds. Same specificity tier as the cad-draw rules above; being
+       later in this sheet is what lets these win. */
+    .arrival-draw-late path, .arrival-draw-late circle, .arrival-draw-late line {
+      animation-duration: 1.15s;
+      animation-delay: .85s;
+    }
+    .arrival-draw-late *:nth-child(2) { animation-delay: 1s }
+    .arrival-draw-late *:nth-child(3) { animation-delay: 1.15s }
+    .arrival-draw-late *:nth-child(4) { animation-delay: 1.3s }
+    .arrival-draw-late *:nth-child(5) { animation-delay: 1.42s }
+
+    /* The arrival studies' own reduced-motion collapse. The global
+       collector-root rule above shortens durations but leaves delays
+       standing, and these sequences are almost entirely delay: zero those
+       too, and the fill modes hold every element at its settled end-state. */
+    @media (prefers-reduced-motion: reduce) {
+      .arrival-anim { animation-delay: 0s !important; animation-duration: .01ms !important }
+      .arrival-draw-late path, .arrival-draw-late circle, .arrival-draw-late line {
+        animation-delay: 0s !important;
+        stroke-dashoffset: 0 !important;
+      }
+    }
   `}</style>
 );

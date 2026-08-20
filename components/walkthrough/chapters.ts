@@ -11,12 +11,18 @@
  */
 
 import { FLOWS, JUMP, View } from '../collector/tourData';
+import { PLACEHOLDERS } from '../collector/copy';
 import { Station, stationFor, walkChain } from './stations';
 import { CeremonyChapter, ceremonyChapters } from './ceremonyChapters';
 
+/** one station of the arrival chapter: which of the three vault-arrival
+ *  studies to mount, and how the rail names and captions it */
+export type ArrivalStationSpec = { variant: 'a' | 'b' | 'c'; label: string; notice: string };
+
 export type Chapter =
   | { id: string; title: string; note: string; stations: Station[]; kind: 'collector' }
-  | (CeremonyChapter & { kind: 'ceremony' });
+  | (CeremonyChapter & { kind: 'ceremony' })
+  | { kind: 'arrival'; id: string; title: string; note: string; stations: ArrivalStationSpec[] };
 
 const slug = (s: string): string =>
   s
@@ -101,4 +107,45 @@ const OTHER_CHAPTERS: Chapter[] = JUMP.flatMap(([section, items]) => {
 
 const CEREMONY: Chapter[] = ceremonyChapters.map(c => ({ ...c, kind: 'ceremony' as const }));
 
-export const CHAPTERS: Chapter[] = [...FLOW_CHAPTERS, ...OTHER_CHAPTERS, ...CEREMONY];
+/* ------------------------------------------------------------------ *
+ * the arrival studies, appended last
+ *
+ * Adrian's ruling (wording record §7, item 2, 2026-08-20): the unlock must
+ * arrive somewhere and stay; three arrivals are built for his walkthrough
+ * and his verdict picks one. Each station mounts one self-contained study
+ * from `components/collector/vaultArrival.tsx`, so Back/Next simply swap
+ * studies — nothing here is a view the collector shell can be pointed at.
+ * ------------------------------------------------------------------ */
+
+/** the walk.tsx idiom: unwritten caption copy, registered so it reads as
+ *  unwritten wherever the placeholder marks are on. T3-COPY. */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+
+const ARRIVAL: Chapter = {
+  kind: 'arrival',
+  id: 'arrival-choose',
+  title: 'Choose the arrival',
+  note: 'One of these becomes the way the vault opens; walk each and say which is true.',
+  stations: [
+    {
+      variant: 'a',
+      label: 'It parts and settles',
+      notice: ph('The panels part over the piece page itself, and the true words settle into it.'),
+    },
+    {
+      variant: 'b',
+      label: 'Inside the opened vault',
+      notice: ph('The ring stays standing, and for one beat the vault is the room the journey stands in.'),
+    },
+    {
+      variant: 'c',
+      label: 'The piece is the proof',
+      notice: ph('The vault light resolves into the piece’s own drawing, and the true words follow it.'),
+    },
+  ],
+};
+
+export const CHAPTERS: Chapter[] = [...FLOW_CHAPTERS, ...OTHER_CHAPTERS, ...CEREMONY, ARRIVAL];
