@@ -203,7 +203,6 @@ export async function buildPublicAtlasState(env, generatedAt = new Date().toISOS
           AND piece.claimed_at IS NOT NULL
           AND piece.released_at IS NULL
           AND city.active = 1
-          AND city.population >= 50000
           AND date(profile.birth_date) = profile.birth_date
           AND date(profile.birth_date, '+18 years') <= date(?1)
         ORDER BY privacy.keeper_piece_id ASC`,

@@ -77,6 +77,7 @@ const migrations = [
   '031_collector_letters.sql', '032_artist_verified_sales.sql',
   '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
+  '035_city_floor_removal.sql',
 ].map((name) => readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8')).join('\n');
 const contributorInvitationKeyV1 = Buffer.alloc(32, 41).toString('base64');
 

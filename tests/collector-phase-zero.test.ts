@@ -59,6 +59,7 @@ const mergedSchema = [
   '028_collector_privacy.sql',
   '029_collector_dreams.sql',
   '030_collector_field.sql',
+  '035_city_floor_removal.sql',
 ].map((entry, index) => index === 0 ? entry : migration(entry)).join('\n');
 
 function databaseWithSchema(includeMerge = true) {

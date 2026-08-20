@@ -546,7 +546,8 @@ second birth-profile store or save fake computed data.
 - [x] **Step 3: Write privacy-default tests**
 
 All optional switches default off. Ring 1 cannot be submitted or disabled. Ring 2 rejects free
-text and accepts only curated city IDs that meet the population rule.
+text and accepts only curated city IDs. (The population rule was removed 2026-08-20 by
+migration 035 — any active curated city qualifies.)
 
 - [x] **Step 4: Implement current privacy state and append-only history**
 

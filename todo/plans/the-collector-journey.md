@@ -214,8 +214,10 @@ to keep.
 - **Ring one — your private record.** Always on, no switch. Nobody else ever sees it. What you
   write for yourself and for whoever inherits the piece. Content by or about a child is locked
   here permanently — no switch exists to make it public until that person is an adult and says so.
-- **Ring two — the dot on the map.** City level only, never an address, with a population floor
-  so a small town cannot identify a home. **Off by default; you tick it on.**
+- **Ring two — the dot on the map.** City level only, never an address, limited to the curated
+  city list. **Off by default; you tick it on.** (The original 50,000-population floor was
+  removed 2026-08-20 per Adrian's ruling — collectors may share whichever curated city they
+  live in; population is informational only.)
 - **Ring three — your chart.** Off by default, offered later on the piece's own page, never
   pushed. Only what is derived from your birth details, never the details themselves.
 - **Ring four — you.** Face, name, intention, business, mission. Five separate switches, each

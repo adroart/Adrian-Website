@@ -67,7 +67,8 @@ const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
 \n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
 \n${readMigration('033_artwork_contributors.sql')}
-\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}`;
+\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}
+\n${readMigration('035_city_floor_removal.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';

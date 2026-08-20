@@ -76,6 +76,7 @@ const migrationsThroughArtistSales = [
   '028_collector_privacy.sql', '029_collector_dreams.sql',
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql',
+  '035_city_floor_removal.sql',
 ].map(readMigration).join('\n');
 
 const now = '2026-08-10T12:00:00.000Z';
