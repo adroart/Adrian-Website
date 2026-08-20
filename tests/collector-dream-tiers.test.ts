@@ -35,16 +35,16 @@ after(() => mock.reset());
 
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
 
-/** Every migration numbered 001 through 041, applied in file order. */
-function migrationsThrough041() {
+/** Every migration numbered 001 through 042 (collector_dream_tiers), applied in file order. */
+function migrationsThrough042() {
   return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 41)
+    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 42)
     .sort()
     .map((name) => readFileSync(path.join(MIGRATIONS_DIR, name), 'utf8'))
     .join('\n');
 }
 
-const migrations = migrationsThrough041();
+const migrations = migrationsThrough042();
 
 function database() {
   const db = new DatabaseSync(':memory:');
@@ -177,7 +177,7 @@ async function plantKeepDream(env: object, userId: string, keeperPieceId: string
   });
 }
 
-describe('collector dream tiers (migration 041)', () => {
+describe('collector dream tiers (migration 042)', () => {
   it('plants keep by default and walks only the allowed transitions', async () => {
     const db = database();
     try {
@@ -593,7 +593,7 @@ describe('collector dream tiers (migration 041)', () => {
     }
   });
 
-  it('composes with migration 040: sealed words never reach the record, shone words stay until an abuse removal', async () => {
+  it('composes with migration 041: sealed words never reach the record, shone words stay until an abuse removal', async () => {
     const db = database();
     try {
       const env = { DB: d1(db) };

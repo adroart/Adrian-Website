@@ -70,14 +70,14 @@ const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migra
 \n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
 \n${readMigration('033_artwork_contributors.sql')}
 \n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}
-\n${readMigration('035_artwork_catalog_snapshots.sql')}
 \n${readMigration('035_city_floor_removal.sql')}
-\n${readMigration('036_piece_records.sql')}
-\n${readMigration('037_transfer_silence.sql')}
-\n${readMigration('038_piece_media.sql')}
-\n${readMigration('039_artist_messages.sql')}
-\n${readMigration('040_collector_shine_removals.sql')}
-\n${readMigration('041_collector_dream_tiers.sql')}`;
+\n${readMigration('036_artwork_catalog_snapshots.sql')}
+\n${readMigration('037_piece_records.sql')}
+\n${readMigration('038_transfer_silence.sql')}
+\n${readMigration('039_piece_media.sql')}
+\n${readMigration('040_artist_messages.sql')}
+\n${readMigration('041_collector_shine_removals.sql')}
+\n${readMigration('042_collector_dream_tiers.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -85,7 +85,7 @@ const exportedAt = '2026-07-31T03:04:05.000Z';
 
 const legacyRecoveryTables = REGISTRY_RECOVERY_V1_TABLES;
 
-/** Strips migration 041's collector_dreams columns for a schema < 9 legacy payload table map. */
+/** Strips migration 042's collector_dreams columns for a schema < 9 legacy payload table map. */
 function withoutDreamTierColumns(name: string, rows: any[]) {
   if (name !== 'collector_dreams') return rows;
   return rows.map(({ tier, heirs_may_share, ...rest }) => rest);
@@ -602,7 +602,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
       ('aa-second-bound', 'kp-ordinal-second', 1, 'first_bound',
        '2026-08-07T03:04:05.000Z', NULL, '${'7'.repeat(64)}', '{}');
 
-    -- Migration 041 tier fixtures: a keep dream with heirs sharing turned
+    -- Migration 042 tier fixtures: a keep dream with heirs sharing turned
     -- off, and a sealed dream (heirs_may_share pinned to 0 by the seal
     -- insert guard). Neither piece already carries an active dream, so
     -- both satisfy collector_dreams_one_current without archiving anything.
@@ -1183,7 +1183,7 @@ describe('private registry recovery export', () => {
     assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.collector_dream_tier_changes, ['text']);
   });
 
-  it('archives every schema-v9 dream-tier column exactly as migration 041 defines it', () => {
+  it('archives every schema-v9 dream-tier column exactly as migration 042 defines it', () => {
     const database = new DatabaseSync(':memory:');
     try {
       database.exec('PRAGMA foreign_keys = ON;');
@@ -2311,7 +2311,7 @@ describe('clean-only private registry restore', () => {
   });
 
   it('decrypts schema v8 without changing any permanent-record row and backfills dream tiers '
-    + 'exactly as migration 041 would', async () => {
+    + 'exactly as migration 042 would', async () => {
     const source = createSqliteD1();
     try {
       source.database.exec(registryMigrations);
@@ -2349,7 +2349,7 @@ describe('clean-only private registry restore', () => {
       assert.deepEqual(upgraded.tables.collector_dream_tier_changes, [], 'no ledger yet in v8');
       // Every archived pre-tier row lands on the ALTER TABLE column defaults
       // (heirs_may_share = 1 always; tier = 'keep' unless the backfill UPDATE
-      // in migration 041 would have caught it as an already-open anonymous or
+      // in migration 042 would have caught it as an already-open anonymous or
       // attributed share, which lands on 'shine'). No archived row can be
       // 'seal': sealing did not exist before this schema version.
       assert.deepEqual(upgraded.tables.collector_dreams.map((row) => [
@@ -2396,9 +2396,9 @@ describe('clean-only private registry restore', () => {
       source.database.exec(phase2Migrations);
       source.database.exec(readMigration('032_artist_verified_sales.sql'));
       source.database.exec(readMigration('033_artwork_contributors.sql'));
-      source.database.exec(readMigration('035_artwork_catalog_snapshots.sql'));
-      source.database.exec(readMigration('036_piece_records.sql'));
-      source.database.exec(readMigration('041_collector_dream_tiers.sql'));
+      source.database.exec(readMigration('036_artwork_catalog_snapshots.sql'));
+      source.database.exec(readMigration('037_piece_records.sql'));
+      source.database.exec(readMigration('042_collector_dream_tiers.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference

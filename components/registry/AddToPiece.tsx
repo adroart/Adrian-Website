@@ -55,7 +55,7 @@ type Instance = {
   message: { id: string; createdAt: string; revealedAt: string | null } | null;
 };
 
-/** Client-side gates mirroring the migration 038 caps, checked before upload. */
+/** Client-side gates mirroring the migration 039 caps, checked before upload. */
 const MEDIA_RULES = {
   photo: {
     types: ['image/jpeg', 'image/png', 'image/webp'],

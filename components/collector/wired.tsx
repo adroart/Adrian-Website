@@ -826,7 +826,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
 
           if (!current) {
             /* first placement: ONE create carrying tier and the heirs'
-               choice (migration 041's optional create fields). A pre-041
+               choice (migration 042's optional create fields). A pre-041
                registry answers 503 dream_tiers_unavailable BEFORE inserting
                anything (and an older handler 400s the unknown fields), so
                the fallback below retries the pre-041 two-step safely:

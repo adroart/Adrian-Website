@@ -1,6 +1,6 @@
 /**
  * /api/admin/artworks/[id]/message — the artist's message for one physical
- * instance, sealed until its caretaker unlocks (migration 039).
+ * instance, sealed until its caretaker unlocks (migration 040).
  *
  * GET without keeperPieceId lists the artwork's registered instances with a
  * body-free summary of each active message; GET ?keeperPieceId= returns the

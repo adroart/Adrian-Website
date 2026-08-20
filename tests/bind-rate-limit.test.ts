@@ -70,8 +70,8 @@ const migrationsThroughSilence = [
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql', '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
-  '035_artwork_catalog_snapshots.sql', '036_piece_records.sql',
-  '037_transfer_silence.sql',
+  '036_artwork_catalog_snapshots.sql', '037_piece_records.sql',
+  '038_transfer_silence.sql',
 ].map(readMigration).join('\n');
 
 // Same D1 stand-in as tests/claim-silence.test.ts: statements execute

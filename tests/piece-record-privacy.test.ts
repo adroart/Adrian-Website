@@ -40,13 +40,13 @@ const migrationsThroughPieceRecords = [
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql', '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
-  '035_artwork_catalog_snapshots.sql', '036_piece_records.sql',
-  '037_transfer_silence.sql', '038_piece_media.sql',
-  '039_artist_messages.sql', '041_collector_dream_tiers.sql',
-  // 040_collector_shine_removals.sql is deliberately NOT in this shared list:
+  '036_artwork_catalog_snapshots.sql', '037_piece_records.sql',
+  '038_transfer_silence.sql', '039_piece_media.sql',
+  '040_artist_messages.sql', '042_collector_dream_tiers.sql',
+  // 041_collector_shine_removals.sql is deliberately NOT in this shared list:
   // the pre-existing "excludes abuse-managed removals going forward" test
   // above plants its own ad hoc collector_shine_removals stub (predating
-  // migration 040, matching only the columns gatherShines actually reads),
+  // migration 041, matching only the columns gatherShines actually reads),
   // and applying the real migration here would collide with that CREATE
   // TABLE ("table collector_shine_removals already exists"). The one test
   // below that needs the real, trigger-guarded table applies 040 itself,
@@ -604,12 +604,12 @@ describe('piece record privacy (the strip-pass)', () => {
     assert.equal(stillShine?.tier, 'shine');
   });
 
-  it('composes with migration 040: an abuse removal still excludes a shone (tier = shine) dream from a regenerated record', async () => {
+  it('composes with migration 041: an abuse removal still excludes a shone (tier = shine) dream from a regenerated record', async () => {
     const { db, env } = await fixtureEnv();
     // The real, trigger-guarded collector_shine_removals table (migration
     // 040), applied locally here only -- see the note by the shared
     // migration list above for why it is not applied there.
-    db.exec(readMigration('040_collector_shine_removals.sql'));
+    db.exec(readMigration('041_collector_shine_removals.sql'));
     const shone = await setCollectorDreamTier(env, {
       userId: 'auth-keeper', keeperPieceId: KEEPER_PIECE_ID, tier: 'shine',
       idempotencyKey: 'privacy-040-shine', now: '2026-08-12T00:00:00.000Z',

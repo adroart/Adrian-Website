@@ -2,7 +2,7 @@
  * /api/keeper/message
  *
  * GET ?publicCode=AR-...
- *   The artist's sealed message for one physical piece (migration 039,
+ *   The artist's sealed message for one physical piece (migration 040,
  *   functions/api/_lib/artistMessage.js). Steward-only: the body NEVER
  *   appears in any response to anyone but the piece's active steward. The
  *   design moment (todo/plans/collector-screen-wording.md, the gift

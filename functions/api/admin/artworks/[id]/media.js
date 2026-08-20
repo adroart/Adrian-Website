@@ -2,7 +2,7 @@
  * /api/admin/artworks/[id]/media — the "Add to this piece" media surface.
  *
  * POST admits one photograph or forever video for the artwork generally
- * (artwork-scoped piece_media, migration 038) through the content-addressed
+ * (artwork-scoped piece_media, migration 039) through the content-addressed
  * write-once admission layer in _lib/pieceMedia.js, then regenerates the
  * permanent Piece Record for every registered instance of the artwork with
  * trigger_event 'attachment', FAIL-SOFT with per-instance outcomes: a record

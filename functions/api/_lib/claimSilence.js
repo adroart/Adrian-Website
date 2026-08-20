@@ -1,5 +1,5 @@
 /**
- * Thirty-day silence windows on contested claims (migration 037), evaluated
+ * Thirty-day silence windows on contested claims (migration 038), evaluated
  * lazily. There is no cron: any later touch of a contested claim runs
  * evaluateSilence, which sends whichever reminders have come due, records
  * them, and, once the deadline has lapsed after the reminders soaked, EXECUTES
@@ -286,7 +286,7 @@ async function sendDueReminders(db, env, { piece, window }, now) {
     const sent = await sendRegistryEmail(env, { to: stewardEmail, ...message });
     if (!sent) {
       // Fail closed: an unsent reminder is never recorded, and without the
-      // recorded reminders the pass can never execute (migration 037 also
+      // recorded reminders the pass can never execute (migration 038 also
       // enforces this structurally). The window simply stays where it is.
       console.error('[claimSilence] reminder email not sent; window stays open:', window.window_id, entry.kind);
       break;
@@ -533,7 +533,7 @@ async function executeSilencePass(db, env, { piece, window }, now) {
  *
  * Returns one of:
  *   { status: 'none' }         no piece or no active window
- *   { status: 'unavailable' }  migration 037 not applied; nothing evaluated
+ *   { status: 'unavailable' }  migration 038 not applied; nothing evaluated
  *   { status: 'withdrawn' }    the current steward touched their piece: alive
  *                              and holding it, every active window withdrawn
  *   { status: 'pending' }      window(s) active; due reminders handled
