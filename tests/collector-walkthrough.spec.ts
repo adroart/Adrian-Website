@@ -3,10 +3,10 @@
  * through the real dev server rather than in isolation. It exercises the
  * exact integration this route enables that no earlier harness could: the
  * rail's phone frame is either the real `CollectorShell` (chrome="tour")
- * pointed at one real `View`, or the real `CeremonyStation` running one of
- * the two artist-ceremony demos, both now mounted inside the site's own
- * `BrowserRouter` for the first time (see the ceremony-chapter test below for
- * what that surfaces).
+ * pointed at one real `View`, the real `CeremonyStation` running one of the
+ * artist-ceremony demos, or one of the three self-contained arrival studies,
+ * all now mounted inside the site's own `BrowserRouter` for the first time
+ * (see the ceremony-chapter tests below for what that surfaces).
  *
  * Layered over the walk is the feedback rail — a verdict pair and a debounced
  * note per station (`notes.ts`, key `walkthrough-notes:v1`), the station
@@ -14,9 +14,9 @@
  * with its copy-the-digest exit — all covered here too.
  *
  * See `components/walkthrough/Walkthrough.tsx`, `NotesDrawer.tsx`, `notes.ts`,
- * `chapters.ts`, `stations.ts`, `ceremonyChapters.ts` and `CeremonyStation.tsx`
- * for the rail's own design; this spec never duplicates their wording, only
- * walks the real screens.
+ * `chapters.ts`, `stations.ts`, `ceremonyChapters.ts`, `CeremonyStation.tsx`
+ * and `ArrivalStation.tsx` for the rail's own design; this spec never
+ * duplicates their wording, only walks the real screens.
  */
 
 import { expect, Page, test } from '@playwright/test';
@@ -30,9 +30,9 @@ const station = (page: Page, n: number, total: number) =>
 
 /** the phone frame actually rendered something, and the app's top-level
  *  ErrorBoundary ("Something went wrong", index.tsx) never tripped. Works for
- *  both the collector shell and the ceremony screens: `.collector-root` is
- *  the shared outer class both `CollectorShell` and the two ceremony
- *  components render on their own root div. */
+ *  the collector shell, the ceremony screens and the arrival studies alike:
+ *  `.collector-root` is the shared outer class each of them renders on its
+ *  own root div. */
 const assertPhoneAlive = async (page: Page) => {
   const root = page.locator('.collector-root').first();
   await expect(root).toBeVisible();
@@ -46,12 +46,32 @@ const openChapter = async (page: Page, title: string) => {
   await page.getByRole('button', { name: title, exact: true }).click();
 };
 
+/**
+ * A ceremony-kind chapter's row in the chapter list carries a second,
+ * sibling "ceremony" span alongside its title, so the accessible name of the
+ * row is the title plus that word — never an exact match against the title
+ * alone. Opened by a case-insensitive substring instead, the same way the
+ * existing ceremony test already did before this helper existed.
+ */
+const openCeremonyChapter = async (page: Page, titlePattern: RegExp) => {
+  await page.getByRole('button', { name: /^Chapters/ }).click();
+  await page.getByRole('button', { name: titlePattern }).click();
+};
+
 /** the notes store exactly as `notes.ts` keeps it */
 const readNotesStore = (page: Page) =>
   page.evaluate(() => JSON.parse(window.localStorage.getItem('walkthrough-notes:v1') ?? 'null'));
 
 /** chapter id for chapter 1, as `chapters.ts`'s slug() derives it */
 const CH1 = 'registering-it-all-the-way';
+
+/**
+ * Chapter 1's total, after §7's re-ordered gathering (sign → lives → who →
+ * light47, folding born and links into the "who" page's two SegmentedTabs
+ * sections): piece, code, codetrue, the four (pull/grid/love/carries), sign,
+ * lives, who, light47, piece-as-caretaker — twelve stations, not fourteen.
+ */
+const CH1_TOTAL = 12;
 
 /* ------------------------------------------------------------------ *
  * 1. loads at chapter 1, station 1
@@ -64,7 +84,7 @@ test('the walkthrough loads at /dev/walkthrough on chapter 1, station 1', async 
   await page.goto('/dev/walkthrough');
   // the title shows twice now: the compact chapter strip and the caption rail
   await expect(page.getByText('Registering it, all the way').first()).toBeVisible();
-  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
   await assertPhoneAlive(page);
 
   // the unclaimed foot carries its arrival line under Begin — and only that
@@ -85,8 +105,7 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   page.on('pageerror', e => errors.push(e.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
 
-  const total = 14;
-  const st = (n: number) => station(page, n, total);
+  const st = (n: number) => station(page, n, CH1_TOTAL);
   const click = (name: string) => page.getByRole('button', { name, exact: true }).click();
 
   await page.goto('/dev/walkthrough');
@@ -98,8 +117,12 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   await expect(st(2)).toBeVisible();
   await assertPhoneAlive(page);
 
-  // sixteen ones, typed as real keystrokes -> the vault -> "the code is true"
+  // sixteen ones, typed as real keystrokes. Adrian's ruling, 2026-08-20:
+  // there is no more auto-fire on the sixteenth keystroke — once all sixteen
+  // boxes read, the progress readout gives its slot to a brass Unlock press,
+  // which alone fires the answer -> the vault -> "the code is true"
   await page.getByLabel('The code').pressSequentially('1111111111111111', { delay: 15 });
+  await page.getByRole('button', { name: 'Unlock', exact: true }).click();
   await expect(st(3)).toBeVisible({ timeout: 8000 });
   await assertPhoneAlive(page);
 
@@ -126,7 +149,8 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   await expect(st(8)).toBeVisible();
   await assertPhoneAlive(page);
 
-  // the gathering, all five required-or-not screens, filled with sample values
+  // the gathering, re-ordered (§7, 2026-08-20): sign, required, one account
+  // across everything
   await page.getByLabel('First name').fill('Ada');
   await page.getByLabel('Last name').fill('Lovelace');
   await page.getByLabel('Email').fill('ada@example.com');
@@ -135,30 +159,27 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   await expect(st(9)).toBeVisible();
   await assertPhoneAlive(page);
 
-  await page.getByLabel('Date').fill('01/01/1990');
-  await page.getByLabel('Time').fill('12:00');
-  await page.getByLabel('Place of birth').fill('Portland, USA');
+  // where it lives, required: a light must live somewhere
+  await page.getByLabel('City').fill('Sonoma County');
   await click('Continue');
   await expect(st(10)).toBeVisible();
   await assertPhoneAlive(page);
 
-  await page.getByLabel('City').fill('Sonoma County');
+  // who you are · your links, held together on one page behind a
+  // SegmentedTabs pill: born's fields on the first tab (open by default),
+  // links' field on the second — both optional, the page itself required
+  await page.getByLabel('Date').fill('01/01/1990');
+  await page.getByLabel('Time').fill('12:00');
+  await page.getByLabel('Place of birth').fill('Portland, USA');
+  await page.getByRole('button', { name: 'Your links', exact: true }).click();
+  await page.getByLabel('Your website').fill('https://example.com');
   await click('Continue');
   await expect(st(11)).toBeVisible();
   await assertPhoneAlive(page);
 
-  await page.getByLabel('Your website').fill('https://example.com');
-  await click('Continue');
-  await expect(st(12)).toBeVisible();
-  await assertPhoneAlive(page);
-
-  await click('Keep these choices');
-  await expect(st(13)).toBeVisible();
-  await assertPhoneAlive(page);
-
   // ignition -> the piece page again, now as its caretaker
   await click('Open its page');
-  await expect(st(14)).toBeVisible();
+  await expect(st(12)).toBeVisible();
   await assertPhoneAlive(page);
 
   // relationship really did flip: the unclaimed Begin and its arrival line are
@@ -171,7 +192,7 @@ test('walks chapter 1 end to end by real clicks, the rail never desyncing', asyn
   // piece, in place, without moving the rail
   await page.getByLabel('Add to your piece').click();
   await expect(page.getByRole('button', { name: 'See all of them', exact: true })).toBeVisible();
-  await expect(st(14)).toBeVisible();
+  await expect(st(12)).toBeVisible();
   await assertPhoneAlive(page);
 
   expect(errors).toEqual([]);
@@ -213,14 +234,32 @@ test('the year turning opens on three ritual rows and walks to the household', a
  * 4. every other collector chapter, via the rail's own Next control
  * ------------------------------------------------------------------ */
 
-/** every FLOW and JUMP-leftover chapter besides "Registering it, all the
- *  way" (walked by real clicks above) and the two ceremony chapters (walked
- *  by real clicks below): title paired with its station count, both read
- *  straight off `components/walkthrough/chapters.ts` so this list cannot
- *  silently drift from the rail's own table of contents. */
+/**
+ * Every FLOW and JUMP-leftover chapter besides "Registering it, all the
+ * way" (walked by real clicks above), the two register-surface ceremony
+ * chapters and the plate chapter (walked by real clicks below, each needing
+ * its own real-button interaction the rail's own Next cannot drive), and
+ * "Choose the arrival" (its own test below — it is the walkthrough's LAST
+ * chapter, so at its own final station Next has nowhere to go and never
+ * reads "Next chapter", the one invariant this loop otherwise relies on):
+ * title paired with its station count.
+ *
+ * Recomputed straight off the rendered rail rather than guessed: run
+ *   npx tsx -e "import('./components/walkthrough/chapters.ts').then(m=>
+ *     m.CHAPTERS.forEach(c=>console.log(c.kind,c.id,c.title,c.stations.length)))"
+ * (or simply open every chapter in the rail and read its own station count)
+ * whenever `chapters.ts`, `ceremonyChapters.ts` or the flows/jump list in
+ * `tourData.ts` change, so this table cannot silently drift from the rail's
+ * own table of contents again. Two entries moved with §7's gathering
+ * re-order (the gift and receiving-a-gift flows both still chain through the
+ * shortened gathering); two more grew because the leftover "gathering"
+ * section now also carries born, links and shows, which the required path
+ * no longer visits, and "Inside the page" lost the one row ("Add to your
+ * piece") that the "Adding to your piece" flow chapter already covers.
+ */
 const OTHER_COLLECTOR_CHAPTERS: [title: string, stations: number][] = [
-  ['Giving it as a gift', 14],
-  ['Receiving one that was a gift', 12],
+  ['Giving it as a gift', 12],
+  ['Receiving one that was a gift', 10],
   ['Passing it to someone you love', 4],
   ['Selling it to a stranger', 4],
   ['Accepting a piece passed to you', 2],
@@ -232,8 +271,8 @@ const OTHER_COLLECTOR_CHAPTERS: [title: string, stations: number][] = [
   ['Signing back in', 2],
   ['The door', 5],
   ['The threshold', 1],
-  ['The gathering', 1],
-  ['Inside the page', 9],
+  ['The gathering', 4],
+  ['Inside the page', 8],
   ['The year turns', 3],
   ['The passing', 1],
   ['Asking someone on', 4],
@@ -251,7 +290,12 @@ test('every other collector chapter walks by Next with a live phone and no page 
     // choosing a chapter closes the list, so reopen it for each one
     await page.getByRole('button', { name: /^Chapters/ }).click();
     await page.getByRole('button', { name: title, exact: true }).click();
-    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+    // the compact strip always carries the title as a substring of its own
+    // "· title · N of M ·" line; some chapters' own first station happens to
+    // repeat the title verbatim too (a coincidence of the underlying copy,
+    // not a structural guarantee), so this is a substring match with
+    // .first() rather than an exact one
+    await expect(page.getByText(title).first()).toBeVisible();
     await expect(station(page, 1, total)).toBeVisible();
     await assertPhoneAlive(page);
 
@@ -273,10 +317,16 @@ test('every other collector chapter walks by Next with a live phone and no page 
 });
 
 /* ------------------------------------------------------------------ *
- * 5. the demo garden's write screen: the three-tier control
+ * 5. the demo garden's write screen, through the review page (§7 "The lock
+ *    line moves; the placing gets a review"): Place it on the write screen
+ *    commits nothing any more, only carries the draft to "Read it back",
+ *    where the words are read back whole and the one real press lives. The
+ *    write screen's old two-press seal arm is gone, folded into this single
+ *    review-page commit.
  * ------------------------------------------------------------------ */
 
-test('the garden write screen holds three tiers, Keep reveals the heirs, Seal takes two presses', async ({ page }) => {
+test('the garden carries a write through the review page to a placed outcome, the seal path folded in', async ({ page }) => {
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
 
@@ -287,6 +337,11 @@ test('the garden write screen holds three tiers, Keep reveals the heirs, Seal ta
 
   // the piece asks -> the write screen
   await page.getByRole('button', { name: /^Write it/ }).click();
+
+  // the review page requires real words: the write screen's Place it is a
+  // no-op on empty text, so the walk types something first
+  const words = 'It sat on the shelf for a year before I could look at it straight.';
+  await page.locator('textarea').fill(words);
 
   // the three stacked choices, all present at once — never the old capsule
   const shine = page.getByRole('button', { name: /^Let it shine/ });
@@ -315,16 +370,39 @@ test('the garden write screen holds three tiers, Keep reveals the heirs, Seal ta
   await expect(heirsOff).toHaveCount(0);
   await expect(page.getByText('This stays yours alone · nobody sees it but you.')).toBeVisible();
 
-  // sealing is a vow: the first press arms the grave confirm, nothing moves
+  // Place it no longer commits: it hands the draft to the review page
   const place = page.getByRole('button', { name: 'Place it', exact: true });
   await place.click();
-  await expect(page.getByText(/Sealing is a vow\. Press Place it once more/)).toBeVisible();
-  await expect(place).toBeVisible();
+  await expect(page.getByText('Read it back')).toBeVisible();
 
-  // the second press commits, landing back on the garden index
+  // the words, read back whole, and the tier restated as the seal's own vow
+  // — tierSealBody and tierSealWriterNote stand as this page's warning,
+  // exactly as the write screen's retired second press once asked
+  await expect(page.getByText(words, { exact: true })).toBeVisible();
+  await expect(page.getByText('Seal it', { exact: true })).toBeVisible();
+  await expect(page.getByText(
+    'Nobody opens it again. Not the next caretaker, not your family, not ever. The piece still holds it.',
+  )).toBeVisible();
+  await expect(page.getByText(
+    'You can always open your own. You can let it shine one day. Once it shines, it stays.',
+  )).toBeVisible();
+
+  // Change it returns to the write screen with everything intact: the
+  // words, and the seal tier still selected
+  await page.getByRole('button', { name: 'Change it', exact: true }).click();
+  await expect(page.locator('textarea')).toHaveValue(words);
+  await expect(page.getByText('This stays yours alone · nobody sees it but you.')).toBeVisible();
+
+  // back to review, and the one press that actually places
   await place.click();
+  await expect(page.getByText('Read it back')).toBeVisible();
+  const commit = page.getByRole('button', { name: 'Place it, truly', exact: true });
+  await expect(commit).toBeVisible();
+  await commit.click();
+
+  // lands back on the garden index, the piece's own table of contents
   await expect(page.getByText('I saw it in the hallway of a house I was leaving…')).toBeVisible();
-  await expect(place).toHaveCount(0);
+  await expect(commit).toHaveCount(0);
   await expect(station(page, 1, 1)).toBeVisible();
   await assertPhoneAlive(page);
 
@@ -333,13 +411,21 @@ test('the garden write screen holds three tiers, Keep reveals the heirs, Seal ta
 
 /* ------------------------------------------------------------------ *
  * 6. the feedback rail: a verdict marks the scrubber, a note autosaves
+ *
+ * At the 390px viewport this spec runs, the rail wears its narrow shape: the
+ * verdict pair sits in the quiet row under Back/Next, and "Leave a note"
+ * opens the note field as a bottom sheet (role="dialog") over the phone
+ * rather than expanding it inline. The sheet carries the same VerdictPair
+ * and NoteField the docked (>=1000px) rail would show inline, so every
+ * assertion below reads the same regardless of which shape rendered it.
  * ------------------------------------------------------------------ */
 
 test('a verdict lights the scrubber dot and a note autosaves to localStorage and survives reload', async ({ page }) => {
   await page.goto('/dev/walkthrough');
-  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
 
-  // the verdict pair under the phone: "right" persists instantly
+  // the verdict pair, visible in the quiet row before any note is open:
+  // "right" persists instantly
   await page.getByRole('button', { name: 'right', exact: true }).click();
 
   // the scrubber's station-1 dot lights brass (espresso.palette.brass)
@@ -350,8 +436,10 @@ test('a verdict lights the scrubber dot and a note autosaves to localStorage and
   expect(store?.[CH1]?.[0]?.verdict).toBe('right');
   expect(store?.[CH1]?.[0]?.label).toBe('Nobody holds it');
 
-  // the note, saved through the field's own debounce: "Kept." is the signal
+  // the note, opened as the narrow rail's bottom sheet, saved through the
+  // field's own debounce: "Kept." is the signal
   await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Leave a note' })).toBeVisible();
   await page.locator('textarea').fill('The door reads honest.');
   await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
 
@@ -359,10 +447,13 @@ test('a verdict lights the scrubber dot and a note autosaves to localStorage and
   expect(store?.[CH1]?.[0]?.note).toBe('The door reads honest.');
   expect(store?.[CH1]?.[0]?.verdict).toBe('right');
 
-  // reload: the note field reopens itself with the text, the entry counted
+  // reload: the note sheet reopens itself with the text, the entry counted
   await page.reload();
-  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Leave a note' })).toBeVisible();
   await expect(page.locator('textarea')).toHaveValue('The door reads honest.');
+  // the quiet row's own opener is hidden while the sheet is up, so this is
+  // the sheet's own copy of the count
   await expect(page.getByRole('button', { name: 'Your notes · 1', exact: true })).toBeVisible();
 
   store = await readNotesStore(page);
@@ -378,13 +469,14 @@ test.describe('the notes drawer', () => {
 
   test('lists the entry and Copy all notes puts the digest on the clipboard', async ({ page }) => {
     await page.goto('/dev/walkthrough');
-    await expect(station(page, 1, 14)).toBeVisible();
+    await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
 
     await page.getByRole('button', { name: 'right', exact: true }).click();
     await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
     await page.locator('textarea').fill('The door reads honest.');
     await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
 
+    // the sheet's own "Your notes" opener, the only one visible while it is up
     await page.getByRole('button', { name: 'Your notes · 1', exact: true }).click();
     const drawer = page.getByRole('dialog', { name: 'Your notes' });
     await expect(drawer).toBeVisible();
@@ -409,10 +501,10 @@ test.describe('the notes drawer', () => {
 
 test('ArrowRight advances a station and Shift+ArrowRight advances a chapter', async ({ page }) => {
   await page.goto('/dev/walkthrough');
-  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
 
   await page.keyboard.press('ArrowRight');
-  await expect(station(page, 2, 14)).toBeVisible();
+  await expect(station(page, 2, CH1_TOTAL)).toBeVisible();
   await assertPhoneAlive(page);
 
   // station 2 is the code page, which focuses its own input on mount, and
@@ -421,7 +513,7 @@ test('ArrowRight advances a station and Shift+ArrowRight advances a chapter', as
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('Shift+ArrowRight');
   await expect(page.getByText('Giving it as a gift').first()).toBeVisible();
-  await expect(station(page, 1, 14)).toBeVisible();
+  await expect(station(page, 1, 12)).toBeVisible();
   await assertPhoneAlive(page);
 });
 
@@ -451,7 +543,7 @@ test('at a chapter\'s final station the control reads Next chapter and advances'
 });
 
 /* ------------------------------------------------------------------ *
- * 10. the two ceremony chapters
+ * 10. the register ceremony and adding to a piece
  *
  * CeremonyStation.tsx carries its own <MemoryRouter>, so the walkthrough
  * must never mount under the site's BrowserRouter (a Router cannot render
@@ -460,7 +552,7 @@ test('at a chapter\'s final station the control reads Next chapter and advances'
  * standalone prototype build has always had.
  * ------------------------------------------------------------------ */
 
-test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to-piece opens its screens', async ({ page }) => {
+test('the register ceremony walks by real clicks to a demo Ownership Code, and add-to-piece opens its screens', async ({ page }) => {
   test.setTimeout(60_000);
 
   await page.goto('/dev/walkthrough');
@@ -524,7 +616,148 @@ test('ceremony chapters walk by real clicks to a demo Ownership Code, and add-to
 });
 
 /* ------------------------------------------------------------------ *
- * 11. localStorage progress survives a reload
+ * 11. the held ceremony: "A piece already in someone's hands"
+ *
+ * The same RegisterCeremony component, reached from the threshold's own
+ * foot link rather than its main Begin, held mode needing no URL param and
+ * no extra prop. This chapter shares the register surface and mounts a
+ * second, separate instance of the same screen (see ceremonyChapters.ts).
+ * Its own copy of the browser-only fetch stub starts fresh with each new
+ * page in this spec, so the registry unlock here always needs its own
+ * secret typed in — nothing carries over from the ceremony test above.
+ * ------------------------------------------------------------------ */
+
+test('the held ceremony walks a piece already in someone’s hands to the invitation reference', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto('/dev/walkthrough');
+  await openCeremonyChapter(page, /A piece already in someone.s hands/i);
+  await expect(station(page, 1, 6)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // the same threshold, entered by its other door
+  await page.getByRole('button', { name: /A piece already in someone.s hands/i }).click();
+  await expect(station(page, 2, 6)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  await page.getByLabel('Search').fill('UL-100');
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await expect(station(page, 3, 6)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Unique work', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(station(page, 4, 6)).toBeVisible();
+
+  await page.getByLabel('Registry secret').fill('anyword');
+  await page.getByRole('button', { name: /^Unlock/ }).click();
+  await expect(station(page, 5, 6)).toBeVisible({ timeout: 8000 });
+
+  // the held entrance's one extra field: the holder's email, so the
+  // invitation knows who it is for
+  await page.getByLabel('The holder’s email').fill('holder@example.com');
+  await page.getByRole('button', { name: 'Register', exact: true }).click();
+  await expect(station(page, 6, 6)).toBeVisible({ timeout: 8000 });
+  await assertPhoneAlive(page);
+
+  // the invitation reference ledger line, present as soon as the ceremony
+  // lands on done — before the ownership code is even dismissed
+  await expect(page.getByText('Invitation reference')).toBeVisible();
+  await expect(page.getByText('kp-demo-0001')).toBeVisible();
+
+  // dismissing the ownership code reveals the invitation itself, carried by
+  // the same "shown once" mechanic as the code before it
+  await page.getByRole('button', { name: 'Dismiss it, I have saved it', exact: true }).click();
+  await expect(page.getByText('demo-invitation-token-45678')).toBeVisible({ timeout: 8000 });
+
+  expect(errors).toEqual([]);
+});
+
+/* ------------------------------------------------------------------ *
+ * 12. the plate chapter: the real generator's own SVG output
+ *
+ * A purpose-made three-station sequence, not the real AdminPlateWizard (see
+ * CeremonyStation.tsx's own comment on why). It builds the REAL two plate
+ * faces with utils/artworkPlate.ts from this walkthrough's own demo codes —
+ * no fetch stub involved, since the plate is generated entirely client-side.
+ * ------------------------------------------------------------------ */
+
+test('the plate chapter renders the real front and underside SVGs from the demo codes', async ({ page }) => {
+  test.setTimeout(30_000);
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto('/dev/walkthrough');
+  await openCeremonyChapter(page, /Preparing the plate/i);
+  await expect(station(page, 1, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // the front: the real generator's QR, built from the demo's own public
+  // code, once the client-side build finishes
+  await expect(page.getByText(/AR-DEM45678 · https:\/\//)).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('svg').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(station(page, 2, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // the underside: the same generator's other face, engraved with the
+  // Ownership Code rather than the public one
+  await expect(page.getByText(/Engraved where a stranger holding the piece never looks/)).toBeVisible();
+  await expect(page.locator('svg').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(station(page, 3, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+
+  // what travels where: the two SVGs to the fabricator, the manifest stays.
+  // Exact text: the station's own rail notice ("The two SVGs go to the
+  // fabricator…") is a case-insensitive substring superset of the Ledger's
+  // own label and would otherwise double-match.
+  await expect(page.getByText('To the fabricator', { exact: true })).toBeVisible();
+  await expect(page.getByText('Stays in the registry', { exact: true })).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
+/* ------------------------------------------------------------------ *
+ * 13. "Choose the arrival": three self-contained studies, none of them a
+ *     collector View the shell can be pointed at
+ * ------------------------------------------------------------------ */
+
+test('the arrival chapter offers three replayable studies, verdicts working on each', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto('/dev/walkthrough');
+  await openChapter(page, 'Choose the arrival');
+  await expect(station(page, 1, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+  await expect(page.getByRole('button', { name: 'Replay', exact: true })).toBeVisible();
+
+  // a verdict on the first study persists exactly like any collector station
+  await page.getByRole('button', { name: 'right', exact: true }).click();
+  const store = await readNotesStore(page);
+  expect(store?.['arrival-choose']?.[0]?.verdict).toBe('right');
+
+  const next = page.getByRole('button', { name: 'Next', exact: true });
+
+  await next.click();
+  await expect(station(page, 2, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+  await expect(page.getByRole('button', { name: 'Replay', exact: true })).toBeVisible();
+
+  await next.click();
+  await expect(station(page, 3, 3)).toBeVisible();
+  await assertPhoneAlive(page);
+  await expect(page.getByRole('button', { name: 'Replay', exact: true })).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
+/* ------------------------------------------------------------------ *
+ * 14. localStorage progress survives a reload
  * ------------------------------------------------------------------ */
 
 test('reloading mid-walk restores the same chapter and station', async ({ page }) => {
