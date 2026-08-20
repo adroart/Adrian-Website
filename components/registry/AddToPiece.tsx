@@ -365,10 +365,10 @@ const AddToPiece: React.FC<{ onStepChange?: (step: Step) => void }> = ({ onStepC
   if (step === 'hub') {
     screen = (
       <Ground light="a" wash>
-        <Eyebrow>{title} · {artworkId}</Eyebrow>
-        <div style={{ position: 'relative', paddingTop: 14 }}>
-          <Head>Add to this piece.</Head>
-        </div>
+        <RoomHead
+          title="Add to this piece."
+          onBack={() => navigate(`/admin/artworks/${encodeURIComponent(artworkId)}`)}
+        />
         <Body top={18}>
           Nothing here is required, and nothing waits on anything else. Whatever you add
           joins the piece and its permanent record.

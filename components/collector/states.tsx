@@ -356,16 +356,16 @@ const Offline: React.FC<{
         position: 'relative',
         flex: 'none',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        gap: 20,
+        justifyContent: 'space-between',
+        gap: 16,
         paddingTop: 24,
       }}
     >
-      <Brass full onClick={onRetry}>
+      <TLink onClick={onLater}>{COPY.states.offlineLater}</TLink>
+      <Brass onClick={onRetry}>
         {COPY.states.offlineRetry}
       </Brass>
-      <TLink onClick={onLater}>{COPY.states.offlineLater}</TLink>
     </div>
   </Ground>
   );
