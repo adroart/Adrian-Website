@@ -364,8 +364,12 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
     value?: string;
     hint?: string;
     lit?: boolean;
+    /** the input's HTML type; defaults to the plain text field this always was */
+    type?: string;
+    /** the input's autoComplete hint; absent by default, exactly as before */
+    autoComplete?: string;
     onChange?: (v: string) => void;
-  }> = ({ label, value = '', hint, lit = false, onChange }) => (
+  }> = ({ label, value = '', hint, lit = false, type = 'text', autoComplete, onChange }) => (
     <label
       style={{
         flex: 1,
@@ -395,6 +399,8 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
         <Eyebrow tone={lit ? C.brass : C.inkQuiet}>{label}</Eyebrow>
       </span>
       <input
+        type={type}
+        autoComplete={autoComplete}
         value={value}
         placeholder={hint}
         spellCheck={false}

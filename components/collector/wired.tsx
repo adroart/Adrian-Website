@@ -133,8 +133,27 @@ const REMOVE_CONFIRM = ph(
 const PERSON_INVITED_LINE = ph('Invited. The piece has written to them, and nothing more until they answer.');
 const PERSON_STANDS_QUIET = ph('private to you, and they are not told');
 
+/* invitation management, the artist's second walk: a pending invitation
+   used to offer only "Take her off the piece." Cancelling one costs
+   nothing (nothing was ever placed), so it is a single press rather than
+   the grave two-press confirm a real removal still uses; resending is a
+   revoke and a fresh invite through the same api.ts functions. */
+const INVITE_CANCEL_LABEL = ph('Cancel the invitation');
+const INVITE_CANCEL_NOTE = ph('Nothing was placed yet. Cancelling it costs nothing.');
+const INVITE_RESEND_LABEL = ph('Send it again');
+/* the fallback line when the matching invitation record has not loaded yet
+   (a brief window right after opening the person screen) */
+const INVITE_RESEND_FALLBACK = ph('A new letter, with a fresh thirty days to answer.');
+
 /* how long an invitation letter waits before it lapses (the server caps at 31 days) */
 const INVITE_DAYS = 30;
+
+/** a plain short date, for the real sent/expiry lines on a pending invitation */
+function formatShortDate(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
 
 /* ------------------------------------------------------------------ *
  * A network-backed value with the quiet presentation: loading renders as
@@ -257,7 +276,6 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const [authOpen, setAuthOpen] = useState(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
-  const [grain, setGrain] = useState<0 | 1>(0);
   const [cityId, setCityId] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
@@ -730,6 +748,32 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     }
   }, [keeperPieceId, refresh]);
 
+  /* "Send it again": revoke the lapsed invitation, then send a fresh one to
+     the same address with a new thirty-day window — both through the
+     existing api.ts functions, never a bespoke resend endpoint. */
+  const submitResendInvite = useCallback(
+    async (target: Extract<FamilyPerson, { kind: 'invited' }>) => {
+      if (!keeperPieceId) return;
+      try {
+        const revoked = await revokeKeeperContributor({ keeperPieceId, invitationId: target.invitationId });
+        if (!revoked.ok) return;
+        const invited = await inviteKeeperContributor({
+          keeperPieceId,
+          intendedRecipientEmail: target.email,
+          expiresAt: new Date(Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        if (invited.ok) {
+          setPerson(null);
+          refresh();
+          setStep({ kind: 'piece', room: 'family' });
+        }
+      } catch {
+        /* the quiet failure: the screen stands, the same press tries again */
+      }
+    },
+    [keeperPieceId, refresh],
+  );
+
   /* ---------------- garden live ----------------
    * The three tiers (§6 "Three tiers, and what outlives you"), mirrored from
    * the backend's settled matrix: keep→shine, keep→seal, seal→shine. Shine
@@ -891,6 +935,19 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     };
   }, [isYours, keeperPieceId, contributors]);
 
+  /* "Send it again"'s own note: the real sent/expiry dates when the
+     matching invitation has loaded (listKeeperContributors returns both,
+     ContributorInvitation.invitedAt / .expiresAt), the honest fallback
+     line otherwise — never a fabricated date. */
+  const resendInviteNote = useMemo(() => {
+    if (!person || person.kind !== 'invited' || contributors.status !== 'ready') {
+      return INVITE_RESEND_FALLBACK;
+    }
+    const invitation = contributors.data?.invitations.find(inv => inv.invitationId === person.invitationId);
+    if (!invitation) return INVITE_RESEND_FALLBACK;
+    return `Sent ${formatShortDate(invitation.invitedAt)}. Waits until ${formatShortDate(invitation.expiresAt)}.`;
+  }, [person, contributors]);
+
   /* ---------------- the ground reading's inputs ----------------
    * The GROUND axis (utils/collectorGround.ts): first binding from the
    * public lineage, the one notion of now this journey holds, and the birth
@@ -1019,23 +1076,30 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       if (key === 'invite') screen.preNote = INVITE_EMAIL_ONLY;
 
       /* one person, real: their email as the head, their true status as the
-         body, and only the two rows that do something — the approval pair is
-         demo-only, honestly absent here (no approval data model). The remove
-         row arms on its first press and commits on its second. */
+         body. An invitation still waiting for its answer gets its own two
+         rows (the artist's second walk): cancelling costs nothing, so it is
+         a single press, never the grave two-press confirm that removing an
+         active contributor still uses. */
       if (key === 'person' && person) {
         screen.head = person.email;
-        screen.body = person.kind === 'invited'
-          ? PERSON_INVITED_LINE
-          : undefined;
-        screen.rows = [
-          [COPY.people.personStands, PERSON_STANDS_QUIET, 'personSuccession'],
-          [COPY.people.personRemove, COPY.people.personRemoveNote, '__personRemove'],
-        ];
-        screen.note = removeArmed ? REMOVE_CONFIRM : COPY.people.personNote;
+        if (person.kind === 'invited') {
+          screen.body = PERSON_INVITED_LINE;
+          screen.rows = [
+            [INVITE_CANCEL_LABEL, INVITE_CANCEL_NOTE, '__personCancelInvite'],
+            [INVITE_RESEND_LABEL, resendInviteNote, '__personResend'],
+          ];
+          screen.note = undefined;
+        } else {
+          screen.rows = [
+            [COPY.people.personStands, PERSON_STANDS_QUIET, 'personSuccession'],
+            [COPY.people.personRemove, COPY.people.personRemoveNote, '__personRemove'],
+          ];
+          screen.note = removeArmed ? REMOVE_CONFIRM : COPY.people.personNote;
+        }
       }
       return screen;
     },
-    [swap, familyLive, person, removeArmed],
+    [swap, familyLive, person, removeArmed, resendInviteNote],
   );
 
   /* ---------------- navigation ---------------- */
@@ -1047,25 +1111,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       /* the armed removal disarms the moment any other press happens */
       if (key !== '__personRemove' && removeArmed) setRemoveArmed(false);
 
-      /* side effects on leaving a gathering screen by its own brass */
-      if (from === 'born' && key === 'lives') {
-        void submitBorn().then(result => {
-          if (result === 'dropped') {
-            setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: [
-                [G.fieldDate, typed[G.fieldDate] ?? ''],
-                [G.fieldPlace, typed[G.fieldPlace] ?? ''],
-              ].filter(([, value]) => value) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'born' }),
-            });
-          }
-        });
-      }
-      /* §7, 2026-08-20: lives now leads straight into who, the gathering's
-         final page, rather than into links. */
-      if (from === 'lives' && key === 'who') void resolveCity();
+      /* side effects on leaving a gathering screen by its own brass.
+         §7 2026-08-20 then the artist's second walk: lives leads into
+         who1, and who2 (not who1) is the screen that now carries the
+         birth-fields and shows submissions on its way into light47 — the
+         gathering's final two screens, split from the one combined page. */
+      if (from === 'lives' && key === 'who1') void resolveCity();
       if (from === 'shows' && key === 'light47') {
         void submitShows(lamps).then(result => {
           if (result === 'dropped') {
@@ -1080,11 +1131,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           }
         });
       }
-      /* who → light47: fires both submissions the who page now carries.
-         shareIntention and shareCity go true always (the piece's own facts
-         are not optional, §7); the five identity lamps come from the who
-         page's own state, at indices 2..6 of the shared lamps array. */
-      if (from === 'who' && key === 'light47') {
+      /* who2 → light47: fires both submissions the split gathering pages
+         now carry between them. shareIntention and shareCity go true
+         always (the piece's own facts are not optional, §7); the five
+         identity lamps come from who1's state, at indices 2..6 of the
+         shared lamps array. */
+      if (from === 'who2' && key === 'light47') {
         void submitBorn().then(result => {
           if (result === 'dropped') {
             setStep({
@@ -1094,7 +1146,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
                 [G.fieldDate, typed[G.fieldDate] ?? ''],
                 [G.fieldPlace, typed[G.fieldPlace] ?? ''],
               ].filter(([, value]) => value) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who' }),
+              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
             });
           }
         });
@@ -1106,7 +1158,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
               receipt: (typed[G.fieldCity]
                 ? [[G.fieldCity, typed[G.fieldCity]]]
                 : []) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who' }),
+              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
             });
           }
         });
@@ -1148,6 +1200,18 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
 
+      /* a pending invitation's own two actions: cancelling is single-press
+         (nothing was ever placed), resending is a revoke and a fresh
+         invite in one motion */
+      if (key === '__personCancelInvite') {
+        if (person && person.kind === 'invited') void submitRemove(person);
+        return;
+      }
+      if (key === '__personResend') {
+        if (person && person.kind === 'invited') void submitResendInvite(person);
+        return;
+      }
+
       if (key === 'codetrue' && giftPendingRef.current) {
         /* the one detour: before 'The code is true', the sealed message
            waiting from this exact bind. Consumed once — a later return to
@@ -1161,8 +1225,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
       if (key === 'sign') {
-        /* the account already exists — the bind required it. §7,
-           2026-08-20: the chain is sign → lives → who → light47 now. */
+        /* the account already exists — the bind required it. The chain is
+           sign → lives → who1 → who2 → light47 now (§7 2026-08-20, then
+           the artist's second walk splitting who into two screens). */
         setStep({ kind: 'walk', key: 'lives' });
         return;
       }
@@ -1193,7 +1258,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       }
       if (key in WALK) setStep({ kind: 'walk', key: key as keyof typeof WALK });
     },
-    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, person, removeArmed, lamps, typed, refresh],
+    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, submitResendInvite, person, removeArmed, lamps, typed, refresh],
   );
 
   /* ---------------- the account bridge ---------------- */
@@ -1279,8 +1344,6 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
           lampsValue={lamps}
           onLamps={setLamps}
-          grainValue={grain}
-          onGrain={setGrain}
         />
       );
     }
@@ -1303,8 +1366,6 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
         lampsValue={lamps}
         onLamps={setLamps}
-        grainValue={grain}
-        onGrain={setGrain}
       />
     );
   } else {

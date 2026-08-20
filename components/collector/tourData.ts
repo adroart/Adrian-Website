@@ -42,9 +42,7 @@ export const SOURCE: Record<string, string | null> = {
 
   /* drawn */
   sign: '9a',
-  born: '9b',
   lives: '9c',
-  links: '9d',
   shows: '9e',
   light47: '9f',
   welcome: '9g',
@@ -64,9 +62,15 @@ export const SOURCE: Record<string, string | null> = {
   love: null,
   carries: null,
   forgot: null,
-  /* who you are · your links, §7 2026-08-20's re-ordered gathering. Built
-     fresh from Adrian's walkthrough ruling; no card exists to compare it to. */
-  who: null,
+  /* who you are, and your links: §7 2026-08-20's re-ordered gathering,
+     split back into two one-line-headed screens by the artist's second
+     walk (2026-08-20). Built fresh from the walkthrough rulings; no card
+     exists to compare either to. */
+  who1: null,
+  who2: null,
+  /* the passing's readback, added by the artist's second walk: no card
+     exists to compare it to either. */
+  passconfirm: null,
   ritual: null,
   ritualplant: null,
   ritualfamily: null,
@@ -135,7 +139,7 @@ export const FLOWS: [label: string, start: View, note: string][] = [
   [
     'Registering it, all the way',
     { kind: 'piece' },
-    'Begin, sixteen ones, the vault, the four, all three gathering screens (sign, where it lives, then who you are and your links together), and out onto the page as yours.',
+    'Begin, sixteen ones, the vault, the four, all four gathering screens (sign, where it lives, who you are, and your links), and out onto the page as yours.',
   ],
   ['Giving it as a gift', { kind: 'walk', key: 'fork' }, 'The giver seals words into it and the record never moves.'],
   ['Receiving one that was a gift', { kind: 'walk', key: 'sealed' }, 'Arrives right after the vault, before everything else.'],
@@ -187,14 +191,14 @@ export const JUMP: [string, Jump[]][] = [
   [
     'The gathering',
     [
-      /* the real chain, §7 2026-08-20: sign → lives → who → light47 */
+      /* the real chain, the artist's second walk (2026-08-20):
+         sign → lives → who1 → who2 → light47 */
       ['Sign its record', { kind: 'walk', key: 'sign' }],
       ['Where it lives', { kind: 'walk', key: 'lives' }],
-      ['Who you are · Your links', { kind: 'walk', key: 'who' }],
+      ['Who you are', { kind: 'walk', key: 'who1' }],
+      ['Your links', { kind: 'walk', key: 'who2' }],
       ['You are Light 47', { kind: 'walk', key: 'light47' }],
-      /* leftover chapters: still defined, no longer on the required path */
-      ['Who you are', { kind: 'walk', key: 'born' }],
-      ['Your links', { kind: 'walk', key: 'links' }],
+      /* leftover chapter: still defined, no longer on the required path */
       ['What shows', { kind: 'walk', key: 'shows' }],
       ['What this is for', { kind: 'walk', key: 'explain' }],
     ],
@@ -232,6 +236,7 @@ export const JUMP: [string, Jump[]][] = [
       ['What travels', { kind: 'walk', key: 'passsell' }],
       ['What it was worth', { kind: 'walk', key: 'passvalue' }],
       ['Let it go', { kind: 'walk', key: 'passready' }],
+      ['To this hand, and no other', { kind: 'walk', key: 'passconfirm' }],
       ['It is waiting', { kind: 'walk', key: 'passdone' }],
       ['Accepting it', { kind: 'walk', key: 'passaccept' }],
     ],
