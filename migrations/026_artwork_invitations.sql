@@ -103,7 +103,7 @@ CREATE TABLE artwork_invitation_redemption_completions (
 CREATE TRIGGER artwork_invitation_redemption_guard
 BEFORE INSERT ON artwork_invitation_redemptions
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invitation redemption is not available') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_invitations invitation
       JOIN keeper_pieces piece ON piece.id = invitation.keeper_piece_id
@@ -117,13 +117,13 @@ BEGIN
        AND piece.keeper_user_id IS NULL
        AND piece.claimed_at IS NULL
        AND piece.released_at IS NULL
-  ) THEN RAISE(ABORT, 'invitation redemption is not available') END;
+  );
 END;
 
 CREATE TRIGGER artwork_invitation_redemption_complete
 BEFORE INSERT ON artwork_invitation_redemption_completions
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'invitation redemption did not complete') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_invitation_redemptions redemption
       JOIN keeper_pieces piece ON piece.id = redemption.keeper_piece_id
@@ -148,7 +148,7 @@ BEGIN
        AND json_valid(lineage.public_payload_json)
        AND json_type(lineage.public_payload_json) = 'object'
        AND (SELECT COUNT(*) FROM json_each(lineage.public_payload_json)) = 0
-  ) THEN RAISE(ABORT, 'invitation redemption did not complete') END;
+  );
 END;
 
 CREATE TRIGGER artwork_invitations_immutable_fields

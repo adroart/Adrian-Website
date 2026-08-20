@@ -185,16 +185,13 @@ CREATE TRIGGER keeper_pieces_governed_steward_update
 BEFORE UPDATE OF keeper_user_id, claimed_at, last_transfer_id ON keeper_pieces
 WHEN OLD.claimed_at IS NOT NULL OR OLD.keeper_user_id IS NOT NULL
 BEGIN
-  SELECT CASE WHEN NEW.claimed_at IS NULL OR NEW.keeper_user_id IS NULL THEN
-    RAISE(ABORT, 'claimed artwork remains governed') END;
-  SELECT CASE WHEN NEW.last_transfer_id IS NOT OLD.last_transfer_id
-    AND NEW.keeper_user_id IS OLD.keeper_user_id THEN
-    RAISE(ABORT, 'transfer marker requires steward transfer') END;
-  SELECT CASE WHEN NEW.last_transfer_id IS OLD.last_transfer_id
+  SELECT RAISE(ABORT, 'claimed artwork remains governed') WHERE NEW.claimed_at IS NULL OR NEW.keeper_user_id IS NULL;
+  SELECT RAISE(ABORT, 'transfer marker requires steward transfer') WHERE NEW.last_transfer_id IS NOT OLD.last_transfer_id
+    AND NEW.keeper_user_id IS OLD.keeper_user_id;
+  SELECT RAISE(ABORT, 'steward transfer is not authorized') WHERE NEW.last_transfer_id IS OLD.last_transfer_id
     AND (NEW.keeper_user_id IS NOT OLD.keeper_user_id
-      OR NEW.claimed_at IS NOT OLD.claimed_at) THEN
-    RAISE(ABORT, 'steward transfer is not authorized') END;
-  SELECT CASE WHEN NEW.keeper_user_id IS NOT OLD.keeper_user_id AND (
+      OR NEW.claimed_at IS NOT OLD.claimed_at);
+  SELECT RAISE(ABORT, 'steward transfer is not authorized') WHERE NEW.keeper_user_id IS NOT OLD.keeper_user_id AND (
     NEW.last_transfer_id IS OLD.last_transfer_id OR NOT EXISTS (
       SELECT 1
         FROM artwork_transfer_receipts receipt
@@ -214,13 +211,13 @@ BEGIN
          AND NEW.lineage_event_count = intent.expected_lineage_count + 1
          AND NEW.lineage_head_hash = lineage.event_hash
     )
-  ) THEN RAISE(ABORT, 'steward transfer is not authorized') END;
+  );
 END;
 
 CREATE TRIGGER artwork_transfer_receipt_complete
 BEFORE INSERT ON artwork_transfer_receipts
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'incomplete steward transfer') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_transfer_intents intent
       JOIN keeper_pieces piece ON piece.id = intent.keeper_piece_id
@@ -269,7 +266,7 @@ BEGIN
        AND json_extract(lineage.public_payload_json, '$.transferKind') = intent.transfer_kind
        AND from_party.user_id = intent.expected_from_user_id
        AND to_party.user_id = intent.target_user_id
-  ) THEN RAISE(ABORT, 'incomplete steward transfer') END;
+  );
 END;
 
 CREATE TRIGGER artwork_transfer_receipt_commit
@@ -316,7 +313,7 @@ BEGIN
             WHERE id = NEW.transfer_intent_id
          );
 
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'steward transfer commit failed') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_transfer_intents intent
       JOIN artwork_lineage_events lineage ON lineage.id = intent.lineage_event_id
@@ -330,5 +327,5 @@ BEGIN
        AND piece.lineage_event_count = intent.expected_lineage_count + 1
        AND piece.lineage_head_hash = lineage.event_hash
        AND piece.last_transfer_id = intent.id
-  ) THEN RAISE(ABORT, 'steward transfer commit failed') END;
+  );
 END;

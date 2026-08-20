@@ -142,7 +142,7 @@ SELECT grant.invitation_id,
 CREATE TRIGGER artwork_contributor_invitation_insert_guard
 BEFORE INSERT ON artwork_contributor_invitations
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') WHERE NOT EXISTS (
     SELECT 1
       FROM keeper_pieces AS piece
       JOIN user AS recipient ON recipient.id = NEW.intended_recipient_user_id
@@ -154,16 +154,16 @@ BEGIN
        AND recipient.emailVerified = 1
        AND lower(recipient.email) = NEW.intended_recipient_email
        AND recipient.id <> piece.keeper_user_id
-  ) THEN RAISE(ABORT, 'contributor invitation requires current keeper and verified recipient') END;
-  SELECT CASE WHEN EXISTS (
+  );
+  SELECT RAISE(ABORT, 'contributor already active') WHERE EXISTS (
     SELECT 1
       FROM artwork_contributor_current_access AS access
      WHERE access.keeper_piece_id = NEW.keeper_piece_id
        AND access.keeper_user_id = NEW.keeper_user_id
        AND access.steward_version = NEW.steward_version
        AND access.contributor_user_id = NEW.intended_recipient_user_id
-  ) THEN RAISE(ABORT, 'contributor already active') END;
-  SELECT CASE WHEN EXISTS (
+  );
+  SELECT RAISE(ABORT, 'contributor already invited') WHERE EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
@@ -190,13 +190,13 @@ BEGIN
             AND prior_grant.steward_version = invitation.steward_version
             AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
        )
-  ) THEN RAISE(ABORT, 'contributor already invited') END;
+  );
 END;
 
 CREATE TRIGGER artwork_contributor_invitation_accept_guard
 BEFORE INSERT ON artwork_contributor_invitation_acceptances
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation is not available') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
@@ -233,7 +233,7 @@ BEGIN
        )
        AND julianday(invitation.invited_at) <= julianday(NEW.accepted_at)
        AND julianday(invitation.expires_at) > julianday(NEW.accepted_at)
-  ) THEN RAISE(ABORT, 'contributor invitation is not available') END;
+  );
 END;
 
 -- Proof consumption and access creation are one SQLite statement. A caller
@@ -254,7 +254,7 @@ END;
 CREATE TRIGGER artwork_contributor_grant_guard
 BEFORE INSERT ON artwork_contributor_access_grants
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor access grant lacks accepted proof') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitation_acceptances AS acceptance
       JOIN artwork_contributor_invitations AS invitation
@@ -270,14 +270,14 @@ BEGIN
           WHERE current_access.keeper_piece_id = NEW.keeper_piece_id
             AND current_access.contributor_user_id = NEW.contributor_user_id
        )
-  ) THEN RAISE(ABORT, 'contributor access grant lacks accepted proof') END;
+  );
 END;
 
 CREATE TRIGGER artwork_contributor_invitation_revoke_guard
 BEFORE INSERT ON artwork_contributor_revocations
 WHEN NEW.revocation_kind = 'invitation'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor invitation cannot be revoked') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_invitations AS invitation
       JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
@@ -294,21 +294,21 @@ BEGIN
          SELECT 1 FROM artwork_contributor_invitation_acceptances AS acceptance
           WHERE acceptance.invitation_id = invitation.id
        )
-  ) THEN RAISE(ABORT, 'contributor invitation cannot be revoked') END;
+  );
 END;
 
 CREATE TRIGGER artwork_contributor_access_revoke_guard
 BEFORE INSERT ON artwork_contributor_revocations
 WHEN NEW.revocation_kind = 'access'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT, 'contributor access cannot be revoked') WHERE NOT EXISTS (
     SELECT 1
       FROM artwork_contributor_current_access AS access
      WHERE access.invitation_id = NEW.invitation_id
        AND access.keeper_user_id = NEW.revoked_by_keeper_user_id
        AND access.steward_version = NEW.steward_version
        AND julianday(NEW.revoked_at) >= julianday(access.granted_at)
-  ) THEN RAISE(ABORT, 'contributor access cannot be revoked') END;
+  );
 END;
 
 -- An active contributor may collaborate, but cannot use that relationship to
