@@ -38,6 +38,7 @@ const migrationsThroughContributors = [
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql', '033_artwork_contributors.sql',
   '034_artwork_contributor_invite_rate_limit.sql',
+  '035_city_floor_removal.sql',
 ].map(readMigration).join('\n');
 
 const invitedAt = '2026-08-10T10:00:00.000Z';
