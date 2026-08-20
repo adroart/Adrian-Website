@@ -10,7 +10,22 @@
 import { createAuthClient } from 'better-auth/react';
 import { emailOTPClient } from 'better-auth/client/plugins';
 
+/**
+ * On a served page the client derives its base URL from the page origin, so
+ * we pass none. On a file:// page (the double-clickable offline walkthrough
+ * build) `window.location.origin` is the literal string "null", which makes
+ * the client constructor throw at module import and take the whole bundle
+ * down before anything renders. Auth is never exercised there, so a harmless
+ * absolute base keeps the import safe; any accidental call just fails like
+ * any other unreachable network request.
+ */
+const fileOriginBaseURL =
+  typeof window !== 'undefined' && window.location.protocol === 'file:'
+    ? 'http://localhost'
+    : undefined;
+
 export const authClient = createAuthClient({
+  ...(fileOriginBaseURL ? { baseURL: fileOriginBaseURL } : {}),
   basePath: '/api/auth',
   plugins: [emailOTPClient()],
 });
