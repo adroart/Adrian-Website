@@ -4,9 +4,9 @@ import { describe, it } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 
-import { DreamScreenView } from '../components/collector/DreamScreen.tsx';
-import { PublicDreamView } from '../components/collector/PublicDream.tsx';
-import { YearlyRitualView } from '../components/collector/YearlyRitualScreen.tsx';
+import { DreamScreenView } from '../components/collector/legacy/DreamScreen.tsx';
+import { PublicDreamView } from '../components/collector/legacy/PublicDream.tsx';
+import { YearlyRitualView } from '../components/collector/legacy/YearlyRitualScreen.tsx';
 import { loadPublicCollectorDream } from '../utils/collectorDreams.ts';
 import type {
   CollectorDreamState,
@@ -210,7 +210,7 @@ describe('collector dream screens', () => {
     const source = [
       'DreamScreen.tsx', 'YearlyRitualScreen.tsx',
     ].map((file) => readFileSync(
-      new URL(`../components/collector/${file}`, import.meta.url), 'utf8',
+      new URL(`../components/collector/legacy/${file}`, import.meta.url), 'utf8',
     )).join('\n');
     assert.doesNotMatch(source, /text-(?:xs|sm)|tracking-\[/);
     assert.doesNotMatch(source, /[\u2014\u{1F300}-\u{1FAFF}]/u);

@@ -1,13 +1,23 @@
 /**
- * GET /api/works/:id — public minimal record for an admin-created DRAFT piece.
+ * GET /api/works/:id — public minimal record for a registered artwork that is
+ * absent from the compiled static catalog (data/mockData.ts).
  *
- * The public catalog (data/mockData.ts) is served client-side by WorksPage; this
- * endpoint is only the fallback for draft pieces that live in the D1
- * `registry_artworks` table (migration 015). It returns nothing secret — just a
- * title, series, and edition size — and only AFTER a plate has been issued for
- * the piece, so a bare draft (registered but never minted) is not exposed.
+ * WorksPage renders directly from the static catalog when the id is there;
+ * this endpoint is only its fallback for artworks that exist solely in the
+ * registry — either an admin draft (registry_artworks, migration 015) or an
+ * artwork typed inline during registration. It serves any REGISTERED
+ * identity (keeper_pieces.registration_status = 'registered'), not only ones
+ * with a fabricated plate, since identity and optional plate fabrication are
+ * independent.
+ *
+ * Metadata comes from resolveArtwork, which prefers the artwork's newest
+ * catalog snapshot (title, series, category, year, dimensions, materials,
+ * description, edition — frozen at registration time) over the thinner draft
+ * row. It returns nothing secret: no codes, no keeper identity, no ownership
+ * material.
  */
 import { isMissingTableError } from '../_lib/keeper.js';
+import { resolveArtwork } from '../_lib/artworkCatalog.js';
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -23,26 +33,40 @@ export async function onRequest({ request, env, params }) {
   if (!env?.DB) return json({ ok: false, error: 'not_found' }, 404);
 
   try {
-    const draft = await env.DB
-      .prepare('SELECT id, title, series, edition_size FROM registry_artworks WHERE id = ?1')
+    const registered = await env.DB
+      .prepare(
+        `SELECT 1 FROM keeper_pieces
+          WHERE piece_id = ?1 AND registration_status = 'registered' LIMIT 1`,
+      )
       .bind(id)
       .first();
-    if (!draft) return json({ ok: false, error: 'not_found' }, 404);
+    if (!registered) return json({ ok: false, error: 'not_found' }, 404);
 
-    // Only expose the record once a plate has actually been issued for it.
-    const plate = await env.DB
-      .prepare('SELECT 1 FROM keeper_pieces WHERE piece_id = ?1 LIMIT 1')
-      .bind(id)
-      .first();
-    if (!plate) return json({ ok: false, error: 'not_found' }, 404);
+    const artwork = await resolveArtwork(env, id);
+    // A plain 'catalog' resolution (no snapshot, no draft) means the id is
+    // already served directly from the static catalog the client holds —
+    // this fallback exists only for what that catalog does not have.
+    if (!artwork || artwork.source === 'catalog') {
+      return json({ ok: false, error: 'not_found' }, 404);
+    }
 
     return json({
       ok: true,
       artwork: {
-        id: draft.id,
-        title: draft.title,
-        series: draft.series || null,
-        editionSize: draft.edition_size == null ? null : Number(draft.edition_size),
+        id: artwork.id,
+        title: artwork.title,
+        series: artwork.series ?? null,
+        year: artwork.year ?? null,
+        dimensions: artwork.dimensions ?? null,
+        materials: artwork.materials ?? [],
+        category: artwork.category ?? null,
+        description: artwork.description ?? null,
+        edition: {
+          kind: artwork.editionKind === 'unique' || artwork.editionKind === 'numbered'
+            ? artwork.editionKind
+            : null,
+          size: artwork.editionSize ?? null,
+        },
       },
     });
   } catch (error) {

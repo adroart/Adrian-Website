@@ -5,30 +5,57 @@ import {
   createCollectorDream,
   getCollectorDreamState,
   setCollectorDreamSharing,
+  setCollectorDreamTier,
   updateCollectorDream,
 } from '../_lib/collectorDreams.js';
 
+// `optional` fields may be present or absent; everything in `required` must
+// be present and nothing outside the union may appear. create's tier and
+// heirsMayShare are optional so pre-tier clients keep their exact shape.
 const ACTION_FIELDS = Object.freeze({
-  create: new Set(['action', 'keeperPieceId', 'body', 'scope', 'idempotencyKey']),
-  update: new Set([
-    'action', 'keeperPieceId', 'body', 'scope', 'expectedVersion', 'idempotencyKey',
-  ]),
-  share: new Set(['action', 'keeperPieceId', 'visibility', 'idempotencyKey']),
-  revoke: new Set(['action', 'keeperPieceId', 'visibility', 'idempotencyKey']),
-  marker: new Set(['action', 'keeperPieceId', 'kind', 'body', 'idempotencyKey']),
+  create: {
+    required: new Set(['action', 'keeperPieceId', 'body', 'scope', 'idempotencyKey']),
+    optional: new Set(['tier', 'heirsMayShare']),
+  },
+  update: {
+    required: new Set([
+      'action', 'keeperPieceId', 'body', 'scope', 'expectedVersion', 'idempotencyKey',
+    ]),
+    optional: new Set(),
+  },
+  share: {
+    required: new Set(['action', 'keeperPieceId', 'visibility', 'idempotencyKey']),
+    optional: new Set(),
+  },
+  revoke: {
+    required: new Set(['action', 'keeperPieceId', 'visibility', 'idempotencyKey']),
+    optional: new Set(),
+  },
+  tier: {
+    required: new Set(['action', 'keeperPieceId', 'tier', 'idempotencyKey']),
+    optional: new Set(),
+  },
+  marker: {
+    required: new Set(['action', 'keeperPieceId', 'kind', 'body', 'idempotencyKey']),
+    optional: new Set(),
+  },
 });
 
 function exactBody(body, fields) {
-  return body && typeof body === 'object' && !Array.isArray(body)
-    && Object.keys(body).length === fields.size
-    && Object.keys(body).every((field) => fields.has(field));
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
+  const keys = Object.keys(body);
+  return keys.every((field) => fields.required.has(field) || fields.optional.has(field))
+    && [...fields.required].every((field) => keys.includes(field));
 }
 
 function errorStatus(code) {
   if (code === 'piece_not_held' || code === 'current_dream_missing') return 404;
   if (code === 'current_dream_exists' || code === 'version_conflict'
-    || code === 'idempotency_conflict') return 409;
-  if (code === 'db_not_configured' || code === 'atomic_batch_unavailable') return 503;
+    || code === 'idempotency_conflict' || code === 'outside_birthday_window'
+    || code === 'shine_is_permanent' || code === 'shone_cannot_seal'
+    || code === 'dream_sealed' || code === 'tier_unchanged') return 409;
+  if (code === 'db_not_configured' || code === 'atomic_batch_unavailable'
+    || code === 'dream_tiers_unavailable') return 503;
   return 400;
 }
 
@@ -74,8 +101,14 @@ export async function onRequest({ request, env }) {
     let state;
     if (body.action === 'create') {
       state = await createCollectorDream(env, {
-        ...base, body: body.body, scope: body.scope,
+        ...base,
+        body: body.body,
+        scope: body.scope,
+        ...(body.tier !== undefined ? { tier: body.tier } : {}),
+        ...(body.heirsMayShare !== undefined ? { heirsMayShare: body.heirsMayShare } : {}),
       });
+    } else if (body.action === 'tier') {
+      state = await setCollectorDreamTier(env, { ...base, tier: body.tier });
     } else if (body.action === 'update') {
       state = await updateCollectorDream(env, {
         ...base, body: body.body, scope: body.scope,

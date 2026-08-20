@@ -85,7 +85,7 @@ describe('artwork invitation client contracts', () => {
   });
 
   it('keeps plaintext invitation proof out of browser persistence and offers explicit dismissal', () => {
-    const door = source('components/collector/InvitationDoor.tsx');
+    const door = source('components/collector/legacy/InvitationDoor.tsx');
     const admin = source('components/admin/ArtworkInvitations.tsx');
     const clients = source('utils/artworkInvitations.ts');
     for (const contents of [door, admin, clients]) {

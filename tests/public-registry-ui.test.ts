@@ -11,7 +11,7 @@ describe('public scanned-identity UI wiring', () => {
       'utils/artworkLedger.ts',
       'functions/api/artwork-ledger/media/[id].js',
       'functions/api/keeper/certificate-ledger.js',
-      'components/collector/CertificateLedger.tsx',
+      'components/collector/legacy/CertificateLedger.tsx',
     ]) {
       assert.equal(existsSync(new URL(`../${relativePath}`, import.meta.url)), true, relativePath);
     }
@@ -19,7 +19,7 @@ describe('public scanned-identity UI wiring', () => {
     const projector = readSource('utils/artworkLedger.ts');
     const publicMedia = readSource('functions/api/artwork-ledger/media/[id].js');
     const privateLedger = readSource('functions/api/keeper/certificate-ledger.js');
-    const certificateLedger = readSource('components/collector/CertificateLedger.tsx');
+    const certificateLedger = readSource('components/collector/legacy/CertificateLedger.tsx');
     const certificateService = readSource('functions/api/_lib/certificateContent.js');
     assert.match(projector, /parsePublicArtworkLedger/);
     assert.match(projector, /parseKeeperCertificateLedger/);
@@ -89,7 +89,7 @@ describe('public scanned-identity UI wiring', () => {
   it('gives the scanned arrival the only h1 before the verified identity details', () => {
     const worksPage = readSource('components/WorksPage.tsx');
     const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
-    const arrivalScreen = readSource('components/collector/ArrivalScreen.tsx');
+    const arrivalScreen = readSource('components/collector/legacy/ArrivalScreen.tsx');
 
     assert.match(arrivalGate, /headingLevel\?:\s*1\s*\|\s*2/);
     assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} identity=\{verifiedIdentity\} headingLevel=\{1\}>/);
@@ -187,7 +187,7 @@ describe('public scanned-identity UI wiring', () => {
   });
 
   it('keeps a failed certificate recoverable and renders only exact instance identity facts', () => {
-    const certificate = readSource('components/collector/CertificateScreen.tsx');
+    const certificate = readSource('components/collector/legacy/CertificateScreen.tsx');
 
     assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onClick=\{retry\}[\s\S]*?>Try again</);
     assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onComplete[\s\S]*?Complete registration/);
@@ -201,8 +201,8 @@ describe('public scanned-identity UI wiring', () => {
   });
 
   it('renders claimed creator fortunes and probes private prices without guest affordances', () => {
-    const certificate = readSource('components/collector/CertificateScreen.tsx');
-    const ledger = readSource('components/collector/CertificateLedger.tsx');
+    const certificate = readSource('components/collector/legacy/CertificateScreen.tsx');
+    const ledger = readSource('components/collector/legacy/CertificateLedger.tsx');
 
     assert.match(certificate, /parsePublicArtworkLedger\(source\.publicLedger\)/);
     assert.match(certificate, /source\.title/);
@@ -223,10 +223,10 @@ describe('public scanned-identity UI wiring', () => {
   });
 
   it('uses the mandated Universal Language alt-text contract for every scanned-record artwork image', () => {
-    const arrival = readSource('components/collector/ArrivalScreen.tsx');
+    const arrival = readSource('components/collector/legacy/ArrivalScreen.tsx');
     const worksPage = readSource('components/WorksPage.tsx');
 
-    assert.match(arrival, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/\.\.\/utils\/universalLanguage['"]/);
+    assert.match(arrival, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/\.\.\/\.\.\/utils\/universalLanguage['"]/);
     assert.match(arrival, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);
     assert.match(worksPage, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/utils\/universalLanguage['"]/);
     assert.match(worksPage, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);

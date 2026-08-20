@@ -17,6 +17,7 @@ describe('admin studio shell', () => {
           'Certificate editor',
           'Optional plate wizard',
           'Registry and plates',
+          'Rehearsal',
           'Maintenance',
           'Private viewings',
           'Artwork stories',
@@ -41,11 +42,19 @@ describe('admin studio shell', () => {
   });
 
   it('keeps a registered instance associated with its one-time Ownership Code until an explicit reset', () => {
+    // The registration form moved from an inline App.tsx component to the
+    // ceremony at components/registry/RegisterCeremony.tsx; the exactly-once
+    // Ownership Code semantics moved with it.
+    const ceremony = source('components/registry/RegisterCeremony.tsx');
+    assert.match(ceremony, /editionLabel:\s*string/);
+    assert.match(ceremony, /ownershipCode\?:\s*string/);
+    assert.match(ceremony, /ownershipCode:\s*undefined/);
+    assert.match(ceremony, /Register another artwork/);
+    // The old address keeps working, query string and all, so verified-sale
+    // deep links still land on the ceremony.
     const app = source('App.tsx');
-    assert.match(app, /artworkTitle:\s*string/);
-    assert.match(app, /editionLabel:\s*string/);
-    assert.match(app, /Register another artwork/);
-    assert.match(app, /!result\s*&&\s*linkedStatus\s*!==\s*['"]error['"]\s*\?\s*\(/);
+    assert.match(app, /path="register" element=\{<RegisterCeremony/);
+    assert.match(app, /\/admin\/register\$\{location\.search\}/);
   });
 
   it('uses one page and control vocabulary across every admin tool', () => {
@@ -97,7 +106,10 @@ describe('admin studio shell', () => {
       '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',
     );
 
-    for (const label of ['Issue identity', 'Verify recovery copy', 'Activate plate']) {
+    // Issuing a plate identity moved to the registration ceremony at
+    // /admin/register; the desk only tracks lifecycle stages that remain
+    // here: encrypted backup, recovery proof, and activation.
+    for (const label of ['Retry backup', 'Prove copied-file recovery', 'Physical checks']) {
       assert.match(source('components/AdminPieces.tsx'), new RegExp(label));
     }
     assert.doesNotMatch(source('components/AdminPieces.tsx'), /fulfillment|shipping/i);

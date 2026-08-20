@@ -29,6 +29,8 @@ import {
   REGISTRY_RECOVERY_V4_TABLES,
   REGISTRY_RECOVERY_V5_TABLES,
   REGISTRY_RECOVERY_V6_TABLES,
+  REGISTRY_RECOVERY_V7_TABLES,
+  REGISTRY_RECOVERY_V8_TABLES,
   REGISTRY_RECOVERY_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
@@ -68,13 +70,26 @@ const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migra
 \n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
 \n${readMigration('033_artwork_contributors.sql')}
 \n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}
-\n${readMigration('035_city_floor_removal.sql')}`;
+\n${readMigration('035_artwork_catalog_snapshots.sql')}
+\n${readMigration('035_city_floor_removal.sql')}
+\n${readMigration('036_piece_records.sql')}
+\n${readMigration('037_transfer_silence.sql')}
+\n${readMigration('038_piece_media.sql')}
+\n${readMigration('039_artist_messages.sql')}
+\n${readMigration('040_collector_shine_removals.sql')}
+\n${readMigration('041_collector_dream_tiers.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
 const exportedAt = '2026-07-31T03:04:05.000Z';
 
 const legacyRecoveryTables = REGISTRY_RECOVERY_V1_TABLES;
+
+/** Strips migration 041's collector_dreams columns for a schema < 9 legacy payload table map. */
+function withoutDreamTierColumns(name: string, rows: any[]) {
+  if (name !== 'collector_dreams') return rows;
+  return rows.map(({ tier, heirs_may_share, ...rest }) => rest);
+}
 
 async function sha256Hex(value: string) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
@@ -90,7 +105,9 @@ async function encryptLegacyPayload(payload: any) {
       : payload.schemaVersion === 3 ? REGISTRY_RECOVERY_V3_TABLES
         : payload.schemaVersion === 4 ? REGISTRY_RECOVERY_V4_TABLES
           : payload.schemaVersion === 5 ? REGISTRY_RECOVERY_V5_TABLES
-            : REGISTRY_RECOVERY_V6_TABLES;
+            : payload.schemaVersion === 6 ? REGISTRY_RECOVERY_V6_TABLES
+              : payload.schemaVersion === 7 ? REGISTRY_RECOVERY_V7_TABLES
+                : REGISTRY_RECOVERY_V8_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -584,6 +601,64 @@ function seedCompleteRegistry(database: DatabaseSync) {
        '2026-08-06T03:04:05.000Z', NULL, '${'5'.repeat(64)}', '{}'),
       ('aa-second-bound', 'kp-ordinal-second', 1, 'first_bound',
        '2026-08-07T03:04:05.000Z', NULL, '${'7'.repeat(64)}', '{}');
+
+    -- Migration 041 tier fixtures: a keep dream with heirs sharing turned
+    -- off, and a sealed dream (heirs_may_share pinned to 0 by the seal
+    -- insert guard). Neither piece already carries an active dream, so
+    -- both satisfy collector_dreams_one_current without archiving anything.
+    INSERT INTO collector_dreams
+      (id, keeper_piece_id, author_user_id, body, scope, visibility,
+       idempotency_key, record_version, created_at, updated_at,
+       heirs_may_share)
+    VALUES
+      ('dream-tier-keep-heirs-off', 'kp-ordinal-first', 'steward-current',
+       'A private keep-tier dream the keeper chose to keep from any heir.',
+       'family', 'private', 'dream-tier-keep-heirs-off-create', 1,
+       '2026-08-09T03:04:05.000Z', '2026-08-09T03:04:05.000Z', 0);
+    INSERT INTO collector_dreams
+      (id, keeper_piece_id, author_user_id, body, scope, visibility,
+       idempotency_key, record_version, created_at, updated_at,
+       tier, heirs_may_share)
+    VALUES
+      ('dream-tier-seal', 'kp-ordinal-second', 'steward-current',
+       'A sealed dream meant for the writer alone, always.',
+       'self', 'private', 'dream-tier-seal-create', 1,
+       '2026-08-09T04:04:05.000Z', '2026-08-09T04:04:05.000Z',
+       'seal', 0);
+
+    -- A shine-tier dream reached through the real audited ledger, not a
+    -- direct tier stamp: an already-open anonymous share on its own new
+    -- piece (so it starts a lone keep-tier dream, satisfying
+    -- collector_dream_tier_change_exact_application's keep-with-open-share
+    -- precondition), then one collector_dream_tier_changes row that the
+    -- AFTER INSERT apply-exactly trigger flips to shine.
+    INSERT INTO registry_artworks (id, title, series, created_at) VALUES
+      ('UL-104', 'Tier Fixture', 'Universal Language', '${exportedAt}');
+    INSERT INTO keeper_pieces
+      (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
+       claimed_at, lineage_head_hash, lineage_event_count)
+    VALUES
+      ('kp-tier-recovery', 'UL-104', 0, 'steward-current', '${'d'.repeat(64)}',
+       '2026-08-08T03:04:05.000Z', '${'c'.repeat(64)}', 0);
+    BEGIN IMMEDIATE;
+    INSERT INTO collector_dreams
+      (id, keeper_piece_id, author_user_id, body, scope, visibility,
+       idempotency_key, record_version, created_at, updated_at,
+       public_shared_at)
+    VALUES
+      ('dream-tier-shine', 'kp-tier-recovery', 'steward-current',
+       'An anonymous dream already open when the tier model landed.',
+       'planet', 'anonymous', 'dream-tier-shine-create', 1,
+       '2026-08-08T03:34:05.000Z', '2026-08-08T03:34:05.000Z',
+       '2026-08-08T03:34:05.000Z');
+    INSERT INTO collector_dream_tier_changes
+      (id, dream_id, author_user_id, from_tier, to_tier, idempotency_key,
+       resulting_version, created_at)
+    VALUES
+      ('tier-change-shine', 'dream-tier-shine', 'steward-current', 'keep',
+       'shine', 'tier-change-shine-create', 2, '2026-08-08T03:44:05.000Z');
+    COMMIT;
+
     INSERT INTO collector_letters
       (id, keeper_piece_id, kind, body, created_at, event_key)
     VALUES
@@ -593,6 +668,24 @@ function seedCompleteRegistry(database: DatabaseSync) {
       ('letter-${'9'.repeat(64)}', 'kp-recovery', 'anniversary',
        'A year with this piece invites a quiet reflection.',
        '2026-08-05T03:04:05.000Z', 'anniversary:kp-recovery:2026');
+
+    INSERT INTO artwork_catalog_snapshots
+      (id, artwork_id, snapshot_hash, canonical_json, source, created_at)
+    VALUES
+      ('acs-ul-100-${'2'.repeat(32)}', 'UL-100', '${'2'.repeat(64)}',
+       '{"category":"multidimensional-art","id":"UL-100","title":"Art of Living"}',
+       'mockData', '${exportedAt}'),
+      ('acs-ul-101-${'4'.repeat(32)}', 'UL-101', '${'4'.repeat(64)}',
+       '{"category":"multidimensional-art","id":"UL-101","title":"Invitation Work"}',
+       'admin', '${exportedAt}');
+    INSERT INTO piece_records
+      (id, public_code, record_hash, r2_key, trigger_event, created_at)
+    VALUES
+      ('pr-${'5'.repeat(64)}', 'AR-7KQ9M2WX', '${'5'.repeat(64)}',
+       'records/AR-7KQ9M2WX/${'5'.repeat(64)}.html', 'registration', '${exportedAt}'),
+      ('pr-${'6'.repeat(64)}', 'AR-8KQ9M2WX', '${'6'.repeat(64)}',
+       'records/AR-8KQ9M2WX/${'6'.repeat(64)}.html', 'on_demand',
+       '2026-08-02T03:04:05.000Z');
   `);
 }
 
@@ -1033,8 +1126,78 @@ describe('registry-only legacy fulfillment migration', () => {
 });
 
 describe('private registry recovery export', () => {
+  it('freezes the schema-v7 manifest and adds both permanent-record tables in schema v8', () => {
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(0, REGISTRY_RECOVERY_V6_TABLES.length),
+      REGISTRY_RECOVERY_V6_TABLES);
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(-4), [
+      'artwork_contributor_invitations',
+      'artwork_contributor_revocations',
+      'artwork_contributor_invitation_acceptances',
+      'artwork_contributor_access_grants',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_V8_TABLES.slice(0, REGISTRY_RECOVERY_V7_TABLES.length),
+      REGISTRY_RECOVERY_V7_TABLES);
+    assert.deepEqual(REGISTRY_RECOVERY_V8_TABLES.slice(-2), [
+      'artwork_catalog_snapshots',
+      'piece_records',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_catalog_snapshots, [
+      'id', 'artwork_id', 'snapshot_hash', 'canonical_json', 'source', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.piece_records, [
+      'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.artwork_catalog_snapshots, ['id']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.piece_records, ['id']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.artwork_catalog_snapshots, ['text']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.piece_records, ['text']);
+  });
+
+  it('archives every schema-v8 permanent-record column exactly as migrations 035 and 036 define them', () => {
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of REGISTRY_RECOVERY_V8_TABLES.slice(-2)) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+    } finally {
+      database.close();
+    }
+  });
+
+  it('freezes the schema-v8 manifest and adds the dream tier-change ledger in schema v9', () => {
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 9);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(0, REGISTRY_RECOVERY_V8_TABLES.length),
+      REGISTRY_RECOVERY_V8_TABLES);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-1), ['collector_dream_tier_changes']);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.collector_dream_tier_changes, [
+      'id', 'dream_id', 'author_user_id', 'from_tier', 'to_tier', 'idempotency_key',
+      'resulting_version', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.collector_dreams.slice(-2), [
+      'tier', 'heirs_may_share',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.collector_dream_tier_changes, ['id']);
+    assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMN_TYPES.collector_dream_tier_changes, ['text']);
+  });
+
+  it('archives every schema-v9 dream-tier column exactly as migration 041 defines it', () => {
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of ['collector_dreams', 'collector_dream_tier_changes'] as const) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+    } finally {
+      database.close();
+    }
+  });
+
   it('freezes the schema-v6 manifest and adds every migration 033 private table in schema v7', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 7);
     assert.deepEqual(REGISTRY_RECOVERY_V6_TABLES.slice(-10), [
       'artist_reconnection_cases',
       'artist_reconnection_events',
@@ -1047,7 +1210,7 @@ describe('private registry recovery export', () => {
       'artist_artwork_ledger_entries',
       'artist_artwork_price_entries',
     ]);
-    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-4), [
+    assert.deepEqual(REGISTRY_RECOVERY_V7_TABLES.slice(-4), [
       'artwork_contributor_invitations',
       'artwork_contributor_revocations',
       'artwork_contributor_invitation_acceptances',
@@ -1188,7 +1351,7 @@ describe('private registry recovery export', () => {
     try {
       database.exec('PRAGMA foreign_keys = ON;');
       database.exec(registryMigrations);
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+      for (const table of REGISTRY_RECOVERY_V7_TABLES.slice(-4)) {
         assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
           .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
       }
@@ -1437,13 +1600,28 @@ describe('private registry recovery export', () => {
       ]);
       assert.deepEqual(payload.tables.collector_dreams.map((row: any) => [
         row.id, row.author_user_id, row.archived_at, row.record_version,
-        row.last_mutation_id, row.fulfilled_at,
+        row.last_mutation_id, row.fulfilled_at, row.tier, row.heirs_may_share,
       ]), [
         [
           'dream-current', 'steward-current', null, 3, 'mutation-current',
-          '2026-08-05T03:04:05.000Z',
+          '2026-08-05T03:04:05.000Z', 'keep', 1,
         ],
-        ['dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null],
+        [
+          'dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null,
+          'keep', 1,
+        ],
+        [
+          'dream-tier-keep-heirs-off', 'steward-current', null, 1, null, null,
+          'keep', 0,
+        ],
+        ['dream-tier-seal', 'steward-current', null, 1, null, null, 'seal', 0],
+        ['dream-tier-shine', 'steward-current', null, 2, null, null, 'shine', 1],
+      ]);
+      assert.deepEqual(payload.tables.collector_dream_tier_changes.map((row: any) => [
+        row.id, row.dream_id, row.author_user_id, row.from_tier, row.to_tier,
+        row.resulting_version,
+      ]), [
+        ['tier-change-shine', 'dream-tier-shine', 'steward-current', 'keep', 'shine', 2],
       ]);
       assert.equal(payload.tables.collector_dream_markers.length, 2);
       assert.equal(payload.tables.collector_dream_mutations.length, 2);
@@ -2020,7 +2198,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 5,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V5_TABLES.map((name) => [
-          name, current.tables[name],
+          name, withoutDreamTierColumns(name, current.tables[name]),
         ])),
       };
       const archive = await encryptLegacyPayload(v5Payload);
@@ -2029,10 +2207,13 @@ describe('clean-only private registry restore', () => {
       });
 
       for (const table of REGISTRY_RECOVERY_V5_TABLES) {
+        if (table === 'collector_dreams') continue;
         assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
           canonicalRecoveryJson(v5Payload.tables[table]), table);
       }
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-10)) {
+      assert.deepEqual(upgraded.tables.collector_dreams.map((row) => row.id).sort(),
+        v5Payload.tables.collector_dreams.map((row) => row.id).sort());
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V5_TABLES.length)) {
         assert.deepEqual(upgraded.tables[table], [], table);
       }
     } finally {
@@ -2059,7 +2240,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 6,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V6_TABLES.map((name) => [
-          name, current.tables[name],
+          name, withoutDreamTierColumns(name, current.tables[name]),
         ])),
       };
       const archive = await encryptLegacyPayload(v6Payload);
@@ -2068,12 +2249,118 @@ describe('clean-only private registry restore', () => {
       });
 
       for (const table of REGISTRY_RECOVERY_V6_TABLES) {
+        if (table === 'collector_dreams') continue;
         assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
           canonicalRecoveryJson(v6Payload.tables[table]), table);
       }
-      for (const table of REGISTRY_RECOVERY_TABLES.slice(-4)) {
+      assert.deepEqual(upgraded.tables.collector_dreams.map((row) => row.id).sort(),
+        v6Payload.tables.collector_dreams.map((row) => row.id).sort());
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V6_TABLES.length)) {
         assert.deepEqual(upgraded.tables[table], [], table);
       }
+    } finally {
+      source.database.close();
+    }
+  });
+
+  it('decrypts schema v7 without changing any contributor row or digest input', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.ok(current.tables.artwork_catalog_snapshots.length >= 2,
+        'v8 fixture archives catalog snapshot rows');
+      assert.ok(current.tables.piece_records.length >= 2,
+        'v8 fixture archives piece record rows');
+      const v7Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 7,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V7_TABLES.map((name) => [
+          name, withoutDreamTierColumns(name, current.tables[name]),
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v7Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      assert.equal(upgraded.schemaVersion, PRIVATE_RECOVERY_SCHEMA_VERSION);
+      for (const table of REGISTRY_RECOVERY_V7_TABLES) {
+        if (table === 'collector_dreams') continue;
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v7Payload.tables[table]), table);
+      }
+      assert.deepEqual(upgraded.tables.collector_dreams.map((row) => row.id).sort(),
+        v7Payload.tables.collector_dreams.map((row) => row.id).sort());
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V7_TABLES.length)) {
+        assert.deepEqual(upgraded.tables[table], [], table);
+      }
+    } finally {
+      source.database.close();
+    }
+  });
+
+  it('decrypts schema v8 without changing any permanent-record row and backfills dream tiers '
+    + 'exactly as migration 041 would', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.ok(current.tables.collector_dream_tier_changes.length >= 1,
+        'v9 fixture archives a dream tier-change ledger row');
+      const v8Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 8,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V8_TABLES.map((name) => [
+          name, withoutDreamTierColumns(name, current.tables[name]),
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v8Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      assert.equal(upgraded.schemaVersion, PRIVATE_RECOVERY_SCHEMA_VERSION);
+      for (const table of REGISTRY_RECOVERY_V8_TABLES) {
+        if (table === 'collector_dreams') continue;
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v8Payload.tables[table]), table);
+      }
+      assert.deepEqual(upgraded.tables.collector_dream_tier_changes, [], 'no ledger yet in v8');
+      // Every archived pre-tier row lands on the ALTER TABLE column defaults
+      // (heirs_may_share = 1 always; tier = 'keep' unless the backfill UPDATE
+      // in migration 041 would have caught it as an already-open anonymous or
+      // attributed share, which lands on 'shine'). No archived row can be
+      // 'seal': sealing did not exist before this schema version.
+      assert.deepEqual(upgraded.tables.collector_dreams.map((row) => [
+        row.id, row.tier, row.heirs_may_share,
+      ]).sort((left, right) => (left[0] as string).localeCompare(right[0] as string)), [
+        ['dream-current', 'shine', 1],
+        ['dream-prior', 'keep', 1],
+        ['dream-tier-keep-heirs-off', 'keep', 1],
+        ['dream-tier-seal', 'keep', 1],
+        ['dream-tier-shine', 'shine', 1],
+      ]);
     } finally {
       source.database.close();
     }
@@ -2109,6 +2396,9 @@ describe('clean-only private registry restore', () => {
       source.database.exec(phase2Migrations);
       source.database.exec(readMigration('032_artist_verified_sales.sql'));
       source.database.exec(readMigration('033_artwork_contributors.sql'));
+      source.database.exec(readMigration('035_artwork_catalog_snapshots.sql'));
+      source.database.exec(readMigration('036_piece_records.sql'));
+      source.database.exec(readMigration('041_collector_dream_tiers.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference
@@ -2179,6 +2469,12 @@ describe('clean-only private registry restore', () => {
         'collector_dream_mutation_apply_exactly',
         'collector_dreams_runtime_update_guard',
         'collector_dream_ritual_fulfill_exactly',
+        'collector_dreams_tier_transitions',
+        'collector_dreams_seal_entry_coherence',
+        'collector_dreams_seal_pins_heirs_insert',
+        'collector_dreams_seal_pins_heirs_update',
+        'collector_dream_tier_change_exact_application',
+        'collector_dream_tier_change_apply_exactly',
       ];
       const triggerSqlBefore = new Map(temporarilyRemovedTriggers.map((trigger) => [
         trigger,
@@ -2232,17 +2528,26 @@ describe('clean-only private registry restore', () => {
       ]);
       assert.deepEqual(target.database.prepare(
         `SELECT id, author_user_id, archived_at, record_version, last_mutation_id,
-                fulfilled_at
+                fulfilled_at, tier, heirs_may_share
            FROM collector_dreams ORDER BY id`,
       ).all().map((row: any) => [
         row.id, row.author_user_id, row.archived_at, row.record_version,
-        row.last_mutation_id, row.fulfilled_at,
+        row.last_mutation_id, row.fulfilled_at, row.tier, row.heirs_may_share,
       ]), [
         [
           'dream-current', 'steward-current', null, 3, 'mutation-current',
-          '2026-08-05T03:04:05.000Z',
+          '2026-08-05T03:04:05.000Z', 'keep', 1,
         ],
-        ['dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null],
+        [
+          'dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null,
+          'keep', 1,
+        ],
+        [
+          'dream-tier-keep-heirs-off', 'steward-current', null, 1, null, null,
+          'keep', 0,
+        ],
+        ['dream-tier-seal', 'steward-current', null, 1, null, null, 'seal', 0],
+        ['dream-tier-shine', 'steward-current', null, 2, null, null, 'shine', 1],
       ]);
       assert.deepEqual(target.database.prepare(
         'SELECT id, request_json FROM collector_dream_mutations ORDER BY id',
@@ -2252,6 +2557,15 @@ describe('clean-only private registry restore', () => {
           'mutation-prior',
           '{"body":"A former keeper dream that travels with the piece.","scope":"community","expectedVersion":1}',
         ],
+      ]);
+      assert.deepEqual(target.database.prepare(
+        `SELECT id, dream_id, author_user_id, from_tier, to_tier, resulting_version
+           FROM collector_dream_tier_changes ORDER BY id`,
+      ).all().map((row: any) => [
+        row.id, row.dream_id, row.author_user_id, row.from_tier, row.to_tier,
+        row.resulting_version,
+      ]), [
+        ['tier-change-shine', 'dream-tier-shine', 'steward-current', 'keep', 'shine', 2],
       ]);
       for (const trigger of temporarilyRemovedTriggers) {
         assert.equal(target.database.prepare(

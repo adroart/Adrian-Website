@@ -4,6 +4,7 @@ import { requireAdmin as authorizeAdmin } from './auth.js';
 
 export const REGISTRY_UNLOCK_COOKIE_NAME = 'registry_unlock';
 export const REGISTRY_UNLOCK_TTL_SECONDS = 60 * 10;
+export const REGISTRY_UNLOCK_ABSOLUTE_CAP_SECONDS = 60 * 60;
 const REGISTRY_UNLOCK_DOMAIN = 'adrian-website:registry-unlock:v1';
 
 export function getCookie(request, name) {
@@ -130,11 +131,18 @@ export async function verifyRegistryStepUpSecret(env, candidate) {
   return timingSafeEqual(candidateDigest, secretDigest);
 }
 
-/** Mint a signed unlock token bound to one administrator login session. */
+/**
+ * Mint a signed unlock token bound to one administrator login session.
+ *
+ * `originalUnlockAt` carries the epoch-seconds timestamp of the first secret
+ * exchange across sliding refreshes. Omitted (or invalid) it defaults to the
+ * token's own issue time, so a fresh unlock starts the absolute-cap clock.
+ */
 export async function createRegistryUnlockToken(
   env,
   identity,
   ttlSeconds = REGISTRY_UNLOCK_TTL_SECONDS,
+  originalUnlockAt = null,
 ) {
   const secret = registryStepUpSecret(env);
   if (!secret) throw new Error('registry_unlock_not_configured');
@@ -143,12 +151,18 @@ export async function createRegistryUnlockToken(
     throw new Error('registry_unlock_session_required');
   }
   const iat = Math.floor(Date.now() / 1000);
+  const origIat = typeof originalUnlockAt === 'number'
+    && Number.isFinite(originalUnlockAt)
+    && originalUnlockAt <= iat
+    ? Math.floor(originalUnlockAt)
+    : iat;
   const payload = {
     v: 2,
     userId: identity.userId,
     email: typeof identity.email === 'string' ? identity.email.trim().toLowerCase() : '',
     sessionId,
     iat,
+    origIat,
     exp: iat + ttlSeconds,
   };
   const payloadB64 = bytesToBase64url(new TextEncoder().encode(JSON.stringify(payload)));
@@ -186,7 +200,17 @@ export async function readRegistryUnlockToken(request, env, identity) {
       || payload.email !== identity.email
       || payload.sessionId !== identity?.session?.id
     ) return null;
-    return payload;
+    // Tokens minted before sliding refresh existed carry no origIat; treat
+    // their issue time as the original unlock so they gain no extra lifetime.
+    if (payload.origIat !== undefined
+      && (typeof payload.origIat !== 'number' || payload.origIat > payload.iat)) return null;
+    const origIat = typeof payload.origIat === 'number' ? payload.origIat : payload.iat;
+    // No legitimately issued token can outlive the absolute cap plus one
+    // final refresh window; anything beyond that is forged or corrupted.
+    if (payload.exp - origIat > REGISTRY_UNLOCK_ABSOLUTE_CAP_SECONDS + REGISTRY_UNLOCK_TTL_SECONDS) {
+      return null;
+    }
+    return { ...payload, origIat };
   } catch {
     return null;
   }
@@ -208,7 +232,11 @@ export async function requireRegistryUnlock(request, env) {
   }
   const unlock = await readRegistryUnlockToken(request, env, admin);
   if (!unlock) return jsonResponse({ ok: false, error: 'registry_locked' }, 403);
-  return { ...admin, registryUnlockExpiresAt: unlock.exp };
+  return {
+    ...admin,
+    registryUnlockExpiresAt: unlock.exp,
+    registryUnlockOriginalIat: unlock.origIat,
+  };
 }
 
 export function ownershipAuditStatement(env, {

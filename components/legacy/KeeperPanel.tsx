@@ -20,8 +20,8 @@ import {
   type ContributorRevokeRequest,
 } from '../../utils/artworkContributors';
 import type { PublicCreatorHistoryEntry, PublicPlateIdentity } from '../../utils/publicRegistry';
-import CollectorFlow from '../collector/CollectorFlow';
-import CollectorLife from '../collector/CollectorLife';
+import CollectorFlow from '../collector/legacy/CollectorFlow';
+import CollectorLife from '../collector/legacy/CollectorLife';
 import IntentionRitual from './IntentionRitual';
 
 interface StewardStatus {

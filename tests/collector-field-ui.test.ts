@@ -9,7 +9,7 @@ import FieldExperience, {
   flattenFieldData,
   markerPresentation,
   type CollectorFieldData,
-} from '../components/collector/FieldExperience.tsx';
+} from '../components/collector/legacy/FieldExperience.tsx';
 
 const fixture: CollectorFieldData = {
   schemaVersion: 3,
@@ -155,7 +155,7 @@ describe('collector field browsing', () => {
 
   it('keeps receded browse links at full text opacity', () => {
     const experience = readFileSync(
-      new URL('../components/collector/FieldExperience.tsx', import.meta.url),
+      new URL('../components/collector/legacy/FieldExperience.tsx', import.meta.url),
       'utf8',
     );
     const recededRule = /\.collector-field__item\[data-field-match="false"\]\s*\{([^}]*)\}/
@@ -238,11 +238,11 @@ describe('collector field browsing', () => {
 
   it('makes reduced motion immediately readable without a timed or inert gate', () => {
     const experience = readFileSync(
-      new URL('../components/collector/FieldExperience.tsx', import.meta.url),
+      new URL('../components/collector/legacy/FieldExperience.tsx', import.meta.url),
       'utf8',
     );
     const fieldMap = readFileSync(
-      new URL('../components/collector/FieldMap.tsx', import.meta.url),
+      new URL('../components/collector/legacy/FieldMap.tsx', import.meta.url),
       'utf8',
     );
 
@@ -256,7 +256,7 @@ describe('collector field browsing', () => {
       'FieldExperience.tsx',
       'FieldMap.tsx',
       'FieldBrowse.tsx',
-    ].map((file) => readFileSync(new URL(`../components/collector/${file}`, import.meta.url), 'utf8')).join('\n');
+    ].map((file) => readFileSync(new URL(`../components/collector/legacy/${file}`, import.meta.url), 'utf8')).join('\n');
 
     assert.doesNotMatch(source, /hexagram|support count|visit count|word count/i);
     assert.doesNotMatch(source, /[\u2014\u{1F300}-\u{1FAFF}]/u);
