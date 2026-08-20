@@ -14,7 +14,7 @@
  *   the provenance chain is public.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { C, F } from './tokens';
 import { COPY, PIECE, PLACEHOLDERS } from './copy';
 import { Body, Brass, Eyebrow, Field, Flag, Ground, Ledger, Note, Plus, RoomBody, RoomHead, SegmentedTabs, TLink } from './ui';
@@ -36,16 +36,43 @@ const ph = (s: string): string => {
 };
 
 /* the household's honest status words: email and status are all the registry
-   holds for a person, so the rows say exactly that and nothing warmer */
+   holds for a person, so the rows say exactly that and nothing warmer. The
+   invited line's static word; the date beside it is real fetched data and is
+   never itself marked a placeholder. */
 const FAMILY_ON_PIECE = ph('On the piece');
 const FAMILY_INVITED = ph('Invited');
+const FAMILY_SENT_WORD = ph('Sent');
+
+/* the two waiting-card actions, pressed: a single press is enough, and it
+   settles into a quiet confirmation. Neither line exists yet in copy.ts. */
+const FAMILY_SHINE_CONFIRM = ph('It shines now, and it stays.');
+const FAMILY_KEEP_CONFIRM = ph('Kept in the record.');
 
 /* the account room's rows and its one kept line */
 const ACCOUNT_KEPT = ph('Kept. The light moves with you.');
+const ACCOUNT_KEPT_GENERIC = ph('Kept.');
 const ACCOUNT_KEEP_ACTION = ph('Keep it');
 const ACCOUNT_SHOWS_ROW = ph('What shows');
 const ACCOUNT_LETTERS_ROW = ph('Letters');
 const ACCOUNT_LIVES_LABEL = ph('Where the art lives');
+/* consolidated row: 'Your links' and 'What shows' merged to one line, per
+   the artist's own note that the list can be tightened */
+const ACCOUNT_SHOWS_LINKS_ROW = ph('What shows and your links');
+const ACCOUNT_SHOWS_LINKS_NOTE = ph(
+  'What the piece shows, and the links that travel beside it. Changing either still lives on its own screen for now.',
+);
+const ACCOUNT_NEW_PASSWORD_LABEL = ph('New password');
+const ACCOUNT_PASSWORD_CHANGED = ph('Changed just now');
+/* the one conventional Back a suppressed room head hands to Your account's
+   own edit views (§1's mechanic, shared here) */
+const ACCOUNT_BACK = ph('Back to your account');
+
+/* the quiet press affordance shared by every entry that opens into a fuller
+   reading: a hover underline on the entry's own text, plus a small trailing
+   label. Never a chevron glyph standing in for state. */
+const READ_IT = ph('Read it');
+const OPEN_AFFORDANCE_CSS =
+  '.collector-open-entry:hover .collector-open-entry-text{text-decoration:underline;text-underline-offset:3px}';
 
 /* the letters room: the record's own empty line (§5 "the piece page after
    registration": empty sections carry one quiet line), and a plain word per
@@ -54,17 +81,24 @@ const LETTERS_EMPTY = ph('Nothing written yet.');
 
 /* the story's second voice: the commissioner's paragraph. The label and the
    demo paragraph are both samples — the wire that carries a real
-   commissioner's words does not exist yet (live.ts story.commissioned). */
+   commissioner's words does not exist yet (live.ts story.commissioned).
+   The scaffolding ("Sample, a commissioner might write:") used to open the
+   paragraph itself; it now sits above it instead, as its own quiet label,
+   so the quote reads as a quote. */
 const STORY_COMMISSIONED_LABEL = ph('From the one who asked for it');
+const STORY_COMMISSIONED_SAMPLE_LABEL = ph('A sample, until a commissioner writes');
 const STORY_COMMISSIONED_SAMPLE = ph(
-  'Sample, a commissioner might write: I asked for this piece the year the family workshop was sold, so that one made thing would still hold the smell of that room.',
+  'I asked for this piece the year the family workshop was sold, so that one made thing would still hold the smell of that room.',
 );
 
 /* the history room: the two tab words were inline in the old tab strip, and
    the rest are the written items' honest lines */
 const HISTORY_TAB_MOVED = ph('How it moved');
 const HISTORY_TAB_WRITTEN = ph('What was written');
+/* the one conventional Back a reading hands to the room's own head while
+   it is open (§1's fix: two Backs on screen collapse to one) */
 const HISTORY_BACK = ph('Back to the history');
+const DREAMS_BACK = ph('Back to the dreams');
 const WRITTEN_SHINES_TEXT = ph('A dream was placed in it');
 const WRITTEN_SHINES_NOTE = ph('shining · words with no name');
 const WRITTEN_SHINES_WORD = ph('shining');
@@ -122,7 +156,52 @@ type Props = {
   live?: PieceLive;
 };
 
+/**
+ * What a room hands up when it opens a reading or an edit view in place of
+ * its own list: the room shell suppresses its own conventional Back (and its
+ * Close brass, where it has one) and shows this one instead, in the exact
+ * position the shell's Back occupied. Fixes §1: two visually identical Backs
+ * on screen at once, one of which silently exited the whole room.
+ */
+type ChromeOverride = { backLabel: string; onBack: () => void } | null;
+type OnChrome = (override: ChromeOverride) => void;
+
+/** The room shell's own head, drawn once more with a room-supplied label,
+ *  for exactly the moment a room has something open that isn't its list. */
+const SubHead: React.FC<{ title: string; backLabel: string; onBack: () => void }> = ({
+  title,
+  backLabel,
+  onBack,
+}) => (
+  <div
+    style={{
+      position: 'relative',
+      flex: 'none',
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: 14,
+      borderBottom: `1px solid ${C.hairStrong}`,
+      paddingBottom: 15,
+    }}
+  >
+    <span style={{ fontFamily: F.display, fontWeight: 300, fontSize: 26, color: C.ink }}>{title}</span>
+    <button
+      type="button"
+      onClick={onBack}
+      style={{ background: 'none', border: 0, cursor: 'pointer', fontFamily: F.body, fontSize: 13.5, color: C.inkQuiet }}
+    >
+      {backLabel}
+    </button>
+  </div>
+);
+
 export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live }) => {
+  /* a room's reading/edit view can only ever belong to the room currently
+     mounted, so switching rooms clears any override the previous one left */
+  const [chromeOverride, setChromeOverride] = useState<ChromeOverride>(null);
+  useEffect(() => setChromeOverride(null), [room]);
+
   /* the garden brings its own ground: its first surface is the piece asking a
      single thing full screen, which has no room header to sit under */
   if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} live={live?.garden ?? undefined} />;
@@ -133,16 +212,21 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live 
 
   return (
     <Ground light={LIGHT[room] as never} pad="44px 30px 30px">
-      <RoomHead title={TITLES[room]} onBack={onClose} />
+      <style>{OPEN_AFFORDANCE_CSS}</style>
+      {chromeOverride ? (
+        <SubHead title={TITLES[room]} backLabel={chromeOverride.backLabel} onBack={chromeOverride.onBack} />
+      ) : (
+        <RoomHead title={TITLES[room]} onBack={onClose} />
+      )}
       {room === 'story' && (live ? <LiveStoryRoom live={live} /> : <StoryRoom />)}
-      {room === 'history' && (live ? <LiveHistoryRoom live={live} /> : <HistoryRoom />)}
-      {room === 'dreams' && (live ? <LiveDreamsRoom live={live} /> : <DreamsRoom />)}
+      {room === 'history' && (live ? <LiveHistoryRoom live={live} onChrome={setChromeOverride} /> : <HistoryRoom onChrome={setChromeOverride} />)}
+      {room === 'dreams' && (live ? <LiveDreamsRoom live={live} onChrome={setChromeOverride} /> : <DreamsRoom onChrome={setChromeOverride} />)}
       {room === 'information' && (live ? <LiveInformationRoom live={live} /> : <InformationRoom />)}
       {room === 'family' && (live ? <LiveFamilyRoom live={live} onWalk={onWalk} /> : <FamilyRoom onWalk={onWalk} />)}
-      {room === 'account' && (live ? <LiveAccountRoom live={live} onWalk={onWalk} onOpenRoom={onOpenRoom} /> : <AccountRoom />)}
+      {room === 'account' && (live ? <LiveAccountRoom live={live} onWalk={onWalk} onOpenRoom={onOpenRoom} /> : <AccountRoom onClose={onClose} onChrome={setChromeOverride} />)}
       {room === 'letters' && <LettersRoom live={live} />}
       {room === 'grid' && <GridRoom />}
-      {!listRoom && (
+      {!listRoom && !chromeOverride && (
         <div style={{ flex: 'none', marginTop: 'auto', paddingTop: 18, display: 'flex', justifyContent: 'flex-end' }}>
           <Brass onClick={onClose}>{COPY.page.close}</Brass>
         </div>
@@ -155,6 +239,45 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live 
  * The story: the public row every guest reads. Adrian's voice leads, and
  * the commissioner's paragraph follows when the piece was asked for.
  * ------------------------------------------------------------------ */
+
+/**
+ * The commissioner's paragraph, given a proper quote presentation: display
+ * face, italic, its own colour, set apart from Adrian's own body voice
+ * rather than sharing its typography. `sampleLabel` is the small scaffolding
+ * line that used to open the sentence itself ("Sample, a commissioner might
+ * write:"); it now sits above the quote as its own 10px quiet label, present
+ * only while the paragraph is still a sample rather than a real one.
+ */
+const CommissionerQuote: React.FC<{ sampleLabel?: string; text: string; flagged?: boolean }> = ({
+  sampleLabel,
+  text,
+  flagged = false,
+}) => (
+  <>
+    <div style={{ paddingTop: 26 }}>
+      <Eyebrow>{STORY_COMMISSIONED_LABEL}</Eyebrow>
+    </div>
+    {sampleLabel && (
+      <div style={{ paddingTop: 12 }}>
+        <Eyebrow size={10}>{sampleLabel}</Eyebrow>
+      </div>
+    )}
+    <p
+      style={{
+        margin: `${sampleLabel ? 8 : 12}px 0 0`,
+        fontFamily: F.display,
+        fontStyle: 'italic',
+        fontWeight: 300,
+        fontSize: 19,
+        lineHeight: 1.58,
+        color: C.inkWarm,
+        textWrap: 'pretty',
+      }}
+    >
+      {flagged ? <Flag text={text} /> : text}
+    </p>
+  </>
+);
 
 const StoryRoom: React.FC = () => (
   <RoomBody top={22}>
@@ -174,10 +297,7 @@ const StoryRoom: React.FC = () => (
     <Body top={16}>{COPY.rooms.storyBody2}</Body>
     {/* the commissioner's voice: why the piece was asked for. Sample only —
         clearly a placeholder, never Adrian's or a real commissioner's words. */}
-    <div style={{ paddingTop: 26 }}>
-      <Eyebrow>{STORY_COMMISSIONED_LABEL}</Eyebrow>
-    </div>
-    <Body top={10}>{STORY_COMMISSIONED_SAMPLE}</Body>
+    <CommissionerQuote sampleLabel={STORY_COMMISSIONED_SAMPLE_LABEL} text={STORY_COMMISSIONED_SAMPLE} flagged />
     <Note top={22}>{COPY.rooms.storyNote}</Note>
   </RoomBody>
 );
@@ -241,7 +361,9 @@ const HistoryDate: React.FC<{ year: string | null; month: string | null }> = ({ 
 );
 
 /* one entry on the spine. With onOpen it is a real button and the whole line
-   is the press target; without, it is the same quiet line it always was. */
+   is the press target, carrying the shared quiet press affordance (a hover
+   underline on its own text, plus a small trailing label, never a chevron);
+   without onOpen it is the same plain line it always was, no affordance. */
 const HistoryEntry: React.FC<{
   year: string | null;
   month: string | null;
@@ -249,6 +371,7 @@ const HistoryEntry: React.FC<{
   note?: string | null;
   onOpen?: () => void;
 }> = ({ year, month, text, note, onOpen }) => {
+  const pressable = Boolean(onOpen);
   const line = (
     <>
       <span
@@ -267,8 +390,27 @@ const HistoryEntry: React.FC<{
       <span
         style={{ position: 'absolute', left: 2, top: 16, bottom: -26, width: 1, background: C.hair, display: 'block' }}
       />
-      <div style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink }}>{text}</div>
+      <div
+        className={pressable ? 'collector-open-entry-text' : undefined}
+        style={{ fontFamily: F.body, fontSize: 15.5, lineHeight: 1.45, color: C.ink, display: 'inline-block' }}
+      >
+        {text}
+      </div>
       {note && <div style={{ paddingTop: 4, fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet }}>{note}</div>}
+      {pressable && (
+        <div
+          style={{
+            paddingTop: 4,
+            fontFamily: F.label,
+            fontSize: 10,
+            letterSpacing: '.12em',
+            textTransform: 'uppercase',
+            color: C.brass,
+          }}
+        >
+          {READ_IT}
+        </div>
+      )}
     </>
   );
   return (
@@ -278,6 +420,7 @@ const HistoryEntry: React.FC<{
         <button
           type="button"
           onClick={onOpen}
+          className="collector-open-entry"
           style={{
             position: 'relative',
             display: 'block',
@@ -298,48 +441,59 @@ const HistoryEntry: React.FC<{
   );
 };
 
-/* a written item opened: the words whole, in the dream-reading typography the
-   garden's review page settled (F.display 300 at 23, the writer's line breaks
-   kept). Rendered in the room itself; the quiet link returns to the spine. */
-type HistoryReading = { eyebrow: string | null; body: string };
+/**
+ * A reading opened in place: the words whole, in the dream-reading
+ * typography the garden's review page settled (F.display 300 at 23). Shared
+ * by the history's written items and the dreams' portal entries — one
+ * paragraph or several; a single-name `eyebrow` line, when there is one,
+ * leads. The room's own head carries the one Back while this is open (§1);
+ * this view renders no back link of its own.
+ */
+type Reading = { eyebrow: string | null; paragraphs: string[] };
 
-const HistoryReadingView: React.FC<{ reading: HistoryReading; onBack: () => void }> = ({ reading, onBack }) => (
+const ReadingView: React.FC<{ reading: Reading }> = ({ reading }) => (
   <RoomBody top={16}>
-    <div>
-      <TLink onClick={onBack}>{HISTORY_BACK}</TLink>
-    </div>
     {reading.eyebrow && (
-      <div style={{ paddingTop: 14 }}>
+      <div>
         <Eyebrow>{reading.eyebrow}</Eyebrow>
       </div>
     )}
-    <p
-      style={{
-        margin: '14px 0 0',
-        fontFamily: F.display,
-        fontWeight: 300,
-        fontSize: 23,
-        lineHeight: 1.36,
-        color: C.inkWarm,
-        textWrap: 'pretty',
-        whiteSpace: 'pre-wrap',
-      }}
-    >
-      <Flag text={reading.body} />
-    </p>
+    {reading.paragraphs.map((body, i) => (
+      <p
+        key={i}
+        style={{
+          margin: i === 0 ? (reading.eyebrow ? '14px 0 0' : 0) : '18px 0 0',
+          fontFamily: F.display,
+          fontWeight: 300,
+          fontSize: 23,
+          lineHeight: 1.36,
+          color: C.inkWarm,
+          textWrap: 'pretty',
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        <Flag text={body} />
+      </p>
+    ))}
   </RoomBody>
 );
 
-const HistoryRoom: React.FC = () => {
+const HistoryRoom: React.FC<{ onChrome?: OnChrome }> = ({ onChrome }) => {
   const [tab, setTab] = useState(0);
-  const [reading, setReading] = useState<HistoryReading | null>(null);
+  const [reading, setReading] = useState<Reading | null>(null);
+  /* §1's fix: while a reading is open, the room hands its Back up to the
+     shell instead of drawing its own — the shell suppresses RoomHead's Back
+     and the Close brass, and shows this one Back in their place */
+  useEffect(() => {
+    onChrome?.(reading ? { backLabel: HISTORY_BACK, onBack: () => setReading(null) } : null);
+  }, [reading, onChrome]);
   return (
     <>
       <div style={{ flex: 'none', paddingTop: 10 }}>
         <Note>{COPY.rooms.historyNote}</Note>
       </div>
       {reading ? (
-        <HistoryReadingView reading={reading} onBack={() => setReading(null)} />
+        <ReadingView reading={reading} />
       ) : (
         <>
           <div style={{ flex: 'none', paddingTop: 18 }}>
@@ -360,7 +514,7 @@ const HistoryRoom: React.FC = () => {
                   note={entry.note}
                   /* only words that shine open for a guest; the kept entry
                      carries no press at all */
-                  onOpen={entry.body ? () => setReading({ eyebrow: entry.note, body: entry.body as string }) : undefined}
+                  onOpen={entry.body ? () => setReading({ eyebrow: entry.note, paragraphs: [entry.body as string] }) : undefined}
                 />
               ))}
           </RoomBody>
@@ -371,58 +525,168 @@ const HistoryRoom: React.FC = () => {
 };
 
 /* ------------------------------------------------------------------ *
- * The dreams: what other caretakers let shine. Words with no name, each
- * with the city its light sits in. The most recent leads.
+ * The dreams: what other caretakers let shine. Each opener is the whole
+ * dream's own first line, in the demo's original display type; press it
+ * and it opens into a portal, the paragraphs standing behind it — a
+ * caretaker's small words made room enough to actually read. Nameless is
+ * the default; exactly one demo entry carries a name, signed with the city,
+ * so Adrian can see what that looks like the day someone chooses it.
  * ------------------------------------------------------------------ */
 
-const DREAMS: [string, string][] = [
-  ['That this house stays a place people arrive at unannounced.', 'Sonoma County'],
-  ['That my daughter reads the letter I have not written yet.', 'Lisbon'],
-  ['That the workshop outlives me and someone else swears in it.', 'Bergen'],
-  ['That we stop measuring the years by what went wrong in them.', 'Kyoto'],
+/* draft replacement for the locked COPY.rooms.dreamsNote, in workbook
+   territory rather than settled: the artist's own note was "the writing in
+   here should encourage people to share because of the power with it," and
+   the old line only ever described what other people did, never invited
+   the reader. Not Adrian's words yet. */
+const DREAMS_NOTE_WORKBOOK = ph(
+  'What other caretakers chose to let shine. If something is stirring in you, there is room for it here too, whenever you are ready and however much you want to say.',
+);
+
+type DreamEntry = { opener: string; city: string; name: string | null; paragraphs: string[] };
+
+const DREAMS: DreamEntry[] = [
+  {
+    opener: ph('That this house stays a place people arrive at unannounced.'),
+    city: 'Sonoma County',
+    name: null,
+    paragraphs: [
+      ph(
+        "I don't mean guests who call ahead. I mean the kind of arriving where someone is already halfway through the door before they remember to knock, because some part of them already knows this is a house that opens.",
+      ),
+      ph(
+        'We built it that way on purpose, or maybe it built us that way and we just went along. Either way, I hope the door stays like that long after I have stopped being the one who answers it.',
+      ),
+    ],
+  },
+  {
+    opener: ph('That my daughter reads the letter I have not written yet.'),
+    city: 'Lisbon',
+    /* the one demo entry that carries a name, per the artist's request to
+       see the named case: name and city both shown, signed treatment */
+    name: ph('Miriam'),
+    paragraphs: [
+      ph(
+        "I have started it four times, in four different notebooks. Every time I reach the part about her mother I stop, because I don't yet know how to say it without it sounding like an apology.",
+      ),
+      ph(
+        'It is not an apology. It is just true, and true things seem to take longer to write down than sorry ones do. One day it will be finished, and she will read it, and I hope by then I will have found the right order for it.',
+      ),
+    ],
+  },
+  {
+    opener: ph('That the workshop outlives me and someone else swears in it.'),
+    city: 'Bergen',
+    name: null,
+    paragraphs: [
+      ph(
+        'Not politely. Actually swears, the way you do when a chisel skips and takes a piece of your thumb with it, or a joint you have fought for three hours finally seats.',
+      ),
+      ph(
+        "That is how I will know the place is still alive. Not the tools staying where I left them, but somebody's temper breaking in it, the way mine has for years, over the same wood doing the same thing it has always done.",
+      ),
+    ],
+  },
+  {
+    opener: ph('That we stop measuring the years by what went wrong in them.'),
+    city: 'Kyoto',
+    name: null,
+    paragraphs: [
+      ph(
+        "Every year someone asks how it was, and I catch myself running down the list of what broke, who left, what didn't heal in time, before I have said one true good thing.",
+      ),
+      ph(
+        'I want a year where the honest answer is just: it happened, and I was there for most of it. I think that would be enough, if I let it be.',
+      ),
+    ],
+  },
 ];
 
-const DreamsRoom: React.FC = () => (
-  <>
-    <div style={{ flex: 'none', paddingTop: 11 }}>
-      <Note>{COPY.rooms.dreamsNote}</Note>
+/** the eyebrow line under an opener, and the reading's own eyebrow above its
+ *  paragraphs: name and city together when a name was given, city alone
+ *  otherwise — the same treatment either place */
+const dreamAttribution = (entry: DreamEntry): string => (entry.name ? `${entry.name} · ${entry.city}` : entry.city);
+
+const DreamEntryRow: React.FC<{ entry: DreamEntry; lead: boolean; onOpen: () => void }> = ({ entry, lead, onOpen }) => (
+  <div style={{ padding: '0 0 26px' }}>
+    <button
+      type="button"
+      onClick={onOpen}
+      className="collector-open-entry"
+      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+    >
+      <p
+        className="collector-open-entry-text"
+        style={{
+          margin: 0,
+          fontFamily: F.display,
+          fontWeight: 300,
+          fontSize: lead ? 23 : 21,
+          lineHeight: 1.36,
+          color: lead ? C.inkWarm : C.ink,
+          textWrap: 'pretty',
+        }}
+      >
+        {entry.opener}
+      </p>
+      <div
+        style={{
+          paddingTop: 4,
+          fontFamily: F.label,
+          fontSize: 10,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+          color: C.brass,
+        }}
+      >
+        {READ_IT}
+      </div>
+    </button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, paddingTop: 8 }}>
+      <span
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: '50%',
+          background: C.brass,
+          boxShadow: '0 0 9px 3px rgba(212,184,138,.4)',
+          flex: 'none',
+          display: 'block',
+        }}
+      />
+      <Eyebrow>{dreamAttribution(entry)}</Eyebrow>
     </div>
-    <RoomBody top={24}>
-      {DREAMS.map(([text, city], i) => (
-        <div key={city} style={{ padding: '0 0 26px' }}>
-          <p
-            style={{
-              margin: 0,
-              fontFamily: F.display,
-              fontWeight: 300,
-              fontSize: i === 0 ? 23 : 21,
-              lineHeight: 1.36,
-              color: i === 0 ? C.inkWarm : C.ink,
-              textWrap: 'pretty',
-            }}
-          >
-            {text}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, paddingTop: 10 }}>
-            <span
-              style={{
-                width: 4,
-                height: 4,
-                borderRadius: '50%',
-                background: C.brass,
-                boxShadow: '0 0 9px 3px rgba(212,184,138,.4)',
-                flex: 'none',
-                display: 'block',
-              }}
-            />
-            <Eyebrow>{city}</Eyebrow>
-          </div>
-        </div>
-      ))}
-      <Note>{COPY.rooms.dreamsFoot}</Note>
-    </RoomBody>
-  </>
+  </div>
 );
+
+const DreamsRoom: React.FC<{ onChrome?: OnChrome }> = ({ onChrome }) => {
+  const [reading, setReading] = useState<Reading | null>(null);
+  useEffect(() => {
+    onChrome?.(reading ? { backLabel: DREAMS_BACK, onBack: () => setReading(null) } : null);
+  }, [reading, onChrome]);
+
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 11 }}>
+        <Note>{DREAMS_NOTE_WORKBOOK}</Note>
+      </div>
+      {reading ? (
+        <ReadingView reading={reading} />
+      ) : (
+        <RoomBody top={24}>
+          {DREAMS.map((entry, i) => (
+            <DreamEntryRow
+              key={entry.opener}
+              entry={entry}
+              lead={i === 0}
+              onOpen={() => setReading({ eyebrow: dreamAttribution(entry), paragraphs: entry.paragraphs })}
+            />
+          ))}
+          <Note>{COPY.rooms.dreamsFoot}</Note>
+        </RoomBody>
+      )}
+    </>
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * Piece information: the certificate and the record are one room. Everyone
@@ -479,9 +743,10 @@ const PaidLedger: React.FC<{ amount: string }> = ({ amount }) => {
 
 const InformationRoom: React.FC = () => (
   <>
-    <div style={{ flex: 'none', paddingTop: 10 }}>
-      <Note>{COPY.rooms.infoNote}</Note>
-    </div>
+    {/* COPY.rooms.infoNote used to open this room, saying "the full record.
+        what was paid appears here and nowhere else" on a screen that IS
+        that record, with the masked price sitting a few rows below.
+        Deleted per the artist: it doesn't need to be there. */}
     <RoomBody>
       {/* the photograph slot has an empty state: the piece's own line drawing
           stands in, and the page never shows a broken or blank image. Adding a
@@ -526,7 +791,12 @@ const HOUSEHOLD: [string, string, string][] = [
   ['Tomas', 'Son', 'Invited, has not written yet'],
 ];
 
-const FamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) => (
+const FamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) => {
+  /* the waiting card's own settled state: a single press on either action is
+     enough (no arm-then-commit here), and it flips the card into a quiet
+     confirmation rather than opening anything further */
+  const [waiting, setWaiting] = useState<'pending' | 'shine' | 'keep'>('pending');
+  return (
   <>
     <div style={{ flex: 'none', paddingTop: 10 }}>
       <Note>{COPY.rooms.familyNote}</Note>
@@ -601,70 +871,206 @@ const FamilyRoom: React.FC<{ onWalk?: (key: string) => void }> = ({ onWalk }) =>
         <div style={{ paddingTop: 9, fontFamily: F.body, fontSize: 12.5, color: 'rgba(242,227,196,.6)' }}>
           Ines · read it once before it shines
         </div>
-        <div style={{ display: 'flex', gap: 20, paddingTop: 16 }}>
-          <span style={{ fontFamily: F.body, fontSize: 14, color: C.brass, cursor: 'pointer' }}>
-            {COPY.rooms.familyShine}
-          </span>
-          <span style={{ fontFamily: F.body, fontSize: 14, color: C.inkQuiet, cursor: 'pointer' }}>
-            {COPY.rooms.familyKeep}
-          </span>
-        </div>
+        {waiting === 'pending' ? (
+          <div style={{ display: 'flex', gap: 20, paddingTop: 16 }}>
+            <span
+              onClick={() => setWaiting('shine')}
+              style={{ fontFamily: F.body, fontSize: 14, color: C.brass, cursor: 'pointer' }}
+            >
+              {COPY.rooms.familyShine}
+            </span>
+            <span
+              onClick={() => setWaiting('keep')}
+              style={{ fontFamily: F.body, fontSize: 14, color: C.inkQuiet, cursor: 'pointer' }}
+            >
+              {COPY.rooms.familyKeep}
+            </span>
+          </div>
+        ) : (
+          <div
+            style={{
+              paddingTop: 16,
+              fontFamily: F.body,
+              fontSize: 14,
+              color: waiting === 'shine' ? C.brass : 'rgba(242,227,196,.6)',
+            }}
+          >
+            {waiting === 'shine' ? FAMILY_SHINE_CONFIRM : FAMILY_KEEP_CONFIRM}
+          </div>
+        )}
       </div>
     </RoomBody>
   </>
-);
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * Your account. Nothing from setting up is frozen.
  * ------------------------------------------------------------------ */
 
-const ACCOUNT: [string, string][] = [
-  ['Name', 'Adrian Rasmussen'],
-  ['Email', 'adrian@somewhere'],
-  ['Password', 'Changed in April'],
-  ['Where the art lives', 'Sonoma County · shown as city'],
-  ['Your links', 'Website and Instagram shown'],
-  ['What shows', 'Four choices open, one closed'],
-  /* birth details are shown to nobody, ever. The row states itself and there
-     is no switch on it. */
-  ['Born', 'Held, shown to nobody'],
-];
-
-const AccountRoom: React.FC = () => (
-  <>
-    <div style={{ flex: 'none', paddingTop: 11 }}>
-      <Note>{COPY.rooms.accountNote}</Note>
+/* the rows, consolidated: 'Your links' and 'What shows' merge into one row
+   per the artist's note that the list could be tightened. Born keeps its own
+   row, since its view says something different from the others (nothing
+   editable there, honestly) rather than being folded into anything. */
+const AccountRow: React.FC<{ label: string; value: string; onOpen: () => void }> = ({ label, value, onOpen }) => (
+  <button
+    type="button"
+    onClick={onOpen}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 14,
+      width: '100%',
+      textAlign: 'left',
+      background: 'none',
+      border: 0,
+      borderBottom: `1px solid ${C.hair}`,
+      padding: '15px 0',
+      cursor: 'pointer',
+    }}
+  >
+    <div style={{ minWidth: 0 }}>
+      <Eyebrow>{label}</Eyebrow>
+      <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>{value}</div>
     </div>
-    <RoomBody top={18}>
-      {ACCOUNT.map(([label, value]) => (
-        <div
-          key={label}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 14,
-            borderBottom: `1px solid ${C.hair}`,
-            padding: '15px 0',
-            cursor: 'pointer',
+    <span style={{ fontFamily: F.body, fontSize: 15, color: C.inkQuiet, flex: 'none' }}>›</span>
+  </button>
+);
+
+/**
+ * One row's edit view: a Field-style input prefilled with the row's current
+ * value, and a Keep-it commit that lands into the room's own local demo
+ * state (there is nothing to save to; the point is that pressing it does
+ * something real within the screen). The same suppressed-chrome mechanic as
+ * a reading carries this view's Back, so it renders none of its own.
+ */
+const AccountFieldEdit: React.FC<{
+  label: string;
+  value: string;
+  hint?: string;
+  keptNote: string;
+  onCommit: (next: string) => void;
+}> = ({ label, value, hint, keptNote, onCommit }) => {
+  const [draft, setDraft] = useState(value);
+  const [kept, setKept] = useState(false);
+  return (
+    <RoomBody top={16}>
+      <div style={{ padding: '0 0 13px' }}>
+        <Field
+          label={label}
+          value={draft}
+          hint={hint}
+          onChange={v => {
+            setKept(false);
+            setDraft(v);
           }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <Eyebrow>{label}</Eyebrow>
-            <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>{value}</div>
-          </div>
-          <span style={{ fontFamily: F.body, fontSize: 15, color: C.inkQuiet, flex: 'none' }}>›</span>
+        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, paddingTop: 8 }}>
+          {kept ? <Note>{keptNote}</Note> : <span />}
+          <TLink
+            onClick={() => {
+              onCommit(draft);
+              setKept(true);
+            }}
+          >
+            {ACCOUNT_KEEP_ACTION}
+          </TLink>
         </div>
-      ))}
-      <Note top={20}>{COPY.rooms.accountFoot}</Note>
-      <div style={{ paddingTop: 18 }}>
-        <span style={{ fontFamily: F.body, fontSize: 14, color: C.inkQuiet, cursor: 'pointer' }}>
-          {COPY.rooms.accountSignOut}
-        </span>
       </div>
     </RoomBody>
-  </>
-);
+  );
+};
+
+type AccountView = 'name' | 'email' | 'password' | 'location' | 'showsLinks' | 'born' | null;
+
+const AccountRoom: React.FC<{ onClose?: () => void; onChrome?: OnChrome }> = ({ onClose, onChrome }) => {
+  const [name, setName] = useState('Adrian Rasmussen');
+  const [email, setEmail] = useState('adrian@somewhere');
+  const [passwordNote, setPasswordNote] = useState('Changed in April');
+  const [location, setLocation] = useState('Sonoma County · shown as city');
+  const [view, setView] = useState<AccountView>(null);
+
+  useEffect(() => {
+    onChrome?.(view ? { backLabel: ACCOUNT_BACK, onBack: () => setView(null) } : null);
+  }, [view, onChrome]);
+
+  return (
+    <>
+      <div style={{ flex: 'none', paddingTop: 11 }}>
+        <Note>{COPY.rooms.accountNote}</Note>
+      </div>
+      {view === null && (
+        <RoomBody top={18}>
+          <AccountRow label="Name" value={name} onOpen={() => setView('name')} />
+          <AccountRow label="Email" value={email} onOpen={() => setView('email')} />
+          <AccountRow label="Password" value={passwordNote} onOpen={() => setView('password')} />
+          <AccountRow label={ACCOUNT_LIVES_LABEL} value={location} onOpen={() => setView('location')} />
+          <AccountRow
+            label={ACCOUNT_SHOWS_LINKS_ROW}
+            value="Four choices open, one closed · website and Instagram shown"
+            onOpen={() => setView('showsLinks')}
+          />
+          {/* birth details are shown to nobody, ever. The row states itself
+              and there is no switch on it. */}
+          <AccountRow label="Born" value="Held, shown to nobody" onOpen={() => setView('born')} />
+          <Note top={20}>{COPY.rooms.accountFoot}</Note>
+          <div style={{ paddingTop: 18 }}>
+            <button
+              type="button"
+              onClick={() => onClose?.()}
+              style={{
+                background: 'none',
+                border: 0,
+                padding: 0,
+                fontFamily: F.body,
+                fontSize: 14,
+                color: C.inkQuiet,
+                cursor: 'pointer',
+              }}
+            >
+              {COPY.rooms.accountSignOut}
+            </button>
+          </div>
+        </RoomBody>
+      )}
+      {view === 'name' && (
+        <AccountFieldEdit label="Name" value={name} keptNote={ACCOUNT_KEPT_GENERIC} onCommit={setName} />
+      )}
+      {view === 'email' && (
+        <AccountFieldEdit label="Email" value={email} keptNote={ACCOUNT_KEPT_GENERIC} onCommit={setEmail} />
+      )}
+      {view === 'password' && (
+        <AccountFieldEdit
+          label={ACCOUNT_NEW_PASSWORD_LABEL}
+          value=""
+          hint={COPY.gathering.hintPassword}
+          keptNote={ACCOUNT_KEPT_GENERIC}
+          onCommit={next => setPasswordNote(next ? ACCOUNT_PASSWORD_CHANGED : passwordNote)}
+        />
+      )}
+      {view === 'location' && (
+        <AccountFieldEdit label={ACCOUNT_LIVES_LABEL} value={location} keptNote={ACCOUNT_KEPT} onCommit={setLocation} />
+      )}
+      {view === 'showsLinks' && (
+        <RoomBody top={16}>
+          <Note>{ACCOUNT_SHOWS_LINKS_NOTE}</Note>
+          <Ledger label={ACCOUNT_SHOWS_ROW} value="Four choices open, one closed" />
+          <Ledger label="Your links" value="Website and Instagram shown" />
+        </RoomBody>
+      )}
+      {view === 'born' && (
+        <RoomBody top={16}>
+          <div style={{ padding: '0 0 15px' }}>
+            <Eyebrow>Born</Eyebrow>
+            <div style={{ paddingTop: 6, fontFamily: F.body, fontSize: 15, color: C.ink }}>Held, shown to nobody</div>
+          </div>
+          <Note>{COPY.gathering.showBirthNote}</Note>
+        </RoomBody>
+      )}
+    </>
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * The wired rooms. Same surfaces, real registry data via api.ts (fetched
@@ -693,15 +1099,9 @@ const LiveStoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
       {/* the commissioner's paragraph, when the record carries one.
           TODO(server): nothing supplies story.commissioned yet — it is a
           future field on the catalog/registry record (live.ts), rendered
-          here the day a wire fills it. */}
-      {live.story?.commissioned && (
-        <>
-          <div style={{ paddingTop: 26 }}>
-            <Eyebrow>{STORY_COMMISSIONED_LABEL}</Eyebrow>
-          </div>
-          <Body top={10}>{live.story.commissioned}</Body>
-        </>
-      )}
+          here the day a wire fills it. Real content, so no sample label and
+          no Flag: it is never a placeholder once it exists. */}
+      {live.story?.commissioned && <CommissionerQuote text={live.story.commissioned} />}
     </RoomBody>
   );
 };
@@ -716,9 +1116,20 @@ const isoDateParts = (iso: string): { year: string | null; month: string | null 
   };
 };
 
-const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+/** day, month word, year — the LettersRoom idiom, reused for the household's
+ *  invited-sent date. Null on a date that fails to parse. */
+const formatFullDate = (iso: string): string | null => {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null;
+  return at.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const LiveHistoryRoom: React.FC<{ live: PieceLive; onChrome?: OnChrome }> = ({ live, onChrome }) => {
   const [tab, setTab] = useState(0);
-  const [reading, setReading] = useState<HistoryReading | null>(null);
+  const [reading, setReading] = useState<Reading | null>(null);
+  useEffect(() => {
+    onChrome?.(reading ? { backLabel: HISTORY_BACK, onBack: () => setReading(null) } : null);
+  }, [reading, onChrome]);
   const { lineage } = live;
   const outcome = lineage.status === 'ready' ? lineage.data : null;
   /* the dark lineage is the quiet absence the design prescribes: the note
@@ -745,7 +1156,7 @@ const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
         <Note>{COPY.rooms.historyNote}</Note>
       </div>
       {reading ? (
-        <HistoryReadingView reading={reading} onBack={() => setReading(null)} />
+        <ReadingView reading={reading} />
       ) : (
         <>
           <div style={{ flex: 'none', paddingTop: 18 }}>
@@ -791,7 +1202,7 @@ const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
                         eyebrow: shining.attribution
                           ? `${WRITTEN_SHINES_WORD} · ${shining.attribution}`
                           : WRITTEN_SHINES_NOTE,
-                        body: shining.body,
+                        paragraphs: [shining.body],
                       })
                     }
                   />
@@ -807,7 +1218,7 @@ const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
                     onOpen={() =>
                       setReading({
                         eyebrow: keptSealed ? WRITTEN_SEALED_NOTE : WRITTEN_KEPT_NOTE,
-                        body: kept.body,
+                        paragraphs: [kept.body],
                       })
                     }
                   />
@@ -826,33 +1237,61 @@ const LiveHistoryRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
   );
 };
 
-const LiveDreamsRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
+/**
+ * The wired dreams room. The wire carries one shared dream at most, with no
+ * paragraph structure of its own — so the "opener" and the reading behind it
+ * show the same real words; nothing is fabricated to make the portal deeper
+ * than what actually exists. Pressing it still opens the same reading view
+ * history and the demo dreams use, so the room behaves the same way whether
+ * the words are real or sample.
+ */
+const LiveDreamsRoom: React.FC<{ live: PieceLive; onChrome?: OnChrome }> = ({ live, onChrome }) => {
   const dream = live.dream.status === 'ready' ? live.dream.data : null;
+  const [reading, setReading] = useState<Reading | null>(null);
+  useEffect(() => {
+    onChrome?.(reading ? { backLabel: DREAMS_BACK, onBack: () => setReading(null) } : null);
+  }, [reading, onChrome]);
+
   return (
     <>
       <div style={{ flex: 'none', paddingTop: 11 }}>
-        <Note>{COPY.rooms.dreamsNote}</Note>
+        <Note>{DREAMS_NOTE_WORKBOOK}</Note>
       </div>
-      <RoomBody top={24}>
-        {dream && (
-          <div style={{ padding: '0 0 26px' }}>
-            <p
-              style={{
-                margin: 0, fontFamily: F.display, fontWeight: 300, fontSize: 23,
-                lineHeight: 1.36, color: C.inkWarm, textWrap: 'pretty',
-              }}
-            >
-              {dream.body}
-            </p>
-          </div>
-        )}
-        {live.dream.status === 'failed' && (
-          <div style={{ paddingBottom: 16 }}>
-            <TLink onClick={live.dream.retry}>{COPY.code.tryAgain}</TLink>
-          </div>
-        )}
-        {dream && <Note>{COPY.rooms.dreamsFoot}</Note>}
-      </RoomBody>
+      {reading ? (
+        <ReadingView reading={reading} />
+      ) : (
+        <RoomBody top={24}>
+          {dream && (
+            <div style={{ padding: '0 0 26px' }}>
+              <button
+                type="button"
+                onClick={() => setReading({ eyebrow: dream.attribution, paragraphs: [dream.body] })}
+                className="collector-open-entry"
+                style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+              >
+                <p
+                  className="collector-open-entry-text"
+                  style={{
+                    margin: 0, fontFamily: F.display, fontWeight: 300, fontSize: 23,
+                    lineHeight: 1.36, color: C.inkWarm, textWrap: 'pretty',
+                  }}
+                >
+                  {dream.body}
+                </p>
+                <div style={{ paddingTop: 4, fontFamily: F.label, fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: C.brass }}>
+                  {READ_IT}
+                </div>
+              </button>
+            </div>
+          )}
+          {live.dream.status === 'failed' && (
+            <div style={{ paddingBottom: 16 }}>
+              <TLink onClick={live.dream.retry}>{COPY.code.tryAgain}</TLink>
+            </div>
+          )}
+          {dream && <Note>{COPY.rooms.dreamsFoot}</Note>}
+        </RoomBody>
+      )}
     </>
   );
 };
@@ -900,12 +1339,18 @@ const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
     priceHistory && priceHistory.status === 'ready' ? latestPaid(priceHistory.data) : null;
   return (
     <>
-      <div style={{ flex: 'none', paddingTop: 10 }}>
-        {/* each viewer gets the locked line that is true for them: the guest's
-            says the paid line is not here, the caretaker's says it is */}
-        <Note>{caretaker ? COPY.rooms.infoNote : COPY.rooms.certNote}</Note>
-      </div>
-      <RoomBody>
+      {/* the caretaker's header note used to say "the full record. what was
+          paid appears here and nowhere else" on a screen that IS that
+          record, a few rows above the masked price itself — deleted per the
+          artist. The guest's note stays: certNote tells a first-time guest
+          what they are looking at and that price isn't part of it, which
+          the page gives them nowhere else. */}
+      {!caretaker && (
+        <div style={{ flex: 'none', paddingTop: 10 }}>
+          <Note>{COPY.rooms.certNote}</Note>
+        </div>
+      )}
+      <RoomBody top={caretaker ? 20 : 16}>
         <div
           style={{
             position: 'relative', width: 240, height: 240, margin: '6px auto 22px',
@@ -989,7 +1434,16 @@ const LiveFamilyRoom: React.FC<{ live: PieceLive; onWalk?: (key: string) => void
               </span>
               {person.kind === 'invited' && (
                 <span style={{ display: 'block', paddingTop: 5, fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet }}>
-                  {COPY.people.sentBody}
+                  {/* the invitation entry (utils/artworkContributors.ts
+                      ContributorInvitation, threaded through as
+                      FamilyPerson in live.ts) carries invitedAt but no
+                      expiresAt, so this renders when it was sent and
+                      nothing about when it expires — that half isn't real
+                      data here yet. Falls back to the generic locked line
+                      only if the date fails to parse. */}
+                  {formatFullDate(person.invitedAt)
+                    ? `${FAMILY_SENT_WORD} ${formatFullDate(person.invitedAt)}`
+                    : COPY.people.sentBody}
                 </span>
               )}
             </button>
