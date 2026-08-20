@@ -84,31 +84,9 @@ export const QR_REGISTRY: QREntry[] = [
     notes: 'Printed plaque, redirects to mandalacodes.com',
   },
 
-  // ── Artwork QR codes ────────────────────────────────────────────
-  // Add entries here as you engrave/print QR codes for pieces.
-  // The code should match the artwork ID in FULL_ARCHIVE.
-
-  // Living Legacy worked example (gated behind the `livingLegacy` flag).
-  // UL-100 ("Art of Living - 32") is a real piece in FULL_ARCHIVE. The public
-  // QR (code 'UL-100') is look-only and routes to /works/UL-100. The steward
-  // binds with a LONG recovery code printed under a scratch panel on the back
-  // of the art, distinct from this public number. Only the SHA-256 hash of that
-  // code lives in source; the plaintext stays offline on the physical piece.
-  //
-  // NOTE: recoveryCodeHash below is a worked-EXAMPLE hash. Before a real
-  // print run, Adrian generates a fresh random code per piece with
-  // utils/recoveryCode.generateRecoveryCode(), prints it, hashes it, and
-  // replaces this value. See todo/plans/living-legacy.md.
-  {
-    code: 'UL-100',
-    type: 'artwork',
-    destination: '/works/UL-100',
-    label: 'Art of Living - 32 · Universal Language',
-    created: '2026',
-    active: true,
-    recoveryCodeHash:
-      '4f7f0287d2909b11da94d68e90524cf37f5b93cbc77ebd28a1ab701a27d12c62',
-    notes:
-      'Living Lineage steward record. The Ownership Code is on the back of the art, not in this QR number.',
-  },
+  // Modern artwork QR identities (public_code values like 'AR-...') are
+  // issued through /admin/register and live in the shared D1 `keeper_pieces`
+  // table, not here. This file never lists them; the live inventory is
+  // served by /api/admin/qr-index, which merges these legacy entries with
+  // the current `keeper_pieces` rows at request time.
 ];

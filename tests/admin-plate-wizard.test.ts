@@ -11,14 +11,21 @@ import {
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 describe('plate wizard stage logic', () => {
-  it('exposes the five registry stages in order', () => {
+  it('exposes the four fabrication-only stages in order, with no registration stage', () => {
     assert.deepEqual(
       PLATE_WIZARD_STAGES.map((stage) => stage.key),
-      ['issue', 'fabricate', 'backup', 'recovery', 'activate'],
+      ['fabricate', 'backup', 'recovery', 'activate'],
     );
     // Indices are stable and match the array position.
-    assert.equal(plateWizardStageIndex('issue'), 0);
-    assert.equal(plateWizardStageIndex('activate'), 4);
+    assert.equal(plateWizardStageIndex('fabricate'), 0);
+    assert.equal(plateWizardStageIndex('activate'), 3);
+  });
+
+  it('starts a registered identity with no plate yet at fabricate', () => {
+    assert.equal(
+      plateWizardStageForPiece({ plateStatus: 'legacy', backupStatus: null, registered: true }),
+      'fabricate',
+    );
   });
 
   it('resumes a generated plate at backup until the backup verifies', () => {
@@ -57,9 +64,13 @@ describe('plate wizard stage logic', () => {
     );
   });
 
-  it('does not offer a legacy row to the wizard', () => {
+  it('does not offer an unregistered legacy row to the wizard', () => {
     assert.equal(
       plateWizardStageForPiece({ plateStatus: 'legacy', backupStatus: null }),
+      null,
+    );
+    assert.equal(
+      plateWizardStageForPiece({ plateStatus: 'legacy', backupStatus: null, registered: false }),
       null,
     );
   });
@@ -67,6 +78,26 @@ describe('plate wizard stage logic', () => {
 
 describe('plate wizard component wiring', () => {
   const wizard = source('components/AdminPlateWizard.tsx');
+
+  it('requires an already-registered identity and has no registration path', () => {
+    // Keyed on the same keeperPieceId query param the rest of the admin
+    // surface already uses to deep-link into an exact registered identity.
+    assert.match(wizard, /keeperPieceId/);
+    assert.doesNotMatch(wizard, /Add a new piece/);
+    assert.doesNotMatch(wizard, /const createPiece/);
+    assert.doesNotMatch(wizard, /const saveEditionStructure/);
+    assert.doesNotMatch(wizard, /const runIssue/);
+    assert.doesNotMatch(wizard, /const beginNewPiece/);
+    assert.doesNotMatch(wizard, /issueArtwork|issuanceKey|beginIssuanceAttempt/);
+    assert.doesNotMatch(wizard, /Issue permanent identity/);
+    assert.doesNotMatch(wizard, /Mint the permanent public QR code/);
+  });
+
+  it('shows a quiet chooser pointing to the registration ceremony when there is no eligible piece', () => {
+    assert.match(wizard, /Choose a registered artwork to prepare its plate/);
+    assert.match(wizard, /\/admin\/register/);
+    assert.match(wizard, /Register an artwork/);
+  });
 
   it('drives only the existing admin endpoints and adds no new server surface', () => {
     for (const endpoint of ['/api/admin/registry-unlock', '/api/admin/pieces']) {
@@ -107,11 +138,9 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /Recovery proof is stale/);
   });
 
-  it('restarts after completion and requires an active repaired plate to pass the activation checks again', () => {
-    assert.match(
-      wizard,
-      /const beginNewPiece[\s\S]*?setFinished\(false\);[\s\S]*?setStarted\(true\);/,
-    );
+  it('lets the operator choose another registered artwork after completion, with no restart-from-scratch path', () => {
+    assert.match(wizard, /const goToChoose[\s\S]*?setStarted\(false\);/);
+    assert.match(wizard, /Choose another artwork/);
     assert.doesNotMatch(wizard, /piece\?\.plateStatus !== 'active'/);
     assert.match(wizard, /Activating…/);
     assert.match(wizard, /This active identity was repaired/);
@@ -128,42 +157,5 @@ describe('plate wizard component wiring', () => {
   it('re-locks the flow when the registry unlock expires mid-run', () => {
     assert.match(wizard, /message === 'registry_locked'/);
     assert.match(wizard, /setRegistryUnlocked\(false\)/);
-  });
-
-  it('uses explicit edition identity for draft creation and issuance', () => {
-    assert.match(wizard, />Unique</);
-    assert.match(wizard, />Numbered</);
-    assert.match(wizard, /This is a unique, non-numbered work/);
-    assert.match(wizard, /editionKind:\s*newPieceEditionKind/);
-    assert.match(wizard, /uniqueConfirmed:\s*newPieceUniqueConfirmed/);
-    assert.match(wizard, /editionKind:\s*selectedEditionKind/);
-    assert.match(wizard, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
-    assert.doesNotMatch(wizard, /issueEdition\.trim\(\) \? Number\(issueEdition\) : 0/);
-    assert.doesNotMatch(wizard, /unique if blank|Edition 0 means/);
-    assert.match(wizard, /const saveEditionStructure/);
-    assert.match(wizard, /editionSize:/);
-    assert.match(wizard, /Save edition structure/);
-    assert.doesNotMatch(wizard, /selectedArtwork\?\.editionSize \|\| 9999/);
-  });
-
-  it('clears issuance details when draft creation selects the new artwork', () => {
-    const selection = wizard.slice(
-      wizard.indexOf('setIssueArtwork(data.artwork.id)'),
-      wizard.indexOf("setNewPieceId('')", wizard.indexOf('setIssueArtwork(data.artwork.id)')),
-    );
-    assert.match(selection, /setIssueEdition\(''\)/);
-    assert.match(selection, /setIssueUniqueConfirmed\(false\)/);
-  });
-
-  it('locks identity controls after an issuance attempt until explicit restart', () => {
-    assert.match(wizard, /disabled=\{Boolean\(busy \|\| issuanceKey\)\}/);
-    assert.match(wizard, /Start over with a different identity/);
-    assert.match(wizard, /const startIssuanceOver[\s\S]*?setIssuanceKey\(null\)/);
-  });
-
-  it('does not race draft or overlay completion against issuance identity', () => {
-    assert.match(wizard, /disabled=\{Boolean\(busy \|\| addPieceBusy/);
-    assert.match(wizard, /issuanceKeyRef\.current/);
-    assert.match(wizard, /if \(issuanceKeyRef\.current\)[\s\S]*?return;/);
   });
 });

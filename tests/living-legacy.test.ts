@@ -3208,6 +3208,11 @@ describe('steward status and display location by public identity', () => {
             if (/FROM artwork_contributor_current_access/i.test(normalized)) {
               return { is_contributor: 0 };
             }
+            if (/FROM claim_silence_windows/i.test(normalized)) {
+              // the additive pendingClaim lookup: no open claim against this
+              // piece, so the field stays absent from the response
+              return null;
+            }
             throw new Error(`unexpected steward-history first: ${normalized}`);
           },
           async all() {

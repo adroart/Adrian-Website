@@ -89,8 +89,13 @@ describe('admin artwork workspace screen', () => {
     const maintenance = source('components/AdminMaintenance.tsx');
     const wizard = source('components/AdminPlateWizard.tsx');
 
-    assert.match(app, /Open artwork/);
-    assert.match(app, /instance: result\.keeperPieceId/);
+    // The registration flow moved from an inline App.tsx component to the
+    // ceremony at components/registry/RegisterCeremony.tsx; its post-register
+    // backlink still carries the exact physical identity.
+    const ceremony = source('components/registry/RegisterCeremony.tsx');
+    assert.match(ceremony, /View and save codes/);
+    assert.match(ceremony, /instance: result\.keeperPieceId/);
+    assert.match(app, /path="register" element=\{<RegisterCeremony/);
     assert.match(sales, /item\.identificationStatus !== 'unresolved'/);
     assert.match(sales, /record: item\.artworkRecordId/);
     assert.match(sales, /instance: item\.keeperPieceId/);

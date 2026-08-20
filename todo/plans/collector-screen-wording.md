@@ -1046,6 +1046,88 @@ accounts is clean.
 
 ---
 
+## 7. Adrian's walkthrough rulings, 2026-08-20
+
+These five rulings came out of Adrian's first walkthrough pass through the built flow, and
+where they touch section 6, they supersede it.
+
+**The code press, superseded.** Section 6 held that "the last character is the press." My
+walkthrough replaces it: tapping any box selects it, retyping a character replaces just that
+one and moves on to the next, and once all sixteen are filled, the progress readout itself
+becomes the one deliberate press that unlocks. The exact word on that press is still mine to
+choose.
+
+**The unlock arrives and stays.** The vault must open directly onto the destination itself.
+The words that say the code is true belong to the arrival, not to a page that follows it.
+Three arrivals are built for my walkthrough, and my verdict picks one.
+
+**The gathering, re-ordered.** The piece's own facts, the artwork, its image, its sales
+record, are not optional and never were choices; only what concerns the person is chosen.
+The path becomes: sign its record, then where it lives (city, or the area marked less
+accurate), then one final page holding who you are and your links together, each with its
+own light on the map, on by default. The birthday stays private always, is never shown and
+never sold, and quietly feeds the Oracle and the Dream. What shows leaves the required path
+and remains as a kept surface for later changing.
+
+**The lock line moves; the placing gets a review.** The line about a placed answer settling
+until the birthday leaves the writing screen entirely. Placing now passes through one grave
+page first: the words read back whole, a warning that placing locks them into the record,
+the honesty that the editing mechanics are still being decided, and the one press that
+commits. The seal's second press lives on that same page.
+
+**A reminder where the name will shine.** When a placing would shine and the name is set to
+show, a small line under the two buttons says so. The wording is drafted and awaits my word.
+
+---
+
+## 8. Adrian's second-walk rulings, 2026-08-20
+
+These rulings came out of the same walkthrough pass as section 7, gathered while working
+through the wording workbook (`collector-wording-workbook.md`). Where they touch anything
+earlier in this file, they supersede it.
+
+**The location is city only, no area.** The region-widening escape hatch on "Where it lives"
+is removed. A light shows at city level and nothing else; there is no coarser fallback grain
+for a caretaker to choose.
+
+**Who you are, and your links, are two pages, not one, each with a one-line title.** Section
+7's combined "one final page holding who you are and your links together" splits back into
+two screens, each carrying a single short title rather than a shared header.
+
+**The piece page's center is a glowing dot, not a vector.** The dot is the caretaker's
+interactions with the art, made visible: not decoration, not a graphic standing in for the
+piece, the accumulated fact of what has been placed.
+
+**Begin is a standard button with nothing beneath it.** The unclaimed-state note drafted
+beneath Begin does not ship; Begin stands alone.
+
+**Plates are never replaced. One number, forever.** A damaged plate is re-engraved with the
+same code it has always carried; no piece ever receives a second public code. An elevated
+claim, binding the piece with the true Ownership Code, outranks any earlier claim made
+without it, so the number can never be permanently taken from its rightful caretaker.
+
+**The passing by email waits for acceptance, and it can be stopped.** A caretaker-initiated
+passing reads the receiver's email back before sending, requires the receiver to sign in with
+a verified account matching that exact address, expires after 30 days unaccepted, and can be
+cancelled by the sender at any time until the receiver accepts. Nothing about the piece moves
+until they do.
+
+**The already-held path runs without Adrian.** Claiming a piece another caretaker holds
+notifies that caretaker by email; logging in is their proof and their chance to confirm the
+letting go; thirty silent days, carrying more than one reminder, passes the piece to the
+claimant; only an active refusal reaches Adrian. No step in the ordinary case needs him.
+
+**The note box in the walkthrough is always open.** Wherever a screen in the click-through or
+design walkthrough carries a note box for feedback, it stays open by default rather than
+collapsed behind a disclosure.
+
+**Rewrites are settled in batches, in the workbook, not on the spot.** The wording workbook
+(`collector-wording-workbook.md`) is the standing home for every piece of copy Adrian flags
+mid-walkthrough: his note, why it needs rewriting, and drafted options, worked through
+together in one sitting rather than decided line by line as they come up.
+
+---
+
 ## Design rules shared by every screen
 
 - **Shape:** one line drawing in the upper third, headline short, body brief, one brass pill

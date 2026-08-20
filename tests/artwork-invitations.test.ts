@@ -145,7 +145,7 @@ function invitationInput(keeperPieceId: string, overrides: Record<string, unknow
     keeperPieceId,
     intendedRecipientEmail: 'Collector@Example.com',
     createdBy: 'admin-one',
-    expiresAt: '2026-08-20T00:00:00.000Z',
+    expiresAt: '2126-08-20T00:00:00.000Z',
     idempotencyKey: `invite-${keeperPieceId}`,
     createdAt: '2026-08-09T02:00:00.000Z',
     ...overrides,

@@ -5,9 +5,23 @@ import {
 } from '../../../utils/ownershipCodeCrypto.ts';
 import { generateRecoveryCode } from '../../../utils/recoveryCode.ts';
 import { ownershipAuditStatement } from './admin.js';
-import { resolveArtwork } from './artworkCatalog.js';
+import {
+  ARTWORK_ID_PATTERN,
+  DRAFT_EDITION_MAX,
+  DRAFT_SERIES_MAX,
+  DRAFT_TITLE_MAX,
+  findStaticArtwork,
+  resolveArtwork,
+} from './artworkCatalog.js';
+import { ensureCatalogSnapshot } from './catalogSnapshot.js';
 import { backupArtworkIdentity } from './identityBackup.js';
-import { genKeeperPieceId, hashRecoveryCode } from './keeper.js';
+import {
+  genKeeperPieceId,
+  hashRecoveryCode,
+  isMissingTableError,
+  legacyEnabled,
+} from './keeper.js';
+import { publishPieceRecord } from './pieceRecord.js';
 import {
   buildLineageEvent,
   lineageAnchorStatement,
@@ -350,4 +364,303 @@ export async function registerArtwork(env, rawInput) {
     };
   }
   throw registrationError('public_code_collision');
+}
+
+/* ── Unified register-an-artwork operation ─────────────────────────────
+ *
+ * One idempotent operation behind POST /api/admin/register-artwork:
+ * accept EITHER an existing catalog/draft artwork id OR a brand-new
+ * registry-only artwork typed inline, ensure the registry_artworks row an
+ * inline artwork (or a static piece without edition metadata) needs, take
+ * an append-only catalog snapshot, run the existing registration
+ * transaction unchanged in its guarantees, then generate the first Piece
+ * Record FAIL-SOFT: a record failure never fails the registration.
+ * The old /api/admin/registrations path is untouched.
+ */
+
+function normalizeUnifiedSelector(input) {
+  const hasArtworkId = input.artworkId !== undefined;
+  const hasNewArtwork = input.newArtwork !== undefined;
+  if (hasArtworkId === hasNewArtwork) throw registrationError('invalid_registration');
+  if (hasArtworkId) {
+    const artworkId = typeof input.artworkId === 'string'
+      ? input.artworkId.trim().toUpperCase()
+      : '';
+    if (!ARTWORK_ID_PATTERN.test(artworkId)) throw registrationError('unknown_artwork');
+    return { kind: 'existing', artworkId };
+  }
+  const raw = input.newArtwork;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw registrationError('invalid_new_artwork');
+  }
+  if (!Object.keys(raw).every((key) => ['id', 'title', 'series'].includes(key))) {
+    throw registrationError('invalid_new_artwork');
+  }
+  const artworkId = typeof raw.id === 'string' ? raw.id.trim().toUpperCase() : '';
+  if (!ARTWORK_ID_PATTERN.test(artworkId)) throw registrationError('invalid_new_artwork');
+  // AR- is reserved for issued public codes; artwork ids stay out of it.
+  if (artworkId.startsWith('AR-')) throw registrationError('reserved_artwork_id');
+  const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+  if (!title || title.length > DRAFT_TITLE_MAX) throw registrationError('invalid_new_artwork');
+  const series = typeof raw.series === 'string' && raw.series.trim()
+    ? raw.series.trim().slice(0, DRAFT_SERIES_MAX)
+    : null;
+  return { kind: 'new', artworkId, title, series };
+}
+
+function normalizeUnifiedEdition(edition) {
+  if (!edition || typeof edition !== 'object' || Array.isArray(edition)) {
+    throw registrationError('invalid_edition');
+  }
+  if (edition.kind === 'unique') {
+    if (!Object.keys(edition).every((key) => key === 'kind')) {
+      throw registrationError('invalid_edition');
+    }
+    return { kind: 'unique', number: null, size: null };
+  }
+  if (edition.kind !== 'numbered') throw registrationError('invalid_edition');
+  if (!Object.keys(edition).every((key) => ['kind', 'number', 'size'].includes(key))) {
+    throw registrationError('invalid_edition');
+  }
+  if (!Number.isSafeInteger(edition.number)
+    || edition.number < 1
+    || edition.number > DRAFT_EDITION_MAX) {
+    throw registrationError('invalid_edition');
+  }
+  const size = edition.size === undefined || edition.size === null ? null : edition.size;
+  if (size !== null && (
+    !Number.isSafeInteger(size) || size < edition.number || size > DRAFT_EDITION_MAX
+  )) {
+    throw registrationError('invalid_edition');
+  }
+  return { kind: 'numbered', number: edition.number, size };
+}
+
+async function findDraftRow(env, artworkId) {
+  try {
+    return await env.DB
+      .prepare('SELECT id, title, series, edition_size FROM registry_artworks WHERE id = ?1')
+      .bind(artworkId)
+      .first();
+  } catch (error) {
+    if (isMissingTableError(error)) return null;
+    throw error;
+  }
+}
+
+async function issuedEditionShape(env, artworkId) {
+  const row = await env.DB.prepare(
+    `SELECT
+       MAX(CASE WHEN edition_number = 0 THEN 1 ELSE 0 END) AS has_unique,
+       MAX(CASE WHEN edition_number > 0 THEN edition_number ELSE NULL END) AS highest_numbered
+     FROM keeper_pieces WHERE piece_id = ?1`,
+  ).bind(artworkId).first();
+  return {
+    hasUnique: Number(row?.has_unique) === 1,
+    highestNumbered: row?.highest_numbered == null ? null : Number(row.highest_numbered),
+  };
+}
+
+function ensureDraftStatement(env, { artworkId, title, series, editionSize, createdAt }) {
+  return env.DB.prepare(
+    `INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
+     SELECT ?1, ?2, ?3, ?4, ?5
+      WHERE NOT EXISTS (SELECT 1 FROM registry_artworks WHERE id = ?1)`,
+  ).bind(artworkId, title, series, editionSize, createdAt);
+}
+
+async function existingRegistrationRecord(env, publicCode) {
+  try {
+    return await env.DB.prepare(
+      `SELECT record_hash FROM piece_records
+        WHERE public_code = ?1 AND trigger_event = 'registration'
+        ORDER BY created_at ASC, id ASC LIMIT 1`,
+    ).bind(publicCode).first();
+  } catch (error) {
+    if (isMissingTableError(error)) return null;
+    throw error;
+  }
+}
+
+/**
+ * Generate and store the first Piece Record for a freshly registered (or
+ * replayed) identity. FAIL-SOFT by contract: any failure is reported as
+ * { status: 'deferred', reason } and never thrown, because the admin
+ * records rebuild endpoint is the recovery path.
+ */
+async function publishRegistrationRecord(env, publicCode, generatedAt) {
+  try {
+    const already = await existingRegistrationRecord(env, publicCode);
+    if (already) return { status: 'generated', recordHash: already.record_hash };
+    const published = await publishPieceRecord(env, {
+      publicCode,
+      trigger: 'registration',
+      generatedAt,
+      // The same launch condition the public lineage endpoint enforces:
+      // livingLegacy-gated sections stay out of records generated before
+      // the flag is on.
+      includeLegacySections: legacyEnabled(),
+    });
+    if (published.status === 'verified') {
+      return { status: 'generated', recordHash: published.recordHash };
+    }
+    return { status: 'deferred', reason: 'record_write_failed' };
+  } catch (error) {
+    return {
+      status: 'deferred',
+      reason: typeof error?.code === 'string' ? error.code : 'record_generation_failed',
+    };
+  }
+}
+
+/**
+ * The unified register-an-artwork operation. Input:
+ *   { artworkId } XOR { newArtwork: { id, title, series? } },
+ *   edition: { kind: 'unique' } | { kind: 'numbered', number, size? },
+ *   authorization, idempotencyKey, registeredAt.
+ *
+ * Returns the existing registration result shape plus:
+ *   artwork: { id, title, series },
+ *   record: { status: 'generated' | 'deferred', reason? }.
+ */
+export async function registerArtworkWithRecord(env, rawInput) {
+  if (!rawInput || typeof rawInput !== 'object' || Array.isArray(rawInput)) {
+    throw registrationError('invalid_registration');
+  }
+  const selector = normalizeUnifiedSelector(rawInput);
+  const edition = normalizeUnifiedEdition(rawInput.edition);
+  const idempotencyKey = typeof rawInput.idempotencyKey === 'string'
+    ? rawInput.idempotencyKey.trim()
+    : '';
+  if (!idempotencyKey || idempotencyKey.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+    throw registrationError('idempotency_key_required');
+  }
+  const registeredAt = typeof rawInput.registeredAt === 'string'
+    ? rawInput.registeredAt.trim()
+    : '';
+  if (!registeredAt || !Number.isFinite(Date.parse(registeredAt))) {
+    throw registrationError('invalid_registered_at');
+  }
+
+  const replayRow = await findByRegistrationKey(env, idempotencyKey);
+  if (replayRow && replayRow.piece_id !== selector.artworkId) {
+    throw registrationError('idempotency_conflict');
+  }
+  const replaying = Boolean(replayRow);
+
+  const staticArtwork = findStaticArtwork(selector.artworkId);
+  let draft = await findDraftRow(env, selector.artworkId);
+  // resolveArtwork can throw artwork_edition_metadata_conflict; let it travel.
+  const resolved = await resolveArtwork(env, selector.artworkId);
+
+  if (!replaying) {
+    if (selector.kind === 'new') {
+      if (staticArtwork) throw registrationError('artwork_id_taken');
+      if (draft) {
+        // A draft with this id is only acceptable when it is exactly the
+        // draft THIS registration would have created, so a retry after a
+        // partial failure works and a genuine collision is refused.
+        const sameDraft = draft.title === selector.title
+          && (draft.series || null) === selector.series
+          && (draft.edition_size == null ? null : Number(draft.edition_size))
+            === (edition.kind === 'numbered' ? edition.size : null);
+        if (!sameDraft) throw registrationError('artwork_id_taken');
+      }
+    } else if (!staticArtwork && !draft) {
+      throw registrationError('unknown_artwork');
+    }
+  }
+
+  // Settle the edition against what the catalog already fixes.
+  let finalEdition = edition;
+  const resolvedKind = resolved ? resolved.editionKind : null;
+  if (resolvedKind === 'unique' && edition.kind !== 'unique') {
+    throw registrationError('edition_conflict');
+  }
+  if (resolvedKind === 'numbered') {
+    if (edition.kind !== 'numbered') throw registrationError('edition_conflict');
+    if (edition.size === null) {
+      finalEdition = { ...edition, size: resolved.editionSize };
+    } else if (edition.size !== resolved.editionSize) {
+      throw registrationError('edition_conflict');
+    }
+    if (finalEdition.number > finalEdition.size) throw registrationError('invalid_edition');
+  }
+
+  // A brand-new artwork, or a static piece with no edition metadata yet,
+  // needs a registry_artworks row so the edition is fixed before minting.
+  const needsDraftRow = !replaying
+    && (resolvedKind === null || resolvedKind === 'unspecified')
+    && !draft;
+  if (needsDraftRow) {
+    if (finalEdition.kind === 'numbered' && finalEdition.size === null) {
+      throw registrationError('edition_size_required');
+    }
+    const issued = await issuedEditionShape(env, selector.artworkId);
+    if (finalEdition.kind === 'unique' && issued.highestNumbered !== null) {
+      throw registrationError('edition_conflict');
+    }
+    if (finalEdition.kind === 'numbered') {
+      if (issued.hasUnique) throw registrationError('edition_conflict');
+      if (issued.highestNumbered !== null && finalEdition.size < issued.highestNumbered) {
+        throw registrationError('edition_size_below_issued');
+      }
+    }
+    await ensureDraftStatement(env, {
+      artworkId: selector.artworkId,
+      title: staticArtwork ? staticArtwork.title : selector.title,
+      series: staticArtwork ? (staticArtwork.series || null) : selector.series,
+      editionSize: finalEdition.kind === 'numbered' ? finalEdition.size : null,
+      createdAt: registeredAt,
+    }).run();
+    draft = await findDraftRow(env, selector.artworkId);
+  }
+
+  const artworkInfo = staticArtwork
+    ? {
+        id: selector.artworkId,
+        title: staticArtwork.title,
+        series: staticArtwork.series || null,
+      }
+    : {
+        id: selector.artworkId,
+        title: draft?.title ?? (selector.kind === 'new' ? selector.title : selector.artworkId),
+        series: (draft?.series ?? (selector.kind === 'new' ? selector.series : null)) || null,
+      };
+
+  // Append-only catalog snapshot: full static catalog data when the artwork
+  // came from FULL_ARCHIVE, otherwise the typed registry fields.
+  const snapshotArtwork = staticArtwork
+    ? {
+        ...staticArtwork,
+        editionKind: finalEdition.kind,
+        editionSize: finalEdition.kind === 'numbered' ? finalEdition.size : null,
+      }
+    : {
+        id: artworkInfo.id,
+        title: artworkInfo.title,
+        series: artworkInfo.series,
+        editionKind: finalEdition.kind,
+        editionSize: finalEdition.kind === 'numbered' ? finalEdition.size : null,
+      };
+  await ensureCatalogSnapshot(env, snapshotArtwork, {
+    source: staticArtwork ? 'mockData' : 'admin',
+    createdAt: registeredAt,
+  });
+
+  // The existing registration transaction, unchanged in its guarantees:
+  // identity backup fail-hard, atomic D1 batch, idempotent replay.
+  const registration = await registerArtwork(env, {
+    artworkId: selector.artworkId,
+    edition: finalEdition.kind === 'unique'
+      ? { kind: 'unique' }
+      : { kind: 'numbered', number: finalEdition.number, size: finalEdition.size },
+    authorization: rawInput.authorization,
+    idempotencyKey,
+    registeredAt,
+  });
+
+  const record = await publishRegistrationRecord(env, registration.publicCode, registeredAt);
+
+  return { ...registration, artwork: artworkInfo, record };
 }

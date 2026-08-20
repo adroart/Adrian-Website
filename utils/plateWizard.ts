@@ -8,12 +8,14 @@
  * and free of React or fetch — lets it be unit tested and keeps the component
  * focused on rendering.
  *
- * The five doing-stages cover the registry identity lifecycle:
- *   Issue → Fabrication files → Encrypted backup → Prove recovery → Activate
+ * The wizard is fabrication-only: it starts from an artwork that is already a
+ * registered identity (minted at /admin/register) and covers only the four
+ * doing-stages that add and verify optional physical fabrication:
+ *   Fabrication files → Encrypted backup → Prove recovery → Activate
+ * Registering a new artwork identity happens at /admin/register, not here.
  */
 
 export type PlateWizardStageKey =
-  | 'issue'
   | 'fabricate'
   | 'backup'
   | 'recovery'
@@ -27,11 +29,6 @@ export interface PlateWizardStage {
 
 /** The permanent, ordered spine of the wizard. Order is the flow. */
 export const PLATE_WIZARD_STAGES: readonly PlateWizardStage[] = [
-  {
-    key: 'issue',
-    title: 'Issue identity',
-    summary: 'Mint the permanent public QR code and the secret Ownership Code.',
-  },
   {
     key: 'fabricate',
     title: 'Fabrication files',
@@ -59,19 +56,24 @@ export interface PlateLifecycleSnapshot {
   plateStatus: string; // 'legacy' | 'generated' | 'active'
   backupStatus: string | null; // 'pending' | 'failed' | 'verified' | null
   recoveryQualificationStatus?: 'missing' | 'stale' | 'current';
+  /** Whether this row is a minted, registered identity (has a public code). */
+  registered?: boolean;
 }
 
 /**
  * The earliest incomplete stage for RESUMING a piece already in the registry.
- * Returns null when the piece is either not wizard-eligible (a legacy row with
- * no minted plate identity) or active with a current copied-file recovery proof.
+ * Returns null when the piece is either not wizard-eligible (an unregistered
+ * legacy row with no minted identity) or active with a current copied-file
+ * recovery proof.
  *
- * A freshly generated plate whose backup is not yet verified must repair the
- * backup first, so it resumes at 'backup'. Once verified, it resumes at
- * 'fabricate' so the operator can re-download the etch files and walk forward
- * through the recovery drill and activation. An active identity whose backup
- * dependencies changed is reopened at recovery and must pass the physical
- * activation checks again after its copied-file proof is renewed.
+ * A registered identity with no plate fabricated yet (plate status 'legacy')
+ * starts at 'fabricate'. A freshly generated plate whose backup is not yet
+ * verified must repair the backup first, so it resumes at 'backup'. Once
+ * verified, it resumes at 'fabricate' so the operator can re-download the etch
+ * files and walk forward through the recovery drill and activation. An active
+ * identity whose backup dependencies changed is reopened at recovery and must
+ * pass the physical activation checks again after its copied-file proof is
+ * renewed.
  */
 export function plateWizardStageForPiece(
   piece: PlateLifecycleSnapshot,
@@ -85,7 +87,10 @@ export function plateWizardStageForPiece(
       ? 'recovery'
       : null;
   }
-  return null; // legacy or unknown — not wizard-eligible
+  if (piece.plateStatus === 'legacy' && piece.registered) {
+    return 'fabricate'; // registered identity, no plate fabricated yet
+  }
+  return null; // unregistered legacy row, or unknown — not wizard-eligible
 }
 
 /** Index of a stage in PLATE_WIZARD_STAGES, or -1 if unknown. */

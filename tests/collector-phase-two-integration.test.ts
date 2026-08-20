@@ -8,7 +8,7 @@ function source(path: string) {
 
 describe('collector phase two journey integration', () => {
   it('offers the real dream after registration instead of the old placeholder', () => {
-    const flow = source('components/collector/CollectorFlow.tsx');
+    const flow = source('components/collector/legacy/CollectorFlow.tsx');
     assert.match(flow, /import DreamScreen from ['"]\.\/DreamScreen['"]/);
     assert.match(flow, /<DreamScreen[\s\S]*?keeperPieceId=\{keeperPieceId\}/);
     assert.match(flow, /onComplete=\{\(\) => setStage\(['"]complete['"]\)\}/);
@@ -17,7 +17,7 @@ describe('collector phase two journey integration', () => {
   });
 
   it('gives a current keeper one private home for the dream and yearly return', () => {
-    const life = source('components/collector/CollectorLife.tsx');
+    const life = source('components/collector/legacy/CollectorLife.tsx');
     const panel = source('components/legacy/KeeperPanel.tsx');
     assert.match(life, /DreamScreen/);
     assert.match(life, /YearlyRitualScreen/);
@@ -31,7 +31,7 @@ describe('collector phase two journey integration', () => {
 
   it('mounts public dreams only inside the verified living record', () => {
     const works = source('components/WorksPage.tsx');
-    assert.match(works, /import PublicDream from ['"]\.\/collector\/PublicDream['"]/);
+    assert.match(works, /import PublicDream from ['"]\.\/collector\/legacy\/PublicDream['"]/);
     assert.match(works, /legacyOn && identity[\s\S]*?<PublicDream publicCode=\{identity\.publicCode\}/);
   });
 });

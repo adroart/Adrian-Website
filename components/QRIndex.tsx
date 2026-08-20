@@ -1,31 +1,105 @@
 
-import React, { useState, useMemo } from 'react';
-import { QR_REGISTRY, QR_RULES, type QREntry } from '../data/qrRegistry';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { QR_RULES } from '../data/qrRegistry';
 
-const TYPE_LABELS: Record<QREntry['type'], string> = {
+type EntryType = 'oracle' | 'artwork' | 'exhibition' | 'custom';
+
+type LiveEntry = {
+    source: 'legacy' | 'registry';
+    code: string;
+    type: EntryType;
+    label?: string;
+    destination?: string;
+    createdAt?: string | null;
+    pieceId?: string;
+    plateStatus?: string;
+    registrationStatus?: string | null;
+    registeredAt?: string | null;
+};
+
+const TYPE_LABELS: Record<EntryType, string> = {
     oracle: 'Oracle',
     artwork: 'Artwork',
     exhibition: 'Exhibition',
     custom: 'Custom',
 };
 
+function isLiveEntry(value: unknown): value is LiveEntry {
+    if (!value || typeof value !== 'object') return false;
+    const entry = value as Partial<LiveEntry>;
+    return (entry.source === 'legacy' || entry.source === 'registry')
+        && typeof entry.code === 'string'
+        && typeof entry.type === 'string';
+}
+
+function isEntryList(value: unknown): value is LiveEntry[] {
+    return Array.isArray(value) && value.every(isLiveEntry);
+}
+
+function labelOrPiece(entry: LiveEntry): string {
+    if (entry.source === 'legacy') return entry.label || '';
+    return entry.pieceId || '';
+}
+
+function destinationOrStatus(entry: LiveEntry): string {
+    if (entry.source === 'legacy') return entry.destination || '';
+    const parts = [entry.plateStatus, entry.registrationStatus].filter(Boolean);
+    return parts.join(' · ');
+}
+
+function created(entry: LiveEntry): string {
+    return (entry.source === 'legacy' ? entry.createdAt : entry.registeredAt) || '';
+}
+
+type LoadState = 'loading' | 'signed-out' | 'error' | 'ready';
+
 const QRIndex: React.FC = () => {
-    const [filter, setFilter] = useState<QREntry['type'] | 'all'>('all');
+    const [state, setState] = useState<LoadState>('loading');
+    const [entries, setEntries] = useState<LiveEntry[]>([]);
+    const [filter, setFilter] = useState<EntryType | 'all'>('all');
+
+    const load = useCallback(async (signal?: AbortSignal) => {
+        setState('loading');
+        try {
+            const response = await fetch('/api/admin/qr-index', { cache: 'no-store', signal });
+            if (response.status === 401 || response.status === 403) {
+                setEntries([]);
+                setState('signed-out');
+                return;
+            }
+            if (!response.ok) throw new Error('qr index unavailable');
+            const data: unknown = await response.json();
+            const list = data && typeof data === 'object' ? (data as { entries?: unknown }).entries : undefined;
+            if (!isEntryList(list)) throw new Error('qr index incomplete');
+            setEntries(list);
+            setState('ready');
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') return;
+            setEntries([]);
+            setState('error');
+        }
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        void load(controller.signal);
+        return () => controller.abort();
+    }, [load]);
 
     const filtered = useMemo(
-        () => filter === 'all' ? QR_REGISTRY : QR_REGISTRY.filter(e => e.type === filter),
-        [filter],
+        () => filter === 'all' ? entries : entries.filter(e => e.type === filter),
+        [entries, filter],
     );
 
     const counts = useMemo(() => {
-        const c: Record<string, number> = { all: QR_REGISTRY.length };
-        for (const e of QR_REGISTRY) c[e.type] = (c[e.type] || 0) + 1;
+        const c: Record<string, number> = { all: entries.length };
+        for (const e of entries) c[e.type] = (c[e.type] || 0) + 1;
         return c;
-    }, []);
+    }, [entries]);
 
     const types = useMemo(
-        () => Array.from(new Set(QR_REGISTRY.map(e => e.type))),
-        [],
+        () => Array.from(new Set(entries.map(e => e.type))),
+        [entries],
     );
 
     return (
@@ -40,7 +114,7 @@ const QRIndex: React.FC = () => {
                         QR Code Index
                     </h1>
                     <p className="font-sans text-sm text-wood-500">
-                        {QR_REGISTRY.length} registered codes
+                        {state === 'ready' ? `${entries.length} registered codes` : 'Every issued QR code, in one place'}
                     </p>
                 </div>
 
@@ -89,61 +163,83 @@ const QRIndex: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Filter */}
-                <div className="flex gap-3 mb-6 flex-wrap">
-                    <FilterButton
-                        active={filter === 'all'}
-                        onClick={() => setFilter('all')}
-                        label={`All (${counts.all})`}
-                    />
-                    {types.map(t => (
-                        <FilterButton
-                            key={t}
-                            active={filter === t}
-                            onClick={() => setFilter(t)}
-                            label={`${TYPE_LABELS[t]} (${counts[t] || 0})`}
-                        />
-                    ))}
-                </div>
-
-                {/* Table */}
-                <div className="border border-wood-100 overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-wood-100 bg-paper-100/50">
-                                <Th>Code</Th>
-                                <Th>Type</Th>
-                                <Th>Label</Th>
-                                <Th>Destination</Th>
-                                <Th>Created</Th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filtered.map(entry => (
-                                <tr key={entry.code} className="border-b border-wood-50 hover:bg-paper-100/30 transition-colors">
-                                    <Td>
-                                        <code className="text-bronze-700 text-xs">{entry.code}</code>
-                                    </Td>
-                                    <Td>
-                                        <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500">
-                                            {TYPE_LABELS[entry.type]}
-                                        </span>
-                                    </Td>
-                                    <Td>{entry.label}</Td>
-                                    <Td>
-                                        <span className="text-wood-500 text-xs break-all">{entry.destination}</span>
-                                    </Td>
-                                    <Td>{entry.created}</Td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filtered.length === 0 && (
-                    <p className="text-center font-sans text-sm text-wood-400 py-12">
-                        No QR codes match this filter.
+                {state === 'signed-out' && (
+                    <p className="text-center font-sans text-sm text-wood-400 py-6">
+                        The registry listing requires the artist's sign-in.
                     </p>
+                )}
+
+                {state === 'error' && (
+                    <p className="text-center font-sans text-sm text-wood-400 py-6">
+                        The registry listing could not be checked. Reload to try again.
+                    </p>
+                )}
+
+                {state === 'loading' && (
+                    <p className="text-center font-sans text-sm text-wood-400 py-6" role="status">
+                        Checking the registry…
+                    </p>
+                )}
+
+                {state === 'ready' && (
+                    <>
+                        {/* Filter */}
+                        <div className="flex gap-3 mb-6 flex-wrap">
+                            <FilterButton
+                                active={filter === 'all'}
+                                onClick={() => setFilter('all')}
+                                label={`All (${counts.all})`}
+                            />
+                            {types.map(t => (
+                                <FilterButton
+                                    key={t}
+                                    active={filter === t}
+                                    onClick={() => setFilter(t)}
+                                    label={`${TYPE_LABELS[t]} (${counts[t] || 0})`}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Table */}
+                        <div className="border border-wood-100 overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-wood-100 bg-paper-100/50">
+                                        <Th>Code</Th>
+                                        <Th>Type</Th>
+                                        <Th>Label/Piece</Th>
+                                        <Th>Destination/Status</Th>
+                                        <Th>Created</Th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(entry => (
+                                        <tr key={`${entry.source}:${entry.code}`} className="border-b border-wood-50 hover:bg-paper-100/30 transition-colors">
+                                            <Td>
+                                                <code className="text-bronze-700 text-xs">{entry.code}</code>
+                                            </Td>
+                                            <Td>
+                                                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500">
+                                                    {TYPE_LABELS[entry.type]}
+                                                </span>
+                                            </Td>
+                                            <Td>{labelOrPiece(entry)}</Td>
+                                            <Td>
+                                                <span className="text-wood-500 text-xs break-all">{destinationOrStatus(entry)}</span>
+                                            </Td>
+                                            <Td>{created(entry)}</Td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {filtered.length === 0 && (
+                            <p className="text-center font-sans text-sm text-wood-400 py-12">
+                                No QR codes match this filter.
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
         </section>

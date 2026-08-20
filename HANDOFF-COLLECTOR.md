@@ -75,7 +75,7 @@ Then it accumulates for as long as it is held, and passes on.
   chain is public.
 
 **Registration and people**
-- **Registration is binary.** Two required screens: your name, and where it lives.
+- **Registration is binary.** Three required screens: your name (Sign its record), where it lives, and what shows.
   Everything else is an add-on reachable forever.
 - **One account across the ecosystem**, Mandala Codes, the ledger, ordering already signed
   in.

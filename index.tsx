@@ -17,6 +17,10 @@ import '@fontsource/lora/400-italic.css';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+
+// Lazy so production visitors never fetch the walkthrough chunk; the module is
+// only requested when the dev-only branch below actually renders it.
+const DevWalkthrough = React.lazy(() => import('./components/walkthrough/Walkthrough'));
 import './src/index.css';
 import App from './App';
 
@@ -82,11 +86,18 @@ const mountApp = () => {
         rootElement.innerHTML = '';
 
         const root = createRoot(rootElement);
+        // Dev builds only: /dev/walkthrough mounts the guided walkthrough rail
+        // standalone, outside the site router. The ceremony chapters carry their
+        // own MemoryRouter, and a Router cannot render inside another Router, so
+        // the walkthrough must never mount under BrowserRouter.
+        const devWalkthrough = typeof import.meta !== 'undefined'
+            && Boolean(import.meta.env?.DEV)
+            && window.location.pathname.startsWith('/dev/walkthrough');
         root.render(
             <ErrorBoundary>
-                <BrowserRouter>
-                    <App />
-                </BrowserRouter>
+                {devWalkthrough
+                    ? <React.Suspense fallback={null}><DevWalkthrough /></React.Suspense>
+                    : <BrowserRouter><App /></BrowserRouter>}
             </ErrorBoundary>
         );
     } catch (e) {

@@ -57,3 +57,7 @@ data/generatedStories.ts
 test-results/
 playwright-report/
 .playwright-mcp/
+
+# the collector prototype's build scratch and its output
+.proto-dist/
+collector-prototype.html

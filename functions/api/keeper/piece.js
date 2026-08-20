@@ -4,10 +4,17 @@
  * GET  ?publicCode=AR-...
  *   Tells the signed-in user their relationship to this piece:
  *     { ok: true, kept: boolean, byYou: boolean, contributor: boolean,
- *       currentDisplayLocation?: string }
+ *       currentDisplayLocation?: string, pendingClaim?: {...} }
  *   - kept:  does a governed steward record exist at all (any user)?
  *   - byYou: is the signed-in user the active steward?
  *   currentDisplayLocation is returned only to the piece's own steward.
+ *   pendingClaim is returned only to the piece's own steward (byYou), and
+ *   only when a thirty-day silence window is currently open against this
+ *   piece (functions/api/_lib/claimSilence.js): { openedAt, deadline,
+ *   remindersSent }. remindersSent is a count only; nothing about the
+ *   claimant is ever included, matching the boundary refuseSilencePass and
+ *   the reminder emails already keep. See functions/api/keeper/claim-refusal.js
+ *   for the steward's one door to refuse it.
  *
  * PUT  { publicCode, currentDisplayLocation }
  *   The steward edits where the piece currently lives. Presentation state only:
@@ -90,6 +97,11 @@ async function handleGet(context, auth) {
   ).bind(row.id, auth.userId).first();
   const contributor = !byYou && Number(contributorRow?.is_contributor) === 1;
   let stewardHistory = [];
+  // Additive: an open silence window against the steward's own piece, if
+  // any. Never affects a guest or non-steward response, and a missing
+  // migration 038 silently omits the field rather than failing the whole
+  // lookup — the same fail-open-on-absence stance evaluateSilence takes.
+  let pendingClaim;
   if (byYou) {
     const historyRows = await env.DB.prepare(
       `SELECT entry_type AS entryType, title, detail, role, occurred_at AS occurredAt
@@ -98,6 +110,29 @@ async function handleGet(context, auth) {
         ORDER BY COALESCE(occurred_at, created_at), created_at, id`,
     ).bind(row.id).all();
     stewardHistory = projectPublicCreatorHistory(historyRows?.results || []);
+
+    try {
+      const openWindow = await env.DB.prepare(
+        `SELECT id, opened_at, deadline_at
+           FROM claim_silence_windows
+          WHERE keeper_piece_id = ?1 AND status IN ('open', 'reminded')
+          ORDER BY opened_at
+          LIMIT 1`,
+      ).bind(row.id).first();
+      if (openWindow) {
+        const reminderCount = await env.DB.prepare(
+          'SELECT COUNT(*) AS count FROM claim_silence_reminders WHERE window_id = ?1',
+        ).bind(openWindow.id).first();
+        pendingClaim = {
+          openedAt: openWindow.opened_at,
+          deadline: openWindow.deadline_at,
+          remindersSent: Number(reminderCount?.count ?? 0),
+        };
+      }
+    } catch (err) {
+      if (!isMissingTableError(err)) throw err;
+      // migration 038 not applied yet: pendingClaim simply stays absent.
+    }
   }
   return json({
     ok: true,
@@ -110,6 +145,7 @@ async function handleGet(context, auth) {
       currentDisplayLocation: row.current_display_location ?? null,
       stewardHistory,
     } : {}),
+    ...(pendingClaim ? { pendingClaim } : {}),
   });
 }
 
