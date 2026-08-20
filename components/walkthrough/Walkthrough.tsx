@@ -19,10 +19,14 @@
  *   with its own internal overflow, so writing a note never scrolls the page.
  *
  * — Narrow (under 1000px): strip, phone, scrubber, then a minimal caption
- *   band — station line, Back/Next, and one quiet row holding the verdict
- *   pair and the note/chapters/notes openers. Leave a note, and the chapter
- *   list, open as fixed bottom sheets OVER the phone (backdrop tap closes,
- *   the page never grows), and everything behind an open sheet goes inert.
+ *   band — station line, Back/Next, one quiet row holding the verdict pair
+ *   and the chapters/notes openers, and the note field itself. Only the
+ *   chapter list opens as a fixed bottom sheet OVER the phone (backdrop tap
+ *   closes, the page never grows), with everything behind it inert.
+ *
+ * The note field is ALWAYS open, on every station, in both shapes. Adrian's
+ * ruling, 2026-08-20: the rail assumes a note is coming — no "Leave a note"
+ * press, no sheet to summon first. The box is simply there, waiting.
  *
  * Chapters come from `chapters.ts`: the twelve real journeys, the surfaces
  * none of them passes through, and the two ceremony demos, in that order.
@@ -188,7 +192,6 @@ export const Walkthrough: React.FC = () => {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [stationIndex, setStationIndex] = useState(0);
   const [listOpen, setListOpen] = useState(false);
-  const [noteOpen, setNoteOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [notesStore, setNotesStore] = useState<NotesStore>(() => notes.load());
   const shellRef = useRef<CollectorShellHandle>(null);
@@ -212,15 +215,6 @@ export const Walkthrough: React.FC = () => {
 
   useEffect(() => {
     saveProgress({ chapterId: chapter.id, stationIndex });
-  }, [chapter.id, stationIndex]);
-
-  /* the note toggle only resets when the station itself changes, so it does
-     not snap shut mid-sentence while the debounced save behind it settles.
-     A station that already carries a note reopens its field — inline on the
-     wide rail, as the sheet on a narrow one. */
-  useEffect(() => {
-    setNoteOpen(Boolean(notesStore[chapter.id]?.[stationIndex]?.note));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapter.id, stationIndex]);
 
   const goToChapter = (idx: number) => {
@@ -373,7 +367,7 @@ export const Walkthrough: React.FC = () => {
      behind it goes inert (the AdminShell idiom), so the phone and the quiet
      row can neither be tabbed into nor read as duplicates of the sheet's own
      controls. The body also stops scrolling: the sheet never moves the page. */
-  const sheetOpen = !wide && (noteOpen || listOpen);
+  const sheetOpen = !wide && listOpen;
   useEffect(() => {
     if (contentRef.current) contentRef.current.inert = sheetOpen;
     if (!sheetOpen) return;
@@ -648,30 +642,22 @@ export const Walkthrough: React.FC = () => {
       </div>
 
       {/* the verdict and the note: judged per station, quietly, under
-          everything that describes the station itself. The docked note field
-          is the generous one — six rows to start, growing with the text. */}
+          everything that describes the station itself. The note field is
+          always open — every station assumes a note is coming — six rows to
+          start, growing with the text. */}
       <div style={{ paddingTop: 20, borderTop: `1px solid ${C.hair}`, marginTop: 20 }}>
         <VerdictPair value={entry?.verdict} onChange={setVerdict} />
 
-        <button
-          type="button"
-          onClick={() => setNoteOpen(o => !o)}
-          style={{ ...openerStyle, display: 'block', margin: '12px 0 0' }}
-        >
-          {noteOpen ? 'Hide the note' : 'Leave a note'}
-        </button>
-
-        {noteOpen && (
-          <div style={{ paddingTop: 10 }}>
-            <NoteField
-              key={`${chapter.id}:${stationIndex}`}
-              value={entry?.note ?? ''}
-              onChange={setNoteText}
-              rows={6}
-              autoGrow
-            />
-          </div>
-        )}
+        <div style={{ paddingTop: 12 }}>
+          <NoteField
+            key={`${chapter.id}:${stationIndex}`}
+            value={entry?.note ?? ''}
+            onChange={setNoteText}
+            rows={6}
+            autoGrow
+            placeholder="A note on this station"
+          />
+        </div>
       </div>
 
       <div style={{ paddingTop: 20, borderTop: `1px solid ${C.hair}`, marginTop: 20 }}>
@@ -750,10 +736,9 @@ export const Walkthrough: React.FC = () => {
           </RailLink>
         </div>
 
-        {/* one quiet row: the verdict pair and the three openers. While the
-            note sheet is up it carries the verdict and the notes opener
-            itself, so the row behind the backdrop does not keep a second
-            copy of either. */}
+        {/* one quiet row: the verdict pair and the two openers, with the
+            note field itself always open beneath it — the narrow rail
+            assumes a note the same way the docked one does. */}
         <div
           style={{
             marginTop: 18,
@@ -766,14 +751,11 @@ export const Walkthrough: React.FC = () => {
             gap: '8px 18px',
           }}
         >
-          {!noteOpen && <VerdictPair value={entry?.verdict} onChange={setVerdict} />}
-          <button type="button" onClick={() => { setListOpen(false); setNoteOpen(true); }} style={openerStyle}>
-            Leave a note
-          </button>
-          <button type="button" onClick={() => { setNoteOpen(false); setListOpen(true); }} style={openerStyle}>
+          <VerdictPair value={entry?.verdict} onChange={setVerdict} />
+          <button type="button" onClick={() => setListOpen(true)} style={openerStyle}>
             Chapters · {CHAPTERS.length}
           </button>
-          {totalNotes > 0 && !noteOpen && (
+          {totalNotes > 0 && (
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
@@ -782,6 +764,17 @@ export const Walkthrough: React.FC = () => {
               Your notes · {totalNotes}
             </button>
           )}
+        </div>
+
+        <div style={{ paddingTop: 14, textAlign: 'left' }}>
+          <NoteField
+            key={`${chapter.id}:${stationIndex}`}
+            value={entry?.note ?? ''}
+            onChange={setNoteText}
+            rows={4}
+            autoGrow
+            placeholder="A note on this station"
+          />
         </div>
 
         <button
@@ -845,67 +838,6 @@ export const Walkthrough: React.FC = () => {
           {wide ? dockedRail : compactBand}
         </div>
       </div>
-
-      {/* the note sheet: the expanded Leave-a-note surface on a narrow
-          viewport. Fixed over the phone, so writing never scrolls the page. */}
-      {!wide && noteOpen && (
-        <Sheet label="Leave a note" onClose={() => setNoteOpen(false)}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-            <span
-              style={{
-                fontFamily: F.body,
-                fontSize: 13.5,
-                color: C.inkBody,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              Station {stationIndex + 1} · {station.label}
-            </span>
-            <button
-              type="button"
-              onClick={() => setNoteOpen(false)}
-              style={{
-                background: 'none',
-                border: 0,
-                padding: 0,
-                cursor: 'pointer',
-                fontFamily: F.body,
-                fontSize: 13,
-                color: C.brass,
-              }}
-            >
-              Done
-            </button>
-          </div>
-
-          <div style={{ paddingTop: 12 }}>
-            <VerdictPair value={entry?.verdict} onChange={setVerdict} />
-          </div>
-
-          <div style={{ paddingTop: 12, textAlign: 'left' }}>
-            <NoteField
-              key={`${chapter.id}:${stationIndex}`}
-              value={entry?.note ?? ''}
-              onChange={setNoteText}
-              rows={6}
-              autoGrow
-              placeholder="A note on this station"
-            />
-          </div>
-
-          {totalNotes > 0 && (
-            <div style={{ paddingTop: 10 }}>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(true)}
-                style={{ ...openerStyle, color: C.brass }}
-              >
-                Your notes · {totalNotes}
-              </button>
-            </div>
-          )}
-        </Sheet>
-      )}
 
       {/* the chapter list as a sheet, same overlay mechanic */}
       {!wide && listOpen && (

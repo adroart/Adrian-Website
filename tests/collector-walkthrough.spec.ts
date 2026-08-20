@@ -341,7 +341,10 @@ test('the garden carries a write through the review page to a placed outcome, th
   // the review page requires real words: the write screen's Place it is a
   // no-op on empty text, so the walk types something first
   const words = 'It sat on the shelf for a year before I could look at it straight.';
-  await page.locator('textarea').fill(words);
+  // two textareas exist on every station now (the rail's always-open note
+  // field is the other); the write screen's is the one without its placeholder
+  const writeBox = page.locator('textarea:not([placeholder="A note on this station"])');
+  await writeBox.fill(words);
 
   // the three stacked choices, all present at once — never the old capsule
   const shine = page.getByRole('button', { name: /^Let it shine/ });
@@ -390,7 +393,7 @@ test('the garden carries a write through the review page to a placed outcome, th
   // Change it returns to the write screen with everything intact: the
   // words, and the seal tier still selected
   await page.getByRole('button', { name: 'Change it', exact: true }).click();
-  await expect(page.locator('textarea')).toHaveValue(words);
+  await expect(writeBox).toHaveValue(words);
   await expect(page.getByText('This stays yours alone · nobody sees it but you.')).toBeVisible();
 
   // back to review, and the one press that actually places
@@ -412,12 +415,11 @@ test('the garden carries a write through the review page to a placed outcome, th
 /* ------------------------------------------------------------------ *
  * 6. the feedback rail: a verdict marks the scrubber, a note autosaves
  *
- * At the 390px viewport this spec runs, the rail wears its narrow shape: the
- * verdict pair sits in the quiet row under Back/Next, and "Leave a note"
- * opens the note field as a bottom sheet (role="dialog") over the phone
- * rather than expanding it inline. The sheet carries the same VerdictPair
- * and NoteField the docked (>=1000px) rail would show inline, so every
- * assertion below reads the same regardless of which shape rendered it.
+ * The note field is ALWAYS open on every station (Adrian's ruling,
+ * 2026-08-20): no "Leave a note" opener exists any more, in either shape of
+ * the rail. At the 390px viewport this spec runs, the rail wears its narrow
+ * shape — the verdict pair sits in the quiet row under Back/Next with the
+ * note field directly beneath it, inline in the page.
  * ------------------------------------------------------------------ */
 
 test('a verdict lights the scrubber dot and a note autosaves to localStorage and survives reload', async ({ page }) => {
@@ -436,24 +438,20 @@ test('a verdict lights the scrubber dot and a note autosaves to localStorage and
   expect(store?.[CH1]?.[0]?.verdict).toBe('right');
   expect(store?.[CH1]?.[0]?.label).toBe('Nobody holds it');
 
-  // the note, opened as the narrow rail's bottom sheet, saved through the
+  // the note field is simply there, no opener to press, saved through the
   // field's own debounce: "Kept." is the signal
-  await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Leave a note' })).toBeVisible();
-  await page.locator('textarea').fill('The door reads honest.');
+  await page.getByPlaceholder('A note on this station').fill('The door reads honest.');
   await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
 
   store = await readNotesStore(page);
   expect(store?.[CH1]?.[0]?.note).toBe('The door reads honest.');
   expect(store?.[CH1]?.[0]?.verdict).toBe('right');
 
-  // reload: the note sheet reopens itself with the text, the entry counted
+  // reload: the field is open again (it always is) carrying the text, the
+  // entry counted in the quiet row's notes opener
   await page.reload();
   await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Leave a note' })).toBeVisible();
-  await expect(page.locator('textarea')).toHaveValue('The door reads honest.');
-  // the quiet row's own opener is hidden while the sheet is up, so this is
-  // the sheet's own copy of the count
+  await expect(page.getByPlaceholder('A note on this station')).toHaveValue('The door reads honest.');
   await expect(page.getByRole('button', { name: 'Your notes · 1', exact: true })).toBeVisible();
 
   store = await readNotesStore(page);
@@ -472,11 +470,9 @@ test.describe('the notes drawer', () => {
     await expect(station(page, 1, CH1_TOTAL)).toBeVisible();
 
     await page.getByRole('button', { name: 'right', exact: true }).click();
-    await page.getByRole('button', { name: 'Leave a note', exact: true }).click();
-    await page.locator('textarea').fill('The door reads honest.');
+    await page.getByPlaceholder('A note on this station').fill('The door reads honest.');
     await expect(page.getByText('Kept.', { exact: true })).toBeVisible();
 
-    // the sheet's own "Your notes" opener, the only one visible while it is up
     await page.getByRole('button', { name: 'Your notes · 1', exact: true }).click();
     const drawer = page.getByRole('dialog', { name: 'Your notes' });
     await expect(drawer).toBeVisible();
@@ -607,7 +603,10 @@ test('the register ceremony walks by real clicks to a demo Ownership Code, and a
   // posting a story is the one real advance the task asks for here
   await page.getByRole('button', { name: 'The story', exact: true }).click();
   await expect(station(page, 3, 4)).toBeVisible();
-  await page.locator('textarea').fill('Eleven months, one piece of claro walnut.');
+  // the frame's own story box, not the rail's always-open note field
+  await page
+    .locator('textarea:not([placeholder="A note on this station"])')
+    .fill('Eleven months, one piece of claro walnut.');
   await page.getByRole('button', { name: 'Keep the story', exact: true }).click();
   await expect(page.getByText('The story is with the piece.')).toBeVisible();
 
