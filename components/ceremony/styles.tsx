@@ -159,5 +159,19 @@ export const CeremonyStyles: React.FC<{ theme?: CeremonyTheme }> = ({ theme = es
         stroke-dashoffset: 0 !important;
       }
     }
+
+    /* ── the glowing dot (components/collector/glowDot.tsx) ──────────────
+       The piece's own presence, not a vector. A very slow, gentle pulse
+       when \`breathing\` is on: decoration only, never information, so it
+       is switched off entirely rather than shortened under reduced motion. */
+    @keyframes glowDotBreathe {
+      0%, 100% { transform: scale(1); opacity: 1 }
+      50% { transform: scale(1.035); opacity: .94 }
+    }
+    .glow-dot-breathe { animation: glowDotBreathe 9s ease-in-out infinite }
+
+    @media (prefers-reduced-motion: reduce) {
+      .glow-dot-breathe { animation: none; transform: none; opacity: 1 }
+    }
   `}</style>
 );

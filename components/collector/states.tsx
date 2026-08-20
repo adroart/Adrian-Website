@@ -43,6 +43,14 @@ const NOTYET_BODY =
 PLACEHOLDERS.add(NOTYET_HEAD);
 PLACEHOLDERS.add(NOTYET_BODY);
 
+/** Same idiom as walk.tsx's own local `ph`: registers a string as a
+ *  placeholder against the shared PLACEHOLDERS set so it can be marked on
+ *  screen, without touching frozen copy.ts. */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+
 type Props = {
   state: StateKey;
   onBack?: () => void;
@@ -78,7 +86,7 @@ export const StateScreen: React.FC<Props> = ({
       />
     );
   }
-  if (state === 'held') return <AlreadyHeld onBack={onBack} />;
+  if (state === 'held') return <AlreadyHeld onBack={onBack} onClaim={onPrimary ?? onBack} />;
   if (state === 'notyet') return <PassingNotYet onReturn={onPrimary ?? onBack} />;
   if (state === 'plate') return <ReissuedPlate onBack={onBack} />;
   if (state === 'offline') {
@@ -127,6 +135,7 @@ const NoAccount: React.FC<{
         borderRadius: 14,
         padding: '18px 20px',
         background: 'rgba(0,0,0,.16)',
+        textAlign: 'center',
       }}
     >
       <Eyebrow size={9.5}>{COPY.states.accountHeld}</Eyebrow>
@@ -134,6 +143,7 @@ const NoAccount: React.FC<{
         style={{
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
           gap: 7,
           paddingTop: 11,
           fontFamily: F.mono,
@@ -174,11 +184,34 @@ const NoAccount: React.FC<{
  *
  * A true code, already bound to someone. This is a resale, an inheritance
  * or a theft, and the page cannot tell which, so it says only that the
- * piece is held and offers the one path that can settle it. Nothing about
- * who holds it. The sacred rule: the code alone never transfers ownership.
+ * piece is held. Nothing about who holds it. The sacred rule: the code
+ * alone never transfers ownership.
+ *
+ * Rebuilt per Adrian, 2026-08-20: "it needs to be able to function without
+ * me. If I pass or cannot manage it, my role is not for people to write me
+ * and fix things. My role is to have the system already built and
+ * automated." The former screen routed this through a letter to Adrian;
+ * the backend already runs the real settlement without him, so the screen
+ * now describes that process instead: claiming with the true code opens a
+ * claim, the registered caretaker is told and has their say, and thirty
+ * days of silence (with reminders) passes the piece on. `onClaim` opens the
+ * code page when a caller supplies one; StateScreen wires it from its own
+ * `onPrimary` prop, falling back to `onBack` exactly like every other state
+ * here does when no wiring is provided.
  * ------------------------------------------------------------------ */
 
-const AlreadyHeld: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
+// workbook: drafts describing the real automated claim / notice / thirty-day
+// process. Not yet read back to Adrian.
+const HELD_BODY_1 = ph(
+  'Someone already tends this piece. If it has truly come to you, the code in your hands is enough to begin the passing.',
+);
+const HELD_BODY_2 = ph(
+  'Its caretaker is told, and has their say. Thirty days of silence, with reminders along the way, settles the piece to you; a word from them settles it the other way.',
+);
+const HELD_BODY_3 = ph('The piece keeps what it holds either way. Nothing is lost by either of you.');
+const HELD_CLAIM = ph('Say it is yours');
+
+const AlreadyHeld: React.FC<{ onBack?: () => void; onClaim?: () => void }> = ({ onBack, onClaim = onBack }) => (
   <Ground light="e" pad="52px 30px 30px">
     <div style={{ position: 'relative', flex: 'none', display: 'grid', placeItems: 'center', height: 162 }}>
       <Drawing motif="hands" size={106} draw />
@@ -186,8 +219,9 @@ const AlreadyHeld: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
     <div style={{ position: 'relative', flex: 'none' }}>
       <Head size={34}>{COPY.states.heldHead}</Head>
     </div>
-    <Body top={16}>{COPY.states.heldBody}</Body>
-    <Body top={14}>{COPY.states.heldBody2}</Body>
+    <Body top={16}>{HELD_BODY_1}</Body>
+    <Body top={14}>{HELD_BODY_2}</Body>
+    <Body top={14}>{HELD_BODY_3}</Body>
 
     <div style={{ position: 'relative', flex: 1 }} />
     <div
@@ -201,8 +235,8 @@ const AlreadyHeld: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
         paddingTop: 24,
       }}
     >
-      <Brass full onClick={onBack}>
-        {COPY.states.heldWrite}
+      <Brass full onClick={onClaim}>
+        {HELD_CLAIM}
       </Brass>
       <TLink onClick={onBack}>{COPY.page.back}</TLink>
     </div>
@@ -248,12 +282,24 @@ const PassingNotYet: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => (
 );
 
 /* ------------------------------------------------------------------ *
- * A reissued plate.
+ * The plate, permanent.
  *
- * The plate was replaced, so an older code still resolves. The record is
- * the same record. This screen says the plate changed, never that the
- * piece is wrong, and the change belongs in the public history.
+ * Rebuilt per Adrian's ruling, 2026-08-20: "Plates are not replaced. It
+ * always keeps the same number." The former screen narrated a reissue,
+ * with two fabricated 'March 2025' ledger rows and a stub note describing
+ * its own unfinished state. All three are gone. The real rule: one piece,
+ * one code, forever; if a plate is ever damaged the same code is engraved
+ * again, and the record never forks into two histories. The state key
+ * ('plate') and this component's export name are unchanged so the not_ready
+ * wiring in wired.tsx keeps compiling against it.
  * ------------------------------------------------------------------ */
+
+// workbook: drafts, not yet read back to Adrian.
+const PLATE_HEAD = ph('One piece, one number, forever.');
+const PLATE_BODY = ph(
+  'This piece carries a single code for as long as it exists. If its plate is ever damaged, the same code is engraved again, never a new one.',
+);
+const PLATE_NOTE = ph('The record never forks. One piece, one history, from the first plate to the last.');
 
 const ReissuedPlate: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
   <Ground light="f" pad="52px 30px 30px">
@@ -287,15 +333,10 @@ const ReissuedPlate: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
         color: C.ink,
       }}
     >
-      {COPY.states.plateHead}
+      <Flag text={PLATE_HEAD} />
     </p>
-    <Body top={16}>{COPY.states.plateBody}</Body>
-
-    <div style={{ position: 'relative', flex: 'none', paddingTop: 26 }}>
-      <Ledger label="March 2025" value="First plate, retired" />
-      <Ledger label="March 2025" value="Second plate, on the piece" />
-      <Note top={18}>{COPY.states.plateNote}</Note>
-    </div>
+    <Body top={16}>{PLATE_BODY}</Body>
+    <Note top={22}>{PLATE_NOTE}</Note>
 
     <div style={{ position: 'relative', flex: 1 }} />
     <div style={{ position: 'relative', flex: 'none', paddingTop: 18, display: 'flex', justifyContent: 'flex-end' }}>

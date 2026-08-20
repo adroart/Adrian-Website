@@ -6,7 +6,7 @@
  * makes it one page rather than four that resemble each other.
  *
  * The four relationships, per the wording record §6:
- *   unclaimed  — a lit Begin, the only bright thing on an otherwise quiet page
+ *   unclaimed  — a standard Begin, the only brass on an otherwise quiet page
  *   registered — two peer doors, neither above the other
  *   signedin   — signed in, but not theirs. An account is not a claim.
  *   yours      — no pill, no doors, nothing left to claim
@@ -22,15 +22,32 @@
 
 import React, { useMemo, useState } from 'react';
 import { C, F } from './tokens';
-import { COPY, PIECE } from './copy';
+import { COPY, PIECE, PLACEHOLDERS } from './copy';
 import { Brass, Eyebrow, Flag, Ground, Note, Row, TLink } from './ui';
 import { Drawing } from './drawings';
 import { Orbit } from './Orbit';
+import { GlowDot } from './glowDot';
 import { Room, RoomKey } from './rooms';
 import type { PieceLive } from './live';
 import { composeGround } from '../../utils/collectorGround';
 
 export type Relationship = 'loading' | 'unclaimed' | 'registered' | 'signedin' | 'yours';
+
+/**
+ * Strings no copy.ts key exists for yet, or standing in for a rendering this
+ * feedback pass removes. copy.ts is frozen this pass, so they live here,
+ * registered as placeholders so none can reach Adrian disguised as finished
+ * copy (the states.tsx / walk.tsx idiom). Adrian's feedback, 2026-08-20: the
+ * quiet "Not yet registered" line moves off the top of the page and becomes
+ * a prominent eyebrow at the Begin foot instead, and the standing note that
+ * used to sit under Begin (COPY.page.unclaimedNote) is dropped.
+ */
+const ph = (s: string): string => {
+  PLACEHOLDERS.add(s);
+  return s;
+};
+const UNCLAIMED_EYEBROW = ph('Unclaimed artwork');
+const UNCLAIMED_FOOT_LINE = ph('Begin to claim it');
 
 /**
  * The GROUND axis inputs (utils/collectorGround.ts). Everything arrives from
@@ -103,6 +120,23 @@ export const PiecePage: React.FC<Props> = ({
   const isCaretaker = relationship === 'yours';
   const registered = relationship !== 'unclaimed' && relationship !== 'loading';
 
+  /* the glow dot's warmth, fed by the piece's own interactions: how much
+     lineage the piece carries and how many letters it has been sent. Demo
+     shell (no live data): the fixed ~0.7 the design was drawn against.
+     Wired: a small saturating clamp on the combined count, the same curve
+     shape as utils/collectorGround.ts's groundWarmth but sized for a
+     handful of events rather than years — see glowDot.tsx. */
+  const centreWarmth = useMemo(() => {
+    if (!live) return 0.7;
+    const lineageEvents =
+      live.lineage.status === 'ready' && live.lineage.data.kind === 'ok'
+        ? live.lineage.data.events.length
+        : 0;
+    const writings = live.letters && live.letters.status === 'ready' ? live.letters.data.length : 0;
+    const n = lineageEvents + writings;
+    return 1 - Math.exp(-Math.max(0, n) / 4);
+  }, [live]);
+
   /* the GROUND reading, once per render-inputs: years held warm it, season
      and hour tint it, the birthday month is the warmest it ever gets. It
      feeds two CSS custom properties on the page Ground and nothing else —
@@ -162,10 +196,14 @@ export const PiecePage: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* the authenticity line, visible to anyone */}
-      <div style={{ position: 'relative', flex: 'none', paddingTop: 8, fontFamily: F.body, fontSize: 11.5, color: C.inkQuiet }}>
-        {registered ? COPY.page.statusRegistered : COPY.page.statusUnclaimed}
-      </div>
+      {/* the authenticity line, visible to anyone. Registered only: the
+          unclaimed case now reads more prominently, at the Begin foot,
+          per feedback. */}
+      {registered && (
+        <div style={{ position: 'relative', flex: 'none', paddingTop: 8, fontFamily: F.body, fontSize: 11.5, color: C.inkQuiet }}>
+          {COPY.page.statusRegistered}
+        </div>
+      )}
 
       {/* the dream: the first thing any guest reads. Placing it IS the choice
           to show it, so there is no switch for it anywhere. Words only; who
@@ -251,8 +289,11 @@ export const PiecePage: React.FC<Props> = ({
             <Orbit placed={placed} near={near} />
           )
         ) : (
+          /* the piece's presence, not a vector: per Adrian, "the center
+             should be the glowing dot not a vector.. the dot is your
+             interactions with the art." See glowDot.tsx. */
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-            <Drawing motif="piece" size={128} draw />
+            <GlowDot size={128} warmth={centreWarmth} breathing />
           </div>
         )}
       </div>
@@ -333,10 +374,13 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
   /* unclaimed: a lit Begin, the only bright thing on the page. No sign-in link,
      because nobody has an account for an unregistered piece.
 
-     It is the SAME object as every other brass button in the flow, per card
-     24f: the studies are deleted, this is the button, and every screen uses
-     it. Being the only bright thing on a quiet page is what makes it read as
-     the arrival, not being wider than everything else. */
+     It is the SAME object as every other brass button in the flow: standard
+     brass, no lifted glow, per feedback 2026-08-20 ("the glow behind the
+     button does not look good... the Begin needs to be standard button
+     theme"). What used to be a quiet line under the title, and a standing
+     note under Begin, are now one prominent eyebrow pair sitting above the
+     button instead: the unclaimed status, moved somewhere it is actually
+     seen. */
   if (relationship === 'unclaimed') {
     return (
       <div
@@ -349,13 +393,17 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
           alignItems: 'center',
         }}
       >
-        <Brass lifted onClick={onBegin}>
+        <div style={{ textAlign: 'center', paddingBottom: 16 }}>
+          <Eyebrow size={10.5}>
+            <Flag text={UNCLAIMED_EYEBROW} />
+          </Eyebrow>
+          <div style={{ fontFamily: F.body, fontSize: 13, color: C.inkBody, marginTop: 5 }}>
+            <Flag text={UNCLAIMED_FOOT_LINE} />
+          </div>
+        </div>
+        <Brass onClick={onBegin}>
           {COPY.page.begin}
         </Brass>
-        {/* the short line beneath Begin — Adrian's chosen wording, 2026-08-20 */}
-        <div style={{ textAlign: 'center', maxWidth: '34ch' }}>
-          <Note top={10}>{COPY.page.unclaimedNote}</Note>
-        </div>
       </div>
     );
   }
