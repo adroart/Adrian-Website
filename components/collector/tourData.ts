@@ -97,6 +97,9 @@ export const SOURCE: Record<string, string | null> = {
   held: '20e',
   plate: '20f',
   offline: '20g',
+  /* not drawn: the honest door while the passing is unwired (D4). Built from
+     the shape the drawn states establish; the copy is placeholder. */
+  notyet: null,
   letter: '14e',
   email: '14g',
 };
@@ -211,6 +214,7 @@ export const JUMP: [string, Jump[]][] = [
   [
     'The passing',
     [
+      ['Not open yet (the wired door)', { kind: 'state', key: 'notyet' }],
       ['Two exits', { kind: 'walk', key: 'passfork' }],
       ['It stays in the house', { kind: 'walk', key: 'passname' }],
       ['What travels', { kind: 'walk', key: 'passsell' }],

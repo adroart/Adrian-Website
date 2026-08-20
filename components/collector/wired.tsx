@@ -71,8 +71,8 @@ import {
   getPublicDream,
   getRegistryIdentity,
   getYearlyRitualEligibility,
-  revokeCollectorDreamSharing,
   saveCollectorBirthProfile,
+  setCollectorDreamTier,
   shareCollectorDream,
   updateCollectorDream,
   updateCollectorPrivacy,
@@ -82,6 +82,7 @@ import type {
   CertificateContent,
   CollectorDreamState,
   CollectorRitualEligibility,
+  DreamTier,
   KeeperPieceStatus,
   LineageOutcome,
   PublicCollectorDream,
@@ -150,6 +151,14 @@ export function parseBirthTime(raw: string): string | null {
   return `${String(hours).padStart(2, '0')}:${m[2]}`;
 }
 
+/**
+ * The error code of a failed ApiOutcome, null when it landed. A plain reader
+ * rather than discriminant narrowing, which this tsconfig does not perform.
+ */
+function failCode(outcome: { ok: boolean; error?: string }): string | null {
+  return outcome.ok ? null : outcome.error ?? 'error';
+}
+
 /* ------------------------------------------------------------------ *
  * The journey
  * ------------------------------------------------------------------ */
@@ -170,7 +179,12 @@ type Step =
   | { kind: 'gift-message'; stage: 'sealed' | 'written' }
   | {
       kind: 'state';
-      key: 'account' | 'plate' | 'offline';
+      /**
+       * 'notyet' is the honest passing (D4): the passing screens exist as
+       * demo surfaces but nothing behind them is wired, so the live door
+       * says so instead of staging a passing that cannot happen.
+       */
+      key: 'account' | 'plate' | 'offline' | 'notyet';
       onRetry?: () => void;
       receipt?: [string, string][];
     };
@@ -318,22 +332,30 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     return 'registered';
   }, [account.isLoaded, signedIn, keeper, lineage]);
 
-  /* the light: fed from the real lineage. What is placed is the public
-     record's depth; how lately it was tended is the age of the last event. */
+  /* the light. The orbit's `placed` axis counts what has been PLACED in the
+     piece — placed-words data only. Today that is at most the one standing
+     dream (any tier: the caretaker sees their own through the keeper state,
+     a guest sees only what shines through the public dream), so the axis
+     honestly reads 0 or 1 for now; it grows only when more placeable things
+     exist. It is NEVER lineage.events.length — binds and transfers are
+     history, not things placed in the piece, and counting them would dress
+     an empty piece as a full one. `near` still reads the lineage: how
+     lately the piece was tended is the age of the last public event. */
   const { placed, near } = useMemo(() => {
     const events = lineage.status === 'ready' && lineage.data.kind === 'ok'
       ? lineage.data.events
       : [];
-    const shared = dream.status === 'ready' && dream.data ? 1 : 0;
+    const own = dreams.status === 'ready' && dreams.data?.current ? 1 : 0;
+    const shown = dream.status === 'ready' && dream.data ? 1 : 0;
     const last = events.length > 0 ? Date.parse(events[events.length - 1].eventAt) : NaN;
     const months = Number.isFinite(last)
       ? (Date.now() - last) / (30 * 24 * 60 * 60 * 1000)
       : Infinity;
     return {
-      placed: events.length + shared,
+      placed: Math.max(own, shown),
       near: months <= 1 ? 1 : months <= 6 ? 0.5 : 0.15,
     };
-  }, [lineage, dream]);
+  }, [lineage, dream, dreams]);
 
   /* ---------------- the bind ---------------- */
 
@@ -538,40 +560,114 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     }
   }, [keeperPieceId, typed, refresh]);
 
-  /* ---------------- garden live ---------------- */
+  /* ---------------- garden live ----------------
+   * The three tiers (§6 "Three tiers, and what outlives you"), mirrored from
+   * the backend's settled matrix: keep→shine, keep→seal, seal→shine. Shine
+   * is permanent, keep is never a destination once the dream stands, and
+   * UN-SHINING DOES NOT EXIST — revokeCollectorDreamSharing is never called
+   * here or anywhere else, because a public dream entered the permanent
+   * record the moment it shone. */
+
+  const ritualEligibility = ritual.status === 'ready' ? ritual.data : null;
 
   const gardenLive: GardenLive | null = useMemo(() => {
     if (!isYours || !keeperPieceId) return null;
+
+    /* Entering the light. The tier verb is the settled move; while migration
+       041 has not reached the registry it answers 503, and keep→shine falls
+       back to the audited share, which both eras accept and which the
+       backend routes through the same keep→shine tier change once tiered.
+       seal→shine has no fallback: a plain share on a sealed dream is
+       refused by design, and seal itself only exists post-041. */
+    const enterShine = async (fromSeal: boolean): Promise<boolean> => {
+      const moved = failCode(await setCollectorDreamTier({ keeperPieceId, tier: 'shine' }));
+      if (moved === null || moved === 'tier_unchanged') return true;
+      if (moved === 'dream_tiers_unavailable' && !fromSeal) {
+        const lit = await shareCollectorDream({ keeperPieceId, visibility: 'anonymous' });
+        return lit.ok;
+      }
+      return false;
+    };
+
     return {
       dreams,
-      place: async (body: string, shine: boolean) => {
+      /* The yearly gate, pre-empted for the UI: outside the window the
+         standing BODY settles. Unknown eligibility reads open — the server
+         is the real gate, and `place` answers 'locked' when it refuses. */
+      editWindowOpen: ritualEligibility?.eligible !== false,
+      place: async (body: string, tier: DreamTier) => {
         try {
           const current = dreams.status === 'ready' ? dreams.data?.current ?? null : null;
-          const first = current
-            ? await updateCollectorDream({
+          /* whether anything already landed, so a half-landed placement
+             refreshes to true state before the quiet retry */
+          let landedAny = false;
+
+          if (!current) {
+            /* first placement: the dream is planted (the server plants at
+               keep with heirs ON), then moved to the asked-for tier.
+               api.ts's create does not carry tier/heirsMayShare yet (T2b);
+               the two-step lands the identical end state. */
+            const planted = await createCollectorDream({ keeperPieceId, body, scope: 'self' });
+            if (!planted.ok) return 'held';
+            landedAny = true;
+            if (tier === 'shine' && !(await enterShine(false))) {
+              refresh();
+              return 'held';
+            }
+            if (tier === 'seal') {
+              const sealed = failCode(await setCollectorDreamTier({ keeperPieceId, tier: 'seal' }));
+              if (sealed !== null && sealed !== 'tier_unchanged') {
+                refresh();
+                return 'held';
+              }
+            }
+          } else {
+            const currentTier: DreamTier =
+              current.tier ?? (current.visibility === 'private' ? 'keep' : 'shine');
+
+            /* the words: version-checked, and yearly-gated by the server.
+               'outside_birthday_window' is a state, never an error. */
+            if (body !== current.body) {
+              const edited = await updateCollectorDream({
                 keeperPieceId,
                 body,
                 scope: current.scope,
                 expectedVersion: current.version,
-              })
-            : await createCollectorDream({ keeperPieceId, body, scope: 'self' });
-          if (!first.ok) return false;
-          const visibility = first.data.current?.visibility ?? 'private';
-          if (shine) {
-            const second = await shareCollectorDream({ keeperPieceId, visibility: 'anonymous' });
-            if (!second.ok) return false;
-          } else if (visibility !== 'private') {
-            const second = await revokeCollectorDreamSharing({ keeperPieceId });
-            if (!second.ok) return false;
+              });
+              const editFail = failCode(edited);
+              if (editFail !== null) {
+                return editFail === 'outside_birthday_window' ? 'locked' : 'held';
+              }
+              landedAny = true;
+            }
+
+            /* the tier move, when one was asked for. Only shine and seal are
+               ever destinations; the control never offers a way back to
+               keep, mirroring the backend exactly. */
+            if (tier !== currentTier && tier !== 'keep') {
+              const moved =
+                tier === 'shine'
+                  ? await enterShine(currentTier === 'seal')
+                  : await setCollectorDreamTier({ keeperPieceId, tier: 'seal' }).then(outcome => {
+                      const code = failCode(outcome);
+                      return code === null || code === 'tier_unchanged';
+                    });
+              if (!moved) {
+                if (landedAny) refresh();
+                return 'held';
+              }
+              landedAny = true;
+            }
           }
+
           refresh();
-          return true;
+          return 'landed';
         } catch {
-          return false;
+          return 'held';
         }
       },
     };
-  }, [isYours, keeperPieceId, dreams, refresh]);
+  }, [isYours, keeperPieceId, dreams, ritualEligibility, refresh]);
 
   /* ---------------- the live object the screens read ---------------- */
 
@@ -628,6 +724,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         body2: swap(base.body2),
         eyebrow: swap(base.eyebrow),
         note: swap(base.note),
+        preNote: swap(base.preNote),
       };
       /* Sign its record is auto-satisfied by the verified session the bind
          required, so the first reachable gathering screen has nothing behind
@@ -696,6 +793,14 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       if (key === 'sign') {
         /* the account already exists — the bind required it */
         setStep({ kind: 'walk', key: 'born' });
+        return;
+      }
+      if (key === 'passfork') {
+        /* the honest passing (D4): the passing screens are demo surfaces
+           with nothing wired behind them, and walking a live caretaker into
+           a passing that cannot complete would be a lie. One quiet state
+           says the passing opens here soon, and the piece is untouched. */
+        setStep({ kind: 'state', key: 'notyet' });
         return;
       }
       if (key === '__home') {

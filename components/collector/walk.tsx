@@ -41,6 +41,13 @@ export type Screen = {
   art?: Motif;
   eyebrow?: string;
   note?: string;
+  /**
+   * A quiet line rendered BEFORE the fields: a rule that must be read before
+   * writing, not after. The ritual carries its "placing it is the choosing"
+   * line here, so nobody types the year's words and only then learns they
+   * will show.
+   */
+  preNote?: string;
   /** rows of lit fields; an inner array is one row */
   fields?: [string, string?][];
   hints?: Record<string, string>;
@@ -331,8 +338,8 @@ export const WALK = {
     head: COPY.ritual.head,
     body: COPY.ritual.body,
     art: 'piece',
+    preNote: COPY.ritual.note,
     fields: [[COPY.ritual.field]],
-    note: COPY.ritual.note,
     pill: COPY.garden.place,
     to: 'ritualfamily',
     link: COPY.ritual.keep,
@@ -795,6 +802,13 @@ export const WalkScreen: React.FC<Props> = ({
 
           {screen.body && <Body top={16}>{screen.body}</Body>}
           {screen.body2 && <Body top={14}>{screen.body2}</Body>}
+
+          {/* the rule that must be read before writing */}
+          {screen.preNote && (
+            <div style={{ position: 'relative', flex: 'none' }}>
+              <Note top={22}>{screen.preNote}</Note>
+            </div>
+          )}
 
           {/* the fields. Lit, never boxed: the rule under the field holding the
               cursor is the only light on the screen. */}

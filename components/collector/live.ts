@@ -15,6 +15,7 @@ import type {
   CertificateContent,
   CollectorDreamState,
   CollectorRitualEligibility,
+  DreamTier,
   LineageOutcome,
 } from './api';
 
@@ -24,16 +25,36 @@ export type Quiet<T> =
   | { status: 'ready'; data: T }
   | { status: 'failed'; retry: () => void };
 
+/**
+ * How a placement resolved.
+ *   landed  everything asked for is now in the registry
+ *   held    the quiet failure: nothing is lost, the same brass tries again
+ *   locked  the server's yearly gate answered: the words settle until the
+ *           birthday window opens. A state, never an error.
+ */
+export type GardenPlaceOutcome = 'landed' | 'held' | 'locked';
+
 /** What the wired garden can do. All writes go through api.ts in wired.tsx. */
 export type GardenLive = {
   /** the piece's dream state, for the index */
   dreams: Quiet<CollectorDreamState | null>;
   /**
-   * Place words in the piece: create or version-checked update of the current
-   * dream, then share (anonymous) or revoke to private per the capsule.
-   * Resolves true when everything landed; false is the quiet failure.
+   * Whether the yearly window is open for editing the standing words. First
+   * placement is never gated, and neither are tier moves — only a body edit
+   * on the existing dream waits for the birthday. Unknown eligibility reads
+   * as open: the server is the real gate either way, and `place` answers
+   * 'locked' when it refuses.
    */
-  place: (body: string, shine: boolean) => Promise<boolean>;
+  editWindowOpen: boolean;
+  /**
+   * Place words in the piece at a tier (§6 "Three tiers, and what outlives
+   * you"): create the dream, or version-checked update of the standing one,
+   * then the tier move the choice asks for. The allowed moves mirror the
+   * backend's matrix — keep→shine, keep→seal, seal→shine; shine is
+   * permanent and keep is never a destination once the dream stands.
+   * Un-shining does not exist anywhere.
+   */
+  place: (body: string, tier: DreamTier) => Promise<GardenPlaceOutcome>;
 };
 
 /** Everything the live piece page and its rooms read. */

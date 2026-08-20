@@ -19,15 +19,34 @@
  * privacy model: the piece shines, the person opts in. So the control is never
  * a permission request.
  *
+ * The one real decision under the field is the THREE-TIER control (§6 "Three
+ * tiers, and what outlives you"; drawn in collector-primitives.html ~2536-2610):
+ * Let it shine · Keep it with the piece · Seal it, stacked, with the heirs'
+ * sub-choice under Keep and hidden entirely under Seal. It replaced the two-way
+ * capsule on 2026-08-20; the capsule's strings stay exported in copy.ts but
+ * nothing here reads them any more.
+ *
  * OPEN, and Adrian's: the questions themselves. The eight in `copy.ts` show the
  * intended shape and are marked as placeholders.
  */
 
 import React, { useState } from 'react';
 import { C, F } from './tokens';
-import { COPY } from './copy';
-import { Area, Brass, Capsule, Eyebrow, Flag, Ground, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
+import { COPY, PLACEHOLDERS } from './copy';
+import { Area, Brass, Eyebrow, Flag, Ground, Note, Plus, RoomBody, RoomHead, TLink } from './ui';
 import type { GardenLive } from './live';
+import type { DreamTier } from './api';
+
+/**
+ * The grave confirm before a seal commits. Sealing is a vow, so it takes one
+ * extra deliberate press of the same brass — never a browser confirm(). No
+ * locked line exists for this moment and copy.ts is frozen this pass, so the
+ * string lives here, registered as a placeholder so it can never reach Adrian
+ * disguised as finished copy. T2b: hoist into copy.ts's garden table.
+ */
+const SEAL_CONFIRM =
+  'Sealing is a vow. Press Place it once more, and nobody but you opens these words again, not ever.';
+PLACEHOLDERS.add(SEAL_CONFIRM);
 
 type View = 'ask' | 'index' | 'write';
 
@@ -253,6 +272,143 @@ const GardenIndex: React.FC<{
 );
 
 /* ------------------------------------------------------------------ *
+ * The three-tier control. Three quiet stacked choices, the drawn shape
+ * from collector-primitives.html: title over a two-line truth, brass
+ * border on the one that holds. The heirs' sub-choice sits under Keep,
+ * on by default, and is hidden entirely under Seal, which already
+ * answers the question.
+ * ------------------------------------------------------------------ */
+
+const TierRow: React.FC<{
+  title: string;
+  body: string;
+  on: boolean;
+  /** absent: the row is settled and cannot move */
+  onPick?: () => void;
+}> = ({ title, body, on, onPick }) => (
+  <button
+    type="button"
+    onClick={onPick}
+    disabled={!onPick}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 3,
+      width: '100%',
+      textAlign: 'left',
+      padding: '11px 13px',
+      cursor: onPick ? 'pointer' : 'default',
+      background: on ? 'rgba(212,184,138,.05)' : 'none',
+      border: `1px solid ${on ? C.brassEdge : C.hair}`,
+      borderRadius: 10,
+      fontFamily: F.body,
+    }}
+  >
+    <span style={{ fontSize: 13.5, color: on ? C.brass : C.ink }}>
+      <Flag text={title} />
+    </span>
+    <span style={{ fontSize: 11.5, lineHeight: 1.5, color: C.inkQuiet }}>
+      <Flag text={body} />
+    </span>
+  </button>
+);
+
+/** the heirs' right: label and note swap with the state, never a switch glyph */
+const HeirsRow: React.FC<{ on: boolean; onToggle: () => void }> = ({ on, onToggle }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 2,
+      width: '100%',
+      textAlign: 'left',
+      marginTop: 12,
+      padding: '9px 2px 0',
+      cursor: 'pointer',
+      background: 'none',
+      border: 0,
+      borderTop: `1px solid ${C.hair}`,
+      fontFamily: F.body,
+    }}
+  >
+    <span style={{ fontSize: 12.5, color: on ? C.brass : C.ink }}>
+      <Flag text={on ? COPY.garden.heirsOnTitle : COPY.garden.heirsOffTitle} />
+    </span>
+    <span style={{ fontSize: 11.5, lineHeight: 1.5, color: C.inkQuiet }}>
+      <Flag text={on ? COPY.garden.heirsOnNote : COPY.garden.heirsOffNote} />
+    </span>
+  </button>
+);
+
+const T = COPY.garden;
+
+/**
+ * The whole control, shaped by what already stands:
+ *
+ *   nothing yet, or a keep dream — three stacked choices, every allowed move
+ *     open (keep→shine, keep→seal, and staying put). The heirs' sub-choice
+ *     shows only while Keep is the selection.
+ *   a shine dream — settled. It shines with the piece; there is no movement,
+ *     because shine is permanent and un-shining does not exist.
+ *   a sealed dream — the seal state, the writer's own access spoken plainly
+ *     (tierSealWriterNote), and exactly one move: let it shine.
+ *
+ * The lit/tapped share moment (§6 "A question, opened"): shareOnLine under a
+ * selection that will shine, shareOffLine under Seal, whose "nobody sees it
+ * but you" is literally true. Keep carries no state line — its own body holds
+ * the truth ("They may choose to let it shine one day"), and shareOffLine on
+ * it would be the exact lie §6 forbids.
+ */
+const TierControl: React.FC<{
+  tier: DreamTier;
+  onTier: (t: DreamTier) => void;
+  /** the standing dream's tier; null before first placement */
+  settled: DreamTier | null;
+  heirs: boolean;
+  onHeirs: (on: boolean) => void;
+  /**
+   * Whether the heirs' choice can actually be kept. The demo always shows it
+   * (the design is reviewable); the wired path hides it until api.ts carries
+   * heirsMayShare on create — the server already accepts and defaults it ON,
+   * so a wired placement gets the drawn default, and a toggle that silently
+   * saved nothing would be a lie. T2b threads it through.
+   */
+  heirsChoosable: boolean;
+}> = ({ tier, onTier, settled, heirs, onHeirs, heirsChoosable }) => {
+  if (settled === 'shine') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <TierRow title={T.tierShineTitle} body={T.tierShineBody} on />
+        <Note top={4}>{T.shareOnLine}</Note>
+      </div>
+    );
+  }
+
+  if (settled === 'seal') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <TierRow title={T.tierSealTitle} body={T.tierSealBody} on={tier === 'seal'} onPick={() => onTier('seal')} />
+        <TierRow title={T.tierShineTitle} body={T.tierShineBody} on={tier === 'shine'} onPick={() => onTier('shine')} />
+        <Note top={4}>{tier === 'shine' ? T.shareOnLine : T.tierSealWriterNote}</Note>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <TierRow title={T.tierShineTitle} body={T.tierShineBody} on={tier === 'shine'} onPick={() => onTier('shine')} />
+      <TierRow title={T.tierKeepTitle} body={T.tierKeepBody} on={tier === 'keep'} onPick={() => onTier('keep')} />
+      <TierRow title={T.tierSealTitle} body={T.tierSealBody} on={tier === 'seal'} onPick={() => onTier('seal')} />
+      {tier === 'keep' && heirsChoosable && <HeirsRow on={heirs} onToggle={() => onHeirs(!heirs)} />}
+      {tier === 'shine' && <Note top={4}>{T.shareOnLine}</Note>}
+      {tier === 'seal' && <Note top={4}>{T.shareOffLine}</Note>}
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ *
  * A question, opened. One question, a plain rule, and the one real
  * decision under it.
  * ------------------------------------------------------------------ */
@@ -271,24 +427,57 @@ export const QuestionPage: React.FC<{
   live,
   initialText = '',
 }) => {
+  /* the standing dream, when the garden is wired. The dreams contract holds
+     one current dream per piece, and it is what `place` touches. */
+  const current = live && live.dreams.status === 'ready' ? live.dreams.data?.current ?? null : null;
+  const settled: DreamTier | null = current
+    ? current.tier ?? (current.visibility === 'private' ? 'keep' : 'shine')
+    : null;
+
+  /* the yearly lock, pre-empted from eligibility: the standing dream's BODY
+     settles outside the birthday window. First placement is always open, and
+     tier moves are never gated. The server is the real gate — an unknown
+     window reads open here and `place` answers 'locked' if it was not. */
+  const bodyLocked = Boolean(live && current && !live.editWindowOpen);
+
   const [text, setText] = useState(initialText);
-  const [where, setWhere] = useState<0 | 1>(0);
+  const [tier, setTierState] = useState<DreamTier>(settled ?? 'shine');
+  const [heirs, setHeirs] = useState(true);
   const [placing, setPlacing] = useState(false);
-  const [held, setHeld] = useState(false);
+  const [held, setHeld] = useState<'held' | 'locked' | null>(null);
+  /* sealing is a vow: the first press arms, the second commits */
+  const [sealArmed, setSealArmed] = useState(false);
+
+  const setTier = (t: DreamTier) => {
+    setSealArmed(false);
+    setTierState(t);
+  };
+
+  const sealing = tier === 'seal' && settled !== 'seal';
 
   const place = () => {
     if (!live) {
+      /* demo: same control, same grave confirm, nothing stored anywhere */
+      if (sealing && !sealArmed) {
+        setSealArmed(true);
+        return;
+      }
       onPlace();
       return;
     }
-    if (placing || !text.trim()) return;
+    const body = bodyLocked ? current?.body ?? '' : text.trim();
+    if (placing || !body) return;
+    if (sealing && !sealArmed) {
+      setSealArmed(true);
+      return;
+    }
     setPlacing(true);
-    setHeld(false);
+    setHeld(null);
     void live
-      .place(text.trim(), where === 0)
-      .then(landed => {
-        if (landed) onPlace();
-        else setHeld(true);
+      .place(body, tier)
+      .then(outcome => {
+        if (outcome === 'landed') onPlace();
+        else setHeld(outcome);
       })
       .finally(() => setPlacing(false));
   };
@@ -302,33 +491,64 @@ export const QuestionPage: React.FC<{
           <Note>{COPY.garden.frames[1]}</Note>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <Area value={text} hint={COPY.garden.answerHint} rows={5} onChange={setText} />
-        </div>
+        {bodyLocked ? (
+          /* outside the window the words are readable, never editable: the
+             standing body as plain text and the lock as a quiet note. No
+             field, no greyed field, no error. Tier moves below stay open. */
+          <div className="collector-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 18 }}>
+            <p style={{ margin: 0, fontFamily: F.body, fontSize: 15, lineHeight: 1.7, color: C.inkBody }}>
+              {current?.body}
+            </p>
+            <Note top={14}>{COPY.garden.lock}</Note>
+          </div>
+        ) : (
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <Area
+              value={text}
+              hint={COPY.garden.answerHint}
+              rows={5}
+              onChange={v => {
+                setSealArmed(false);
+                setText(v);
+              }}
+            />
+          </div>
+        )}
 
-        {/* the one real decision. Sharing is the default; this is how you
-            withhold, never a permission request. */}
+        {/* the one real decision. Sharing is the default; the tiers are how
+            you withhold, never a permission request. */}
         <div style={{ flex: 'none', paddingTop: 16 }}>
-          <div style={{ paddingBottom: 9 }}>
-            <Eyebrow>{COPY.garden.whereLabel}</Eyebrow>
-          </div>
-          <Capsule options={[COPY.garden.whereShine, COPY.garden.whereKeep]} active={where} onPick={setWhere} />
-          <div style={{ paddingTop: 10 }}>
-            <Note>{COPY.garden.whereNote}</Note>
-          </div>
+          <TierControl
+            tier={tier}
+            onTier={setTier}
+            settled={settled}
+            heirs={heirs}
+            onHeirs={setHeirs}
+            heirsChoosable={!live}
+          />
         </div>
 
         {/* the lock is a single line, deliberately, so the mechanic can change
             without touching anything else on this screen */}
-        <div style={{ flex: 'none', paddingTop: 14 }}>
-          <Note>{COPY.garden.lock}</Note>
-        </div>
+        {!bodyLocked && (
+          <div style={{ flex: 'none', paddingTop: 14 }}>
+            <Note>{COPY.garden.lock}</Note>
+          </div>
+        )}
+
+        {/* the grave confirm: one more deliberate press of the same brass */}
+        {sealArmed && sealing && (
+          <div style={{ flex: 'none', paddingTop: 12 }}>
+            <Note>{SEAL_CONFIRM}</Note>
+          </div>
+        )}
 
         {/* the quiet failure: a receipt, never an error. The words stay on the
-            phone and the same brass tries again. */}
+            phone and the same brass tries again. The yearly gate is a state,
+            not a failure: the lock line itself answers it. */}
         {held && (
           <div style={{ flex: 'none', paddingTop: 12 }}>
-            <Note>{COPY.states.offlineBody}</Note>
+            <Note>{held === 'locked' ? COPY.garden.lock : COPY.states.offlineBody}</Note>
           </div>
         )}
       </div>

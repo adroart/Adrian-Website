@@ -21,11 +21,27 @@
 
 import React from 'react';
 import { C, F } from './tokens';
-import { COPY, PIECE } from './copy';
-import { Body, Brass, Eyebrow, Ground, Head, Ledger, Note, TLink } from './ui';
+import { COPY, PIECE, PLACEHOLDERS } from './copy';
+import { Body, Brass, Eyebrow, Flag, Ground, Head, Ledger, Note, TLink } from './ui';
 import { Drawing } from './drawings';
 
-export type StateKey = 'account' | 'held' | 'plate' | 'offline' | 'recordonly';
+export type StateKey = 'account' | 'held' | 'plate' | 'offline' | 'recordonly' | 'notyet';
+
+/**
+ * The honest passing (D4). The passing screens exist as demo surfaces, but
+ * nothing behind them is wired: walking a caretaker into them from the live
+ * piece page would stage a passing that cannot happen. Until the flow is
+ * real, the door says so plainly and returns them to the piece.
+ *
+ * Neither line is Adrian's. copy.ts is frozen this pass, so they live here,
+ * registered as placeholders so the dev marker shows. T2b: hoist into
+ * copy.ts once the passing copy is worked.
+ */
+const NOTYET_HEAD = 'The passing is not open yet';
+const NOTYET_BODY =
+  'Passing a piece on will happen right here, and it is not ready to be done yet. Nothing about your piece or its record is affected. When the passing opens, this door leads into it.';
+PLACEHOLDERS.add(NOTYET_HEAD);
+PLACEHOLDERS.add(NOTYET_BODY);
 
 type Props = {
   state: StateKey;
@@ -63,6 +79,7 @@ export const StateScreen: React.FC<Props> = ({
     );
   }
   if (state === 'held') return <AlreadyHeld onBack={onBack} />;
+  if (state === 'notyet') return <PassingNotYet onReturn={onPrimary ?? onBack} />;
   if (state === 'plate') return <ReissuedPlate onBack={onBack} />;
   if (state === 'offline') {
     return (
@@ -188,6 +205,44 @@ const AlreadyHeld: React.FC<{ onBack?: () => void }> = ({ onBack }) => (
         {COPY.states.heldWrite}
       </Brass>
       <TLink onClick={onBack}>{COPY.page.back}</TLink>
+    </div>
+  </Ground>
+);
+
+/* ------------------------------------------------------------------ *
+ * The passing is not open yet.
+ *
+ * The house pattern: one drawing, a short head, a plain body, one brass act
+ * back to the piece. No prompt, no count, no blame, no locked door — the
+ * piece is exactly as it was, and the screen says so.
+ * ------------------------------------------------------------------ */
+
+const PassingNotYet: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => (
+  <Ground light="f" pad="52px 30px 30px">
+    <div style={{ position: 'relative', flex: 'none', display: 'grid', placeItems: 'center', height: 162 }}>
+      <Drawing motif="hands" size={106} draw />
+    </div>
+    <div style={{ position: 'relative', flex: 'none' }}>
+      <Head size={34}>
+        <Flag text={NOTYET_HEAD} />
+      </Head>
+    </div>
+    <Body top={16}>{NOTYET_BODY}</Body>
+
+    <div style={{ position: 'relative', flex: 1 }} />
+    <div
+      style={{
+        position: 'relative',
+        flex: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        paddingTop: 24,
+      }}
+    >
+      <Brass full onClick={onReturn}>
+        {COPY.page.back}
+      </Brass>
     </div>
   </Ground>
 );
