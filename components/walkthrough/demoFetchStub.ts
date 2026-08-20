@@ -22,9 +22,16 @@
  *  the same way the real step-up unlock survives across ceremony screens. */
 let unlocked = false;
 
-const DEMO_PUBLIC_CODE = 'AR-DEM45678';
-const DEMO_OWNERSHIP_CODE = 'DEM2-3456-789C-DEFG';
+/* Exported so the plate chapter's purpose-made station sequence
+   (CeremonyStation.tsx) can build the SAME piece's real plate SVGs with
+   utils/artworkPlate.ts, rather than inventing a second demo identity. */
+export const DEMO_PUBLIC_CODE = 'AR-DEM45678';
+export const DEMO_OWNERSHIP_CODE = 'DEM2-3456-789C-DEFG';
+export const DEMO_ARTWORK_ID = 'UL-100';
+export const DEMO_EDITION_NUMBER = 1;
 const DEMO_KEEPER_PIECE_ID = 'kp-demo-0001';
+const DEMO_INVITATION_ID = 'iv-demo-0001';
+const DEMO_INVITATION_TOKEN = 'demo-invitation-token-45678';
 
 type DemoMedia = { id: string; kind: string };
 type DemoMessageSummary = { id: string; createdAt: string; revealedAt: string | null };
@@ -142,6 +149,18 @@ export function installCeremonyDemoStub(): () => void {
         ownershipCode: DEMO_OWNERSHIP_CODE,
         artwork,
         record: { status: 'generated' },
+      }, 201);
+    }
+
+    /* the held-piece entrance's invitation, POST /api/admin/invitations,
+       answering createArtworkInvitation's real response shape
+       (functions/api/_lib/artworkInvitations.js): { invitationId, token }.
+       The demo never inspects the request body beyond acknowledging it. */
+    if (path === '/api/admin/invitations' && method === 'POST') {
+      return jsonResponse({
+        ok: true,
+        invitationId: DEMO_INVITATION_ID,
+        token: DEMO_INVITATION_TOKEN,
       }, 201);
     }
 
