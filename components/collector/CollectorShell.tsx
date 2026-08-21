@@ -23,7 +23,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import { C, F } from './tokens';
 import { MARKS_DEFAULT } from './copy';
 import { CollectorStyles } from './styles';
-import { PieceDesktopStyles } from './pieceDesktop';
+import { CollectorDisplay } from './display';
 import { PiecePage, Relationship } from './PiecePage';
 import { CodePage } from './CodePage';
 import { VaultArrival } from './vaultArrival';
@@ -47,6 +47,12 @@ export type CollectorShellProps = {
    *  contract existed. 'tour' hides that harness and renders only the phone
    *  frame and its screen, for a host page that supplies its own chrome. */
   chrome?: 'full' | 'tour';
+  /**
+   * How the journey is displayed. 'card' is the review vehicle: the phone at
+   * the size it was drawn, floating, with the harness underneath. 'full' is
+   * the product: the journey fills the screen it is opened on. See display.tsx.
+   */
+  frame?: 'card' | 'full';
   /** the view the shell opens on, before the `?screen=` mount effect (which
    *  still runs and may override it) has a chance to look at the URL */
   initialView?: View;
@@ -68,7 +74,7 @@ const relationshipForJump = (v: View): Relationship | undefined =>
   v.kind === 'room' ? 'yours' : v.kind === 'piece' ? 'unclaimed' : undefined;
 
 const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(function CollectorShell(
-  { chrome = 'full', initialView, onViewChange }: CollectorShellProps,
+  { chrome = 'full', frame: frameProp, initialView, onViewChange }: CollectorShellProps,
   ref,
 ) {
   const [view, setView] = useState<View>(initialView ?? { kind: 'piece' });
@@ -76,6 +82,10 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
      runs the same screens against whatever backend the dev server proxies
      to. The sixteen-1s code only opens the piece in demo mode. */
   const [mode, setMode] = useState<'demo' | 'wired'>('demo');
+  /* the review harness can flip between looking at the journey and using it;
+     a host that states a frame owns it and the switch does not appear */
+  const [frameState, setFrameState] = useState<'card' | 'full'>('card');
+  const frame = frameProp ?? frameState;
   const [wiredCode, setWiredCode] = useState('');
   const [relationship, setRelationship] = useState<Relationship>('unclaimed');
   const [placed, setPlaced] = useState(7);
@@ -250,19 +260,18 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
     >
       <CollectorStyles />
 
-      {/* The frame, at 390 by 844. On a phone it is the viewport itself; on a
-          desktop it stays a frame for every screen the design file drew only
-          as a phone, because reviewing those at 1440 wide would flatter them
-          dishonestly.
-
-          The piece page is the one exception, and it is an exception on the
-          design's own authority: the file carries 174 artboards at 390 by 844
-          and exactly one at 1280 by 1020, and that one is this page. So the
-          frame opens to the drawn desk size while the piece page is showing
-          and holds the phone for everything else. See pieceDesktop.tsx. */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 16px 64px' }}>
-        <PieceDesktopStyles />
-        <div className="collector-frame" data-wide={view.kind === 'piece' ? '1' : '0'}>
+      {/* Two frames, and only one of them is the product. `card` is the phone
+          at the size it was drawn, floating, for checking the journey against
+          the design file. `full` is the journey filling the screen it was
+          opened on, which is how it is actually used. What each screen size
+          shows is decided in display.tsx, not here. */}
+      <div className="collector-stage" data-frame={frame}>
+        <CollectorDisplay />
+        <div
+          className="collector-frame"
+          data-frame={frame}
+          data-wide={view.kind === 'piece' ? '1' : '0'}
+        >
           {mode === 'wired' && DEV_SHELL
             ? (isValidPublicCode(wiredCode)
                 ? <WiredByCode key={wiredCode} publicCode={wiredCode} />
@@ -270,12 +279,40 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
             : screen}
         </div>
 
+        {/* The one way back out of full, because the harness that normally
+            carries the switch is not on screen there. It belongs to the
+            review shell only: a host that states its own frame never gets it,
+            so nothing of the harness can reach a real collector. */}
+        {chrome !== 'tour' && !frameProp && frame === 'full' && (
+          <button
+            type="button"
+            onClick={() => setFrameState('card')}
+            style={{
+              position: 'fixed',
+              right: 14,
+              bottom: 14,
+              zIndex: 20,
+              border: `1px solid ${C.hairStrong}`,
+              borderRadius: 999,
+              padding: '6px 14px',
+              background: 'rgba(0,0,0,.45)',
+              backdropFilter: 'blur(6px)',
+              fontFamily: F.body,
+              fontSize: 12,
+              color: C.inkQuiet,
+              cursor: 'pointer',
+            }}
+          >
+            Back to review
+          </button>
+        )}
+
         {/* the harness below the phone: dev-mode chips, back/restart, caption,
             source, review notes, the flow starters, and the jump-list
             controls. None of it is part of the design; it exists so every
             surface can be reached and checked. A host page rendering its own
             chrome (chrome="tour") hides all of it and supplies its own. */}
-        {chrome !== 'tour' && (
+        {chrome !== 'tour' && frame === 'card' && (
         <>
         {/* dev-only: run the same screens against the real api.ts. The demo
             mode above stays exactly what it was — Adrian's review vehicle. */}
@@ -329,6 +366,34 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
                 }}
               />
             )}
+          </div>
+        )}
+
+        {/* Looking at it, or using it. The card is the artboard at its drawn
+            size, honest for review and wrong for use; full is the journey with
+            the screen to itself. A host that states its own frame owns it and
+            never sees this. */}
+        {!frameProp && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 14 }}>
+            {(['card', 'full'] as const).map(value => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFrameState(value)}
+                style={{
+                  border: `1px solid ${frame === value ? C.brassEdge : C.hairStrong}`,
+                  borderRadius: 999,
+                  padding: '6px 15px',
+                  background: 'none',
+                  fontFamily: F.body,
+                  fontSize: 12.5,
+                  color: frame === value ? C.brass : C.inkQuiet,
+                  cursor: 'pointer',
+                }}
+              >
+                {value === 'card' ? 'Review it' : 'Use it'}
+              </button>
+            ))}
           </div>
         )}
 

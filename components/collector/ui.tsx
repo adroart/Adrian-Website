@@ -42,8 +42,38 @@ type GroundProps = React.ComponentProps<typeof KitGround> & {
 
 const GROUND_BASE_HUE_DEG = 36; // the espresso room's own amber
 
+/**
+ * The reading column.
+ *
+ * Every screen in the journey was drawn at 390 wide, and a line of type set
+ * across a 1900-wide desk is not that drawing made bigger, it is a different
+ * and worse one. So the ground fills whatever screen it is given and the words
+ * hold a measure inside it, centred. `--cc-measure` is undefined at phone
+ * width, the fallback is the full width the screens already used, and nothing
+ * about the phone changes.
+ *
+ * The piece page is exempt: it has a drawing of its own at desk width and sets
+ * its own measures (see display.tsx). The frame withholds `--cc-measure` from
+ * it rather than this file knowing which screen it is holding.
+ */
+const Column: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      minHeight: 0,
+      width: '100%',
+      maxWidth: 'var(--cc-measure,100%)',
+      marginInline: 'auto',
+    }}
+  >
+    {children}
+  </div>
+);
+
 export const Ground: React.FC<GroundProps> = ({ tint = null, children, ...rest }) => {
-  if (!tint) return <KitGround {...rest}>{children}</KitGround>;
+  if (!tint) return <KitGround {...rest}><Column>{children}</Column></KitGround>;
   const vars = {
     '--ground-warmth': String(Math.min(1, Math.max(0, tint.warmth))),
     '--ground-hue': String(GROUND_BASE_HUE_DEG + tint.hueShiftDeg),
@@ -64,7 +94,7 @@ export const Ground: React.FC<GroundProps> = ({ tint = null, children, ...rest }
               ' transparent 100%)',
           }}
         />
-        {children}
+        <Column>{children}</Column>
       </KitGround>
     </div>
   );

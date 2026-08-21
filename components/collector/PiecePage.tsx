@@ -179,6 +179,10 @@ export const PiecePage: React.FC<Props> = ({
           flex: 1,
           minHeight: 0,
           width: '100%',
+          /* full-screen frame: the ground fills the monitor, the drawing does
+             not. Capped at the width it was drawn, centred; the rest is ground. */
+          maxWidth: 'var(--pp-frame-max,none)',
+          marginInline: 'auto',
           textAlign: 'var(--pp-text,left)' as React.CSSProperties['textAlign'],
         }}
       >
