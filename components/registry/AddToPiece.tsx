@@ -21,12 +21,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CeremonyStyles } from '../ceremony/styles';
 import {
   Area,
   Body,
   Brass,
   C,
+  CeremonyFrame,
   ChoiceRow,
   Eyebrow,
   Foot,
@@ -599,30 +599,7 @@ const AddToPiece: React.FC<{ onStepChange?: (step: Step) => void }> = ({ onStepC
   // while locked, and the write paths re-prompt exactly when the server says.
   void unlockState;
 
-  return (
-    <div
-      className="collector-root"
-      data-marks="0"
-      style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 44px' }}
-    >
-      <CeremonyStyles />
-      <div
-        style={{
-          position: 'relative',
-          width: 390,
-          maxWidth: '100%',
-          height: 'min(780px, max(640px, calc(100vh - 150px)))',
-          borderRadius: 24,
-          overflow: 'hidden',
-          background: C.ground,
-          border: `1px solid ${C.hairStrong}`,
-          boxShadow: '0 32px 64px -24px rgba(0,0,0,.55)',
-        }}
-      >
-        {screen}
-      </div>
-    </div>
-  );
+  return <CeremonyFrame>{screen}</CeremonyFrame>;
 };
 
 export default AddToPiece;
