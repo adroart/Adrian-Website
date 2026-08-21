@@ -17,6 +17,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminAlert, AdminPage, AdminPageHeader, AdminSection, adminUI } from './AdminPage';
+import CustodyEnvelope from './CustodyEnvelope';
 import {
   emptySuccessionRecord,
   fillHandbookBlanks,
@@ -492,6 +493,17 @@ const Succession: React.FC = () => {
                 title="The custody envelope, and the yearly drill"
                 description="Neither can be read from here, so these are your own dates: when the envelope was last built, and when the yearly restore drill was last walked against a scratch database. Typing a date does not verify the act happened; it only stops this page from staying silent about it."
               >
+                {/* Making the envelope sits directly above the date it produces,
+                    so the act and its record are one motion. The date is filled
+                    in for you when it finishes, and still has to be saved, since
+                    the page never records an act on your behalf. */}
+                <CustodyEnvelope
+                  onEnvelopeMade={(date) => setDraft((current) => ({
+                    ...current,
+                    custodyEnvelopeMadeAt: sanitizeSuccessionField(date),
+                  }))}
+                />
+
                 <form onSubmit={saveDraft} className="grid gap-6 max-w-lg">
                   <Field
                     label="Custody envelope last built"

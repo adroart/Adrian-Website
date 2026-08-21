@@ -71,3 +71,55 @@ manifest and run the separate registry recovery qualification before any
 binding change. Do not automatically switch the production binding. A deliberate
 binding change happens only after the restored database and copied encrypted
 plate artifacts have both been verified.
+
+## Custody keys endpoint
+
+`POST /api/admin/custody-keys` is the one route that hands the registry's
+private key material, `REGISTRY_RECOVERY_EXPORT_KEY`, its key id, and every
+`OWNERSHIP_CODE_KEY_V<n>` still configured, to an authenticated admin browser.
+It exists so the custody envelope described in the Successor's Handbook can be
+built from the admin console instead of only from a Terminal script.
+
+**The trust boundary.** The keys travel exactly once, over TLS, to a browser
+that has already completed the registry step-up unlock, the same gate every
+other secret export in this file sits behind. From there, everything happens
+locally: `utils/custodyEnvelope.ts` is isomorphic Web Crypto (PBKDF2, then
+AES-GCM), the same code whether it runs in this endpoint's tests, in Node, or
+in the browser, so the envelope is built and encrypted on the admin's own
+machine. The passphrase that locks the envelope is typed there and never sent
+anywhere, including to this endpoint. Nothing about this design changes what
+the endpoint returns, key material in the clear, over an authenticated
+connection, once, to no-store responses only, which is why every other
+requirement in this document (the step-up gate, fail-closed configuration
+checks, an audit row for every call) applies to it in full.
+
+**The Terminal script is still the offline path.** `~/builds/adrian-website-custody.sh`
+(`/awcustody`) builds an envelope with no website at all, generating fresh
+keys rather than reading the live ones, for when Cloudflare or the site itself
+is gone. Use the website while it exists; keep the script for when it does
+not.
+
+**Why not GET.** A GET request can end up in browser history, a proxy log, or
+a prefetch. This endpoint answers POST only and returns 405 naming `POST` in
+`Allow` for anything else.
+
+**Audit.** Every call, successful or not reaching the point of returning keys,
+is recorded in `registry_maintenance_events` (migration `017`) before the
+response is sent, the same append-only shape the shine-removal and
+stewardship-transfer maintenance actions use. The single Ownership Code reveal
+path (`ownership_code_audit`, migration `010`) was the other candidate, but
+that table's `keeper_piece_id` column is required and tied to one piece; a
+custody export names no piece, so it uses the table already built to carry a
+`NULL` piece for a registry-wide administrative action. The audit row holds
+ids, key versions, and timestamps only, never a key value, so a full read of
+the audit history reveals nothing that helps decrypt anything.
+
+**Rate limiting and single use.** Neither applies here, on purpose. The
+codebase's in-memory rate limiter (`_lib/ratelimit.js`) is used only on
+public, unauthenticated endpoints such as inquiries and viewing requests; no
+admin-gated route in this codebase rate limits itself, because the registry
+step-up unlock already bounds how often a signed-in administrator can reach a
+sensitive route without re-entering the step-up secret (a ten minute token, a
+one hour absolute cap). Adding a separate limiter here would be inventing a
+new pattern rather than following one that exists. The durable record of who
+exported keys and when is the audit row, not a usage cap.
