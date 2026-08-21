@@ -56,10 +56,32 @@ describe('succession desk', () => {
       'Not known here',
       'keeps no record of when the encrypted archive was last downloaded',
       'has no way to check whether it exists',
-      'Nothing here tracks drills',
+      'Nothing here can watch a drill happen',
+      'not something this page verified',
     ]) {
       assert.ok(page.includes(admission), `expected the page to admit: ${admission}`);
     }
+  });
+
+  it('warns prominently, at the top of the succession state, while no custody envelope is recorded', () => {
+    const page = source('components/admin/Succession.tsx');
+    assert.match(page, /!fields\.custodyEnvelopeMadeAt/);
+    assert.match(page, /tone="warning"/);
+    assert.match(page, /the private layer of the registry.*would be gone/s);
+    assert.match(page, /permanent records and the\s+public history would still survive/);
+    assert.match(page, /bash ~\/builds\/adrian-website-custody\.sh/);
+    // The banner sits before the honesty ledger, not after it.
+    const bannerIndex = page.indexOf('No custody envelope has been recorded');
+    const ledgerIndex = page.indexOf('The state of the succession, honestly');
+    assert.ok(bannerIndex > -1 && ledgerIndex > -1 && bannerIndex < ledgerIndex, 'warning banner must precede the honesty ledger section');
+  });
+
+  it('turns the warning into a quiet confirmed line once a date is recorded, and treats the drill less urgently', () => {
+    const page = source('components/admin/Succession.tsx');
+    assert.match(page, /Custody envelope last built/);
+    assert.match(page, /Yearly restore drill last run/);
+    assert.match(page, /fields\.custodyEnvelopeMadeAt \? 'warm' : 'wrong'/);
+    assert.match(page, /fields\.custodyDrillLastRunAt \? 'warm' : 'brass'/);
   });
 
   it('quotes the custody rule and the yearly drill in the handbook\'s own words', () => {
@@ -79,6 +101,14 @@ describe('succession desk', () => {
     }
   });
 
+  it('adds the two custody dates additively in migration 045, nullable, no new table', () => {
+    const migration = source('migrations/045_succession_custody_dates.sql');
+    assert.match(migration, /ALTER TABLE succession_settings ADD COLUMN custody_envelope_made_at TEXT/);
+    assert.match(migration, /ALTER TABLE succession_settings ADD COLUMN custody_drill_last_run_at TEXT/);
+    assert.doesNotMatch(migration, /CREATE TABLE/);
+    assert.doesNotMatch(migration, /NOT NULL/);
+  });
+
   it('gates the settings endpoint behind requireRegistryUnlock, like every other registry-wide export', () => {
     const endpoint = source('functions/api/admin/succession.js');
     assert.match(endpoint, /requireRegistryUnlock/);
@@ -86,6 +116,13 @@ describe('succession desk', () => {
     assert.match(endpoint, /succession_settings/);
     assert.match(endpoint, /REGISTRY_RECOVERY_EXPORT_KEY/);
     assert.match(endpoint, /ARTWORK_REGISTRY_BACKUP/);
+  });
+
+  it('carries the two custody dates through both GET and POST on the settings endpoint', () => {
+    const endpoint = source('functions/api/admin/succession.js');
+    assert.match(endpoint, /custody_envelope_made_at/);
+    assert.match(endpoint, /custody_drill_last_run_at/);
+    assert.match(endpoint, /sanitizeSuccessionRecord/);
   });
 });
 
@@ -143,5 +180,26 @@ describe('utils/adminSuccession pure helpers', () => {
     const { HANDBOOK_SOURCE } = await import('../functions/api/_lib/successorHandbook.js');
     const filled = fillHandbookBlanks(HANDBOOK_SOURCE, emptySuccessionFields);
     assert.equal(filled, HANDBOOK_SOURCE);
+  });
+
+  it('sanitizes the two custody dates the same single-line, capped way as the handbook blanks', async () => {
+    const { sanitizeCustodyFields, emptyCustodyFields } = await import('../utils/adminSuccession.ts');
+    assert.deepEqual(sanitizeCustodyFields(undefined), emptyCustodyFields);
+    assert.deepEqual(
+      sanitizeCustodyFields({ custodyEnvelopeMadeAt: '2026-08-21', custodyDrillLastRunAt: 42 }),
+      { custodyEnvelopeMadeAt: '2026-08-21', custodyDrillLastRunAt: '' },
+    );
+  });
+
+  it('combines the handbook blanks and the custody dates into one settings record', async () => {
+    const { sanitizeSuccessionRecord, emptySuccessionRecord } = await import('../utils/adminSuccession.ts');
+    assert.deepEqual(sanitizeSuccessionRecord(undefined), emptySuccessionRecord);
+    assert.deepEqual(
+      sanitizeSuccessionRecord({ familyContact: 'Jane Doe', custodyEnvelopeMadeAt: '2026-08-21' }),
+      {
+        passkeySealedAt: '', passkeySecondCopyAt: '', familyContact: 'Jane Doe', technicalHelper: '',
+        custodyEnvelopeMadeAt: '2026-08-21', custodyDrillLastRunAt: '',
+      },
+    );
   });
 });

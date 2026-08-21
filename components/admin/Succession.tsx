@@ -18,12 +18,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminAlert, AdminPage, AdminPageHeader, AdminSection, adminUI } from './AdminPage';
 import {
-  emptySuccessionFields,
+  emptySuccessionRecord,
   fillHandbookBlanks,
   sanitizeSuccessionField,
   successionFieldsComplete,
   successionReadiness,
-  type SuccessionFields,
+  type SuccessionRecord,
 } from '../../utils/adminSuccession';
 import { HANDBOOK_SOURCE, renderHandbookMarkdown } from '../../functions/api/_lib/successorHandbook.js';
 
@@ -69,6 +69,8 @@ const RECOVERY_EXPORT_REMEDY = [
   '',
   'Redeploy afterward. Pages Functions only read new values on a fresh deployment.',
 ].join('\n');
+
+const CUSTODY_ENVELOPE_COMMAND = 'bash ~/builds/adrian-website-custody.sh';
 
 const RECORDS_BUCKET_REMEDY = 'The R2 backup bucket is not bound yet. See docs/finish-setup.md, Step 4, to create adrian-artwork-registry-backup and bind it as ARTWORK_REGISTRY_BACKUP.';
 const DRIVE_REMEDY = 'Google Drive sync is not configured yet. See docs/finish-setup.md for GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DRIVE_REFRESH_TOKEN, and the optional GOOGLE_DRIVE_FOLDER_ID.';
@@ -119,11 +121,11 @@ const Succession: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [fields, setFields] = useState<SuccessionFields>(emptySuccessionFields);
+  const [fields, setFields] = useState<SuccessionRecord>(emptySuccessionRecord);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [config, setConfig] = useState<ConfigStatus>(emptyConfigStatus);
 
-  const [draft, setDraft] = useState<SuccessionFields>(emptySuccessionFields);
+  const [draft, setDraft] = useState<SuccessionRecord>(emptySuccessionRecord);
   const [saveBusy, setSaveBusy] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -146,11 +148,13 @@ const Succession: React.FC = () => {
       if (!response.ok || !data?.ok) {
         throw new Error(remedyFor(data?.error, `Could not load the succession state (${response.status}).`));
       }
-      const loadedFields: SuccessionFields = {
+      const loadedFields: SuccessionRecord = {
         passkeySealedAt: data.fields?.passkeySealedAt || '',
         passkeySecondCopyAt: data.fields?.passkeySecondCopyAt || '',
         familyContact: data.fields?.familyContact || '',
         technicalHelper: data.fields?.technicalHelper || '',
+        custodyEnvelopeMadeAt: data.fields?.custodyEnvelopeMadeAt || '',
+        custodyDrillLastRunAt: data.fields?.custodyDrillLastRunAt || '',
       };
       setFields(loadedFields);
       setDraft(loadedFields);
@@ -230,11 +234,13 @@ const Succession: React.FC = () => {
       if (!response.ok || !data?.ok) {
         throw new Error(remedyFor(data?.error, `Could not save (${response.status}).`));
       }
-      const savedFields: SuccessionFields = {
+      const savedFields: SuccessionRecord = {
         passkeySealedAt: data.fields?.passkeySealedAt || '',
         passkeySecondCopyAt: data.fields?.passkeySecondCopyAt || '',
         familyContact: data.fields?.familyContact || '',
         technicalHelper: data.fields?.technicalHelper || '',
+        custodyEnvelopeMadeAt: data.fields?.custodyEnvelopeMadeAt || '',
+        custodyDrillLastRunAt: data.fields?.custodyDrillLastRunAt || '',
       };
       setFields(savedFields);
       setDraft(savedFields);
@@ -345,6 +351,32 @@ const Succession: React.FC = () => {
 
           {!loading && !loadError && (
             <>
+              {!fields.custodyEnvelopeMadeAt && (
+                <AdminAlert tone="warning" live>
+                  <Body size={14}>
+                    No custody envelope has been recorded. The envelope is the one file that carries the
+                    encrypted archive's keys out of Cloudflare, and Cloudflare can never hand those keys back
+                    once they leave. Without it, if this Cloudflare account were ever lost, the encrypted
+                    archive could never be opened again: the private layer of the registry, who holds each
+                    piece and every collector's Ownership Code, would be gone. The permanent records and the
+                    public history would still survive. Only the private layer depends on this one file.
+                  </Body>
+                  <Body size={14} top={10}>Build it, then come back and record the date below.</Body>
+                  <pre
+                    style={{
+                      marginTop: 10,
+                      padding: '10px 14px',
+                      background: 'rgba(0,0,0,0.28)',
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      overflowX: 'auto',
+                    }}
+                  >
+                    {CUSTODY_ENVELOPE_COMMAND}
+                  </pre>
+                </AdminAlert>
+              )}
+
               <AdminSection
                 title="The state of the succession, honestly"
                 description="Every line below is either a real read from this server or an admission that it does not know."
@@ -387,15 +419,34 @@ const Succession: React.FC = () => {
                   the timestamp inside the filename of whichever copy you are holding, registry-private-recovery-
                   &lt;timestamp&gt;.json.
                 </Note>
-                <Ledger label="Whether the custody envelope exists" value={<State tone="quiet">Not known here</State>} />
+                <Ledger
+                  label="Custody envelope"
+                  value={
+                    <State tone={fields.custodyEnvelopeMadeAt ? 'warm' : 'wrong'}>
+                      {fields.custodyEnvelopeMadeAt ? `Recorded, ${fields.custodyEnvelopeMadeAt}` : 'Not recorded'}
+                    </State>
+                  }
+                />
                 <Note top={8}>
-                  The custody envelope is a file you hold offline, apart from this archive. This interface never
+                  The envelope is a file you hold offline, apart from this archive. This interface never
                   receives it and has no way to check whether it exists or which archive it opens.
+                  {fields.custodyEnvelopeMadeAt
+                    ? ' The date above is only your own record that you built it, not something this page verified.'
+                    : ' Nothing has been recorded yet.'}
                 </Note>
-                <Ledger label="When the yearly drill was last run" value={<State tone="quiet">Not known here</State>} />
+                <Ledger
+                  label="Yearly drill"
+                  value={
+                    <State tone={fields.custodyDrillLastRunAt ? 'warm' : 'brass'}>
+                      {fields.custodyDrillLastRunAt ? `Recorded, ${fields.custodyDrillLastRunAt}` : 'Not recorded'}
+                    </State>
+                  }
+                />
                 <Note top={8}>
-                  Nothing here tracks drills. Record the date somewhere durable, such as beside the sealed passkey
-                  itself, when you walk the drill described below.
+                  Nothing here can watch a drill happen.
+                  {fields.custodyDrillLastRunAt
+                    ? ' The date above is only your own record that you walked it, not something this page verified.'
+                    : ' Record the date below once you have walked the drill described further down this page.'}
                 </Note>
               </AdminSection>
 
@@ -427,6 +478,34 @@ const Succession: React.FC = () => {
                     value={draft.technicalHelper}
                     onChange={(value) => setDraft((current) => ({ ...current, technicalHelper: sanitizeSuccessionField(value) }))}
                     hint="Who can follow the restore steps"
+                  />
+                  <div className="flex items-center gap-4">
+                    <Brass onClick={() => void saveDraft()}>{saveBusy ? 'Saving' : 'Save'}</Brass>
+                    {savedAt && <Note>Last saved {new Date(savedAt).toLocaleString()}</Note>}
+                  </div>
+                  {saveError && <Note>{saveError}</Note>}
+                  {saveSuccess && <Note>{saveSuccess}</Note>}
+                </form>
+              </AdminSection>
+
+              <AdminSection
+                title="The custody envelope, and the yearly drill"
+                description="Neither can be read from here, so these are your own dates: when the envelope was last built, and when the yearly restore drill was last walked against a scratch database. Typing a date does not verify the act happened; it only stops this page from staying silent about it."
+              >
+                <form onSubmit={saveDraft} className="grid gap-6 max-w-lg">
+                  <Field
+                    label="Custody envelope last built"
+                    type="date"
+                    value={draft.custodyEnvelopeMadeAt}
+                    onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
+                    hint="When scripts/custody-envelope.ts was last run to make it"
+                  />
+                  <Field
+                    label="Yearly restore drill last run"
+                    type="date"
+                    value={draft.custodyDrillLastRunAt}
+                    onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
+                    hint="When you last walked the drill described further down this page"
                   />
                   <div className="flex items-center gap-4">
                     <Brass onClick={() => void saveDraft()}>{saveBusy ? 'Saving' : 'Save'}</Brass>

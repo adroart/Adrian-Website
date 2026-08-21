@@ -41,6 +41,46 @@ export function sanitizeSuccessionFields(input: Record<string, unknown> | null |
 }
 
 /**
+ * The two dates from migration 045_succession_custody_dates.sql: when the
+ * custody envelope (scripts/custody-envelope.ts) was last built, and when
+ * the yearly restore drill (docs/registry-custodian-guide.md, "The test
+ * drill") was last walked. Neither is a handbook blank -- they never splice
+ * into the rendered handbook -- and neither can be checked by the server, so
+ * they get the same honest treatment as the four fields above: Adrian's own
+ * typed record, sanitized the same single-line, capped way.
+ */
+export type CustodyFields = {
+  custodyEnvelopeMadeAt: string;
+  custodyDrillLastRunAt: string;
+};
+
+export const emptyCustodyFields: CustodyFields = {
+  custodyEnvelopeMadeAt: '',
+  custodyDrillLastRunAt: '',
+};
+
+export function sanitizeCustodyFields(input: Record<string, unknown> | null | undefined): CustodyFields {
+  const source = input ?? {};
+  return {
+    custodyEnvelopeMadeAt: sanitizeSuccessionField(source.custodyEnvelopeMadeAt),
+    custodyDrillLastRunAt: sanitizeSuccessionField(source.custodyDrillLastRunAt),
+  };
+}
+
+/** The whole settings row: the three handbook blanks (four fields) plus the
+ *  two custody dates. One row, one form on the page, one save. */
+export type SuccessionRecord = SuccessionFields & CustodyFields;
+
+export const emptySuccessionRecord: SuccessionRecord = {
+  ...emptySuccessionFields,
+  ...emptyCustodyFields,
+};
+
+export function sanitizeSuccessionRecord(input: Record<string, unknown> | null | undefined): SuccessionRecord {
+  return { ...sanitizeSuccessionFields(input), ...sanitizeCustodyFields(input) };
+}
+
+/**
  * The handbook's own blank lines, matched exactly against the markdown
  * source in functions/api/_lib/successorHandbook.js (generated from
  * docs/registry-custodian-guide.md). If that guide's wording ever changes,
