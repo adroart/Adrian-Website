@@ -4,7 +4,7 @@ status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages Functions, D1, R2, Better Auth, Stripe]
 deploy: https://adrianrasmussen.com
 family: art
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-21
 ---
 
 # Adrian Rasmussen Art Website — personal portfolio + shop

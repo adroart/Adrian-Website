@@ -61,3 +61,6 @@ playwright-report/
 # the collector prototype's build scratch and its output
 .proto-dist/
 collector-prototype.html
+
+# Scratch output from the impeccable design skill
+.impeccable/
