@@ -23,6 +23,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import { C, F } from './tokens';
 import { MARKS_DEFAULT } from './copy';
 import { CollectorStyles } from './styles';
+import { PieceDesktopStyles } from './pieceDesktop';
 import { PiecePage, Relationship } from './PiecePage';
 import { CodePage } from './CodePage';
 import { VaultArrival } from './vaultArrival';
@@ -249,23 +250,19 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
     >
       <CollectorStyles />
 
-      {/* the phone, at 390 by 844. On a phone it is the viewport itself; on a
-          desktop it is a frame, because this surface is drawn for a phone and
-          reviewing it at 1440 wide would flatter it dishonestly. */}
+      {/* The frame, at 390 by 844. On a phone it is the viewport itself; on a
+          desktop it stays a frame for every screen the design file drew only
+          as a phone, because reviewing those at 1440 wide would flatter them
+          dishonestly.
+
+          The piece page is the one exception, and it is an exception on the
+          design's own authority: the file carries 174 artboards at 390 by 844
+          and exactly one at 1280 by 1020, and that one is this page. So the
+          frame opens to the drawn desk size while the piece page is showing
+          and holds the phone for everything else. See pieceDesktop.tsx. */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 16px 64px' }}>
-        <div
-          style={{
-            position: 'relative',
-            width: 390,
-            height: 844,
-            maxWidth: '100%',
-            borderRadius: 34,
-            background: C.ground,
-            border: `1px solid ${C.hairStrong}`,
-            overflow: 'hidden',
-            boxShadow: '0 32px 64px -24px rgba(0,0,0,.7)',
-          }}
-        >
+        <PieceDesktopStyles />
+        <div className="collector-frame" data-wide={view.kind === 'piece' ? '1' : '0'}>
           {mode === 'wired' && DEV_SHELL
             ? (isValidPublicCode(wiredCode)
                 ? <WiredByCode key={wiredCode} publicCode={wiredCode} />

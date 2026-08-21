@@ -163,7 +163,25 @@ export const PiecePage: React.FC<Props> = ({
   }
 
   return (
-    <Ground light={relationship === 'yours' ? 'l' : 'a'} pad="40px 28px 26px" tint={registered ? tint : null}>
+    <Ground
+      light={relationship === 'yours' ? 'l' : 'a'}
+      pad="var(--pp-pad,40px 28px 26px)"
+      tint={registered ? tint : null}
+    >
+      {/* The reading column. At phone width every custom property below is
+          undefined and each fallback is the value this page already had, so
+          the phone renders exactly as before. At desk width the frame defines
+          them and the one drawn wide layout takes over — see pieceDesktop.tsx. */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          textAlign: 'var(--pp-text,left)' as React.CSSProperties['textAlign'],
+        }}
+      >
       {/* the head. Identical in all four. */}
       <div
         style={{
@@ -171,9 +189,10 @@ export const PiecePage: React.FC<Props> = ({
           flex: 'none',
           display: 'flex',
           alignItems: 'center',
-          gap: 13,
+          justifyContent: 'var(--pp-head-justify,flex-start)',
+          gap: 'var(--pp-head-gap,13px)',
           paddingBottom: 13,
-          borderBottom: `1px solid ${C.hairMid}`,
+          borderBottom: `var(--pp-head-border,1px solid ${C.hairMid})`,
         }}
       >
         <Drawing motif="piece" size={40} lit draw label={`${live ? live.identity.title : PIECE.name}, line drawing`} />
@@ -200,7 +219,16 @@ export const PiecePage: React.FC<Props> = ({
           unclaimed case now reads more prominently, at the Begin foot,
           per feedback. */}
       {registered && (
-        <div style={{ position: 'relative', flex: 'none', paddingTop: 8, fontFamily: F.body, fontSize: 11.5, color: C.inkQuiet }}>
+        <div
+          style={{
+            position: 'relative',
+            flex: 'none',
+            paddingTop: 'var(--pp-status-top,8px)',
+            fontFamily: F.body,
+            fontSize: 'var(--pp-status-size,11.5px)',
+            color: C.inkQuiet,
+          }}
+        >
           {COPY.page.statusRegistered}
         </div>
       )}
@@ -210,7 +238,9 @@ export const PiecePage: React.FC<Props> = ({
           wrote them does not show. On the wired page a piece with nothing
           shared simply has no dream block: a quiet absence, never a prompt. */}
       {registered && (live === undefined || liveDream) && (
-        <blockquote style={{ position: 'relative', margin: 0, flex: 'none', paddingTop: 20 }}>
+        <blockquote
+          style={{ position: 'relative', margin: 0, flex: 'none', paddingTop: 'var(--pp-quote-top,20px)' }}
+        >
           <p
             style={{
               margin: 0,
@@ -253,9 +283,11 @@ export const PiecePage: React.FC<Props> = ({
       <div
         style={{
           position: 'relative',
+          width: '100%',
           flex: isCaretaker ? 'none' : '1 1 auto',
-          height: isCaretaker ? 186 : undefined,
-          minHeight: isCaretaker ? undefined : 190,
+          height: isCaretaker ? 'var(--pp-band-max,186px)' : undefined,
+          minHeight: isCaretaker ? undefined : 'var(--pp-band-min,190px)',
+          maxHeight: 'var(--pp-band-max,none)',
           overflow: 'hidden',
         }}
       >
@@ -308,11 +340,15 @@ export const PiecePage: React.FC<Props> = ({
           one surface a person returns to for years. */}
       <div
         className={isCaretaker ? 'collector-scroll' : undefined}
-        style={
-          isCaretaker
-            ? { position: 'relative', flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }
-            : { position: 'relative', flex: 'none' }
-        }
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 'var(--pp-measure,100%)',
+          marginInline: 'auto',
+          ...(isCaretaker
+            ? { flex: '1 1 auto', minHeight: 0, overflowY: 'auto' as const }
+            : { flex: 'none' }),
+        }}
       >
         {/* the certificate IS the piece information: one room, one row, the
             record's preferred label. Everyone opens it; what each viewer
@@ -332,7 +368,7 @@ export const PiecePage: React.FC<Props> = ({
         )}
 
         {/* a link, not a row, because rows open in place and links travel */}
-        <div style={{ paddingTop: 17 }}>
+        <div style={{ paddingTop: 17, textAlign: 'var(--pp-link-align,inherit)' as React.CSSProperties['textAlign'] }}>
           <a
             href="/"
             style={{ fontFamily: F.body, fontSize: 14, color: C.inkQuiet, textDecoration: 'none' }}
@@ -344,6 +380,7 @@ export const PiecePage: React.FC<Props> = ({
 
       {/* the foot: the only part that differs across the four */}
       <Foot relationship={relationship} onBegin={onBegin} onSignIn={onSignIn} onOpenRoom={setRoom} />
+      </div>
     </Ground>
   );
 };
@@ -362,13 +399,13 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
 }) => {
   if (relationship === 'loading') {
     return (
-      <div style={{ position: 'relative', flex: 'none', borderTop: `1px solid ${C.hair}`, height: 96, marginTop: 18 }} />
+      <div style={{ position: 'relative', flex: 'none', borderTop: `1px solid ${C.hair}`, height: 96, marginTop: 'var(--pp-foot-push,18px)' }} />
     );
   }
 
   /* nothing left to claim, and nothing to sign into */
   if (relationship === 'yours') {
-    return <div style={{ position: 'relative', flex: 'none', height: 18 }} />;
+    return <div style={{ position: 'relative', flex: 'none', height: 18, marginTop: 'var(--pp-foot-push,0)' }} />;
   }
 
   /* unclaimed: a lit Begin, the only bright thing on the page. No sign-in link,
@@ -388,6 +425,7 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
           position: 'relative',
           flex: 'none',
           paddingTop: 22,
+          marginTop: 'var(--pp-foot-push,0)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -413,22 +451,51 @@ const Foot: React.FC<{ relationship: Relationship; onBegin?: () => void; onSignI
      is bent here and nowhere else, because it is the only screen where the
      system genuinely does not know who is holding the phone. */
   return (
-    <div style={{ position: 'relative', flex: 'none', paddingTop: 22 }}>
+    <div
+      style={{
+        position: 'relative',
+        flex: 'none',
+        paddingTop: 22,
+        marginTop: 'var(--pp-foot-push,0)',
+        width: '100%',
+        maxWidth: 'var(--pp-measure,100%)',
+        marginInline: 'auto',
+      }}
+    >
+      {/* The two doors. Centred as a pair with a divider between them on the
+          phone; split to the two ends under a hairline at desk width, which is
+          how the wide artboard draws them. Same two doors, same words, same
+          order either way: only where they sit changes. */}
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
+          alignItems: 'var(--pp-foot-items,center)',
+          justifyContent: 'var(--pp-foot-justify,center)',
+          gap: 'var(--pp-foot-gap,16px)',
+          borderTop: 'var(--pp-foot-border,0)',
+          paddingTop: 'var(--pp-foot-top,0)',
+          fontSize: 'var(--pp-foot-size,inherit)',
         }}
       >
-        <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
-          {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
-        </TLink>
-        <span style={{ width: 1, height: 16, background: C.hair, display: 'block' }} />
-        <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
-          {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
-        </TLink>
+        <span style={{ flex: 'var(--pp-foot-flex,0 0 auto)', textAlign: 'left' }}>
+          <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? onBegin : () => onOpenRoom?.('story')}>
+            {relationship === 'signedin' ? COPY.page.doorHold : COPY.page.doorLook}
+          </TLink>
+        </span>
+        <span
+          style={{
+            width: 1,
+            height: 16,
+            background: C.hair,
+            display: 'var(--pp-foot-divider,block)',
+            alignSelf: 'center',
+          }}
+        />
+        <span style={{ flex: 'var(--pp-foot-flex,0 0 auto)', textAlign: 'right' }}>
+          <TLink tone={C.inkBody} onClick={relationship === 'signedin' ? () => onOpenRoom?.('story') : onSignIn}>
+            {relationship === 'signedin' ? COPY.page.doorLook : COPY.page.doorTend}
+          </TLink>
+        </span>
       </div>
       {/* the short line beneath the two doors — Adrian's chosen wording, 2026-08-20 */}
       <div style={{ textAlign: 'center', maxWidth: '40ch', margin: '0 auto' }}>
