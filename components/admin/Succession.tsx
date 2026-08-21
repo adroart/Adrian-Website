@@ -556,7 +556,7 @@ const Succession: React.FC = () => {
                       Nothing here can watch a drill happen.
                       {fields.custodyDrillLastRunAt
                         ? ' The date above is only your own record that you walked it, not something this page verified.'
-                        : ' Record the date in part two once you have walked the drill in part four.'}
+                        : ' Record the date in part two once you have practised opening the archive.'}
                     </Standing>
                   </Group>
                 </Part>
@@ -573,53 +573,76 @@ const Succession: React.FC = () => {
                     }))}
                   />
 
-                  <h3>The four blanks, and the two dates</h3>
-                  <p className="admin-quiet">
-                    The four lines are spliced into the handbook in part four. The two dates are your word that
-                    an act happened. Building an envelope above fills the first date in, and it still has to be
-                    saved.
+                  <h3>Where the paper is, and who to call</h3>
+                  <p className="admin-say">
+                    Building the envelope above gives you six words to write on paper. If you are ever gone,
+                    someone has to find that paper and find a person who can help. These six lines say where and
+                    who, and they print into the handbook in part four.
                   </p>
 
-                  <form onSubmit={saveDraft} className="grid gap-5 mt-8 max-w-xl">
-                    <Field
-                      label="Written and sealed at"
-                      value={draft.passkeySealedAt}
-                      onChange={(value) => setDraft((current) => ({ ...current, passkeySealedAt: sanitizeSuccessionField(value) }))}
-                      hint="Where the first sealed copy is kept"
-                    />
-                    <Field
-                      label="A second sealed copy at"
-                      value={draft.passkeySecondCopyAt}
-                      onChange={(value) => setDraft((current) => ({ ...current, passkeySecondCopyAt: sanitizeSuccessionField(value) }))}
-                      hint="Where the second copy is kept"
-                    />
-                    <Field
-                      label="Family contact for the registry"
-                      value={draft.familyContact}
-                      onChange={(value) => setDraft((current) => ({ ...current, familyContact: sanitizeSuccessionField(value) }))}
-                      hint="Who to reach first"
-                    />
-                    <Field
-                      label="Technical helper who knows this system"
-                      value={draft.technicalHelper}
-                      onChange={(value) => setDraft((current) => ({ ...current, technicalHelper: sanitizeSuccessionField(value) }))}
-                      hint="Who can follow the restore steps"
-                    />
-                    <Field
-                      label="Custody envelope last built"
-                      type="date"
-                      value={draft.custodyEnvelopeMadeAt}
-                      onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
-                      hint="Date it was last built"
-                    />
-                    <Field
-                      label="Yearly restore drill last run"
-                      type="date"
-                      value={draft.custodyDrillLastRunAt}
-                      onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
-                      hint="Date you last walked the drill in part four"
-                    />
-                    <div className="admin-shelf mt-3">
+                  {/* Three small groups rather than six fields in a row. The
+                      labels used to be lifted straight out of the handbook,
+                      which is a legal document and reads like one; on screen
+                      they say what to type, and the hint gives an example,
+                      because an example explains faster than a sentence. */}
+                  <form onSubmit={saveDraft} className="mt-9 max-w-xl">
+                    <div className="admin-group">
+                      <Mark>The paper, in two places</Mark>
+                      <div className="grid gap-5 mt-4">
+                        <Field
+                          label="Where the first paper copy is kept"
+                          value={draft.passkeySealedAt}
+                          onChange={(value) => setDraft((current) => ({ ...current, passkeySealedAt: sanitizeSuccessionField(value) }))}
+                          hint="For example, the safe at home"
+                        />
+                        <Field
+                          label="Where the second paper copy is kept"
+                          value={draft.passkeySecondCopyAt}
+                          onChange={(value) => setDraft((current) => ({ ...current, passkeySecondCopyAt: sanitizeSuccessionField(value) }))}
+                          hint="Somewhere else entirely, for example a bank box"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-group">
+                      <Mark>Two people</Mark>
+                      <div className="grid gap-5 mt-4">
+                        <Field
+                          label="Who to call first"
+                          value={draft.familyContact}
+                          onChange={(value) => setDraft((current) => ({ ...current, familyContact: sanitizeSuccessionField(value) }))}
+                          hint="A name and a phone number"
+                        />
+                        <Field
+                          label="Who can do the technical work"
+                          value={draft.technicalHelper}
+                          onChange={(value) => setDraft((current) => ({ ...current, technicalHelper: sanitizeSuccessionField(value) }))}
+                          hint="A developer, a name and how to reach them"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-group">
+                      <Mark>Two dates you keep yourself</Mark>
+                      <div className="grid gap-5 mt-4">
+                        <Field
+                          label="Custody envelope last built"
+                          type="date"
+                          value={draft.custodyEnvelopeMadeAt}
+                          onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
+                          hint="The day you last pressed the button above"
+                        />
+                        <Field
+                          label="Yearly restore drill last run"
+                          type="date"
+                          value={draft.custodyDrillLastRunAt}
+                          onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
+                          hint="The day you last practised opening the archive"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-shelf mt-8">
                       <Brass onClick={() => void saveDraft()}>{saveBusy ? 'Saving' : 'Save'}</Brass>
                       {savedAt && <Mark>Last saved {new Date(savedAt).toLocaleString()}</Mark>}
                     </div>
