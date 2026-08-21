@@ -65,6 +65,17 @@ export type CollectorShellHandle = {
   jumpTo: (view: View) => void;
 };
 
+/** Keep the address in step with the frame, without a navigation: the link in
+ *  the bar is then always the thing on screen, so it can be copied, bookmarked
+ *  and reopened where it was left. */
+const setFrameParam = (frame: 'card' | 'full'): void => {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  if (frame === 'full') url.searchParams.set('frame', 'full');
+  else url.searchParams.delete('frame');
+  window.history.replaceState({}, '', url);
+};
+
 /** the relationship a jump into `v` implies, exactly as the Flows onStart
  *  handler infers it: entering a room is entering as its keeper, and
  *  restarting at the piece page is entering unclaimed. Every other jump
@@ -84,7 +95,16 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
   const [mode, setMode] = useState<'demo' | 'wired'>('demo');
   /* the review harness can flip between looking at the journey and using it;
      a host that states a frame owns it and the switch does not appear */
-  const [frameState, setFrameState] = useState<'card' | 'full'>('card');
+  const [frameState, setFrameState] = useState<'card' | 'full'>(
+    /* the frame is addressable, so each mode can be linked to and returned to.
+       `?frame=full` opens the journey with the screen to itself; anything else,
+       including no parameter at all, opens the review card. Read once at mount:
+       the switch owns it after that, exactly as `?screen=` works. */
+    () => {
+      if (typeof window === 'undefined') return 'card';
+      return new URLSearchParams(window.location.search).get('frame') === 'full' ? 'full' : 'card';
+    },
+  );
   const frame = frameProp ?? frameState;
   const [wiredCode, setWiredCode] = useState('');
   const [relationship, setRelationship] = useState<Relationship>('unclaimed');
@@ -286,7 +306,10 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
         {chrome !== 'tour' && !frameProp && frame === 'full' && (
           <button
             type="button"
-            onClick={() => setFrameState('card')}
+            onClick={() => {
+              setFrameState('card');
+              setFrameParam('card');
+            }}
             style={{
               position: 'fixed',
               right: 14,
@@ -379,7 +402,10 @@ const CollectorShell = forwardRef<CollectorShellHandle, CollectorShellProps>(fun
               <button
                 key={value}
                 type="button"
-                onClick={() => setFrameState(value)}
+                onClick={() => {
+                  setFrameState(value);
+                  setFrameParam(value);
+                }}
                 style={{
                   border: `1px solid ${frame === value ? C.brassEdge : C.hairStrong}`,
                   borderRadius: 999,
