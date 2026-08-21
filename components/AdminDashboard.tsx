@@ -25,8 +25,12 @@ type AdminOverview = {
   recentCollectors: RecentItem[];
 };
 
+// Registration comes first because it is the act that creates the artwork's
+// permanent identity. The plate is optional and can only be made for a work
+// that already has one, so it follows rather than leads.
 const START_NEW = [
-  { label: 'Issue a plate', description: 'Guided, start to finish', href: '/admin/pieces/wizard' },
+  { label: 'Register an artwork', description: 'Give a work its permanent identity', href: '/admin/register' },
+  { label: 'Issue a plate', description: 'The optional plate, for a work already registered', href: '/admin/pieces/wizard' },
   { label: 'Create invoice', description: 'Price and send new work', href: '/admin/invoices?mode=create' },
   { label: 'Build a viewing', description: 'Prepare a collector presentation', href: '/admin/viewings?mode=create' },
 ];
