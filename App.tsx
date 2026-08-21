@@ -39,6 +39,7 @@ const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
 const RegisterCeremony = lazy(() => import('./components/registry/RegisterCeremony'));
 const AddToPiece = lazy(() => import('./components/registry/AddToPiece'));
+const Succession = lazy(() => import('./components/admin/Succession'));
 const ScreenDevelopment = lazy(() => import('./components/admin/ScreenDevelopment'));
 const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
 const CollectorSales = lazy(() => import('./components/admin/CollectorSales'));
@@ -69,7 +70,6 @@ import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
 import { FULL_ARCHIVE } from './data/mockData';
-import { AdminEmptyState, AdminPage, AdminPageHeader } from './components/admin/AdminPage';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -188,10 +188,7 @@ const SiteShell: React.FC = () => {
               <Route path="artworks/:artworkId" element={<ArtworkWorkspace />} />
               <Route path="artworks/:artworkId/add" element={<AddToPiece />} />
               <Route path="register" element={<RegisterCeremony />} />
-              {/* Succession is being built by another session. This is an
-                  honest placeholder so the Continuity nav entry does not
-                  point at a dead route; it is not the real page. */}
-              <Route path="succession" element={<AdminSuccessionPlaceholder />} />
+              <Route path="succession" element={<Succession />} />
               <Route path="screens" element={<ScreenDevelopment />} />
               {/* The old registration form's address. Verified-sale deep links
                   carry ?artworkId=&artistArtworkRecordId=, so the query string
@@ -258,20 +255,6 @@ const RegistrationsRedirect: React.FC = () => {
   const location = useLocation();
   return <Navigate to={`/admin/register${location.search}`} replace />;
 };
-
-/** Succession is being built in a separate session. This is an honest
- *  placeholder for the Continuity nav entry, not the real page: it says
- *  plainly that the page does not exist yet rather than dead-ending on a
- *  404 or silently omitting the nav entry until the real build lands. */
-const AdminSuccessionPlaceholder: React.FC = () => (
-  <AdminPage>
-    <AdminPageHeader eyebrow="Continuity" title="Succession" />
-    <AdminEmptyState
-      title="Succession is not built yet"
-      description="This page is under active development in a separate session. Nothing lives here yet."
-    />
-  </AdminPage>
-);
 
 /** The atlas moved to mandalacodes.com. Anyone hitting an old /atlas* URL
  *  on adrianrasmussen.com is sent across with a hard browser redirect. */

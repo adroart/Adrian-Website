@@ -30,6 +30,11 @@ import {
   jsonRequest,
   titleFor,
   formatDate,
+  recordLabel,
+  recordHoverText,
+  requestRecordRebuild,
+  summarizeRecordRebuild,
+  summarizeRecordRebuildAll,
   type PieceRow,
 } from '../utils/adminPieces';
 
@@ -213,6 +218,65 @@ const AdminPieces: React.FC = () => {
     }
   };
 
+  const rebuildRecord = async (row: PieceRow) => {
+    if (!row.publicCode) return;
+    if (!registryUnlocked) {
+      setRowError((current) => ({ ...current, [row.id]: 'Unlock the private registry first.' }));
+      return;
+    }
+    setRowBusy(`${row.id}:record-rebuild`);
+    setRowError((current) => ({ ...current, [row.id]: '' }));
+    setRowSuccess((current) => ({ ...current, [row.id]: '' }));
+    try {
+      const data = await requestRecordRebuild('/api/admin/records/rebuild', { publicCode: row.publicCode });
+      const outcome = data.outcomes[0];
+      if (!outcome || outcome.status === 'failed') {
+        setRowError((current) => ({
+          ...current,
+          [row.id]: outcome ? summarizeRecordRebuild(outcome) : 'Record rebuild failed: no outcome reported.',
+        }));
+      } else {
+        setRowSuccess((current) => ({ ...current, [row.id]: summarizeRecordRebuild(outcome) }));
+      }
+      await loadPieces();
+    } catch (error) {
+      const message = registryErrorMessage(error, 'Could not rebuild this record.');
+      setRowError((current) => ({ ...current, [row.id]: message }));
+    } finally {
+      setRowBusy(null);
+    }
+  };
+
+  const [recordsBusy, setRecordsBusy] = useState(false);
+  const [recordsStatus, setRecordsStatus] = useState('');
+  const [recordsFailed, setRecordsFailed] = useState(false);
+
+  const rebuildAllRecords = async () => {
+    if (!registryUnlocked) {
+      setListError('Unlock the private registry first.');
+      return;
+    }
+    if (!window.confirm(
+      'Rebuild the permanent record for every registered piece? This writes two files per '
+      + 'piece and runs as one request; a large registry will take a while. Records that '
+      + 'already match are left unchanged.',
+    )) return;
+    setRecordsBusy(true);
+    setRecordsStatus('');
+    setRecordsFailed(false);
+    try {
+      const data = await requestRecordRebuild('/api/admin/records/rebuild');
+      setRecordsStatus(summarizeRecordRebuildAll(data));
+      setRecordsFailed(data.failed > 0);
+      await loadPieces();
+    } catch (error) {
+      setRecordsStatus(registryErrorMessage(error, 'Could not rebuild the registry’s records.'));
+      setRecordsFailed(true);
+    } finally {
+      setRecordsBusy(false);
+    }
+  };
+
   const runRowAction = async (
     row: PieceRow,
     action: 'backup' | 'reveal' | 'package' | 'prepare-plate',
@@ -363,10 +427,16 @@ const AdminPieces: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()} disabled={!registryUnlocked} title="The offline master record. Online is a mirror you can rebuild from this file.">Download offline ledger</button>
                 <button type="button" className={quietButtonClass} onClick={() => void syncDrive()} disabled={!registryUnlocked} title="Send the offline master ledger to your Google Drive.">Sync to Google Drive</button>
+                <button type="button" className={quietButtonClass} onClick={() => void rebuildAllRecords()} disabled={!registryUnlocked || recordsBusy} title="Regenerate the permanent record for every registered piece. A server-side loop, two storage writes per piece; a large registry takes a while.">{recordsBusy ? 'Rebuilding records…' : 'Rebuild all records'}</button>
                 <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
               </div>
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mb-4" role="status">{driveStatus}</p>}
+            {recordsStatus && (
+              <p className={`font-sans text-sm mb-4 ${recordsFailed ? 'text-red-700' : 'text-wood-600'}`} role={recordsFailed ? 'alert' : 'status'}>
+                {recordsStatus}
+              </p>
+            )}
             <form className="border border-wood-200 bg-paper-50 p-4 mb-4" onSubmit={unlockRegistry}>
               <label className={labelClass} htmlFor="registry-secret">Private registry unlock</label>
               <div className="flex flex-wrap gap-3">
@@ -413,6 +483,10 @@ const AdminPieces: React.FC = () => {
                           <div><dt className="font-semibold">Generated</dt><dd>{formatDate(row.plateGeneratedAt)}</dd></div>
                           <div><dt className="font-semibold">Activated</dt><dd>{formatDate(row.plateActivatedAt)}</dd></div>
                           <div><dt className="font-semibold">Backup reference</dt><dd className="break-all">{row.backupReference || 'Not yet'}</dd></div>
+                          <div>
+                            <dt className="font-semibold">Record</dt>
+                            <dd title={recordHoverText(row.record)}>{recordLabel(row.record)}</dd>
+                          </div>
                         </dl>
                       </div>
                       <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
@@ -424,6 +498,8 @@ const AdminPieces: React.FC = () => {
                             {row.backupStatus === 'verified' && row.recoveryQualification?.status !== 'current' && <Link className={quietButtonClass} to={`/admin/pieces/wizard?${new URLSearchParams({ keeperPieceId: row.id })}`}>Prove copied-file recovery in wizard</Link>}
                             <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
                             <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
+                            <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void rebuildRecord(row)} title={recordHoverText(row.record)}>{rowBusy === `${row.id}:record-rebuild` ? 'Rebuilding…' : 'Rebuild record'}</button>
+                            {row.record && <a className={quietButtonClass} href={`/api/records/${encodeURIComponent(row.publicCode)}`} target="_blank" rel="noreferrer">View record</a>}
                             {row.plateStatus === 'generated' && row.backupStatus === 'verified' && row.recoveryQualification?.status === 'current' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
                           </>
                         )}

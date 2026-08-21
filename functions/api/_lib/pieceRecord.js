@@ -49,6 +49,21 @@ function isMissingTableError(error) {
   return error instanceof Error && /no such table/i.test(error.message);
 }
 
+/**
+ * True when the error is SQLite complaining that `column` does not exist on
+ * the table an INSERT or SELECT just named it in. The two SQLite error
+ * shapes seen in practice: an INSERT with the column in its explicit column
+ * list ("table piece_records has no column named legacy_sections"), and a
+ * reference elsewhere in a statement ("no such column: legacy_sections" or
+ * "no such column: pr.legacy_sections").
+ */
+function isMissingColumnError(error, column) {
+  if (!(error instanceof Error)) return false;
+  const escaped = column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`no column named ${escaped}\\b`, 'i').test(error.message)
+    || new RegExp(`no such column:\\s*(\\w+\\.)?${escaped}\\b`, 'i').test(error.message);
+}
+
 /* ── Canonicalization + hashing (byte-compatible with lineage.js) ───── */
 
 /** Sorted-keys canonical shape, exactly lineage.js stable(). */
@@ -829,6 +844,53 @@ export function pieceRecordR2Key(publicCode, recordHash) {
 }
 
 /**
+ * Insert one piece_records row, recording whether it was built with
+ * includeLegacySections (migration 043's legacy_sections column).
+ *
+ * Degrades on purpose rather than throwing: a database that has not yet run
+ * migration 043 is a real, expected state on a production deploy in the
+ * window between the code landing and the migration being applied by hand
+ * (this is a Cloudflare Pages project; migrations are not auto-applied on
+ * deploy, see the "wrangler d1 migrations apply" note atop every migration
+ * file). Piece Record publication is the one-way door here -- the R2 bytes
+ * are already written-once and verified by the time this runs -- so failing
+ * the whole publish over an administrative bookkeeping column would turn a
+ * successful, irreversible record generation into a reported failure. The
+ * row is written without the column instead; once 043 applies, every
+ * record generated afterward (and only those) carries it. This mirrors
+ * gatherShines' fallback above for the same reason: a column a later
+ * migration adds is not yet guaranteed present everywhere this code runs.
+ */
+async function insertPieceRecordRow(env, {
+  id, publicCode, recordHash, r2Key, trigger, generatedAt, legacySections,
+}) {
+  try {
+    await env.DB.prepare(
+      `INSERT INTO piece_records
+         (id, public_code, record_hash, r2_key, trigger_event, created_at, legacy_sections)
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
+        WHERE NOT EXISTS (
+          SELECT 1 FROM piece_records
+           WHERE public_code = ?2 AND record_hash = ?3
+        )`,
+    ).bind(
+      id, publicCode, recordHash, r2Key, trigger, generatedAt, legacySections ? 1 : 0,
+    ).run();
+  } catch (error) {
+    if (!isMissingColumnError(error, 'legacy_sections')) throw error;
+    await env.DB.prepare(
+      `INSERT INTO piece_records
+         (id, public_code, record_hash, r2_key, trigger_event, created_at)
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6
+        WHERE NOT EXISTS (
+          SELECT 1 FROM piece_records
+           WHERE public_code = ?2 AND record_hash = ?3
+        )`,
+    ).bind(id, publicCode, recordHash, r2Key, trigger, generatedAt).run();
+  }
+}
+
+/**
  * Generate, store write-once in R2 (content-addressed, read back and
  * byte-compared before being reported verified, modeled on
  * identityBackup.js), then insert the append-only piece_records row.
@@ -866,17 +928,15 @@ export async function publishPieceRecord(env, {
       record: built.record, html: built.html,
     };
   }
-  await env.DB.prepare(
-    `INSERT INTO piece_records
-       (id, public_code, record_hash, r2_key, trigger_event, created_at)
-     SELECT ?1, ?2, ?3, ?4, ?5, ?6
-      WHERE NOT EXISTS (
-        SELECT 1 FROM piece_records
-         WHERE public_code = ?2 AND record_hash = ?3
-      )`,
-  ).bind(
-    `pr-${built.recordHash}`, publicCode, built.recordHash, htmlKey, trigger, generatedAt,
-  ).run();
+  await insertPieceRecordRow(env, {
+    id: `pr-${built.recordHash}`,
+    publicCode,
+    recordHash: built.recordHash,
+    r2Key: htmlKey,
+    trigger,
+    generatedAt,
+    legacySections: includeLegacySections,
+  });
   return {
     status: 'verified',
     recordHash: built.recordHash,

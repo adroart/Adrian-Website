@@ -717,6 +717,48 @@ function usePublicRegistryIdentity(
     return [state, () => setAttempt(value => value + 1)];
 }
 
+type RecordProbeState =
+    | { status: 'idle' }
+    | { status: 'checking'; publicCode: string }
+    | { status: 'present'; publicCode: string }
+    | { status: 'absent'; publicCode: string };
+
+/** Probes whether a permanent Piece Record exists for this public code,
+ *  via a cheap HEAD request, so the link below can be offered only when
+ *  the record is actually there. An absent record is never a collector's
+ *  problem, so this never surfaces as an error state, only as no link. */
+function usePublicRecordProbe(publicCode: string | null): RecordProbeState {
+    const [state, setState] = useState<RecordProbeState>(
+        publicCode ? { status: 'checking', publicCode } : { status: 'idle' },
+    );
+
+    useEffect(() => {
+        if (!publicCode) {
+            setState({ status: 'idle' });
+            return;
+        }
+
+        const controller = new AbortController();
+        setState({ status: 'checking', publicCode });
+        fetch(`/api/records/${encodeURIComponent(publicCode)}`, {
+            method: 'HEAD',
+            cache: 'no-store',
+            signal: controller.signal,
+        })
+            .then(response => {
+                if (controller.signal.aborted) return;
+                setState({ status: response.ok ? 'present' : 'absent', publicCode });
+            })
+            .catch(error => {
+                if (error?.name !== 'AbortError') setState({ status: 'absent', publicCode });
+            });
+
+        return () => controller.abort();
+    }, [publicCode]);
+
+    return state;
+}
+
 function PublicIdentityRecord({
     identityState,
     publicCode,
@@ -728,6 +770,10 @@ function PublicIdentityRecord({
     onRetry: () => void;
     headingLevel: 1 | 2;
 }) {
+    const recordProbe = usePublicRecordProbe(
+        identityState.status === 'ready' && identityState.publicCode === publicCode ? publicCode : null,
+    );
+
     if (
         identityState.status === 'idle'
         || identityState.publicCode !== publicCode
@@ -880,6 +926,27 @@ function PublicIdentityRecord({
                                     </li>
                                 ))}
                             </ol>
+                        </div>
+                    )}
+
+                    {recordProbe.status === 'present' && recordProbe.publicCode === publicCode && (
+                        <div className="max-w-md mx-auto mt-10 pt-10 border-t border-wood-100 text-center min-w-0 print:hidden">
+                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5">
+                                Permanent record
+                            </p>
+                            <p className="font-sans text-[13px] leading-relaxed text-wood-600 mb-5">
+                                A single file holding this artwork's identity and the instructions
+                                to verify it. It opens with no internet connection, and it can be
+                                saved anywhere.
+                            </p>
+                            <a
+                                href={`/api/records/${encodeURIComponent(publicCode)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-block font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
+                            >
+                                Open the permanent record
+                            </a>
                         </div>
                     )}
                 </div>

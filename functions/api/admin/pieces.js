@@ -31,7 +31,41 @@ export async function onRequest(context) {
   return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
-function serialize(row, qualification, env) {
+// A year, in whole days, for the staleness judgement below. Not a
+// regulatory figure, just the plain-language "over a year old" the admin
+// desk reads out per piece.
+const RECORD_STALE_AFTER_DAYS = 365;
+
+/**
+ * Project the newest piece_records row for one public code into the shape
+ * the admin desk reads: whether the record is a placeholder or carries its
+ * full lineage and shines sections, how old it is, and whether it is stale
+ * (older than a year, or older than the piece's own newest lineage event,
+ * meaning the registry has moved since the record was last generated).
+ */
+function recordSummary(recordRow) {
+  if (!recordRow) return null;
+  const generatedAt = recordRow.created_at;
+  const generatedMs = Date.parse(generatedAt);
+  const ageDays = Number.isFinite(generatedMs)
+    ? Math.max(0, Math.floor((Date.now() - generatedMs) / 86400000))
+    : null;
+  const olderThanAYear = ageDays !== null && ageDays > RECORD_STALE_AFTER_DAYS;
+  const latestLineageMs = recordRow.latest_lineage_at ? Date.parse(recordRow.latest_lineage_at) : NaN;
+  const olderThanLineage = Number.isFinite(latestLineageMs)
+    && Number.isFinite(generatedMs)
+    && latestLineageMs > generatedMs;
+  return {
+    hash: recordRow.record_hash,
+    generatedAt,
+    trigger: recordRow.trigger_event,
+    legacySections: Boolean(recordRow.legacy_sections),
+    ageDays,
+    stale: Boolean(olderThanAYear || olderThanLineage),
+  };
+}
+
+function serialize(row, qualification, env, recordByPublicCode) {
   const backupStatus = row.backup_status === 'verified' && !plateBackupIsVerified(row)
     ? 'pending'
     : row.backup_status || null;
@@ -58,12 +92,44 @@ function serialize(row, qualification, env) {
       qualification,
       recoveryDependenciesForRow(row, env),
     ),
+    record: row.public_code ? (recordByPublicCode.get(row.public_code) || null) : null,
   };
+}
+
+/**
+ * Newest permanent Piece Record per public code (migrations 037, 043), with
+ * each row's own newest lineage event timestamp alongside it for the
+ * staleness judgement in recordSummary. Kept in its own try/catch, separate
+ * from the Promise.all below: a database that predates migration 037 (no
+ * piece_records table yet) or predates 043 (no legacy_sections column yet)
+ * must still list every piece, just without record state.
+ */
+async function loadNewestRecordsByPublicCode(env) {
+  const recordByPublicCode = new Map();
+  try {
+    const { results } = await env.DB.prepare(
+      `SELECT pr.public_code, pr.record_hash, pr.created_at, pr.trigger_event,
+              pr.legacy_sections,
+              (SELECT MAX(event_at) FROM artwork_lineage_events le
+                WHERE le.keeper_piece_id = kp.id) AS latest_lineage_at
+         FROM piece_records pr
+         JOIN keeper_pieces kp ON kp.public_code = pr.public_code
+        ORDER BY pr.public_code ASC, pr.created_at DESC, pr.id DESC`,
+    ).all();
+    for (const row of results || []) {
+      if (!recordByPublicCode.has(row.public_code)) {
+        recordByPublicCode.set(row.public_code, recordSummary(row));
+      }
+    }
+  } catch (error) {
+    if (!isSchemaMissing(error)) throw error;
+  }
+  return recordByPublicCode;
 }
 
 async function listPieces(env) {
   try {
-    const [{ results }, { results: qualificationRows }] = await Promise.all([
+    const [{ results }, { results: qualificationRows }, recordByPublicCode] = await Promise.all([
       env.DB.prepare(
         `SELECT id, piece_id, edition_number, public_code, plate_status,
                 backup_status, backup_reference, backup_sha256,
@@ -81,6 +147,7 @@ async function listPieces(env) {
           WHERE scope = 'piece' AND result = 'passed' AND copied_artifacts = 1
           ORDER BY qualified_at DESC, id DESC`,
       ).all(),
+      loadNewestRecordsByPublicCode(env),
     ]);
     const latestByPiece = new Map();
     for (const row of qualificationRows || []) {
@@ -94,6 +161,7 @@ async function listPieces(env) {
         row,
         latestByPiece.get(row.id) || null,
         env,
+        recordByPublicCode,
       )),
     });
   } catch (error) {

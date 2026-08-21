@@ -53,6 +53,18 @@ async function mockIdentity(page: import('@playwright/test').Page) {
   });
 }
 
+// The permanent-record probe (a HEAD request) is not what any of these
+// specs are testing, and it should never reach the live network. Absent by
+// default keeps the link hidden; individual tests can override with a more
+// specific route to assert on the present case.
+async function stubRecordProbeAbsent(page: import('@playwright/test').Page) {
+  await page.route('**/api/records/**', route => route.fulfill({ status: 404 }));
+}
+
+test.beforeEach(async ({ page }) => {
+  await stubRecordProbeAbsent(page);
+});
+
 test('a mismatched route is replaced with the canonical server identity route', async ({ page }) => {
   await mockIdentity(page);
   await page.route('**/api/works/MD-905', route => route.fulfill({
