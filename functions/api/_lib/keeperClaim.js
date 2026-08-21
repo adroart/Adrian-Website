@@ -1,11 +1,12 @@
 import { constantTimeEqual } from './admin.js';
-import { hashRecoveryCode } from './keeper.js';
+import { hashRecoveryCode, legacyEnabled } from './keeper.js';
 import {
   claimEvidenceStatement,
   prepareNextLineageEvent,
 } from './lineage.js';
 import { plateBackupIsVerified } from './plateBackup.js';
 import { syncFirstBindCollectorLetters } from './collectorLetters.js';
+import { refreshPieceRecord } from './pieceRecordRefresh.js';
 import {
   identityRecoveryDependenciesForRow,
   identityRecoveryQualificationStatus,
@@ -196,9 +197,31 @@ export async function prepareFirstKeeperBind(env, {
         claimedAt: boundAt,
       },
     },
-    afterCommit: () => syncFirstBindCollectorLetters(env, {
-      keeperPieceId: piece.id,
-      now: boundAt,
-    }),
+    // The bind itself already committed by the time afterCommit runs. The
+    // letters sync and the record refresh are guarded in separate try/catch
+    // blocks so a failure in either can never suppress the other or turn an
+    // already-committed bind into a failure the caller sees.
+    afterCommit: async () => {
+      try {
+        await syncFirstBindCollectorLetters(env, {
+          keeperPieceId: piece.id,
+          now: boundAt,
+        });
+      } catch (error) {
+        console.error('[keeperClaim] collector letters sync failed after first bind:', error?.message);
+      }
+      try {
+        await refreshPieceRecord(env, {
+          publicCode: piece.public_code,
+          trigger: 'bind',
+          generatedAt: boundAt,
+          includeLegacySections: legacyEnabled(),
+        });
+      } catch (error) {
+        // refreshPieceRecord's contract is to never throw, but this belongs
+        // here too in case that contract is ever violated by mistake.
+        console.error('[keeperClaim] piece record refresh threw after first bind:', error?.message);
+      }
+    },
   };
 }

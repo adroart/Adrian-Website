@@ -11,6 +11,8 @@ import {
   recoveryQualificationStatus,
 } from '../../../_lib/recoveryQualification.js';
 import { plateBackupIsVerified } from '../../../_lib/plateBackup.js';
+import { legacyEnabled } from '../../../_lib/keeper.js';
+import { refreshPieceRecord } from '../../../_lib/pieceRecordRefresh.js';
 
 const CONFIRMATIONS = [
   'realMetalQrScanned',
@@ -172,11 +174,26 @@ export async function onRequest({ request, env, params }) {
       }
       return jsonResponse({ ok: false, error: 'activation_conflict' }, 409);
     }
+
+    // The D1 batch above already committed plate_status = 'active'. This is
+    // a one-way door: activation itself must never fail past this point, no
+    // matter what happens to the Piece Record. generatedAt is the same
+    // activatedAt stamp just written, not a fresh Date, so a retried record
+    // publish after a partial failure is byte-identical and lands on the
+    // write-once R2 + UNIQUE(public_code, record_hash) guards instead of
+    // churning a second record for the same activation.
+    const record = await refreshPieceRecord(env, {
+      publicCode: row.public_code,
+      trigger: 'activation',
+      generatedAt: activatedAt,
+      includeLegacySections: legacyEnabled(),
+    });
     return jsonResponse({
       ok: true,
       plateStatus: 'active',
       activatedAt,
       idempotent: false,
+      record,
     });
   } catch {
     return jsonResponse({ ok: false, error: 'activation_failed' }, 500);

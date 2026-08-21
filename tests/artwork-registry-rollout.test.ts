@@ -14,8 +14,20 @@ describe('artwork registry staged rollout', () => {
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'false' }), false);
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'TRUE' }), false);
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'true' }), true);
+      // ARTWORK_REGISTRY_ADMIN_ENABLED='false' is the explicit kill switch:
+      // it must win even when the hardened registry infrastructure is fully
+      // provisioned, which used to make this expression true regardless of
+      // the variable and left the switch with no effect at all.
       assert.equal(registryAdminEnabled({
         ARTWORK_REGISTRY_ADMIN_ENABLED: 'false',
+        DB: {},
+        ARTWORK_REGISTRY_BACKUP: {},
+        REGISTRY_STEP_UP_SECRET: 'configured',
+      }), false);
+      // Unset (no opinion either way) with full infrastructure still falls
+      // through to the infrastructure-ready clause, unaffected by the new
+      // kill-switch checks above it.
+      assert.equal(registryAdminEnabled({
         DB: {},
         ARTWORK_REGISTRY_BACKUP: {},
         REGISTRY_STEP_UP_SECRET: 'configured',
@@ -34,6 +46,10 @@ describe('artwork registry staged rollout', () => {
     LAUNCH_FLAGS.livingLegacy = true;
     try {
       assert.equal(registryAdminEnabled({}), true);
+      // The kill switch wins even over the public launch flag: a canary or
+      // an incident response must be able to shut private admin repair off
+      // without needing to also flip livingLegacy.
+      assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'false' }), false);
     } finally {
       LAUNCH_FLAGS.livingLegacy = prior;
     }

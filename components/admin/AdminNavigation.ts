@@ -5,7 +5,7 @@ export type AdminNavigationItem = {
 };
 
 export type AdminNavigationGroup = {
-  label: 'Home' | 'Artwork' | 'Publishing' | 'Sales' | 'Workshop';
+  label: 'Home' | 'Artwork' | 'Continuity' | 'Publishing' | 'Sales' | 'Workshop';
   items: AdminNavigationItem[];
 };
 
@@ -14,16 +14,13 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
   {
     label: 'Artwork',
     items: [
-      { label: 'Artwork registration', href: '/admin/register' },
-      { label: 'Collector invitations', href: '/admin/invitations' },
-      { label: 'Certificate editor', href: '/admin/certificates' },
-      { label: 'Optional plate wizard', href: '/admin/pieces/wizard' },
-      { label: 'Registry and plates', href: '/admin/pieces' },
-      { label: 'Rehearsal', href: '/admin/rehearsal' },
-      { label: 'Maintenance', href: '/admin/maintenance' },
-      { label: 'Private viewings', href: '/admin/viewings' },
-      { label: 'Artwork stories', href: '/admin/book' },
+      { label: 'Register an artwork', href: '/admin/register' },
+      { label: 'Artworks', href: '/admin/artworks' },
     ],
+  },
+  {
+    label: 'Continuity',
+    items: [{ label: 'Succession', href: '/admin/succession' }],
   },
   {
     label: 'Publishing',
@@ -45,6 +42,7 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
     label: 'Sales',
     items: [
       { label: 'Verified sales', href: '/admin/collector-sales' },
+      { label: 'Private viewings', href: '/admin/viewings' },
       { label: 'Pricing', href: '/admin/pricing' },
       { label: 'Invoices', href: '/admin/invoices' },
     ],

@@ -15,6 +15,8 @@ import {
 import { handleRegistryPlateLifecycle } from '../../../_lib/registryPlateLifecycle.js';
 import { prepareNextLineageEvent } from '../../../_lib/lineage.js';
 import { syncTransferCollectorLetters } from '../../../_lib/collectorLetters.js';
+import { legacyEnabled } from '../../../_lib/keeper.js';
+import { refreshPieceRecord } from '../../../_lib/pieceRecordRefresh.js';
 
 const REQUEST_FIELDS = new Set([
   'action', 'targetEmail', 'transferKind', 'reason', 'idempotencyKey', 'expectedStewardVersion',
@@ -281,7 +283,7 @@ export async function onRequest({ request, env, params }) {
   try {
     row = await env.DB.prepare(
       `SELECT id, piece_id, keeper_user_id, claimed_at, released_at,
-              current_display_location, steward_version
+              current_display_location, steward_version, public_code
          FROM keeper_pieces
         WHERE id = ?1`,
     ).bind(keeperPieceId).first();
@@ -429,6 +431,31 @@ export async function onRequest({ request, env, params }) {
     }
     return jsonResponse(storedReplay);
   }
-  await syncTransferCollectorLetters(env, { transferIntentId });
-  return jsonResponse({ ok: true, replayed: false, eventId: result.eventId, steward: after });
+  // The transfer itself already committed above. syncTransferCollectorLetters
+  // used to be awaited here with nothing catching it, so a throw from it
+  // escaped as a 500 on a transfer that had already landed; both it and the
+  // Piece Record refresh are guarded here so a failure in either can never
+  // turn a committed transfer into an apparent failure. public_code is a
+  // local carried from the SELECT above, deliberately not added to
+  // snapshot()/SNAPSHOT_FIELDS -- that shape is fingerprinted and persisted
+  // in maintenance before/after JSON, and widening it would break
+  // exactReplay against historical events.
+  let letterSyncError = null;
+  try {
+    await syncTransferCollectorLetters(env, { transferIntentId });
+  } catch (error) {
+    letterSyncError = error;
+  }
+  const record = await refreshPieceRecord(env, {
+    publicCode: row.public_code,
+    trigger: 'transfer',
+    generatedAt: transferAt,
+    includeLegacySections: legacyEnabled(),
+  });
+  if (letterSyncError) {
+    console.error('[maintenance/actions] collector letters sync failed after transfer:', letterSyncError?.message);
+  }
+  return jsonResponse({
+    ok: true, replayed: false, eventId: result.eventId, steward: after, record,
+  });
 }

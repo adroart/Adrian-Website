@@ -47,7 +47,7 @@ import {
 } from '../utils/adminPieces';
 
 const inputClass =
-  'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
 const labelClass =
   'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const buttonClass =
@@ -419,7 +419,7 @@ const AdminPlateWizard: React.FC = () => {
 
         {/* ACCESS GATE */}
         {!registryUnlocked ? (
-          <section className="border border-wood-200 bg-white p-6" aria-labelledby="unlock-title">
+          <section className="border border-wood-200 bg-paper-50 p-6" aria-labelledby="unlock-title">
             <h2 id="unlock-title" className="font-title text-xl text-wood-900 mb-2">Unlock the private registry</h2>
             <p className="font-serif text-sm text-wood-600 mb-5">
               Every plate operation needs the registry step-up secret in addition to your signed-in
@@ -446,18 +446,18 @@ const AdminPlateWizard: React.FC = () => {
             </p>
             {deepLinkNote && <p className="font-sans text-sm text-wood-500 mb-4" role="status">{deepLinkNote}</p>}
             {loadError ? (
-              <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{loadError}</p></div>
+              <div className="border border-red-300 bg-paper-50 p-6"><p className="font-sans text-sm text-red-700" role="alert">{loadError}</p></div>
             ) : loading && rows.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
+              <div className="border border-wood-200 bg-paper-50 p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : resumable.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-8 text-center">
+              <div className="border border-wood-200 bg-paper-50 p-8 text-center">
                 <p className="font-serif text-wood-600">
                   No registered artworks are waiting on a plate action.{' '}
                   <Link to="/admin/register" className="text-bronze-700 underline underline-offset-4">Register an artwork</Link> first.
                 </p>
               </div>
             ) : (
-              <div className="border border-wood-200 bg-white divide-y divide-wood-200">
+              <div className="border border-wood-200 bg-paper-50 divide-y divide-wood-200">
                 {resumable.map((row) => {
                   const target = plateWizardStageForPiece(snapshotOf(row));
                   const targetStage = target ? PLATE_WIZARD_STAGES[plateWizardStageIndex(target)] : null;
@@ -512,7 +512,7 @@ const AdminPlateWizard: React.FC = () => {
               </p>
             )}
 
-            <div className="border border-wood-200 bg-white p-5">
+            <div className="border border-wood-200 bg-paper-50 p-5">
               {/* FABRICATE */}
               {stage.key === 'fabricate' && (
                 <div>

@@ -45,7 +45,7 @@ const SPHERE_LABELS: Record<SphereKey, string> = {
 };
 
 const inputClass =
-  'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const ENGINE_BASE_DEFAULT = 'https://mandalacodes.com';
 
@@ -60,7 +60,7 @@ const BoardCard: React.FC<{
 }> = ({ piece, sphere, reason, onChange, onToggleRecommend, onReason }) => (
   <div
     className={`border p-4 transition-colors ${
-      piece.recommended ? 'border-bronze-500 bg-bronze-200/20' : 'border-wood-200 bg-white'
+      piece.recommended ? 'border-bronze-500 bg-bronze-200/20' : 'border-wood-200 bg-paper-50'
     }`}
   >
     <div className="flex items-start justify-between gap-3">
@@ -423,11 +423,11 @@ const AdminViewings: React.FC = () => {
             {listLoading && rows.length === 0 ? (
               <p className="font-sans text-sm text-wood-500">Loading…</p>
             ) : rows.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-8 text-center">
+              <div className="border border-wood-200 bg-paper-50 p-8 text-center">
                 <p className="font-sans text-wood-600">No viewings yet. Build the first one for a collector.</p>
               </div>
             ) : (
-              <div className="border border-wood-200 bg-white divide-y divide-wood-200">
+              <div className="border border-wood-200 bg-paper-50 divide-y divide-wood-200">
                 {rows.map((row) => (
                   <button key={row.id} type="button" onClick={() => openExisting(row)} className="w-full text-left px-5 py-4 hover:bg-paper-100 transition-colors flex items-center justify-between gap-4">
                     <div>
@@ -471,7 +471,7 @@ const AdminViewings: React.FC = () => {
           </ol>
 
           {/* Intake */}
-          <div className="border border-wood-200 bg-white p-5 mb-8">
+          <div className="border border-wood-200 bg-paper-50 p-5 mb-8">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Recipient name</label>
@@ -551,7 +551,7 @@ const AdminViewings: React.FC = () => {
                       />
                     ))}
                   </div>
-                  <div className="mt-6 border border-wood-200 bg-white p-5">
+                  <div className="mt-6 border border-wood-200 bg-paper-50 p-5">
                     <label className={labelClass}>Closing line</label>
                     <input value={closing} onChange={(e) => setClosing(e.target.value)} className={inputClass} />
                   </div>
@@ -559,7 +559,7 @@ const AdminViewings: React.FC = () => {
               )}
 
               {/* Deliver */}
-              <div className="mt-6 border border-wood-200 bg-white p-5 flex items-center gap-4 flex-wrap">
+              <div className="mt-6 border border-wood-200 bg-paper-50 p-5 flex items-center gap-4 flex-wrap">
                 <button type="button" onClick={() => save('draft')} disabled={saving} className="font-label text-[11px] uppercase tracking-[0.16em] text-wood-700 border border-wood-300 px-5 py-2.5 hover:bg-paper-100 disabled:opacity-50 transition-colors">
                   {saving ? 'Saving…' : viewingId ? 'Save changes' : 'Save draft'}
                 </button>

@@ -204,7 +204,7 @@ const AdminPoetry: React.FC = () => {
     };
 
     const fieldLabel = 'font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
-    const fieldInput = 'w-full border border-wood-300 bg-white px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
+    const fieldInput = 'w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
 
     return (
         <AdminPage width="narrow">
@@ -226,7 +226,7 @@ const AdminPoetry: React.FC = () => {
 
                     {/* Editor */}
                     {editing && (
-                        <div className="bg-white border border-wood-200 p-8 mb-10">
+                        <div className="bg-paper-50 border border-wood-200 p-8 mb-10">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold">
                                     {editing === 'new' ? 'New poem' : 'Editing'}
@@ -390,7 +390,7 @@ const AdminPoetry: React.FC = () => {
                             <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-4">All poems</h2>
                             <div className="space-y-2">
                                 {poems.map(poem => (
-                                    <div key={poem.slug} className="bg-white border border-wood-200 px-5 py-4 flex items-center gap-4">
+                                    <div key={poem.slug} className="bg-paper-50 border border-wood-200 px-5 py-4 flex items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-serif text-lg text-wood-900 truncate">{poem.title}</p>
                                             <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5 truncate">

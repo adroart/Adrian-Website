@@ -205,7 +205,7 @@ const PricingCalculator: React.FC = () => {
           </div>
 
           {view === 'calculator' && (
-            <div className="bg-white border border-wood-200">
+            <div className="bg-paper-50 border border-wood-200">
               {/* Inputs */}
               <div className="px-5 py-6 md:px-7 md:py-7 space-y-6">
                 {pieces.length > 0 && (
@@ -214,7 +214,7 @@ const PricingCalculator: React.FC = () => {
                     <select
                       value=""
                       onChange={(e) => e.target.value && loadPiece(e.target.value)}
-                      className="font-sans text-sm text-wood-900 w-full py-2.5 px-3 border border-wood-200 bg-white focus:border-bronze-400 outline-none transition-colors"
+                      className="font-sans text-sm text-wood-900 w-full py-2.5 px-3 border border-wood-200 bg-paper-50 focus:border-bronze-400 outline-none transition-colors"
                     >
                       <option value="">Choose a piece to load its dimensions…</option>
                       {pieces.map((p) => (
@@ -440,7 +440,7 @@ const ReferenceTab: React.FC<{
   const insight = calibrationInsights(quotes);
   if (quotes.length === 0) {
     return (
-      <div className="bg-white border border-wood-200 px-6 py-10 text-center">
+      <div className="bg-paper-50 border border-wood-200 px-6 py-10 text-center">
         <p className="font-sans text-wood-500 leading-relaxed">
           No saved pieces yet. Price a piece on the Calculator tab and save it here, then enter
           what you actually charged. Over time this shows where the formula tracks your intuition
@@ -462,7 +462,7 @@ const ReferenceTab: React.FC<{
   return (
     <div className="space-y-3">
       {insight && (
-        <div className="bg-white border border-bronze-300 px-5 py-5">
+        <div className="bg-paper-50 border border-bronze-300 px-5 py-5">
           <Label className="block mb-3">Calibration · {insight.calibratedCount} pieces</Label>
           <p className="font-sans text-sm text-wood-600 leading-relaxed mb-4">
             On the pieces you've priced, the formula sits within an average of{' '}
@@ -496,7 +496,7 @@ const ReferenceTab: React.FC<{
             ? Math.round(((q.actualPrice - q.suggestedRetail) / q.suggestedRetail) * 100)
             : null;
         return (
-          <div key={q.id} className="bg-white border border-wood-200 px-5 py-4">
+          <div key={q.id} className="bg-paper-50 border border-wood-200 px-5 py-4">
             <div className="flex items-baseline justify-between gap-4 mb-3">
               <h3 className="font-serif text-lg text-wood-900 font-medium">{q.name}</h3>
               <button

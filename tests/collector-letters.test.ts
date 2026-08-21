@@ -721,7 +721,25 @@ describe('collector letters', () => {
     const invitationSource = readFileSync(
       new URL('../functions/api/_lib/artworkInvitations.js', import.meta.url), 'utf8',
     );
-    assert.match(keeperClaimSource, /afterCommit:\s*\(\)\s*=>\s*syncFirstBindCollectorLetters/);
+    // afterCommit now also refreshes the Piece Record (trigger 'bind') on a
+    // first bind, and the two side effects are guarded in separate
+    // try/catch blocks so a failure in either can never suppress the other
+    // or make an already-committed bind look like it failed. The letters
+    // sync itself is proven never-throwing above; this checks the call site
+    // still catches it defensively regardless, and that the record refresh
+    // is not gated behind the letters sync succeeding.
+    assert.match(
+      keeperClaimSource,
+      /afterCommit:\s*async\s*\(\)\s*=>\s*\{\s*try\s*\{\s*await syncFirstBindCollectorLetters/,
+    );
+    assert.match(
+      keeperClaimSource,
+      /\}\s*catch \(error\) \{\s*console\.error\('\[keeperClaim\] collector letters sync failed after first bind:'/,
+    );
+    assert.match(
+      keeperClaimSource,
+      /try\s*\{\s*await refreshPieceRecord\(env, \{\s*publicCode: piece\.public_code,\s*trigger: 'bind'/,
+    );
     assert.match(directBindSource, /await prepared\.afterCommit\(\);[\s\S]*return json\(\{ ok: true/);
     assert.match(invitationSource, /await prepared\.afterCommit\(\);[\s\S]*return prepared\.result/);
   });

@@ -33,6 +33,7 @@ const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const AdminPieces = lazy(() => import('./components/AdminPieces'));
+const ArtworkList = lazy(() => import('./components/admin/ArtworkList'));
 const ArtworkWorkspace = lazy(() => import('./components/admin/ArtworkWorkspace'));
 const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
@@ -68,6 +69,7 @@ import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
 import { FULL_ARCHIVE } from './data/mockData';
+import { AdminEmptyState, AdminPage, AdminPageHeader } from './components/admin/AdminPage';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -181,9 +183,15 @@ const SiteShell: React.FC = () => {
               {/* Private registry staging remains reachable to authenticated
                   admins while the public Living Legacy surface is disabled. */}
               <Route path="pieces" element={<AdminPieces />} />
+              {/* Static routes before the :artworkId catch-all — order matters. */}
+              <Route path="artworks" element={<ArtworkList />} />
               <Route path="artworks/:artworkId" element={<ArtworkWorkspace />} />
               <Route path="artworks/:artworkId/add" element={<AddToPiece />} />
               <Route path="register" element={<RegisterCeremony />} />
+              {/* Succession is being built by another session. This is an
+                  honest placeholder so the Continuity nav entry does not
+                  point at a dead route; it is not the real page. */}
+              <Route path="succession" element={<AdminSuccessionPlaceholder />} />
               <Route path="screens" element={<ScreenDevelopment />} />
               {/* The old registration form's address. Verified-sale deep links
                   carry ?artworkId=&artistArtworkRecordId=, so the query string
@@ -250,6 +258,20 @@ const RegistrationsRedirect: React.FC = () => {
   const location = useLocation();
   return <Navigate to={`/admin/register${location.search}`} replace />;
 };
+
+/** Succession is being built in a separate session. This is an honest
+ *  placeholder for the Continuity nav entry, not the real page: it says
+ *  plainly that the page does not exist yet rather than dead-ending on a
+ *  404 or silently omitting the nav entry until the real build lands. */
+const AdminSuccessionPlaceholder: React.FC = () => (
+  <AdminPage>
+    <AdminPageHeader eyebrow="Continuity" title="Succession" />
+    <AdminEmptyState
+      title="Succession is not built yet"
+      description="This page is under active development in a separate session. Nothing lives here yet."
+    />
+  </AdminPage>
+);
 
 /** The atlas moved to mandalacodes.com. Anyone hitting an old /atlas* URL
  *  on adrianrasmussen.com is sent across with a hard browser redirect. */

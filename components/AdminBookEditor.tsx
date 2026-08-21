@@ -143,7 +143,7 @@ const AdminBookEditor: React.FC = () => {
     };
 
     const fieldLabel = 'font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
-    const fieldInput = 'w-full border border-wood-300 bg-white px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
+    const fieldInput = 'w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
     const proseArea = `${fieldInput} font-serif text-base leading-[1.7] resize-y`;
 
     const editingArt = editing ? artById.get(editing) : undefined;
@@ -170,7 +170,7 @@ const AdminBookEditor: React.FC = () => {
 
                     {/* Editor */}
                     {editing && editingArt && (
-                        <div className="bg-white border border-wood-200 p-8 mb-10">
+                        <div className="bg-paper-50 border border-wood-200 p-8 mb-10">
                             <div className="flex items-center justify-between mb-1">
                                 <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold">
                                     Writing the page for
@@ -294,7 +294,7 @@ const AdminBookEditor: React.FC = () => {
                             </h2>
                             <div className="space-y-2">
                                 {written.map(({ art, entry }) => (
-                                    <div key={art.id} className="bg-white border border-wood-200 px-5 py-4 flex items-center gap-4">
+                                    <div key={art.id} className="bg-paper-50 border border-wood-200 px-5 py-4 flex items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-serif text-lg text-wood-900 truncate">{art.title}</p>
                                             <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5 truncate">

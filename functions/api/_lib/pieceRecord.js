@@ -30,6 +30,12 @@ export const PIECE_RECORD_TRIGGERS = new Set([
   'registration', 'activation', 'bind', 'transfer', 'yearly',
   'contribution', 'attachment', 'on_demand',
 ]);
+// 'yearly' stays in the vocabulary but uncalled: this is a Cloudflare Pages
+// project (see wrangler.toml pages_build_output_dir), so Cron Triggers do
+// not exist here, and the codebase already chose lazy evaluation for the
+// harder version of this exact problem -- see _lib/claimSilence.js:3,
+// "There is no cron." A yearly record refresh would need the same lazy
+// on-touch treatment if it is ever wanted; it does not get one today.
 export const PIECE_RECORD_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;

@@ -36,7 +36,11 @@ describe('admin artwork workspace screen', () => {
 
     assert.match(app, /lazy\(\(\) => import\('\.\/components\/admin\/ArtworkWorkspace'\)\)/);
     assert.match(app, /path="artworks\/:artworkId" element=\{<ArtworkWorkspace\s*\/>\}/);
-    assert.doesNotMatch(navigation, /\/admin\/artworks/);
+    // The list at /admin/artworks is a menu destination, because opening one
+    // artwork is how the desk begins. The workspace beneath it is per record,
+    // so nothing in the menu ever names a single artwork.
+    assert.match(navigation, /href: '\/admin\/artworks'/);
+    assert.doesNotMatch(navigation, /\/admin\/artworks\//);
     assert.match(screen, /<ArtworkWorkspaceHeader/);
     assert.match(screen, /loadArtworkWorkspace\(selector, controller\.signal\)/);
     assert.match(screen, /new AbortController\(\)/);

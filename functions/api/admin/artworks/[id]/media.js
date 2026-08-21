@@ -20,11 +20,7 @@ import {
 import { resolveArtwork } from '../../../_lib/artworkCatalog.js';
 import { legacyEnabled } from '../../../_lib/keeper.js';
 import { admitPieceMedia, listPieceMedia } from '../../../_lib/pieceMedia.js';
-import {
-  buildPieceRecord,
-  canonicalRecordJson,
-  publishPieceRecord,
-} from '../../../_lib/pieceRecord.js';
+import { refreshPieceRecord } from '../../../_lib/pieceRecordRefresh.js';
 
 const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
 const ALLOWED_KINDS = new Set(['photo', 'video']);
@@ -54,40 +50,12 @@ function decodeBase64(value) {
   }
 }
 
-async function latestRecord(env, publicCode) {
-  const row = await env.DB.prepare(
-    `SELECT record_hash FROM piece_records
-      WHERE public_code = ?1
-      ORDER BY created_at DESC, id DESC LIMIT 1`,
-  ).bind(publicCode).first();
-  return row ?? null;
-}
-
-/** Canonical JSON with the caller-supplied stamps held constant (rebuild.js). */
-function substantiveRecordJson(record) {
-  return canonicalRecordJson({ ...record, generatedAt: '', trigger: '' });
-}
-
-async function storedCanonicalRecord(env, publicCode, recordHash) {
-  try {
-    const stored = await env.ARTWORK_REGISTRY_BACKUP.get(
-      `records/${publicCode}/${recordHash}.json`,
-    );
-    if (!stored) return null;
-    const parsed = JSON.parse(await stored.text());
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Regenerate the Piece Record for every registered instance of one artwork
- * with trigger_event 'attachment'. Fail-soft by contract: every failure is an
- * outcome, never a throw. Unchanged content is a clean no-op, compared the
- * same way the records rebuild endpoint compares (ignoring only the two
- * caller-supplied stamps), so attachments that do not alter record content
- * never churn new files.
+ * with trigger_event 'attachment', via the shared refresh helper
+ * (_lib/pieceRecordRefresh.js) so this never diverges from the same
+ * idempotency comparison every other trigger site uses. Fail-soft by
+ * contract: every failure is an outcome, never a throw.
  */
 export async function regenerateArtworkRecords(env, artworkId, generatedAt) {
   let rows = [];
@@ -106,38 +74,9 @@ export async function regenerateArtworkRecords(env, artworkId, generatedAt) {
   const outcomes = [];
   for (const row of rows) {
     const publicCode = String(row.public_code || '');
-    try {
-      const built = await buildPieceRecord(env, {
-        publicCode, trigger: 'attachment', generatedAt, includeLegacySections,
-      });
-      const previous = await latestRecord(env, publicCode);
-      if (previous) {
-        if (previous.record_hash === built.recordHash) {
-          outcomes.push({ publicCode, status: 'unchanged', recordHash: previous.record_hash });
-          continue;
-        }
-        const previousRecord = await storedCanonicalRecord(env, publicCode, previous.record_hash);
-        if (previousRecord
-          && substantiveRecordJson(previousRecord) === substantiveRecordJson(built.record)) {
-          outcomes.push({ publicCode, status: 'unchanged', recordHash: previous.record_hash });
-          continue;
-        }
-      }
-      const published = await publishPieceRecord(env, {
-        publicCode, trigger: 'attachment', generatedAt, includeLegacySections,
-      });
-      if (published.status === 'verified') {
-        outcomes.push({ publicCode, status: 'generated', recordHash: published.recordHash });
-      } else {
-        outcomes.push({ publicCode, status: 'failed', error: 'record_storage_failed' });
-      }
-    } catch (error) {
-      outcomes.push({
-        publicCode,
-        status: 'failed',
-        error: String(error?.code || 'record_generation_failed'),
-      });
-    }
+    outcomes.push(await refreshPieceRecord(env, {
+      publicCode, trigger: 'attachment', generatedAt, includeLegacySections,
+    }));
   }
   return {
     total: outcomes.length,

@@ -3,11 +3,32 @@
  * Everything on every ceremony screen is built from these; nothing here
  * invents a value that is not in the theme from `tokens.ts`.
  *
+ * The kit dresses two kinds of room, told apart by `Ground`'s `cut`. A frame
+ * is the phone: one question per screen, a fixed height, nothing scrolls but a
+ * room's own body. A run is the desk: a flowing page of lists and work, read
+ * in daylight, that scrolls like a page because it is one.
+ *
  * The laws these encode:
  *   Rows open in place; links travel.
- *   Brass appears only on something you can act on, and never shifts with season.
- *   No icons, no emoji, no glyphs. Text and colour only for states.
- *   No count, bar, streak, badge, or any line that asks the caretaker for anything.
+ *   Brass appears only on something you can act on, and never shifts with
+ *   season. A desk holds the same law by other means: one brass act per shelf,
+ *   and every equal neighbour wears Quiet, the same pill cut in hairline.
+ *   No icons, no emoji, no glyphs. Text and colour only for states, and the
+ *   word always carries the meaning; the colour only agrees with it.
+ *   Counts belong to the desk. The old law said no count, bar, streak, or
+ *   badge, because a count is a demand, and the collector is never asked for
+ *   anything. That reason still stands, so a frame never shows one. But the
+ *   desk exists to tell Adrian how much work is waiting, and hiding the number
+ *   from the person the number is for would be piety, not care. Counts are
+ *   allowed in a run, never in a frame.
+ *   Fields are lit in a frame, boxed in a run. When a screen asks one
+ *   question, the lit rule is the only light on the screen and that is the
+ *   point. A desk page holds fourteen fields, and fourteen lights is no light
+ *   at all, so on the desk a field takes a plain hairline box and keeps quiet.
+ *   In a run, the page scrolls, never a child. No admin surface nests a
+ *   RoomBody inside a run's ground. Two scroll containers on one desk means
+ *   the reader has to find the right one before reading, and that is the
+ *   thing being forbidden.
  *
  * The primitives are built by `createCeremonyUI(theme)`, so the same set can
  * be dressed by a sibling theme later. Today there is one theme, espresso, and
@@ -29,43 +50,93 @@ export type CeremonyUIOptions = {
    * nothing and `Flag` renders every string plain.
    */
   isPlaceholder?: (text: string) => boolean;
+
+  /**
+   * Raises the floor under the quietest type. The collector's defaults, 9.5px
+   * Karla in inkQuiet, were drawn for a phone held close at night, and briefly
+   * they read. A desk of twenty admin routes read in daylight is a different
+   * room, and the same ink at the same size fails there. The sizes are inline
+   * styles, so no stylesheet outside can reach them; the raise has to come in
+   * here, as an option. A surface that passes nothing keeps the collector's
+   * defaults exactly.
+   */
+  label?: { size: number; tone: string };
+};
+
+/**
+ * The ground's props, exported so a surface that wraps `Ground` (the registry
+ * kit does) can forward every prop the ground knows, including ones added
+ * after the wrapper was written. A wrapper that re-declares this type by hand
+ * silently drops whatever it did not know about.
+ */
+export type GroundProps = {
+  /** which vignette from the design doc this screen was drawn with */
+  light?: string;
+  /** setup screens carry an extra warm wash under the vignette */
+  wash?: boolean;
+  /** the design doc's own padding for this screen kind */
+  pad?: string;
+  /**
+   * Which kind of room this ground dresses. A frame is the phone: the ground
+   * fills a positioned, fixed-height ancestor and nothing scrolls. A run is
+   * the desk: the ground is a flowing page that grows with its work and
+   * scrolls as one. The paper is the same either way.
+   */
+  cut?: 'frame' | 'run';
+  children: React.ReactNode;
 };
 
 export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions = {}) => {
   const { palette: C, fonts: F } = theme;
   const isPlaceholder = opts.isPlaceholder ?? (() => false);
+  const labelSize = opts.label?.size ?? 9.5;
+  const labelTone = opts.label?.tone ?? theme.palette.inkQuiet;
 
   /* ------------------------------------------------------------------ *
    * The ground
    * ------------------------------------------------------------------ */
 
-  type GroundProps = {
-    /** which vignette from the design doc this screen was drawn with */
-    light?: string;
-    /** setup screens carry an extra warm wash under the vignette */
-    wash?: boolean;
-    /** the design doc's own padding for this screen kind */
-    pad?: string;
-    children: React.ReactNode;
-  };
-
   /**
    * Laid paper, in the dark. Three layers in order: a woven grain, a dot tooth,
    * and a vignette that moves per screen so no two screens light identically.
    * Every layer is pointer-events:none so nothing here eats a tap.
+   *
+   * A frame cut is the phone: absolute inside a positioned, fixed-height
+   * ancestor, its column pinned to the frame so `Spacer` and `Foot` divide the
+   * height between them. A run cut is the desk: the shell sits in the page's
+   * own flow and grows with its work, the paper layers stay absolute inside it
+   * so they cover the whole run, and the column simply flows. In a run there
+   * is no fixed height to divide, so `Spacer` grows nothing and `Foot`'s auto
+   * margin resolves to zero; both stand harmless rather than breaking.
    */
   const Ground: React.FC<GroundProps> = ({
     light = 'a',
     wash = false,
     pad = '52px 30px 30px',
+    cut = 'frame',
     children,
   }) => (
-    <div style={{ position: 'absolute', inset: 0, background: C.ground, overflow: 'hidden' }}>
+    <div
+      style={{
+        ...(cut === 'run'
+          ? { position: 'relative' as const, minHeight: '100%' }
+          : { position: 'absolute' as const, inset: 0 }),
+        background: C.ground,
+        overflow: 'hidden',
+      }}
+    >
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.55, backgroundImage: theme.grain }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.5, backgroundImage: theme.tooth, backgroundSize: '7px 7px' }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: theme.vignettes[light] }} />
       {wash && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: theme.setupWash }} />}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: pad }}>
+      <div
+        style={{
+          ...(cut === 'run' ? { position: 'relative' as const } : { position: 'absolute' as const, inset: 0 }),
+          display: 'flex',
+          flexDirection: 'column',
+          padding: pad,
+        }}
+      >
         {children}
       </div>
     </div>
@@ -75,11 +146,12 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
    * Type
    * ------------------------------------------------------------------ */
 
-  /** Karla, uppercase, tracked. Labels and eyebrows only. */
+  /** Karla, uppercase, tracked. Labels and eyebrows only. The defaults are
+   *  the collector's unless the surface raised the floor with `opts.label`. */
   const Eyebrow: React.FC<{ children: React.ReactNode; tone?: string; size?: number }> = ({
     children,
-    tone = C.inkQuiet,
-    size = 9.5,
+    tone = labelTone,
+    size = labelSize,
   }) => (
     <span
       style={{
@@ -94,9 +166,17 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
     </span>
   );
 
-  /** Cormorant, never under 20px. */
-  const Head: React.FC<{ children: React.ReactNode; size?: number }> = ({ children, size = 33 }) => (
-    <h1
+  /** Cormorant, never under 20px. A frame shows one heading, so `h1` is the
+   *  default; a run is a document with sections, and a second `h1` on the
+   *  same page breaks the heading order for anyone reading by outline, so
+   *  the desk passes `as`. `size` also takes a string, so a run can hand the
+   *  heading a clamp() and let it breathe with the window. */
+  const Head: React.FC<{
+    children: React.ReactNode;
+    size?: number | string;
+    as?: 'h1' | 'h2' | 'h3';
+  }> = ({ children, size = 33, as: As = 'h1' }) => (
+    <As
       style={{
         margin: 0,
         fontFamily: F.display,
@@ -109,7 +189,7 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
       }}
     >
       {children}
-    </h1>
+    </As>
   );
 
   /**
@@ -149,7 +229,7 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
         fontFamily: F.body,
         fontSize: 12.5,
         lineHeight: 1.66,
-        color: C.inkQuiet,
+        color: labelTone,
       }}
     >
       <Flag text={children} />
@@ -193,6 +273,43 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
     </button>
   );
 
+  /**
+   * The same pill as Brass, cut in hairline. This is how the one-brass law
+   * survives the desk: a shelf full of equal acts keeps brass for the one
+   * that matters and dresses the rest in Quiet, so the eye still lands where
+   * it should. `danger` wears the theme's one error tone, because a desk has
+   * destructive acts a phone walk never had, and a destructive act should
+   * look like what it is before it is pressed.
+   */
+  const Quiet: React.FC<{
+    children: React.ReactNode;
+    onClick?: () => void;
+    full?: boolean;
+    danger?: boolean;
+  }> = ({ children, onClick, full = false, danger = false }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: 'none',
+        border: `1px solid ${danger ? C.wrongEdge : C.hairStrong}`,
+        color: danger ? C.wrong : C.inkBody,
+        width: full ? '100%' : undefined,
+        minHeight: 48,
+        padding: '0 34px',
+        borderRadius: 999,
+        fontFamily: F.label,
+        fontSize: 11.5,
+        fontWeight: 700,
+        letterSpacing: '.16em',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  );
+
   /** A text link. Plain, quiet, and it is how you leave. */
   const TLink: React.FC<{ children: React.ReactNode; onClick?: () => void; tone?: string }> = ({
     children,
@@ -224,6 +341,30 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
         flex: 'none',
         marginTop: 'auto',
         paddingTop: 18,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: link ? 'space-between' : 'flex-end',
+        gap: 16,
+      }}
+    >
+      {link}
+      {children}
+    </div>
+  );
+
+  /**
+   * Foot, inverted: the same shelf of acts, standing at the top of its work
+   * instead of pinned to the bottom of a frame. A run has no fixed height for
+   * an auto margin to push against, so the desk's toolbar simply sits where
+   * it is put and keeps Foot's arrangement, the quiet way out on the left and
+   * the acts on the right.
+   */
+  const Deck: React.FC<{ link?: React.ReactNode; children?: React.ReactNode }> = ({ link, children }) => (
+    <div
+      style={{
+        position: 'relative',
+        flex: 'none',
+        paddingBottom: 18,
         display: 'flex',
         alignItems: 'center',
         justifyContent: link ? 'space-between' : 'flex-end',
@@ -352,6 +493,122 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
         {value}
       </span>
     </div>
+  );
+
+  /**
+   * A status word. The word carries the meaning entirely; the tone only
+   * agrees with it, so nothing here is said by colour alone. Four tones,
+   * all already in the theme: quiet for the ordinary, warm for something a
+   * person placed, brass for something waiting on Adrian, and the theme's
+   * one error tone for something wrong. No new colour, because a desk that
+   * invents a fifth state colour has stopped being this room.
+   */
+  const State: React.FC<{
+    children: React.ReactNode;
+    tone?: 'quiet' | 'warm' | 'brass' | 'wrong';
+  }> = ({ children, tone = 'quiet' }) => (
+    <Eyebrow
+      tone={{ quiet: labelTone, warm: C.inkWarm, brass: C.brass, wrong: C.wrong }[tone]}
+    >
+      {children}
+    </Eyebrow>
+  );
+
+  type LineProps = {
+    title: string;
+    /** the quiet second line: a date, a code, a place */
+    meta?: React.ReactNode;
+    /** a State, standing before the action word */
+    state?: React.ReactNode;
+    /** the uppercase word on the right that says what opening does */
+    act?: string;
+    /**
+     * What to render as. A desk list is made of links that travel, so a
+     * router's Link can be handed in here with its own props alongside;
+     * the kit stays ignorant of the router. The default is the button the
+     * phone's rows always were.
+     */
+    as?: React.ElementType;
+    onClick?: () => void;
+    warm?: boolean;
+    last?: boolean;
+  } & Record<string, unknown>;
+
+  /**
+   * The desk's row. Every list in the back end is this shape: a title, some
+   * quiet meta under it, sometimes a state word, and one uppercase word on
+   * the right naming the act. Not a table; a desk does not need a table, it
+   * needs a line per thing. Wears the same `collector-row` class as Row, so
+   * the hover-to-brass rule in the kit's stylesheet reaches it for free.
+   */
+  const Line: React.FC<LineProps> = ({
+    title,
+    meta,
+    state,
+    act = 'Open',
+    as: As = 'button',
+    onClick,
+    warm = false,
+    last = false,
+    ...rest
+  }) => (
+    <As
+      {...(As === 'button' ? { type: 'button' } : null)}
+      onClick={onClick}
+      className="collector-row"
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        gap: 14,
+        width: '100%',
+        background: 'none',
+        border: 0,
+        borderTop: `1px solid ${C.hairMid}`,
+        borderBottom: last ? `1px solid ${C.hairMid}` : undefined,
+        padding: '14px 0',
+        textAlign: 'left' as const,
+        cursor: 'pointer',
+        textDecoration: 'none',
+        fontFamily: F.body,
+        fontSize: 15.5,
+        color: warm ? C.inkWarm : C.inkBody,
+      }}
+      {...rest}
+    >
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: 'block' }}>{title}</span>
+        {meta && (
+          <span
+            style={{
+              display: 'block',
+              paddingTop: 5,
+              fontFamily: F.body,
+              fontSize: 12.5,
+              lineHeight: 1.55,
+              color: labelTone,
+            }}
+          >
+            {meta}
+          </span>
+        )}
+      </span>
+      <span style={{ flex: 'none', display: 'flex', alignItems: 'baseline', gap: 14 }}>
+        {state}
+        <span
+          className="collector-chev"
+          style={{
+            fontFamily: F.label,
+            fontSize: labelSize,
+            letterSpacing: '.16em',
+            textTransform: 'uppercase',
+            color: labelTone,
+          }}
+        >
+          {act}
+        </span>
+      </span>
+    </As>
   );
 
   /* ------------------------------------------------------------------ *
@@ -621,7 +878,15 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
    * A room: the header every opened row wears
    * ------------------------------------------------------------------ */
 
-  const RoomHead: React.FC<{ title: string; onBack?: () => void }> = ({ title, onBack }) => (
+  /** The header every opened row wears. Back renders only when there is a
+   *  back to go to; a desk page that is its own destination passes none and
+   *  gets no dead control. `aside` holds whatever belongs on the right in
+   *  Back's place or beside it, a state word, a quiet act. */
+  const RoomHead: React.FC<{
+    title: string;
+    onBack?: () => void;
+    aside?: React.ReactNode;
+  }> = ({ title, onBack, aside }) => (
     <div
       style={{
         position: 'relative',
@@ -635,13 +900,16 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
       }}
     >
       <span style={{ fontFamily: F.display, fontWeight: 300, fontSize: 26, color: C.ink }}>{title}</span>
-      <button
-        type="button"
-        onClick={onBack}
-        style={{ background: 'none', border: 0, cursor: 'pointer', fontFamily: F.body, fontSize: 13.5, color: C.inkQuiet }}
-      >
-        Back
-      </button>
+      {aside}
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          style={{ background: 'none', border: 0, cursor: 'pointer', fontFamily: F.body, fontSize: 13.5, color: C.inkQuiet }}
+        >
+          Back
+        </button>
+      )}
     </div>
   );
 
@@ -691,9 +959,13 @@ export const createCeremonyUI = (theme: CeremonyTheme, opts: CeremonyUIOptions =
     Note,
     Flag,
     Brass,
+    Quiet,
     TLink,
     Foot,
+    Deck,
     Row,
+    Line,
+    State,
     ChoiceRow,
     Ledger,
     Field,

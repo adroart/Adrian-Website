@@ -1,9 +1,23 @@
 import React from 'react';
+import espresso from '../ceremony/tokens';
+import { createCeremonyUI } from '../ceremony/ui';
+
+/**
+ * The one ceremony UI the admin desk draws with. The label floor is raised on
+ * purpose: the kit's default quiet ink fails AA on this ground in daylight,
+ * and its 9.5px uppercase eyebrow is below the site's own written floor. The
+ * desk reads at 11px in a lifted quiet ink instead.
+ */
+export const adminUI = createCeremonyUI(espresso, {
+  label: { size: 11, tone: '#a39b90' },
+});
+
+const { Head, Body } = adminUI;
 
 export const AdminPage: React.FC<React.PropsWithChildren<{ width?: 'narrow' | 'medium' | 'wide' }>> = ({
   width = 'medium',
   children,
-}) => <div className={`admin-page admin-page-${width}`}>{children}</div>;
+}) => <div className={`admin-page admin-page-${width} collector-root`}>{children}</div>;
 
 export const AdminPageHeader: React.FC<{
   eyebrow?: string;
@@ -14,8 +28,12 @@ export const AdminPageHeader: React.FC<{
   <header className="admin-page-header">
     <div>
       {eyebrow && <p className="admin-eyebrow">{eyebrow}</p>}
-      <h1>{title}</h1>
-      {description && <p>{description}</p>}
+      <Head as="h1" size="clamp(32px, 4vw, 46px)">{title}</Head>
+      {description && (
+        <div style={{ maxWidth: '42rem' }}>
+          <Body size={14} top={12}>{description}</Body>
+        </div>
+      )}
     </div>
     {actions && <div className="admin-page-actions">{actions}</div>}
   </header>
@@ -28,8 +46,8 @@ export const AdminSection: React.FC<React.PropsWithChildren<{ title: string; des
 }) => (
   <section className="admin-section">
     <header>
-      <h2>{title}</h2>
-      {description && <p>{description}</p>}
+      <Head as="h2" size={23}>{title}</Head>
+      {description && <Body size={13} top={7} tone="#a39b90">{description}</Body>}
     </header>
     {children}
   </section>
@@ -55,8 +73,10 @@ export const AdminEmptyState: React.FC<{
   action?: React.ReactNode;
 }> = ({ title, description, action }) => (
   <div className="admin-empty-state">
-    <h3>{title}</h3>
-    <p>{description}</p>
+    <Head as="h3" size={21}>{title}</Head>
+    <div style={{ maxWidth: '32rem', margin: '0 auto' }}>
+      <Body size={13.5} top={9} tone="#a39b90">{description}</Body>
+    </div>
     {action}
   </div>
 );

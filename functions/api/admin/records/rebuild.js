@@ -23,81 +23,26 @@
  *
  * Guarded like every registry-wide admin operation: admin session plus the
  * registry step-up unlock.
+ *
+ * The per-piece build/compare/publish work lives in _lib/pieceRecordRefresh.js
+ * now, shared with every registry-event trigger site; this endpoint is a
+ * thin loop over that helper for 'on_demand' regeneration.
  */
 import { jsonResponse, requireRegistryUnlock, requireDb } from '../../_lib/admin.js';
 import { isMissingTableError, migrationNotApplied, legacyEnabled } from '../../_lib/keeper.js';
-import {
-  buildPieceRecord, canonicalRecordJson, publishPieceRecord,
-} from '../../_lib/pieceRecord.js';
+import { refreshPieceRecord } from '../../_lib/pieceRecordRefresh.js';
 
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 
-async function latestRecord(env, publicCode) {
-  const row = await env.DB.prepare(
-    `SELECT record_hash
-       FROM piece_records
-      WHERE public_code = ?1
-      ORDER BY created_at DESC, id DESC
-      LIMIT 1`,
-  ).bind(publicCode).first();
-  return row ?? null;
-}
-
-/** Canonical JSON of a record with the caller-supplied stamps held constant. */
-function substantiveRecordJson(record) {
-  return canonicalRecordJson({ ...record, generatedAt: '', trigger: '' });
-}
-
-async function storedCanonicalRecord(env, publicCode, recordHash) {
-  try {
-    const stored = await env.ARTWORK_REGISTRY_BACKUP.get(
-      `records/${publicCode}/${recordHash}.json`,
-    );
-    if (!stored) return null;
-    const parsed = JSON.parse(await stored.text());
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
+// Thin wrapper: this endpoint always regenerates with trigger 'on_demand'
+// and reports every piece's outcome, never throwing per-piece (the shared
+// helper's contract), so a missing table now surfaces as a 'failed' outcome
+// on each row rather than aborting the whole batch. The outer try/catch
+// below still exists for the "list every registered piece" query itself.
 async function rebuildOne(env, publicCode, generatedAt, includeLegacySections) {
-  try {
-    const built = await buildPieceRecord(env, {
-      publicCode,
-      trigger: 'on_demand',
-      generatedAt,
-      includeLegacySections,
-    });
-    const previous = await latestRecord(env, publicCode);
-    if (previous) {
-      if (previous.record_hash === built.recordHash) {
-        return { publicCode, status: 'unchanged', recordHash: previous.record_hash };
-      }
-      const previousRecord = await storedCanonicalRecord(env, publicCode, previous.record_hash);
-      if (previousRecord
-        && substantiveRecordJson(previousRecord) === substantiveRecordJson(built.record)) {
-        return { publicCode, status: 'unchanged', recordHash: previous.record_hash };
-      }
-    }
-    const result = await publishPieceRecord(env, {
-      publicCode,
-      trigger: 'on_demand',
-      generatedAt,
-      includeLegacySections,
-    });
-    if (result.status !== 'verified') {
-      return { publicCode, status: 'failed', error: 'record_storage_failed' };
-    }
-    return { publicCode, status: 'generated', recordHash: result.recordHash };
-  } catch (error) {
-    if (isMissingTableError(error)) throw error;
-    return {
-      publicCode,
-      status: 'failed',
-      error: String(error?.code || error?.message || 'record_generation_failed'),
-    };
-  }
+  return refreshPieceRecord(env, {
+    publicCode, trigger: 'on_demand', generatedAt, includeLegacySections,
+  });
 }
 
 export async function onRequest({ request, env }) {

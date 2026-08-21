@@ -56,7 +56,7 @@ const EMPTY_PRESET = {
   isActive: true,
 };
 
-const inputClass = 'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+const inputClass = 'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
 const textareaClass = `${inputClass} min-h-[96px] resize-y leading-relaxed`;
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const PAYMENT_METHOD_ORDER: Record<string, number> = { wise: 1, crypto: 2, bank: 3 };
@@ -552,7 +552,7 @@ const AdminInvoices: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="border border-wood-300 bg-white px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500 hover:text-bronze-800"
+                className="border border-wood-300 bg-paper-50 px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500 hover:text-bronze-800"
               >
                 New invoice
               </button>
@@ -582,7 +582,7 @@ const AdminInvoices: React.FC = () => {
 
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-8">
-              <section className="bg-white border border-wood-200 p-5 md:p-7">
+              <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 flex flex-col gap-2 border-b border-wood-100 pb-5 md:flex-row md:items-end md:justify-between">
                   <div>
                     <h2 className="font-serif text-2xl text-wood-900">Payment options</h2>
@@ -637,7 +637,7 @@ const AdminInvoices: React.FC = () => {
                                 className={`mt-4 w-full border px-3 py-2 font-label text-[11px] uppercase tracking-[0.12em] ${
                                   selected
                                     ? 'border-bronze-600 bg-bronze-600 text-white dark:text-paper-50'
-                                    : 'border-wood-300 bg-white text-wood-700 hover:border-bronze-500'
+                                    : 'border-wood-300 bg-paper-50 text-wood-700 hover:border-bronze-500'
                                 }`}
                               >
                                 {selected ? 'Selected' : 'Use on invoice'}
@@ -701,7 +701,7 @@ const AdminInvoices: React.FC = () => {
                 </div>
               </section>
 
-              <section className="bg-white border border-wood-200 p-5 md:p-7">
+              <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 border-b border-wood-100 pb-5">
                   <h2 className="font-serif text-2xl text-wood-900">Job details</h2>
                   <p className="font-sans text-sm text-wood-600">
@@ -736,7 +736,7 @@ const AdminInvoices: React.FC = () => {
                 </div>
               </section>
 
-              <section className="bg-white border border-wood-200 p-5 md:p-7">
+              <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 flex flex-col gap-3 border-b border-wood-100 pb-5 md:flex-row md:items-end md:justify-between">
                   <div>
                     <h2 className="font-serif text-2xl text-wood-900">Line items</h2>
@@ -774,7 +774,7 @@ const AdminInvoices: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => removeLineItem(index)}
-                          className="self-end border border-wood-300 bg-white px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-red-500 hover:text-red-700"
+                          className="self-end border border-wood-300 bg-paper-50 px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-red-500 hover:text-red-700"
                         >
                           Remove
                         </button>
@@ -821,13 +821,13 @@ const AdminInvoices: React.FC = () => {
                 <button
                   type="button"
                   onClick={addLineItem}
-                  className="mt-4 border border-wood-300 bg-white px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500 hover:text-bronze-800"
+                  className="mt-4 border border-wood-300 bg-paper-50 px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500 hover:text-bronze-800"
                 >
                   Add line item
                 </button>
               </section>
 
-              <section className="bg-white border border-wood-200 p-5 md:p-7">
+              <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 border-b border-wood-100 pb-5">
                   <h2 className="font-serif text-2xl text-wood-900">Payment schedule</h2>
                   <p className="font-sans text-sm text-wood-600">
@@ -912,7 +912,7 @@ const AdminInvoices: React.FC = () => {
             </div>
 
             <aside className="space-y-6">
-              <section className="sticky top-6 border border-wood-200 bg-white p-5">
+              <section className="sticky top-6 border border-wood-200 bg-paper-50 p-5">
                 <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
                   Current step
                 </p>
@@ -953,7 +953,7 @@ const AdminInvoices: React.FC = () => {
                 )}
               </section>
 
-              <section className="border border-wood-200 bg-white p-5">
+              <section className="border border-wood-200 bg-paper-50 p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-serif text-2xl text-wood-900">Recent</h2>
                   <button type="button" onClick={load} className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700">
@@ -989,7 +989,7 @@ const AdminInvoices: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => markPaid(invoice)}
-                            className="mt-2 border border-wood-300 bg-white px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 hover:border-green-600 hover:text-green-700"
+                            className="mt-2 border border-wood-300 bg-paper-50 px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 hover:border-green-600 hover:text-green-700"
                           >
                             ✓ Record payment
                           </button>

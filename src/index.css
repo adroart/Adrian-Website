@@ -870,6 +870,11 @@ html, body {
   background: var(--color-paper-50);
 }
 
+/* The sidebar sits one shade deeper than the desk: the ceremony theme's void
+   under the theme's ground, seamed by a hairline. Raw espresso hex on purpose,
+   because the .dark token remap would hand this always-dark column near-black
+   inks. Nav items are Lora like everything read; brass appears only on the
+   thing under the cursor and the one active rule, and nothing fills. */
 .admin-sidebar {
   position: fixed;
   inset: 0 auto 0 0;
@@ -878,9 +883,9 @@ html, body {
   width: 15rem;
   flex-direction: column;
   overflow-y: auto;
-  border-right: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
-  background: var(--color-wood-900);
-  color: var(--color-paper-50);
+  border-right: 1px solid rgba(237, 233, 226, 0.09);
+  background: #0d0b09;
+  color: #c4beb4;
 }
 
 .admin-mark {
@@ -889,16 +894,16 @@ html, body {
   gap: 0.7rem;
   min-height: 4.75rem;
   padding: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
-  color: inherit;
+  border-bottom: 1px solid rgba(237, 233, 226, 0.09);
+  color: #a39b90;
   font-family: 'Karla', sans-serif;
   font-size: 0.7rem;
-  font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .admin-mark-monogram {
+  color: #ede9e2;
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.55rem;
   font-weight: 500;
@@ -914,51 +919,49 @@ html, body {
 .admin-nav-group + .admin-nav-group { margin-top: 1.5rem; }
 
 .admin-nav-group p {
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.5rem;
   padding: 0 0.75rem;
-  color: var(--color-paper-300);
+  color: #a39b90;
   font-family: 'Karla', sans-serif;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .admin-nav-group a {
   display: block;
   min-height: 2.5rem;
-  padding: 0.65rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-left: 2px solid transparent;
-  color: var(--color-paper-200);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.86rem;
-  line-height: 1.25rem;
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  color: #c4beb4;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.9rem;
+  line-height: 1.3rem;
+  transition: color 160ms ease, border-color 160ms ease;
 }
 
 .admin-nav-group a:hover {
-  color: var(--color-paper-50);
-  background: color-mix(in srgb, var(--color-paper-50) 6%, transparent);
+  color: #d4b88a;
 }
 
 .admin-nav-group a.active {
-  border-left-color: var(--color-bronze-400);
-  color: var(--color-paper-50);
-  background: color-mix(in srgb, var(--color-paper-50) 9%, transparent);
+  border-left-color: #d4b88a;
+  color: #ede9e2;
 }
 
 .admin-account {
   display: grid;
   gap: 0.65rem;
   padding: 1.25rem 1.5rem 1.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.72rem;
+  border-top: 1px solid rgba(237, 233, 226, 0.09);
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.8rem;
 }
 
 .admin-account span {
   overflow: hidden;
-  color: var(--color-paper-300);
+  color: #a39b90;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -966,15 +969,17 @@ html, body {
 .admin-account a,
 .admin-account button {
   width: fit-content;
-  color: var(--color-paper-200);
+  color: #c4beb4;
   transition: color 160ms ease;
 }
 
 .admin-account button { cursor: pointer; }
 .admin-account a:hover,
-.admin-account button:hover { color: var(--color-paper-50); }
+.admin-account button:hover { color: #d4b88a; }
 
 .admin-main {
+  display: grid;
+  grid-template-rows: 1fr;
   min-height: 100vh;
   margin-left: 15rem;
 }
@@ -996,27 +1001,10 @@ html, body {
   gap: 2rem;
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-wood-200);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
 }
 
-.admin-page-header h1 {
-  margin-top: 0.5rem;
-  color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2.5rem, 5vw, 4.25rem);
-  font-weight: 400;
-  letter-spacing: -0.035em;
-  line-height: 0.98;
-}
-
-.admin-page-header h1 + p {
-  max-width: 42rem;
-  margin-top: 0.9rem;
-  color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
+.admin-page-header .admin-eyebrow { margin-bottom: 0.6rem; }
 
 .admin-page-actions {
   display: flex;
@@ -1025,29 +1013,16 @@ html, body {
   gap: 0.75rem;
 }
 
+/* A section is a heading and a rule, never a card. The bordered box this
+   used to draw is the thing the approved design spec forbids. */
 .admin-section {
-  margin-top: 2rem;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid var(--color-wood-200);
-  background: var(--color-paper-50);
+  margin-top: 2.75rem;
 }
 
-.admin-section > header { margin-bottom: 1.5rem; }
-
-.admin-section > header h2 {
-  color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.65rem;
-  font-weight: 500;
-  line-height: 1.15;
-}
-
-.admin-section > header p {
-  margin-top: 0.4rem;
-  color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.85rem;
-  line-height: 1.55;
+.admin-section > header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
 }
 
 .admin-page button,
@@ -1074,51 +1049,44 @@ html, body {
   opacity: 0.52;
 }
 
+/* An alert is the theme's raised sheet with one left rule in the tone. The
+   tone word stays visible beside the message, so status is never carried by
+   colour alone. */
 .admin-alert {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.85rem;
+  align-items: baseline;
   margin: 1rem 0;
   padding: 1rem 1.1rem;
-  border: 1px solid var(--color-wood-300);
-  color: var(--color-wood-800);
-  background: var(--color-paper-100);
-  font-family: 'Karla', sans-serif;
+  border-left: 2px solid rgba(237, 233, 226, 0.13);
+  color: #c4beb4;
+  background: #211a16;
+  font-family: 'Lora', Georgia, serif;
   font-size: 0.86rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .admin-alert-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-family: 'Karla', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.admin-alert-info { border-left: 3px solid var(--color-stone-500); }
-.admin-alert-success { border-left: 3px solid var(--color-bronze-600); }
-.admin-alert-warning { border-left: 3px solid var(--color-bronze-400); }
-.admin-alert-error { border-left: 3px solid var(--color-bronze-800); }
+.admin-alert-info { border-left-color: #a39b90; }
+.admin-alert-info .admin-alert-label { color: #a39b90; }
+.admin-alert-success { border-left-color: #f2e3c4; }
+.admin-alert-success .admin-alert-label { color: #f2e3c4; }
+.admin-alert-warning { border-left-color: #d4b88a; }
+.admin-alert-warning .admin-alert-label { color: #d4b88a; }
+.admin-alert-error { border-left-color: #e0a08a; }
+.admin-alert-error .admin-alert-label { color: #e0a08a; }
 
 .admin-empty-state {
   padding: 3rem 1.5rem;
-  border: 1px dashed var(--color-wood-300);
   text-align: center;
-}
-
-.admin-empty-state h3 {
-  color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.5rem;
-}
-
-.admin-empty-state p {
-  max-width: 32rem;
-  margin: 0.5rem auto 0;
-  color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.86rem;
-  line-height: 1.55;
 }
 
 .admin-dashboard-loading {
@@ -1585,7 +1553,7 @@ textarea.maintenance-input { resize: vertical; }
   width: min(32rem, calc(100% - 2rem));
   padding: 2.5rem;
   border: 1px solid var(--color-wood-200);
-  background: white;
+  background: var(--color-paper-100);
   text-align: center;
 }
 
@@ -1616,12 +1584,15 @@ textarea.maintenance-input { resize: vertical; }
   text-transform: uppercase;
 }
 
+/* Matches the ceremony kit's Eyebrow at the desk's raised floor: 11px Karla
+   in the lifted quiet ink, not brass, because brass marks only what can be
+   acted on. */
 .admin-eyebrow {
-  color: var(--color-bronze-600);
+  color: #a39b90;
   font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
@@ -1651,7 +1622,7 @@ textarea.maintenance-input { resize: vertical; }
     display: block;
     width: 100%;
     height: 100%;
-    background: color-mix(in srgb, var(--color-wood-900) 48%, transparent);
+    background: rgba(13, 11, 9, 0.62);
     cursor: default;
   }
 

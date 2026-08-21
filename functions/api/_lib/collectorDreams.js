@@ -1,3 +1,6 @@
+import { legacyEnabled } from './keeper.js';
+import { refreshPieceRecord } from './pieceRecordRefresh.js';
+
 const DREAM_SCOPES = new Set([
   'self', 'family', 'community', 'planet',
 ]);
@@ -542,6 +545,21 @@ export async function setCollectorDreamSharing(env, input) {
     }
     throw error;
   }
+  // A revoke never removes already-shone words (once-shone-stays-shone,
+  // §6), so only a share -- which may newly publish the dream's words --
+  // ever needs to refresh the Piece Record. The AFTER INSERT trigger on
+  // collector_dream_mutations (migration 029) writes public_shared_at onto
+  // the collector_dreams row synchronously, as part of the same statement
+  // that just committed above, so gatherShines (_lib/pieceRecord.js) is
+  // guaranteed to see it already when the record is rebuilt here.
+  if (action === 'share') {
+    await refreshPieceRecord(env, {
+      keeperPieceId,
+      trigger: 'contribution',
+      generatedAt: input.now,
+      includeLegacySections: legacyEnabled(),
+    });
+  }
   return getCollectorDreamState(env, { userId, keeperPieceId });
 }
 
@@ -633,6 +651,21 @@ export async function setCollectorDreamTier(env, input) {
       throw new Error('version_conflict');
     }
     throw error;
+  }
+  // keep->shine and seal->shine are the only ways to reach here with
+  // tier === 'shine' (current.tier === tier and current.tier === 'shine'
+  // both throw above, and 'keep' is rejected as a target at the top of this
+  // function), and either one may newly publish the dream's words into the
+  // record. keep->seal and every replay/raced path above return without
+  // reaching this line, which is correct: sealing never shines anything,
+  // and a raced loser's own write never committed.
+  if (tier === 'shine') {
+    await refreshPieceRecord(env, {
+      keeperPieceId,
+      trigger: 'contribution',
+      generatedAt: input.now,
+      includeLegacySections: legacyEnabled(),
+    });
   }
   return getCollectorDreamState(env, { userId, keeperPieceId });
 }

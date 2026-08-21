@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { espresso } from '../ceremony/tokens';
-import { createCeremonyUI } from '../ceremony/ui';
+import { createCeremonyUI, type GroundProps } from '../ceremony/ui';
 import { CeremonyStyles } from '../ceremony/styles';
 
 export const theme = espresso;
@@ -48,13 +48,6 @@ export const {
 
 const BaseGround = ui.Ground;
 
-type GroundProps = {
-  light?: string;
-  wash?: boolean;
-  pad?: string;
-  children: React.ReactNode;
-};
-
 /**
  * The ceremony ground, with one addition the collector's copy does not need:
  * the screen's flex column is centred and capped at `--ceremony-measure`, the
@@ -65,6 +58,11 @@ type GroundProps = {
  *
  * The wrapper takes over as the flex item so `Spacer` (flex: 1) and `RoomBody`
  * (flex: 1, its own scroll) keep working exactly as they did.
+ *
+ * The prop type is the kit's own exported `GroundProps`, never re-declared
+ * here, so every prop the ground learns (the `cut` that turns it into a desk
+ * run, whatever comes after) passes through this wrapper untouched instead of
+ * being silently dropped by a stale local copy.
  */
 export const Ground: React.FC<GroundProps> = ({ children, ...rest }) => (
   <BaseGround {...rest}>

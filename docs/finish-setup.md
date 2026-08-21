@@ -36,6 +36,8 @@ Secrets (Production)**. Mark the sensitive ones **Encrypt (Secret)**:
 | `OWNERSHIP_CODE_KEY_V1` | Secret | 32-byte base64 key (step 1) |
 | `OWNERSHIP_CODE_ACTIVE_KEY_VERSION` | Plaintext | `1` |
 | `REGISTRY_STEP_UP_SECRET` | Secret | your unlock value (step 2) |
+| `REGISTRY_RECOVERY_EXPORT_KEY` | Secret | 32-byte base64 key, must be DIFFERENT from OWNERSHIP_CODE_KEY_V1, escrowed outside Cloudflare (step 3) |
+| `REGISTRY_RECOVERY_EXPORT_KEY_ID` | Plaintext | short label like `rk1` (step 3) |
 | `ADMIN_EMAILS` | Plaintext | `sccsclothing@gmail.com,technicianofthesacred@gmail.com` |
 | `ARTWORK_REGISTRY_ADMIN_ENABLED` | Plaintext | `true` |
 | `GOOGLE_DRIVE_REFRESH_TOKEN` | Secret | drive.file refresh token (step 7, optional) |

@@ -36,7 +36,7 @@ import {
 type RegistrySensitiveState = Omit<SensitivePlateState, 'stepUpSecret'>;
 
 const inputClass =
-  'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
 const labelClass =
   'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const buttonClass =
@@ -367,7 +367,7 @@ const AdminPieces: React.FC = () => {
               </div>
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mb-4" role="status">{driveStatus}</p>}
-            <form className="border border-wood-200 bg-white p-4 mb-4" onSubmit={unlockRegistry}>
+            <form className="border border-wood-200 bg-paper-50 p-4 mb-4" onSubmit={unlockRegistry}>
               <label className={labelClass} htmlFor="registry-secret">Private registry unlock</label>
               <div className="flex flex-wrap gap-3">
                 <input ref={unlockInputRef} id="registry-secret" type="password" autoComplete="off" className={`${inputClass} flex-1`} placeholder="Required for private registry operations" />
@@ -379,18 +379,18 @@ const AdminPieces: React.FC = () => {
               {sensitive.revealedOwnershipCode && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state</button>}
             </form>
             {listError ? (
-              <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{listError}</p></div>
+              <div className="border border-red-300 bg-paper-50 p-6"><p className="font-sans text-sm text-red-700" role="alert">{listError}</p></div>
             ) : listLoading && rows.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
+              <div className="border border-wood-200 bg-paper-50 p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : rows.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-8 text-center">
+              <div className="border border-wood-200 bg-paper-50 p-8 text-center">
                 <p className="font-serif text-wood-600">
                   No plate identities have been issued.{' '}
                   <Link to="/admin/register" className="text-bronze-700 underline underline-offset-4">Register an artwork</Link> to begin.
                 </p>
               </div>
             ) : (
-              <div className="border border-wood-200 bg-white divide-y divide-wood-200">
+              <div className="border border-wood-200 bg-paper-50 divide-y divide-wood-200">
                 {rows.map((row) => (
                   <article
                     key={row.id}

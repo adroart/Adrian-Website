@@ -104,7 +104,7 @@ const StepShell: React.FC<React.PropsWithChildren<{
   <article
     className={`border p-5 ${
       status === 'current'
-        ? 'border-bronze-500 bg-white'
+        ? 'border-bronze-500 bg-paper-50'
         : status === 'done'
           ? 'border-wood-200 bg-paper-50'
           : 'border-wood-200 bg-paper-50 opacity-70'

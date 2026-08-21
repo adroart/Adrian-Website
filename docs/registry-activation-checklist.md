@@ -28,9 +28,9 @@ the artwork registry.
 ## 2. Database preparation
 
 - [ ] A dated encrypted pre-migration D1 export exists outside the repository.
-- [ ] All migrations through `022_registry_fulfillment_detachment.sql` pass on a
+- [ ] All migrations through `042_collector_dream_tiers.sql` pass on a
   disposable local database.
-- [ ] Migration 022 has been applied to production before private export.
+- [ ] Migration 042 has been applied to production before private export.
 - [ ] Old dormant fulfillment source IDs, if any, are now opaque `legacy:`
   references without order-table foreign keys.
 - [ ] Focused registry tests, complete unit tests, typecheck, and production
@@ -150,6 +150,10 @@ Use a non-production identity.
 - [ ] Public launch remains off until copied-file recovery, full clean restore,
   physical prototype, and first production activation all pass.
 - [ ] Launch is a deliberate reviewed change, not a side effect of unrelated work.
+- [ ] After the Living Legacy flag is turned on in code, open the registry desk
+  and run "Rebuild all records" to convert all existing records: every record
+  written before the flag was on carries a placeholder saying the living record
+  is not yet published, and this action converts them to reflect the new state.
 - [ ] After launch, the same real QR shows the correct public artwork record.
 - [ ] Public responses contain no Ownership Code, exact amount, private notes,
   steward email, IP address, ciphertext, nonce, or administrator identity.

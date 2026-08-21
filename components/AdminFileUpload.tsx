@@ -54,7 +54,7 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
   };
 
   return (
-    <div className="bg-white border border-wood-200 px-5 py-4">
+    <div className="bg-paper-50 border border-wood-200 px-5 py-4">
       <div className="flex items-center gap-4">
         {isAudio && (
           <button
@@ -194,7 +194,7 @@ const AdminFileUpload: React.FC = () => {
           </p>
 
           {/* Upload form */}
-          <div className="bg-white border border-wood-200 p-8 mb-10">
+          <div className="bg-paper-50 border border-wood-200 p-8 mb-10">
             <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-6">Upload</h2>
             <div className="space-y-5">
               <div>
@@ -218,7 +218,7 @@ const AdminFileUpload: React.FC = () => {
                   value={filename}
                   onChange={e => setFilename(e.target.value)}
                   placeholder="river-poem.mp3"
-                  className="w-full border border-wood-300 bg-white px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400"
+                  className="w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400"
                 />
               </div>
               {uploadError && <p className="font-sans text-sm text-red-600">{uploadError}</p>}

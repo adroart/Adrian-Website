@@ -44,17 +44,26 @@ export function legacyEnabled() {
  * This remains separate from the compile-time public flag so a canary can be
  * issued and recovery-tested without exposing collector claims. Once the
  * hardened private registry infrastructure is provisioned, administrators keep
- * repair access even if the temporary rollout variable is absent or stale.
+ * repair access even if the rollout variable is absent or stale -- ADMIN_ENABLED
+ * unset is not a signal either way, it just means nobody has set it.
+ *
+ * ARTWORK_REGISTRY_ADMIN_ENABLED='false' is the one explicit kill switch:
+ * it must win over every other clause here, including a fully provisioned
+ * environment. Before this check existed, setting the variable to 'false'
+ * did nothing at all once infrastructure was ready, because the
+ * infrastructure-ready clause made the whole expression true regardless --
+ * it looked like a control and was not one.
  */
 export function registryAdminEnabled(env) {
+  const setting = env?.ARTWORK_REGISTRY_ADMIN_ENABLED;
+  if (setting === 'false') return false;
+  if (setting === 'true') return true;
   const infrastructureReady = Boolean(
     env?.DB
     && env?.ARTWORK_REGISTRY_BACKUP
     && env?.REGISTRY_STEP_UP_SECRET,
   );
-  return legacyEnabled()
-    || env?.ARTWORK_REGISTRY_ADMIN_ENABLED === 'true'
-    || infrastructureReady;
+  return legacyEnabled() || infrastructureReady;
 }
 
 /** Graceful 503 when the shared D1 migration 008 has not been applied yet. */

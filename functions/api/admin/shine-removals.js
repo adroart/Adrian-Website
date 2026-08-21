@@ -36,7 +36,7 @@ import {
   maintenanceMutationFingerprint,
   normalizeReason,
 } from '../_lib/registryMaintenance.js';
-import { buildPieceRecord, publishPieceRecord } from '../_lib/pieceRecord.js';
+import { refreshPieceRecord } from '../_lib/pieceRecordRefresh.js';
 
 const EVENT_TYPE = 'shine_removal';
 
@@ -56,52 +56,23 @@ function serializeRemoval(row) {
   };
 }
 
-async function publicCodeFor(env, keeperPieceId) {
-  const row = await env.DB.prepare(
-    'SELECT public_code FROM keeper_pieces WHERE id = ?1',
-  ).bind(keeperPieceId).first();
-  return row?.public_code ?? null;
-}
-
 /**
  * Regenerate the Piece Record for one keeper piece with trigger_event
- * 'on_demand', fail-soft: any exception becomes a failed outcome, never a
- * thrown error. Narrows the same idempotent generate-or-unchanged shape used
- * by admin/records/rebuild.js and admin/artworks/[id]/media.js to a single
- * already-known piece.
+ * 'on_demand', through the shared refresh helper (_lib/pieceRecordRefresh.js).
+ *
+ * This used to carry its own copy of the compare step, and that copy was
+ * bugged: it only ever compared previous.record_hash === built.recordHash.
+ * Because generatedAt sits inside the hashed record, that equality is
+ * essentially never true across two calls made at different times, so every
+ * shine removal churned a new record file even when nothing substantive had
+ * changed. The shared helper carries the same substantive-comparison
+ * fallback admin/records/rebuild.js always had (ignoring generatedAt and
+ * trigger), which is the fix.
  */
 async function regenerateOne(env, keeperPieceId, generatedAt) {
-  const publicCode = await publicCodeFor(env, keeperPieceId);
-  if (!publicCode) return { publicCode: null, status: 'skipped' };
-  if (!env.ARTWORK_REGISTRY_BACKUP) {
-    return { publicCode, status: 'failed', error: 'records_bucket_not_configured' };
-  }
-  try {
-    const includeLegacySections = legacyEnabled();
-    const built = await buildPieceRecord(env, {
-      publicCode, trigger: 'on_demand', generatedAt, includeLegacySections,
-    });
-    const previous = await env.DB.prepare(
-      `SELECT record_hash FROM piece_records
-        WHERE public_code = ?1 ORDER BY created_at DESC, id DESC LIMIT 1`,
-    ).bind(publicCode).first();
-    if (previous?.record_hash === built.recordHash) {
-      return { publicCode, status: 'unchanged', recordHash: previous.record_hash };
-    }
-    const result = await publishPieceRecord(env, {
-      publicCode, trigger: 'on_demand', generatedAt, includeLegacySections,
-    });
-    if (result.status !== 'verified') {
-      return { publicCode, status: 'failed', error: 'record_storage_failed' };
-    }
-    return { publicCode, status: 'generated', recordHash: result.recordHash };
-  } catch (error) {
-    return {
-      publicCode,
-      status: 'failed',
-      error: String(error?.code || error?.message || 'record_generation_failed'),
-    };
-  }
+  return refreshPieceRecord(env, {
+    keeperPieceId, trigger: 'on_demand', generatedAt, includeLegacySections: legacyEnabled(),
+  });
 }
 
 async function handleGet(request, env) {

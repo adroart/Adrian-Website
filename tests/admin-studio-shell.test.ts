@@ -11,25 +11,24 @@ describe('admin studio shell', () => {
       ADMIN_NAVIGATION.map(group => [group.label, group.items.map(item => item.label)]),
       [
         ['Home', ['Studio overview']],
-        ['Artwork', [
-          'Artwork registration',
-          'Collector invitations',
-          'Certificate editor',
-          'Optional plate wizard',
-          'Registry and plates',
-          'Rehearsal',
-          'Maintenance',
-          'Private viewings',
-          'Artwork stories',
-        ]],
+        ['Artwork', ['Register an artwork', 'Artworks']],
+        ['Continuity', ['Succession']],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
         // Where the collector journey is looked at while it is being built.
         // The address lives on a permanent branch and nowhere else, so this
         // entry is the only place it is written down.
         ['Workshop', ['Screen development system']],
-        ['Sales', ['Verified sales', 'Pricing', 'Invoices']],
+        ['Sales', ['Verified sales', 'Private viewings', 'Pricing', 'Invoices']],
       ],
     );
+  });
+
+  it('keeps the Workshop group present so the permanent-branch address is never silently dropped', async () => {
+    const { ADMIN_NAVIGATION } = await import('../components/admin/AdminNavigation.ts');
+    const workshop = ADMIN_NAVIGATION.find(group => group.label === 'Workshop');
+    assert.ok(workshop, 'Workshop group must exist in the admin navigation');
+    assert.deepEqual(workshop?.items.map(item => item.label), ['Screen development system']);
+    assert.deepEqual(workshop?.items.map(item => item.href), ['/admin/screens']);
   });
 
   it('uses one nested authenticated shell instead of wrapping every tool', () => {

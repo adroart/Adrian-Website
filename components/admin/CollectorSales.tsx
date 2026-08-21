@@ -74,7 +74,7 @@ class WorkspaceRequestError extends Error {
   constructor(public status: number, public code: string) { super(code); }
 }
 
-const inputClass = 'mt-2 block min-h-11 w-full rounded-none border border-wood-300 bg-white px-3 py-2 font-sans text-base text-wood-900';
+const inputClass = 'mt-2 block min-h-11 w-full rounded-none border border-wood-300 bg-paper-50 px-3 py-2 font-sans text-base text-wood-900';
 const labelClass = 'block font-sans text-base font-semibold text-wood-800';
 const buttonPrimary = 'collector-button-primary text-base! disabled:cursor-not-allowed';
 const buttonSecondary = 'collector-button-secondary text-base! disabled:cursor-not-allowed';

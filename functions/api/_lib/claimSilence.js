@@ -41,6 +41,8 @@ import {
 } from './registryMaintenance.js';
 import { prepareNextLineageEvent } from './lineage.js';
 import { syncTransferCollectorLetters } from './collectorLetters.js';
+import { legacyEnabled } from './keeper.js';
+import { refreshPieceRecord } from './pieceRecordRefresh.js';
 
 export const SILENCE_WINDOW_DAYS = 30;
 export const SILENCE_REMINDER_SCHEDULE = [
@@ -370,6 +372,16 @@ async function executeSilencePass(db, env, { piece, window }, now) {
     if (transferIntentId) {
       await syncTransferCollectorLetters({ ...env, DB: db }, { transferIntentId });
     }
+    // Deterministic generatedAt (the stored deadline, not now()): every
+    // invocation of finalize() for this window -- the original pass and any
+    // later replay converging on the same receipt -- builds the identical
+    // record, so a raced or retried pass never churns a second record file.
+    await refreshPieceRecord({ ...env, DB: db }, {
+      keeperPieceId,
+      trigger: 'transfer',
+      generatedAt: transferAt,
+      includeLegacySections: legacyEnabled(),
+    });
     const pieceLabel = `${piece.piece_id} · ${piece.edition_number}`;
     const stewardEmail = await stewardEmailFor(db, piece.keeper_user_id);
     const claimantEmail = typeof window.requester_email === 'string'

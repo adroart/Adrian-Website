@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from '../../lib/account/authClient';
 import { ADMIN_NAVIGATION } from './AdminNavigation';
+import { CeremonyStyles } from '../ceremony/styles';
+import { adminUI } from './AdminPage';
+
+const { Ground } = adminUI;
 
 type AdminIdentity = { id: string; email: string };
 type LocationLike = { pathname: string; search: string; hash: string };
@@ -11,7 +15,7 @@ export function adminReturnDestination(location: LocationLike): string {
 }
 
 const AdminForbidden: React.FC<{ onSignOut: () => Promise<void> }> = ({ onSignOut }) => (
-  <div className="admin-access-state">
+  <div className="admin-access-state dark">
     <div className="admin-access-card">
       <p className="admin-eyebrow">Adrian Rasmussen Studio</p>
       <h1>Administrator access required</h1>
@@ -106,13 +110,14 @@ const AdminShell: React.FC = () => {
   };
 
   if (checking) {
-    return <div className="admin-shell-loading" role="status" aria-label="Checking administrator session" />;
+    return <div className="admin-shell-loading dark" role="status" aria-label="Checking administrator session" />;
   }
   if (forbidden) return <AdminForbidden onSignOut={logout} />;
   if (!admin) return null;
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell dark">
+      <CeremonyStyles />
       <button
         ref={menuButtonRef}
         className="admin-menu-button"
@@ -131,7 +136,7 @@ const AdminShell: React.FC = () => {
           onClick={() => setMenuOpen(false)}
         />
       )}
-      <aside ref={sidebarRef} id="admin-navigation" className={menuOpen ? 'admin-sidebar dark-preserve is-open' : 'admin-sidebar dark-preserve'}>
+      <aside ref={sidebarRef} id="admin-navigation" className={menuOpen ? 'admin-sidebar is-open' : 'admin-sidebar'}>
         <Link to="/admin" className="admin-mark" aria-label="Adrian Rasmussen Studio home">
           <span className="admin-mark-monogram">AR</span>
           <span>Studio</span>
@@ -154,7 +159,11 @@ const AdminShell: React.FC = () => {
           <button type="button" onClick={() => void logout()}>Sign out</button>
         </div>
       </aside>
-      <main className="admin-main" id="admin-main-content"><Outlet /></main>
+      <main className="admin-main collector-root" id="admin-main-content" data-marks="0">
+        <Ground cut="run" light="l" pad="0">
+          <Outlet />
+        </Ground>
+      </main>
     </div>
   );
 };
