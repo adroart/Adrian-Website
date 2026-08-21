@@ -23,6 +23,10 @@ describe('admin studio shell', () => {
           'Artwork stories',
         ]],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
+        // Where the collector journey is looked at while it is being built.
+        // The address lives on a permanent branch and nowhere else, so this
+        // entry is the only place it is written down.
+        ['Workshop', ['Screen development system']],
         ['Sales', ['Verified sales', 'Pricing', 'Invoices']],
       ],
     );

@@ -38,6 +38,7 @@ const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
 const RegisterCeremony = lazy(() => import('./components/registry/RegisterCeremony'));
 const AddToPiece = lazy(() => import('./components/registry/AddToPiece'));
+const ScreenDevelopment = lazy(() => import('./components/admin/ScreenDevelopment'));
 const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
 const CollectorSales = lazy(() => import('./components/admin/CollectorSales'));
 const CertificateEditor = lazy(() => import('./components/admin/CertificateEditor'));
@@ -183,6 +184,7 @@ const SiteShell: React.FC = () => {
               <Route path="artworks/:artworkId" element={<ArtworkWorkspace />} />
               <Route path="artworks/:artworkId/add" element={<AddToPiece />} />
               <Route path="register" element={<RegisterCeremony />} />
+              <Route path="screens" element={<ScreenDevelopment />} />
               {/* The old registration form's address. Verified-sale deep links
                   carry ?artworkId=&artistArtworkRecordId=, so the query string
                   travels with the redirect. */}

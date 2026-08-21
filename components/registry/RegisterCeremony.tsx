@@ -20,13 +20,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CeremonyStyles } from '../ceremony/styles';
 import {
   Body,
   Brass,
   C,
   CodeBlock,
   Capsule,
+  CeremonyFrame,
   ChoiceRow,
   Eyebrow,
   Field,
@@ -1011,30 +1011,7 @@ const RegisterCeremony: React.FC<{ onStepChange?: (step: Step) => void }> = ({ o
     );
   }
 
-  return (
-    <div
-      className="collector-root"
-      data-marks="0"
-      style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 44px' }}
-    >
-      <CeremonyStyles />
-      <div
-        style={{
-          position: 'relative',
-          width: 390,
-          maxWidth: '100%',
-          height: 'min(780px, max(640px, calc(100vh - 150px)))',
-          borderRadius: 24,
-          overflow: 'hidden',
-          background: C.ground,
-          border: `1px solid ${C.hairStrong}`,
-          boxShadow: '0 32px 64px -24px rgba(0,0,0,.55)',
-        }}
-      >
-        {screen}
-      </div>
-    </div>
-  );
+  return <CeremonyFrame>{screen}</CeremonyFrame>;
 };
 
 export default RegisterCeremony;

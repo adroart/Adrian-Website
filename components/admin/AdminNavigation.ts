@@ -5,7 +5,7 @@ export type AdminNavigationItem = {
 };
 
 export type AdminNavigationGroup = {
-  label: 'Home' | 'Artwork' | 'Publishing' | 'Sales';
+  label: 'Home' | 'Artwork' | 'Publishing' | 'Sales' | 'Workshop';
   items: AdminNavigationItem[];
 };
 
@@ -32,6 +32,14 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
       { label: 'Poetry', href: '/admin/poetry' },
       { label: 'Media', href: '/admin/files' },
     ],
+  },
+  {
+    /* Where the collector journey is looked at while it is being built. It is
+       a separate build on a permanent branch, and this entry is the only place
+       its address is written down: without it the link lives in a branch name
+       nobody remembers six weeks later. */
+    label: 'Workshop',
+    items: [{ label: 'Screen development system', href: '/admin/screens' }],
   },
   {
     label: 'Sales',
