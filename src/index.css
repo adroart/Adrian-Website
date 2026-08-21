@@ -1049,19 +1049,26 @@ html, body {
   opacity: 0.52;
 }
 
-/* An alert is the theme's raised sheet with one left rule in the tone. The
-   tone word stays visible beside the message, so status is never carried by
-   colour alone. */
+/* An alert is the theme's raised sheet, lit at its top corner in the tone.
+   It carried a hard rule down its left edge and that rule was the sharpest
+   thing on a page with no other sharp edges. The tone word stays visible
+   beside the message, so status is never carried by colour alone. */
 .admin-alert {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.85rem;
   align-items: baseline;
   margin: 1rem 0;
-  padding: 1rem 1.1rem;
-  border-left: 2px solid rgba(237, 233, 226, 0.13);
+  padding: 1.05rem 1.25rem;
+  border-radius: 4px;
   color: #c4beb4;
-  background: #211a16;
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgba(237, 233, 226, 0.05), transparent 60%),
+    #251e18;
+  box-shadow:
+    inset 0 1px 0 rgba(237, 233, 226, 0.07),
+    inset 0 0 0 1px rgba(237, 233, 226, 0.05),
+    0 14px 32px -24px rgba(0, 0, 0, 0.9);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.86rem;
   line-height: 1.55;
@@ -1075,13 +1082,24 @@ html, body {
   text-transform: uppercase;
 }
 
-.admin-alert-info { border-left-color: #a39b90; }
 .admin-alert-info .admin-alert-label { color: #a39b90; }
-.admin-alert-success { border-left-color: #f2e3c4; }
+
+.admin-alert-success {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(242, 227, 196, 0.11), transparent 60%), #251e18;
+  box-shadow: inset 0 1px 0 rgba(242, 227, 196, 0.11), inset 0 0 0 1px rgba(242, 227, 196, 0.08), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
+}
 .admin-alert-success .admin-alert-label { color: #f2e3c4; }
-.admin-alert-warning { border-left-color: #d4b88a; }
+
+.admin-alert-warning {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(212, 184, 138, 0.13), transparent 60%), #251d15;
+  box-shadow: inset 0 1px 0 rgba(212, 184, 138, 0.13), inset 0 0 0 1px rgba(212, 184, 138, 0.09), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
+}
 .admin-alert-warning .admin-alert-label { color: #d4b88a; }
-.admin-alert-error { border-left-color: #e0a08a; }
+
+.admin-alert-error {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(224, 160, 138, 0.14), transparent 60%), #201310;
+  box-shadow: inset 0 1px 0 rgba(224, 160, 138, 0.14), inset 0 0 0 1px rgba(224, 160, 138, 0.10), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
+}
 .admin-alert-error .admin-alert-label { color: #e0a08a; }
 
 
@@ -1181,15 +1199,22 @@ html, body {
    height would only draw a long empty tail under the shorter one. */
 .admin-board-top { align-items: start; }
 
-/* Lifted off the ground by a shade and half a pixel of light along the top,
-   the same way the ceremony kit's brass button sits on its own ground. The
-   panel has to read as raised at a glance or the whole organisation of the
-   page collapses back into one column. */
+/* A panel is told apart by its own ground and by the light falling across
+   its top corner. No rule, no border, no hard edge: three real values, not
+   three tints of one, and the corner bloom does the separating that a bar
+   used to do badly. The word inside always says the same thing the ground
+   says, so nothing here is carried by colour alone. */
 .admin-panel {
-  padding: 1.3rem 1.45rem 1.45rem;
-  border-left: 2px solid rgba(237, 233, 226, 0.22);
-  background: #262019;
-  box-shadow: inset 0 1px 0 rgba(237, 233, 226, 0.05);
+  position: relative;
+  padding: 1.35rem 1.45rem 1.5rem;
+  border-radius: 4px;
+  background:
+    radial-gradient(125% 90% at 0% 0%, rgba(237, 233, 226, 0.055), transparent 56%),
+    #2b241d;
+  box-shadow:
+    inset 0 1px 0 rgba(237, 233, 226, 0.09),
+    inset 0 0 0 1px rgba(237, 233, 226, 0.04),
+    0 16px 36px -24px rgba(0, 0, 0, 0.95);
 }
 
 .admin-panel > .admin-eyebrow {
@@ -1197,17 +1222,30 @@ html, body {
   margin: 0 0 0.9rem;
 }
 
-/* Brass: there is something here to do. The wash is a hint, never the
-   message; the label beside it always says the same thing in words. */
+/* Brass: something here to do. It stands a shade above the reading panel
+   and catches more of the light, the way the one lit thing in a dark room
+   does. */
 .admin-panel-act {
-  border-left-color: #d4b88a;
-  background: linear-gradient(90deg, rgba(212, 184, 138, 0.07), rgba(212, 184, 138, 0) 45%), #262019;
+  background:
+    radial-gradient(130% 95% at 0% 0%, rgba(212, 184, 138, 0.15), transparent 58%),
+    #2f2719;
+  box-shadow:
+    inset 0 1px 0 rgba(242, 227, 196, 0.13),
+    inset 0 0 0 1px rgba(212, 184, 138, 0.10),
+    0 16px 36px -24px rgba(0, 0, 0, 0.95);
 }
 
-/* The one error tone: this is the copy that must never be shared. */
+/* The copy that must never be shared goes the other way: the darkest ground
+   on the desk, warmed by one ember at the corner, so the thing that should
+   feel sealed reads heavier than everything around it. */
 .admin-panel-warn {
-  border-left-color: #e0a08a;
-  background: linear-gradient(90deg, rgba(224, 160, 138, 0.07), rgba(224, 160, 138, 0) 45%), #262019;
+  background:
+    radial-gradient(130% 95% at 0% 0%, rgba(224, 160, 138, 0.16), transparent 58%),
+    #1a0f0b;
+  box-shadow:
+    inset 0 1px 0 rgba(224, 160, 138, 0.14),
+    inset 0 0 0 1px rgba(224, 160, 138, 0.09),
+    0 18px 40px -22px rgba(0, 0, 0, 1);
 }
 
 .admin-section > p,
@@ -1216,21 +1254,19 @@ html, body {
 
 .admin-alert > div { max-width: 52rem; }
 
+/* One status line. The hue is a wash that fades out across the line rather
+   than a bar cut in at its edge; quiet carries no wash at all, which is the
+   point, since an ordinary line should look ordinary. */
 .admin-status {
-  padding: 0.85rem 0 0.9rem 0.95rem;
-  border-left: 2px solid rgba(163, 155, 144, 0.5);
+  margin: 0 -1.45rem;
+  padding: 0 1.45rem;
+  border-radius: 3px;
 }
 
-.admin-status + .admin-section > p,
-.admin-section > form > p,
-.admin-section > header p { max-width: 48rem; }
-
-.admin-alert > div { max-width: 52rem; }
-
-.admin-status { margin-top: 0.35rem; }
-.admin-status-warm { border-left-color: #f2e3c4; }
-.admin-status-brass { border-left-color: #d4b88a; }
-.admin-status-wrong { border-left-color: #e0a08a; }
+.admin-status + .admin-status { box-shadow: inset 0 1px 0 rgba(237, 233, 226, 0.07); }
+.admin-status-warm { background: linear-gradient(90deg, rgba(242, 227, 196, 0.075), transparent 66%); }
+.admin-status-brass { background: linear-gradient(90deg, rgba(212, 184, 138, 0.095), transparent 66%); }
+.admin-status-wrong { background: linear-gradient(90deg, rgba(224, 160, 138, 0.095), transparent 66%); }
 
 /* The whole line opens. No separate control, and the state word stays
    readable in place whether it is open or shut. */
@@ -1239,7 +1275,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 44px;
+  min-height: 46px;
   cursor: pointer;
   list-style: none;
 }
@@ -1258,10 +1294,70 @@ html, body {
 .admin-status[open] > summary::after { content: '\2212'; }
 .admin-status > summary:hover::after { color: #d4b88a; }
 .admin-status > summary:hover .admin-eyebrow { color: #d4b88a; }
+.admin-status > p { padding-bottom: 0.9rem; }
+
+/* Fields, on the desk.
+
+   The ceremony kit draws a field as a lit rule and no box, which is right on
+   a phone holding one field at a time. A desk form is six fields in two
+   columns and that rule vanishes: there is nothing to aim at and no sign of
+   which field holds the cursor, and the placeholder hints read as typed
+   values. So the desk gives the kit's field a recessed well and a brass edge
+   when it has focus. The kit itself is untouched; this is the desk dressing
+   it, scoped to .admin-page. The two !important marks are unavoidable, since
+   the kit sets exactly those two properties inline. */
+.admin-page label:has(> input) {
+  padding: 0.7rem 0.85rem 0.75rem !important;
+  border-bottom: 0 !important;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.24);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(237, 233, 226, 0.11);
+  transition: box-shadow 150ms ease, background 150ms ease;
+}
+
+.admin-page label:has(> input):hover {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(237, 233, 226, 0.2);
+}
+
+.admin-page label:has(> input):focus-within {
+  background: rgba(0, 0, 0, 0.34);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(212, 184, 138, 0.65),
+    0 0 0 3px rgba(212, 184, 138, 0.15),
+    0 0 20px -6px rgba(212, 184, 138, 0.45);
+}
+
+/* The label goes brass with the edge, so the field you are in is obvious
+   from the corner of the eye and not only from the cursor. */
+.admin-page label:has(> input):focus-within span { color: #d4b88a !important; }
+
+.admin-page label:has(> input) > input { margin-top: 5px !important; }
+
+/* The well itself is the focus indicator, and a higher contrast one than
+   the outline it replaces. */
+.admin-page label:has(> input) > input:focus-visible { outline: none; }
+
+/* Hints are hints. Unstyled they inherit near enough to the ink to read as
+   something already typed. */
+.admin-page input::placeholder {
+  color: #6f6a62;
+  opacity: 1;
+}
+
+.admin-page input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.7) sepia(0.4) saturate(1.5) hue-rotate(340deg);
+}
 
 .admin-code {
   margin: 0.8rem 0 0;
   padding: 0.75rem 1rem;
+  border-radius: 3px;
   overflow-x: auto;
   background: rgba(0, 0, 0, 0.28);
   color: #c4beb4;

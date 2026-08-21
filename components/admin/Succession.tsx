@@ -391,7 +391,7 @@ const Succession: React.FC = () => {
       <AdminPageHeader
         eyebrow="Continuity"
         title="Succession"
-        description="The encrypted copy of the private registry: what lets a museum or a family member continue it if you cannot. Three exports exist and they are easy to confuse, so the page opens by keeping them apart."
+        description="The encrypted copy of the private registry. It lets a museum or a family member continue the registry if you cannot."
       />
 
       {/* The three exports, told apart by standing beside each other rather
@@ -401,17 +401,17 @@ const Succession: React.FC = () => {
       <div className="admin-board">
         <Panel label="The offline ledger">
           <Body size={14}>
-            It proves the public lineage chain, and it is taken on the{' '}
+            Proves the public lineage chain. Taken on the{' '}
             <Link to="/admin/pieces" className="underline underline-offset-4">Plate registry desk</Link>.
           </Body>
           <Note top={10}><State tone="quiet">Safe to share</State></Note>
         </Panel>
         <Panel label="The piece records archive">
-          <Body size={14}>Every public record page. Taken in part three, below.</Body>
+          <Body size={14}>Every public record page. Taken in part three.</Body>
           <Note top={10}><State tone="quiet">Safe to share</State></Note>
         </Panel>
         <Panel label="This encrypted archive" tone="warn">
-          <Body size={14}>The only one of the three that can rebuild the whole private registry from nothing.</Body>
+          <Body size={14}>Rebuilds the whole private registry from nothing. The only one of the three that can.</Body>
           <Note top={10}><State tone="wrong">Never share</State></Note>
         </Panel>
       </div>
@@ -456,12 +456,10 @@ const Succession: React.FC = () => {
 
           {!loading && !loadError && (
             <>
-              <Band count="Part one of four" name="Where it stands">
+              <Band count="Part one of four" name="Status">
               {!fields.custodyEnvelopeMadeAt && (
                 <AdminAlert tone="warning" live>
-                  <Body size={14}>
-                    No custody envelope has been recorded. Build it in part two below.
-                  </Body>
+                  <Body size={14}>No custody envelope recorded. Build it in part two.</Body>
                   {/* The full consequence is the reason this warning exists, and
                       it is a paragraph. It stands folded so the warning itself
                       stays one line every time it is passed. */}
@@ -474,7 +472,7 @@ const Succession: React.FC = () => {
                       piece and every collector's Ownership Code, would be gone. The permanent records and the
                       public history would still survive. Only the private layer depends on this one file.
                     </Body>
-                    <Note top={12}>It can also be built from a terminal, away from this page.</Note>
+                    <Note top={12}>It can also be built from a terminal.</Note>
                     <pre className="admin-code">{CUSTODY_ENVELOPE_COMMAND}</pre>
                   </AdminAside>
                 </AdminAlert>
@@ -482,7 +480,7 @@ const Succession: React.FC = () => {
 
               <AdminSection
                 title="The state of the succession, honestly"
-                description="Real reads from this server on the left. What only your own word can settle on the right."
+                description="Left column is read from this server. Right column is your own record, which nothing here can check."
               >
                 <div className="admin-board admin-board-top">
                   <Panel label="Read from this server">
@@ -553,7 +551,7 @@ const Succession: React.FC = () => {
 
               </Band>
 
-              <Band count="Part two of four" name="What only you can write" deep>
+              <Band count="Part two of four" name="Your record" deep>
 
               {/* Making the envelope sits directly above the record it
                   produces, so the act and its date are one motion. The date
@@ -568,16 +566,15 @@ const Succession: React.FC = () => {
 
               <AdminSection
                 title="Your own record"
-                description="Nothing here can read any of these. They are your handwriting and your word that an act happened."
+                description="Nothing here can verify any of these. They are your own record."
               >
                 <form onSubmit={saveDraft}>
                   <div className="admin-board admin-board-top">
                     <Panel label="The three blanks" tone="act">
-                      <AdminAside label="What these four lines are for">
+                      <AdminAside label="What these are for">
                         <Note>
-                          The handbook in part four has lines waiting for your own handwriting. Type them here and
-                          they travel into the rendered handbook. The physical act, paper and seal, still happens
-                          away from any screen.
+                          The handbook in part four has four blank lines. Whatever you type here is spliced into
+                          it. Writing and sealing the paper copies happens away from this screen.
                         </Note>
                       </AdminAside>
                       <div className="grid gap-6 mt-5">
@@ -585,13 +582,13 @@ const Succession: React.FC = () => {
                           label="Written and sealed at"
                           value={draft.passkeySealedAt}
                           onChange={(value) => setDraft((current) => ({ ...current, passkeySealedAt: sanitizeSuccessionField(value) }))}
-                          hint="Where the first sealed paper copy is kept"
+                          hint="Where the first sealed copy is kept"
                         />
                         <Field
                           label="A second sealed copy at"
                           value={draft.passkeySecondCopyAt}
                           onChange={(value) => setDraft((current) => ({ ...current, passkeySecondCopyAt: sanitizeSuccessionField(value) }))}
-                          hint="Where the second sealed paper copy is kept, somewhere else entirely"
+                          hint="Where the second copy is kept"
                         />
                         <Field
                           label="Family contact for the registry"
@@ -611,9 +608,7 @@ const Succession: React.FC = () => {
                     <Panel label="The two dates" tone="act">
                       <AdminAside label="Where these dates come from">
                         <Note>
-                          When the envelope was last built, and when the yearly restore drill was last walked
-                          against a scratch database. Building an envelope above fills the first of these in for
-                          you, and it still has to be saved.
+                          Building an envelope above fills the first date in. It still has to be saved.
                         </Note>
                       </AdminAside>
                       <div className="grid gap-6 mt-5">
@@ -622,14 +617,14 @@ const Succession: React.FC = () => {
                           type="date"
                           value={draft.custodyEnvelopeMadeAt}
                           onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
-                          hint="When scripts/custody-envelope.ts was last run to make it"
+                          hint="Date it was last built"
                         />
                         <Field
                           label="Yearly restore drill last run"
                           type="date"
                           value={draft.custodyDrillLastRunAt}
                           onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
-                          hint="When you last walked the drill described at the foot of this page"
+                          hint="Date you last walked the drill in part four"
                         />
                       </div>
                     </Panel>
@@ -640,14 +635,12 @@ const Succession: React.FC = () => {
 
               </Band>
 
-              <Band count="Part three of four" name="Take the folder">
+              <Band count="Part three of four" name="Downloads">
 
               <AdminSection title="Take the folder">
                 <div className="admin-board">
                   <Panel label="The encrypted archive" tone="warn">
-                    <Body size={14}>
-                      It travels with the custody envelope, and the two rest in different places, always.
-                    </Body>
+                    <Body size={14}>Keep it apart from the custody envelope, always.</Body>
                     <div className="mt-6">
                       <Brass onClick={() => void downloadArchive()}>
                         {archiveBusy ? 'Preparing' : 'Download encrypted archive'}
@@ -657,7 +650,7 @@ const Succession: React.FC = () => {
                   </Panel>
 
                   <Panel label="The piece records archive">
-                    <Body size={14}>Safe to keep in Google Drive, unlike the archive beside it.</Body>
+                    <Body size={14}>Safe to keep in Google Drive.</Body>
                     <div className="mt-6 flex flex-wrap items-center gap-4">
                       <Quiet onClick={() => void downloadRecords()}>
                         {recordsBusy ? 'Preparing' : 'Download'}
@@ -674,14 +667,14 @@ const Succession: React.FC = () => {
 
               </Band>
 
-              <Band count="Part four of four" name="What travels with the folder" deep>
+              <Band count="Part four of four" name="Reference" deep>
 
               <AdminSection
                 title="The Successor's Handbook"
-                description="Generated from docs/registry-custodian-guide.md, with your four lines spliced in. This is what travels with the folder."
+                description="Generated from docs/registry-custodian-guide.md with your four lines spliced in. This travels with the folder."
               >
                 <details className="admin-fold">
-                  <summary>The handbook in full, with your four lines in place</summary>
+                  <summary>The handbook in full</summary>
                   <div
                     className={`admin-fold-body ${handbookProseClass}`}
                     // The source is this repository's own settled markdown, run through
@@ -702,7 +695,7 @@ const Succession: React.FC = () => {
                       registry, so they travel separately and rest separately, always."
                     </blockquote>
                   </Panel>
-                  <Panel label="Once a year" tone="act">
+                  <Panel label="Once a year">
                     <blockquote className="font-serif text-wood-800 italic text-[15px] leading-relaxed">
                       "Once a year, or whenever custody changes hands, walk steps one through four with the real held
                       files and a scratch database that is thrown away afterward. Never aim a restore at the live

@@ -213,7 +213,7 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
   return (
     <AdminSection
       title="The custody envelope"
-      description="The one file that lets a successor open the encrypted archive with no Cloudflare account at all."
+      description="Lets a successor open the encrypted archive without a Cloudflare account."
     >
       {/* One raised sheet for the whole ceremony, brass ruled, so the four
           stages read as one act standing apart from the page around it
@@ -223,12 +223,13 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
       {stage === 'idle' && (
         <>
           <Body>
-            One button. Six words on paper, and a file your browser saves without sending anything anywhere.
+            Generates a passphrase, shows it once so you can write it on paper, and saves
+            custody-envelope.json. Nothing is sent anywhere.
           </Body>
           {/* Both paragraphs are true and both need saying once. Folded, they
               stop standing between Adrian and the one act on this screen
               every time he passes it. */}
-          <AdminAside label="What pressing it does">
+          <AdminAside label="The detail">
             <Body size={14}>
               Pressing the button below asks this browser for the archive's internal keys, generates a fresh
               passphrase on the spot, and shows it to you once, the way a wallet shows a seed phrase, so you can

@@ -70,8 +70,10 @@ describe('succession desk', () => {
     assert.match(page, /the private layer of the registry.*would be gone/s);
     assert.match(page, /permanent records and the\s+public history would still survive/);
     assert.match(page, /bash ~\/builds\/adrian-website-custody\.sh/);
-    // The banner sits before the honesty ledger, not after it.
-    const bannerIndex = page.indexOf('No custody envelope has been recorded');
+    // The banner sits before the honesty ledger, not after it. Anchored on the
+    // stable half of the sentence, since the wording either side of it is
+    // design copy and has been tightened once already.
+    const bannerIndex = page.indexOf('No custody envelope recorded');
     const ledgerIndex = page.indexOf('The state of the succession, honestly');
     assert.ok(bannerIndex > -1 && ledgerIndex > -1 && bannerIndex < ledgerIndex, 'warning banner must precede the honesty ledger section');
   });
