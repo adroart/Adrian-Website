@@ -36,6 +36,7 @@
  */
 import React, { useState } from 'react';
 import { AdminSection, adminUI } from './AdminPage';
+import AdminAside from './AdminAside';
 import { buildCustodyEnvelope, validateCustodyKeys, type CustodyKeys } from '../../utils/custodyEnvelope';
 
 const { Body, Brass, Field, Note, Quiet } = adminUI;
@@ -212,24 +213,37 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
   return (
     <AdminSection
       title="The custody envelope"
-      description="The one file that lets a successor open the encrypted archive with no Cloudflare account at all. No envelope has ever been made, because the only way to build one was a Terminal script, and that friction meant it never happened. This replaces the script with one button."
+      description="The one file that lets a successor open the encrypted archive with no Cloudflare account at all."
     >
+      {/* One raised sheet for the whole ceremony, brass ruled, so the four
+          stages read as one act standing apart from the page around it
+          rather than as more of the desk's prose. The panel is the same one
+          the Succession desk draws its other acts with. */}
+      <div className="admin-panel admin-panel-act">
       {stage === 'idle' && (
         <>
           <Body>
-            Pressing the button below asks this browser for the archive's internal keys, generates a fresh
-            passphrase on the spot, and shows it to you once, the way a wallet shows a seed phrase, so you can
-            write it on paper. The browser then locks the keys behind that passphrase and saves the result as
-            custody-envelope.json. The passphrase and the keys are never sent anywhere from this screen, not in
-            the request that fetches the keys, not afterward; they exist only in this browser tab, only until
-            the file downloads.
+            One button. Six words on paper, and a file your browser saves without sending anything anywhere.
           </Body>
-          <Body top={10}>
-            Tell the truth to yourself before you start: this is shown once, nobody, including you, can recover
-            it afterward if it is lost, and the paper copy must never be kept in the same place as the envelope
-            file.
-          </Body>
-          <div className="mt-6">
+          {/* Both paragraphs are true and both need saying once. Folded, they
+              stop standing between Adrian and the one act on this screen
+              every time he passes it. */}
+          <AdminAside label="What pressing it does">
+            <Body size={14}>
+              Pressing the button below asks this browser for the archive's internal keys, generates a fresh
+              passphrase on the spot, and shows it to you once, the way a wallet shows a seed phrase, so you can
+              write it on paper. The browser then locks the keys behind that passphrase and saves the result as
+              custody-envelope.json. The passphrase and the keys are never sent anywhere from this screen, not in
+              the request that fetches the keys, not afterward; they exist only in this browser tab, only until
+              the file downloads.
+            </Body>
+            <Body size={14} top={10}>
+              Tell the truth to yourself before you start: this is shown once, nobody, including you, can recover
+              it afterward if it is lost, and the paper copy must never be kept in the same place as the envelope
+              file.
+            </Body>
+          </AdminAside>
+          <div className="mt-5">
             <Brass onClick={() => void begin()}>{busy ? 'Reading the keys' : 'Build the custody envelope'}</Brass>
           </div>
           {error && <Note top={12}>{error}</Note>}
@@ -305,6 +319,7 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
           </div>
         </>
       )}
+      </div>
     </AdminSection>
   );
 };

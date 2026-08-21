@@ -1084,6 +1084,224 @@ html, body {
 .admin-alert-error { border-left-color: #e0a08a; }
 .admin-alert-error .admin-alert-label { color: #e0a08a; }
 
+
+/* ─── Desk parts, panels, and status lines ───────────────────────────────
+   A long desk page (the Succession desk is the longest) turns into one wall
+   of prose if every section is drawn the same way. These four pieces give it
+   organisation without a second type scale: the desk still reads at exactly
+   two sizes, the 11px Karla label and the Lora body.
+
+     .admin-part    a brass hairline naming which part of the page you are in
+     .admin-panel   the theme's raised sheet, so what you DO looks unlike
+                    what you READ. Its left rule carries the one meaning:
+                    brass for an act, the error tone for a caution.
+     .admin-status  one status line: label, state word, and the honest note
+                    under it. The left rule agrees with the state word, it
+                    never says anything the word does not already say.
+     .admin-fold    a disclosure. Text, never an icon, exactly as the rest
+                    of this site states its controls.
+*/
+/* A band: one part of a long desk, standing on its own darker ground and
+   bleeding to the edge of the column so the eye reads it as a block rather
+   than as more scroll. Two grounds alternate, both darker than the desk, so
+   the raised panels inside every band read as raised. */
+.admin-band {
+  margin: 0 calc(-1 * clamp(1rem, 4vw, 3.5rem));
+  padding: 2.4rem clamp(1rem, 4vw, 3.5rem) 3.25rem;
+  background: #191411;
+  border-top: 1px solid rgba(212, 184, 138, 0.22);
+}
+
+.admin-band-deep { background: #100d0b; }
+
+.admin-band > .admin-part {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.admin-band > .admin-section:first-of-type { margin-top: 1.6rem; }
+.admin-band > .admin-alert:first-of-type { margin-top: 1.6rem; }
+
+/* A folded explanation. The label says what is inside, so a closed page
+   still reads as written prose rather than as a row of controls. */
+.admin-aside { margin-top: 0.6rem; }
+
+.admin-aside > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  color: #d4b88a;
+  cursor: pointer;
+  font-family: 'Karla', sans-serif;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+.admin-aside > summary::-webkit-details-marker { display: none; }
+.admin-aside > summary::marker { content: ''; }
+.admin-aside > summary::after { content: '+'; }
+.admin-aside[open] > summary::after { content: '\2212'; }
+
+.admin-aside-body {
+  max-width: 48rem;
+  padding: 0.2rem 0 0.5rem;
+}
+
+.admin-part {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin: 4.25rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(212, 184, 138, 0.34);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-part > span:first-child { color: #a39b90; }
+.admin-part > span + span { color: #d4b88a; }
+.admin-part + .admin-section { margin-top: 1.75rem; }
+
+.admin-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+/* Panels whose contents are genuinely different lengths, where an equal
+   height would only draw a long empty tail under the shorter one. */
+.admin-board-top { align-items: start; }
+
+/* Lifted off the ground by a shade and half a pixel of light along the top,
+   the same way the ceremony kit's brass button sits on its own ground. The
+   panel has to read as raised at a glance or the whole organisation of the
+   page collapses back into one column. */
+.admin-panel {
+  padding: 1.3rem 1.45rem 1.45rem;
+  border-left: 2px solid rgba(237, 233, 226, 0.22);
+  background: #262019;
+  box-shadow: inset 0 1px 0 rgba(237, 233, 226, 0.05);
+}
+
+.admin-panel > .admin-eyebrow {
+  display: block;
+  margin: 0 0 0.9rem;
+}
+
+/* Brass: there is something here to do. The wash is a hint, never the
+   message; the label beside it always says the same thing in words. */
+.admin-panel-act {
+  border-left-color: #d4b88a;
+  background: linear-gradient(90deg, rgba(212, 184, 138, 0.07), rgba(212, 184, 138, 0) 45%), #262019;
+}
+
+/* The one error tone: this is the copy that must never be shared. */
+.admin-panel-warn {
+  border-left-color: #e0a08a;
+  background: linear-gradient(90deg, rgba(224, 160, 138, 0.07), rgba(224, 160, 138, 0) 45%), #262019;
+}
+
+.admin-section > p,
+.admin-section > form > p,
+.admin-section > header p { max-width: 48rem; }
+
+.admin-alert > div { max-width: 52rem; }
+
+.admin-status {
+  padding: 0.85rem 0 0.9rem 0.95rem;
+  border-left: 2px solid rgba(163, 155, 144, 0.5);
+}
+
+.admin-status + .admin-section > p,
+.admin-section > form > p,
+.admin-section > header p { max-width: 48rem; }
+
+.admin-alert > div { max-width: 52rem; }
+
+.admin-status { margin-top: 0.35rem; }
+.admin-status-warm { border-left-color: #f2e3c4; }
+.admin-status-brass { border-left-color: #d4b88a; }
+.admin-status-wrong { border-left-color: #e0a08a; }
+
+/* The whole line opens. No separate control, and the state word stays
+   readable in place whether it is open or shut. */
+.admin-status > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-status > summary::-webkit-details-marker { display: none; }
+.admin-status > summary::marker { content: ''; }
+
+.admin-status > summary::after {
+  content: '+';
+  flex: none;
+  color: #8d867c;
+  font-family: 'Karla', sans-serif;
+  font-size: 0.6875rem;
+}
+
+.admin-status[open] > summary::after { content: '\2212'; }
+.admin-status > summary:hover::after { color: #d4b88a; }
+.admin-status > summary:hover .admin-eyebrow { color: #d4b88a; }
+
+.admin-code {
+  margin: 0.8rem 0 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.28);
+  color: #c4beb4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.admin-fold > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(237, 233, 226, 0.13);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  color: #c4beb4;
+  cursor: pointer;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.95rem;
+  list-style: none;
+}
+
+.admin-fold > summary::-webkit-details-marker { display: none; }
+.admin-fold > summary::marker { content: ''; }
+
+.admin-fold > summary::after {
+  content: 'Read';
+  color: #d4b88a;
+  font-family: 'Karla', sans-serif;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-fold[open] > summary::after { content: 'Close'; }
+.admin-fold[open] > summary { border-bottom-color: transparent; }
+.admin-fold-body { padding: 1.75rem 0 0; }
+
 .admin-empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
