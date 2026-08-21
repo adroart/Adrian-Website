@@ -14,23 +14,21 @@
  * than importing from that file, since the two desks should not be coupled
  * by a shared unlock component).
  *
- * How the page is organised, and why it is organised at all: this is the
- * longest desk on the site, and read as one column of equal sections it was
- * a wall. It now runs in four named parts, and the organisation is carried
- * by material and colour rather than by a ladder of font sizes. The desk
- * still reads at two sizes only, the 11px Karla label and the Lora body.
+ * How it is laid out, and why:
  *
- *   Part one    what stands, split into what the server truly reads and
- *               what only Adrian can say. Never interleaved again.
- *   Part two    the only writing on this page: the envelope ceremony and
- *               the record it produces, under one Save.
- *   Part three  the two archives, the never-share one kept visibly apart.
- *   Part four   the handbook, folded away until it is wanted, and the rule.
+ * One column, one measure, flat ground. An earlier version of this page was
+ * built out of tinted two-column cards and it read as furniture rather than
+ * as a document: everything boxed, every label 11px, nothing to rest on.
+ * What carries the structure now is a type scale and a rule. Four numbered
+ * parts, each opened by a hairline and a serif heading; inside them, lines
+ * separated by hairlines; no filled box anywhere.
  *
- * The left rule on a panel carries the one meaning: brass is something to
- * do, the error tone is the copy that must never be shared, hairline is
- * something to read. Nothing is ever said by colour alone; the word beside
- * it always says the same thing.
+ * Serif for everything read. Mono, and only mono, for what the machine
+ * says: the part numbers, the group chips, and every state word. That is
+ * the whole colour and texture system, and it means a state word is
+ * recognisable as a machine reading before it has been read.
+ *
+ * The classes live in src/index.css under "The desk's reading grammar".
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -47,72 +45,91 @@ import {
 } from '../../utils/adminSuccession';
 import { HANDBOOK_SOURCE, renderHandbookMarkdown } from '../../functions/api/_lib/successorHandbook.js';
 
+/* Of the kit, this page now draws with Body, Brass, Field and Quiet. Ledger,
+   Note and State were the boxed desk's row, caption and status word; the
+   reading grammar in index.css says all three in plain elements at readable
+   sizes instead. The destructure stays whole so the kit is imported the one
+   way every admin file imports it. */
 const { Body, Brass, Field, Ledger, Note, Quiet, State } = adminUI;
+void Ledger; void Note; void State;
 
 const handbookProseClass = [
-  'font-serif text-[15px] leading-relaxed text-wood-700 max-w-[46rem]',
-  '[&_h1]:font-title [&_h1]:text-2xl [&_h1]:text-wood-900 [&_h1]:mb-4',
-  '[&_h2]:font-title [&_h2]:text-xl [&_h2]:text-wood-900 [&_h2]:mt-9 [&_h2]:mb-2',
-  '[&_h3]:italic [&_h3]:text-wood-800 [&_h3]:mt-6 [&_h3]:mb-2',
-  '[&_p]:mb-3', '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3', '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3',
-  '[&_li]:mb-1', '[&_strong]:font-semibold [&_strong]:text-wood-900',
-  '[&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-wood-100 [&_code]:px-1 [&_code]:break-all',
-  '[&_pre]:bg-wood-100 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:mb-3 [&_pre_code]:bg-transparent [&_pre_code]:break-normal',
+  'font-serif text-[16px] leading-relaxed text-wood-700 max-w-[42rem]',
+  '[&_h1]:font-title [&_h1]:text-3xl [&_h1]:text-wood-900 [&_h1]:mb-4',
+  '[&_h2]:font-title [&_h2]:text-2xl [&_h2]:text-wood-900 [&_h2]:mt-10 [&_h2]:mb-2',
+  '[&_h3]:italic [&_h3]:text-wood-800 [&_h3]:mt-7 [&_h3]:mb-2',
+  '[&_p]:mb-4', '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4', '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4',
+  '[&_li]:mb-1.5', '[&_strong]:font-semibold [&_strong]:text-wood-900',
+  '[&_code]:font-mono [&_code]:text-[14px] [&_code]:bg-wood-100 [&_code]:px-1 [&_code]:break-all',
+  '[&_pre]:bg-wood-100 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:mb-4 [&_pre_code]:bg-transparent [&_pre_code]:break-normal',
 ].join(' ');
 
 type StateTone = 'quiet' | 'warm' | 'brass' | 'wrong';
 
-/** One part of the desk, standing on its own darker ground. The band is
- *  what makes a page this long readable as four blocks instead of one run:
- *  the two grounds alternate, and both are darker than the desk, so every
- *  raised panel inside a band reads as raised. */
-const Band: React.FC<React.PropsWithChildren<{ count: string; name: string; deep?: boolean }>> = ({
-  count,
-  name,
-  deep = false,
+/** Everything the machine says wears mono. Nothing else does. */
+const Mark: React.FC<React.PropsWithChildren<{ lit?: boolean }>> = ({ lit, children }) => (
+  <span className={lit ? 'admin-tag admin-tag-lit' : 'admin-tag'}>{children}</span>
+);
+
+/** A state word: what the machine reads, standing at the end of its line. */
+const Reading: React.FC<{ tone?: StateTone; children: React.ReactNode }> = ({ tone = 'quiet', children }) => (
+  <span className={tone === 'quiet' ? 'admin-state' : `admin-state admin-state-${tone}`}>{children}</span>
+);
+
+/** One numbered part. The rule above it and the room around it are the whole
+ *  separation; there is no band and no box. */
+const Part: React.FC<React.PropsWithChildren<{ number: string; title: string }>> = ({
+  number,
+  title,
   children,
 }) => (
-  <section className={deep ? 'admin-band admin-band-deep' : 'admin-band'}>
-    <p className="admin-part">
-      <span>{count}</span>
-      <span>{name}</span>
-    </p>
+  <section className="admin-movement">
+    <header>
+      <Mark>{number}</Mark>
+      <h2>{title}</h2>
+    </header>
     {children}
   </section>
 );
 
-/** A raised sheet holding one group of work. `tone` decides its left rule:
- *  brass for something to do, the error tone for something never shared. */
-const Panel: React.FC<React.PropsWithChildren<{ label: string; tone?: 'act' | 'warn' }>> = ({
-  label,
-  tone,
-  children,
-}) => (
-  <div className={tone ? `admin-panel admin-panel-${tone}` : 'admin-panel'}>
-    <span className="admin-eyebrow">{label}</span>
+/** A named group of lines. */
+const Group: React.FC<React.PropsWithChildren<{ label: string }>> = ({ label, children }) => (
+  <div className="admin-group">
+    <Mark>{label}</Mark>
     {children}
   </div>
 );
 
-/** One line of standing: the label, the state word, and the honest note
- *  underneath saying what this page does and does not actually know. */
+/** One line: what it is on the left, what the machine reads on the right, a
+ *  sentence underneath, and anything to press below that. */
+const Line: React.FC<{
+  title: string;
+  state?: React.ReactNode;
+  note?: React.ReactNode;
+  children?: React.ReactNode;
+}> = ({ title, state, note, children }) => (
+  <div className="admin-line">
+    <span className="admin-line-title">{title}</span>
+    {state}
+    {note && <p className="admin-line-note">{note}</p>}
+    {children && <div className="admin-line-act">{children}</div>}
+  </div>
+);
+
+/** The same line, which opens. The state word still reads in place; the mono
+ *  sign after it is the only thing added. */
 const Standing: React.FC<{ label: string; word: string; tone: StateTone; children: React.ReactNode }> = ({
   label,
   word,
   tone,
   children,
 }) => (
-  /* The line itself is the control. Three of these stacked, each with its
-     own labelled disclosure underneath, was a column of switches; opening
-     the line that already carries the label and the state word costs no
-     extra row at all. The state word alone still tells the whole truth, so
-     nothing is hidden by leaving every one of them closed. */
-  <details className={`admin-status admin-status-${tone}`}>
+  <details className="admin-line">
     <summary>
-      <span className="admin-eyebrow">{label}</span>
-      <State tone={tone}>{word}</State>
+      <span className="admin-line-title">{label}</span>
+      <Reading tone={tone}>{word}</Reading>
     </summary>
-    <Note top={7}>{children}</Note>
+    <p className="admin-line-note">{children}</p>
   </details>
 );
 
@@ -388,137 +405,133 @@ const Succession: React.FC = () => {
 
   return (
     <AdminPage width="medium">
-      <AdminPageHeader
-        eyebrow="Continuity"
-        title="Succession"
-        description="The encrypted copy of the private registry. It lets a museum or a family member continue the registry if you cannot."
-      />
+      <div className="admin-run">
+        <AdminPageHeader eyebrow="Continuity" title="Succession" />
+        <p className="admin-lede">
+          The encrypted copy of the private registry. It lets a museum or a family member continue the registry
+          if you cannot.
+        </p>
+        <p className="admin-quiet">
+          Three exports exist and they are easy to confuse, so the page opens by keeping them apart.
+        </p>
 
-      {/* The three exports, told apart by standing beside each other rather
-          than by a paragraph explaining that they differ. The one that can
-          rebuild everything wears the error rule, because that is the one
-          that must never be shared. */}
-      <div className="admin-board">
-        <Panel label="The offline ledger">
-          <Body size={14}>
-            Proves the public lineage chain. Taken on the{' '}
-            <Link to="/admin/pieces" className="underline underline-offset-4">Plate registry desk</Link>.
-          </Body>
-          <Note top={10}><State tone="quiet">Safe to share</State></Note>
-        </Panel>
-        <Panel label="The piece records archive">
-          <Body size={14}>Every public record page. Taken in part three.</Body>
-          <Note top={10}><State tone="quiet">Safe to share</State></Note>
-        </Panel>
-        <Panel label="This encrypted archive" tone="warn">
-          <Body size={14}>Rebuilds the whole private registry from nothing. The only one of the three that can.</Body>
-          <Note top={10}><State tone="wrong">Never share</State></Note>
-        </Panel>
-      </div>
+        <Group label="The three exports">
+          <Line
+            title="The offline ledger"
+            state={<Reading>Safe to share</Reading>}
+            note={
+              <>
+                Proves the public lineage chain. Taken on the{' '}
+                <Link to="/admin/pieces" className="underline underline-offset-4">Plate registry desk</Link>.
+              </>
+            }
+          />
+          <Line
+            title="The piece records archive"
+            state={<Reading>Safe to share</Reading>}
+            note="Every public record page. Taken in part three."
+          />
+          <Line
+            title="This encrypted archive"
+            state={<Reading tone="wrong">Never share</Reading>}
+            note="Rebuilds the whole private registry from nothing. The only one of the three that can."
+          />
+        </Group>
 
-      {checkingUnlock ? (
-        <AdminSection title="Private registry access">
-          <Body>Checking the registry unlock.</Body>
-        </AdminSection>
-      ) : readiness === 'locked' ? (
-        <AdminSection
-          title="Private registry access"
-          description="Everything below concerns the private registry, so it stays behind the same step-up unlock as the plate registry desk."
-        >
-          <form onSubmit={unlock} className="grid gap-5 max-w-sm">
-            <Field
-              label="Registry unlock secret"
-              type="password"
-              value={unlockSecret}
-              onChange={setUnlockSecret}
-            />
-            <Brass onClick={() => void unlock()}>{unlockBusy ? 'Unlocking' : 'Unlock the registry'}</Brass>
-            {unlockError && <Note>{unlockError}</Note>}
-          </form>
-        </AdminSection>
-      ) : (
-        <>
-          {/* Unlocked, this is one settled line, not a section of its own. */}
-          <div className="admin-panel mt-7 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <span className="admin-eyebrow">Private registry access</span>
-              <Body size={14} top={6}>Unlocked for this session.</Body>
-            </div>
-            <Quiet onClick={() => void lock()}>{unlockBusy ? 'Locking' : 'Lock again'}</Quiet>
-          </div>
+        {checkingUnlock ? (
+          <AdminSection title="Private registry access">
+            <Body>Checking the registry unlock.</Body>
+          </AdminSection>
+        ) : readiness === 'locked' ? (
+          <Part number="01" title="Private registry access">
+            <p className="admin-say">
+              Everything below concerns the private registry, so it stays behind the same step-up unlock as the
+              plate registry desk.
+            </p>
+            <form onSubmit={unlock} className="grid gap-6 max-w-sm mt-8">
+              <Field
+                label="Registry unlock secret"
+                type="password"
+                value={unlockSecret}
+                onChange={setUnlockSecret}
+              />
+              <div className="admin-shelf">
+                <Brass onClick={() => void unlock()}>{unlockBusy ? 'Unlocking' : 'Unlock the registry'}</Brass>
+              </div>
+              {unlockError && <p className="admin-quiet">{unlockError}</p>}
+            </form>
+          </Part>
+        ) : (
+          <>
+            {loading && <p className="admin-say">Reading the succession state.</p>}
+            {loadError && <AdminAlert tone="error" live>{loadError}</AdminAlert>}
 
-          {loading && (
-            <AdminSection title="The state of the succession">
-              <Body>Reading the succession state.</Body>
-            </AdminSection>
-          )}
-          {loadError && <AdminAlert tone="error" live>{loadError}</AdminAlert>}
+            {!loading && !loadError && (
+              <>
+                <Part number="01" title="Status">
+                  {!fields.custodyEnvelopeMadeAt && (
+                    <AdminAlert tone="warning" live>
+                      <p className="admin-say">No custody envelope recorded. Build it in part two.</p>
+                      {/* The full consequence is the reason this warning exists,
+                          and it is a paragraph. It stands folded so the warning
+                          itself is one line every time it is passed. */}
+                      <AdminAside label="What is lost without it">
+                        <p className="admin-quiet">
+                          The envelope is the one file that carries the encrypted archive's keys out of
+                          Cloudflare, and Cloudflare can never hand those keys back once they leave. Without it,
+                          if this Cloudflare account were ever lost, the encrypted archive could never be opened
+                          again: the private layer of the registry, who holds each piece and every
+                          collector's Ownership Code, would be gone. The permanent records and the
+                          public history would still survive. Only the private layer depends on this one file.
+                        </p>
+                        <p className="admin-quiet">It can also be built from a terminal.</p>
+                        <code className="admin-code">{CUSTODY_ENVELOPE_COMMAND}</code>
+                      </AdminAside>
+                    </AdminAlert>
+                  )}
 
-          {!loading && !loadError && (
-            <>
-              <Band count="Part one of four" name="Status">
-              {!fields.custodyEnvelopeMadeAt && (
-                <AdminAlert tone="warning" live>
-                  <Body size={14}>No custody envelope recorded. Build it in part two.</Body>
-                  {/* The full consequence is the reason this warning exists, and
-                      it is a paragraph. It stands folded so the warning itself
-                      stays one line every time it is passed. */}
-                  <AdminAside label="What is lost without it">
-                    <Body size={14}>
-                      The envelope is the one file that carries the
-                      encrypted archive's keys out of Cloudflare, and Cloudflare can never hand those keys back
-                      once they leave. Without it, if this Cloudflare account were ever lost, the encrypted
-                      archive could never be opened again: the private layer of the registry, who holds each
-                      piece and every collector's Ownership Code, would be gone. The permanent records and the
-                      public history would still survive. Only the private layer depends on this one file.
-                    </Body>
-                    <Note top={12}>It can also be built from a terminal.</Note>
-                    <pre className="admin-code">{CUSTODY_ENVELOPE_COMMAND}</pre>
-                  </AdminAside>
-                </AdminAlert>
-              )}
+                  <h3>The state of the succession, honestly</h3>
+                  <p className="admin-quiet">
+                    The first group is read from this server. The second is your own word, and nothing here can
+                    check it.
+                  </p>
 
-              <AdminSection
-                title="The state of the succession, honestly"
-                description="Left column is read from this server. Right column is your own record, which nothing here can check."
-              >
-                <div className="admin-board admin-board-top">
-                  <Panel label="Read from this server">
-                    <Ledger
-                      label="Encrypted archive"
-                      value={
-                        <State tone={config.recoveryExportConfigured ? 'warm' : 'wrong'}>
+                  <Group label="Read from this server">
+                    <Line
+                      title="Encrypted archive"
+                      state={
+                        <Reading tone={config.recoveryExportConfigured ? 'warm' : 'wrong'}>
                           {config.recoveryExportConfigured ? 'Configured' : 'Not configured'}
-                        </State>
+                        </Reading>
                       }
                     />
-                    <Ledger
-                      label="Piece records storage"
-                      value={
-                        <State tone={config.recordsBucketConfigured ? 'warm' : 'wrong'}>
+                    <Line
+                      title="Piece records storage"
+                      state={
+                        <Reading tone={config.recordsBucketConfigured ? 'warm' : 'wrong'}>
                           {config.recordsBucketConfigured ? 'Configured' : 'Not configured'}
-                        </State>
+                        </Reading>
                       }
                     />
-                    <Ledger
-                      label="Google Drive mirror"
-                      value={
-                        <State tone={config.driveConfigured ? 'warm' : 'quiet'}>
+                    <Line
+                      title="Google Drive mirror"
+                      state={
+                        <Reading tone={config.driveConfigured ? 'warm' : 'quiet'}>
                           {config.driveConfigured ? 'Configured' : 'Not configured'}
-                        </State>
+                        </Reading>
                       }
                     />
-                    <Ledger
-                      label="Handbook blanks"
-                      value={
-                        <State tone={successionFieldsComplete(fields) ? 'warm' : 'brass'}>
+                    <Line
+                      title="Handbook blanks"
+                      state={
+                        <Reading tone={successionFieldsComplete(fields) ? 'warm' : 'brass'}>
                           {successionFieldsComplete(fields) ? 'All filled' : 'Waiting on you'}
-                        </State>
+                        </Reading>
                       }
                     />
-                  </Panel>
+                  </Group>
 
-                  <Panel label="What only you can say">
+                  <Group label="Your own record">
                     <Standing label="When the archive was last taken" word="Not known here" tone="quiet">
                       The server keeps no record of when the encrypted archive was last downloaded. The only
                       record is the timestamp inside the filename of whichever copy you are holding,
@@ -526,7 +539,7 @@ const Succession: React.FC = () => {
                     </Standing>
                     <Standing
                       label="Custody envelope"
-                      word={fields.custodyEnvelopeMadeAt ? `Recorded, ${fields.custodyEnvelopeMadeAt}` : 'Not recorded'}
+                      word={fields.custodyEnvelopeMadeAt ? `Recorded ${fields.custodyEnvelopeMadeAt}` : 'Not recorded'}
                       tone={fields.custodyEnvelopeMadeAt ? 'warm' : 'wrong'}
                     >
                       The envelope is a file you hold offline, apart from this archive. This interface never
@@ -537,121 +550,103 @@ const Succession: React.FC = () => {
                     </Standing>
                     <Standing
                       label="Yearly drill"
-                      word={fields.custodyDrillLastRunAt ? `Recorded, ${fields.custodyDrillLastRunAt}` : 'Not recorded'}
+                      word={fields.custodyDrillLastRunAt ? `Recorded ${fields.custodyDrillLastRunAt}` : 'Not recorded'}
                       tone={fields.custodyDrillLastRunAt ? 'warm' : 'brass'}
                     >
                       Nothing here can watch a drill happen.
                       {fields.custodyDrillLastRunAt
                         ? ' The date above is only your own record that you walked it, not something this page verified.'
-                        : ' Record the date in part two once you have walked the drill described at the foot of this page.'}
+                        : ' Record the date in part two once you have walked the drill in part four.'}
                     </Standing>
-                  </Panel>
-                </div>
-              </AdminSection>
+                  </Group>
+                </Part>
 
-              </Band>
+                <Part number="02" title="Your record">
+                  {/* Making the envelope sits directly above the record it
+                      produces, so the act and its date are one motion. The date
+                      is filled in for you when it finishes, and still has to be
+                      saved, since the page never records an act on your behalf. */}
+                  <CustodyEnvelope
+                    onEnvelopeMade={(date) => setDraft((current) => ({
+                      ...current,
+                      custodyEnvelopeMadeAt: sanitizeSuccessionField(date),
+                    }))}
+                  />
 
-              <Band count="Part two of four" name="Your record" deep>
+                  <h3>The four blanks, and the two dates</h3>
+                  <p className="admin-quiet">
+                    The four lines are spliced into the handbook in part four. The two dates are your word that
+                    an act happened. Building an envelope above fills the first date in, and it still has to be
+                    saved.
+                  </p>
 
-              {/* Making the envelope sits directly above the record it
-                  produces, so the act and its date are one motion. The date
-                  is filled in for you when it finishes, and still has to be
-                  saved, since the page never records an act on your behalf. */}
-              <CustodyEnvelope
-                onEnvelopeMade={(date) => setDraft((current) => ({
-                  ...current,
-                  custodyEnvelopeMadeAt: sanitizeSuccessionField(date),
-                }))}
-              />
+                  <form onSubmit={saveDraft} className="grid gap-5 mt-8 max-w-xl">
+                    <Field
+                      label="Written and sealed at"
+                      value={draft.passkeySealedAt}
+                      onChange={(value) => setDraft((current) => ({ ...current, passkeySealedAt: sanitizeSuccessionField(value) }))}
+                      hint="Where the first sealed copy is kept"
+                    />
+                    <Field
+                      label="A second sealed copy at"
+                      value={draft.passkeySecondCopyAt}
+                      onChange={(value) => setDraft((current) => ({ ...current, passkeySecondCopyAt: sanitizeSuccessionField(value) }))}
+                      hint="Where the second copy is kept"
+                    />
+                    <Field
+                      label="Family contact for the registry"
+                      value={draft.familyContact}
+                      onChange={(value) => setDraft((current) => ({ ...current, familyContact: sanitizeSuccessionField(value) }))}
+                      hint="Who to reach first"
+                    />
+                    <Field
+                      label="Technical helper who knows this system"
+                      value={draft.technicalHelper}
+                      onChange={(value) => setDraft((current) => ({ ...current, technicalHelper: sanitizeSuccessionField(value) }))}
+                      hint="Who can follow the restore steps"
+                    />
+                    <Field
+                      label="Custody envelope last built"
+                      type="date"
+                      value={draft.custodyEnvelopeMadeAt}
+                      onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
+                      hint="Date it was last built"
+                    />
+                    <Field
+                      label="Yearly restore drill last run"
+                      type="date"
+                      value={draft.custodyDrillLastRunAt}
+                      onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
+                      hint="Date you last walked the drill in part four"
+                    />
+                    <div className="admin-shelf mt-3">
+                      <Brass onClick={() => void saveDraft()}>{saveBusy ? 'Saving' : 'Save'}</Brass>
+                      {savedAt && <Mark>Last saved {new Date(savedAt).toLocaleString()}</Mark>}
+                    </div>
+                    {saveError && <AdminAlert tone="error" live>{saveError}</AdminAlert>}
+                    {saveSuccess && <AdminAlert tone="success" live>{saveSuccess}</AdminAlert>}
+                  </form>
+                </Part>
 
-              <AdminSection
-                title="Your own record"
-                description="Nothing here can verify any of these. They are your own record."
-              >
-                <form onSubmit={saveDraft}>
-                  <div className="admin-board admin-board-top">
-                    <Panel label="The three blanks" tone="act">
-                      <AdminAside label="What these are for">
-                        <Note>
-                          The handbook in part four has four blank lines. Whatever you type here is spliced into
-                          it. Writing and sealing the paper copies happens away from this screen.
-                        </Note>
-                      </AdminAside>
-                      <div className="grid gap-6 mt-5">
-                        <Field
-                          label="Written and sealed at"
-                          value={draft.passkeySealedAt}
-                          onChange={(value) => setDraft((current) => ({ ...current, passkeySealedAt: sanitizeSuccessionField(value) }))}
-                          hint="Where the first sealed copy is kept"
-                        />
-                        <Field
-                          label="A second sealed copy at"
-                          value={draft.passkeySecondCopyAt}
-                          onChange={(value) => setDraft((current) => ({ ...current, passkeySecondCopyAt: sanitizeSuccessionField(value) }))}
-                          hint="Where the second copy is kept"
-                        />
-                        <Field
-                          label="Family contact for the registry"
-                          value={draft.familyContact}
-                          onChange={(value) => setDraft((current) => ({ ...current, familyContact: sanitizeSuccessionField(value) }))}
-                          hint="Who to reach first"
-                        />
-                        <Field
-                          label="Technical helper who knows this system"
-                          value={draft.technicalHelper}
-                          onChange={(value) => setDraft((current) => ({ ...current, technicalHelper: sanitizeSuccessionField(value) }))}
-                          hint="Who can follow the restore steps"
-                        />
-                      </div>
-                    </Panel>
-
-                    <Panel label="The two dates" tone="act">
-                      <AdminAside label="Where these dates come from">
-                        <Note>
-                          Building an envelope above fills the first date in. It still has to be saved.
-                        </Note>
-                      </AdminAside>
-                      <div className="grid gap-6 mt-5">
-                        <Field
-                          label="Custody envelope last built"
-                          type="date"
-                          value={draft.custodyEnvelopeMadeAt}
-                          onChange={(value) => setDraft((current) => ({ ...current, custodyEnvelopeMadeAt: sanitizeSuccessionField(value) }))}
-                          hint="Date it was last built"
-                        />
-                        <Field
-                          label="Yearly restore drill last run"
-                          type="date"
-                          value={draft.custodyDrillLastRunAt}
-                          onChange={(value) => setDraft((current) => ({ ...current, custodyDrillLastRunAt: sanitizeSuccessionField(value) }))}
-                          hint="Date you last walked the drill in part four"
-                        />
-                      </div>
-                    </Panel>
-                  </div>
-                  {saveBar}
-                </form>
-              </AdminSection>
-
-              </Band>
-
-              <Band count="Part three of four" name="Downloads">
-
-              <AdminSection title="Take the folder">
-                <div className="admin-board">
-                  <Panel label="The encrypted archive" tone="warn">
-                    <Body size={14}>Keep it apart from the custody envelope, always.</Body>
-                    <div className="mt-6">
+                <Part number="03" title="Downloads">
+                  <Line
+                    title="The encrypted archive"
+                    state={<Reading tone="wrong">Never share</Reading>}
+                    note="Keep it apart from the custody envelope, always."
+                  >
+                    <div className="admin-shelf">
                       <Brass onClick={() => void downloadArchive()}>
                         {archiveBusy ? 'Preparing' : 'Download encrypted archive'}
                       </Brass>
                     </div>
-                    {archiveError && <Note top={12}>{archiveError}</Note>}
-                  </Panel>
-
-                  <Panel label="The piece records archive">
-                    <Body size={14}>Safe to keep in Google Drive.</Body>
-                    <div className="mt-6 flex flex-wrap items-center gap-4">
+                    {archiveError && <p className="admin-quiet">{archiveError}</p>}
+                  </Line>
+                  <Line
+                    title="The piece records archive"
+                    state={<Reading>Safe to share</Reading>}
+                    note="Safe to keep in Google Drive."
+                  >
+                    <div className="admin-shelf">
                       <Quiet onClick={() => void downloadRecords()}>
                         {recordsBusy ? 'Preparing' : 'Download'}
                       </Quiet>
@@ -659,58 +654,59 @@ const Succession: React.FC = () => {
                         {driveBusy ? 'Syncing' : 'Sync to Google Drive'}
                       </Quiet>
                     </div>
-                    {recordsError && <Note top={12}>{recordsError}</Note>}
-                    {driveStatus && <Note top={12}>{driveStatus}</Note>}
-                  </Panel>
+                    {recordsError && <p className="admin-quiet">{recordsError}</p>}
+                    {driveStatus && <p className="admin-quiet">{driveStatus}</p>}
+                  </Line>
+                </Part>
+
+                <Part number="04" title="Reference">
+                  <h3>The Successor's Handbook</h3>
+                  <p className="admin-quiet">
+                    Generated from docs/registry-custodian-guide.md with your four lines spliced in. This travels
+                    with the folder.
+                  </p>
+                  <details className="admin-fold mt-7">
+                    <summary>The handbook in full</summary>
+                    <div
+                      className={`admin-fold-body ${handbookProseClass}`}
+                      // The source is this repository's own settled markdown, run through
+                      // successorHandbook.js's own escaping renderer; the only variable
+                      // content spliced in is the four fields above, which pass through
+                      // that same escaping pass. Nothing here is untrusted third-party HTML.
+                      dangerouslySetInnerHTML={{ __html: handbookHtml }}
+                    />
+                  </details>
+
+                  <h3>The custody rule</h3>
+                  <blockquote className="admin-quote">
+                    "The passkey and the files must never be stored in the same place. Not in the same drawer, not
+                    in the same account, not in the same cloud service. Whoever holds both at once holds the
+                    entire registry, so they travel separately and rest separately, always."
+                  </blockquote>
+                  <blockquote className="admin-quote">
+                    "Once a year, or whenever custody changes hands, walk steps one through four with the real
+                    held files and a scratch database that is thrown away afterward. Never aim a restore at the
+                    live system. A drill that ends with a working scratch copy is proof the succession works. A
+                    drill that fails is the best possible time to find out."
+                  </blockquote>
+                </Part>
+
+                {/* The lock stands at the foot, where a thing you are finished
+                    with belongs, rather than above the work. */}
+                <div className="admin-movement">
+                  <div className="admin-shelf" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <Mark>Private registry access</Mark>
+                      <p className="admin-quiet">Unlocked for this session.</p>
+                    </div>
+                    <Quiet onClick={() => void lock()}>{unlockBusy ? 'Locking' : 'Lock again'}</Quiet>
+                  </div>
                 </div>
-              </AdminSection>
-
-              </Band>
-
-              <Band count="Part four of four" name="Reference" deep>
-
-              <AdminSection
-                title="The Successor's Handbook"
-                description="Generated from docs/registry-custodian-guide.md with your four lines spliced in. This travels with the folder."
-              >
-                <details className="admin-fold">
-                  <summary>The handbook in full</summary>
-                  <div
-                    className={`admin-fold-body ${handbookProseClass}`}
-                    // The source is this repository's own settled markdown, run through
-                    // successorHandbook.js's own escaping renderer; the only variable
-                    // content spliced in is the four fields above, which pass through
-                    // that same escaping pass. Nothing here is untrusted third-party HTML.
-                    dangerouslySetInnerHTML={{ __html: handbookHtml }}
-                  />
-                </details>
-              </AdminSection>
-
-              <AdminSection title="The custody rule">
-                <div className="admin-board">
-                  <Panel label="Never in one place" tone="warn">
-                    <blockquote className="font-serif text-wood-800 italic text-[15px] leading-relaxed">
-                      "The passkey and the files must never be stored in the same place. Not in the same drawer, not in
-                      the same account, not in the same cloud service. Whoever holds both at once holds the entire
-                      registry, so they travel separately and rest separately, always."
-                    </blockquote>
-                  </Panel>
-                  <Panel label="Once a year">
-                    <blockquote className="font-serif text-wood-800 italic text-[15px] leading-relaxed">
-                      "Once a year, or whenever custody changes hands, walk steps one through four with the real held
-                      files and a scratch database that is thrown away afterward. Never aim a restore at the live
-                      system. A drill that ends with a working scratch copy is proof the succession works. A drill that
-                      fails is the best possible time to find out."
-                    </blockquote>
-                  </Panel>
-                </div>
-              </AdminSection>
-
-              </Band>
-            </>
-          )}
-        </>
-      )}
+              </>
+            )}
+          </>
+        )}
+      </div>
     </AdminPage>
   );
 };

@@ -1049,301 +1049,260 @@ html, body {
   opacity: 0.52;
 }
 
-/* An alert is the theme's raised sheet, lit at its top corner in the tone.
-   It carried a hard rule down its left edge and that rule was the sharpest
-   thing on a page with no other sharp edges. The tone word stays visible
-   beside the message, so status is never carried by colour alone. */
+/* A notice. The tone word stands over the sentence in mono, and two
+   hairlines hold the pair; there is no card and no coloured bar, because a
+   desk page that is otherwise flat cannot afford either. Status is still
+   never carried by colour alone: the word says which it is. */
 .admin-alert {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.85rem;
-  align-items: baseline;
-  margin: 1rem 0;
-  padding: 1.05rem 1.25rem;
-  border-radius: 4px;
+  display: block;
+  margin: 2rem 0;
+  padding: 1.3rem 0 1.45rem;
+  border-top: 1px solid rgba(237, 233, 226, 0.14);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
   color: #c4beb4;
-  background:
-    radial-gradient(120% 100% at 0% 0%, rgba(237, 233, 226, 0.05), transparent 60%),
-    #251e18;
-  box-shadow:
-    inset 0 1px 0 rgba(237, 233, 226, 0.07),
-    inset 0 0 0 1px rgba(237, 233, 226, 0.05),
-    0 14px 32px -24px rgba(0, 0, 0, 0.9);
   font-family: 'Lora', Georgia, serif;
-  font-size: 0.86rem;
-  line-height: 1.55;
+  font-size: 1.02rem;
+  line-height: 1.68;
 }
 
 .admin-alert-label {
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
+  display: block;
+  margin-bottom: 0.6rem;
+  color: #8d867c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
   font-weight: 400;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.admin-alert-info .admin-alert-label { color: #a39b90; }
+.admin-alert > div > p:first-child { margin-top: 0; }
 
-.admin-alert-success {
-  background: radial-gradient(120% 100% at 0% 0%, rgba(242, 227, 196, 0.11), transparent 60%), #251e18;
-  box-shadow: inset 0 1px 0 rgba(242, 227, 196, 0.11), inset 0 0 0 1px rgba(242, 227, 196, 0.08), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
-}
 .admin-alert-success .admin-alert-label { color: #f2e3c4; }
-
-.admin-alert-warning {
-  background: radial-gradient(120% 100% at 0% 0%, rgba(212, 184, 138, 0.13), transparent 60%), #251d15;
-  box-shadow: inset 0 1px 0 rgba(212, 184, 138, 0.13), inset 0 0 0 1px rgba(212, 184, 138, 0.09), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
-}
 .admin-alert-warning .admin-alert-label { color: #d4b88a; }
-
-.admin-alert-error {
-  background: radial-gradient(120% 100% at 0% 0%, rgba(224, 160, 138, 0.14), transparent 60%), #201310;
-  box-shadow: inset 0 1px 0 rgba(224, 160, 138, 0.14), inset 0 0 0 1px rgba(224, 160, 138, 0.10), 0 14px 32px -24px rgba(0, 0, 0, 0.9);
-}
 .admin-alert-error .admin-alert-label { color: #e0a08a; }
 
 
-/* ─── Desk parts, panels, and status lines ───────────────────────────────
-   A long desk page (the Succession desk is the longest) turns into one wall
-   of prose if every section is drawn the same way. These four pieces give it
-   organisation without a second type scale: the desk still reads at exactly
-   two sizes, the 11px Karla label and the Lora body.
+/* ─── The desk's reading grammar ─────────────────────────────────────────
 
-     .admin-part    a brass hairline naming which part of the page you are in
-     .admin-panel   the theme's raised sheet, so what you DO looks unlike
-                    what you READ. Its left rule carries the one meaning:
-                    brass for an act, the error tone for a caution.
-     .admin-status  one status line: label, state word, and the honest note
-                    under it. The left rule agrees with the state word, it
-                    never says anything the word does not already say.
-     .admin-fold    a disclosure. Text, never an icon, exactly as the rest
-                    of this site states its controls.
+   Flat ground, one column, one measure. Separation is a hairline and space,
+   never a filled box. A page built out of boxes reads as furniture rather
+   than as a document, and it was unreadable at a glance: two columns of
+   tinted cards, every label 11px, every note 12.5px. Nothing on a desk needs
+   to look like a card.
+
+   What carries hierarchy now is a real type scale and one mono. Serif for
+   everything read. Mono, and only mono, for what the machine says: the
+   section numbers, the small chips, and every state word. Small print is
+   gone; the smallest thing on the page is 13px letterspaced mono.
+
+     .admin-run       the one measure everything hangs on
+     .admin-movement  a numbered part: rule, number, title, chip
+     .admin-line      one row: title, state on the right, note under it
+     .admin-note-*    the two body sizes, lede and quiet
+     .admin-tag      a mono chip naming a group of lines
+     .admin-fold      a disclosure, text and never an icon
 */
-/* A band: one part of a long desk, standing on its own darker ground and
-   bleeding to the edge of the column so the eye reads it as a block rather
-   than as more scroll. Two grounds alternate, both darker than the desk, so
-   the raised panels inside every band read as raised. */
-.admin-band {
-  margin: 0 calc(-1 * clamp(1rem, 4vw, 3.5rem));
-  padding: 2.4rem clamp(1rem, 4vw, 3.5rem) 3.25rem;
-  background: #191411;
-  border-top: 1px solid rgba(212, 184, 138, 0.22);
+
+.admin-page .admin-run { max-width: 44rem; }
+
+/* Type. Three sizes, and the smallest of them is still comfortably read. */
+.admin-page .admin-lede {
+  margin: 1.1rem 0 0;
+  color: #ede9e2;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.2rem;
+  line-height: 1.62;
 }
 
-.admin-band-deep { background: #100d0b; }
-
-.admin-band > .admin-part {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
+.admin-page .admin-say {
+  margin: 0.9rem 0 0;
+  color: #c4beb4;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.68;
 }
 
-.admin-band > .admin-section:first-of-type { margin-top: 1.6rem; }
-.admin-band > .admin-alert:first-of-type { margin-top: 1.6rem; }
+.admin-page .admin-quiet {
+  margin: 0.55rem 0 0;
+  color: #a39b90;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.96rem;
+  line-height: 1.68;
+}
 
-/* A folded explanation. The label says what is inside, so a closed page
-   still reads as written prose rather than as a row of controls. */
-.admin-aside { margin-top: 0.6rem; }
-
-.admin-aside > summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 44px;
-  color: #d4b88a;
-  cursor: pointer;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+/* Mono. Everything the machine says, and nothing else. */
+.admin-page .admin-tag {
+  display: block;
+  color: #8d867c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  list-style: none;
 }
 
-.admin-aside > summary::-webkit-details-marker { display: none; }
-.admin-aside > summary::marker { content: ''; }
-.admin-aside > summary::after { content: '+'; }
-.admin-aside[open] > summary::after { content: '\2212'; }
+.admin-page .admin-tag-lit { color: #d4b88a; }
 
-.admin-aside-body {
-  max-width: 48rem;
-  padding: 0.2rem 0 0.5rem;
+/* A numbered part. The rule and the space above it do the separating that a
+   tinted band was doing badly. */
+.admin-page .admin-movement {
+  margin-top: 4.5rem;
+  padding-top: 2.1rem;
+  border-top: 1px solid rgba(237, 233, 226, 0.14);
 }
 
-.admin-part {
+.admin-page .admin-movement > header {
   display: flex;
   align-items: baseline;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-  margin: 4.25rem 0 0;
-  padding-top: 1.4rem;
-  border-top: 1px solid rgba(212, 184, 138, 0.34);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  gap: 1.15rem;
 }
 
-.admin-part > span:first-child { color: #a39b90; }
-.admin-part > span + span { color: #d4b88a; }
-.admin-part + .admin-section { margin-top: 1.75rem; }
+.admin-page .admin-movement > header > .admin-tag { flex: none; }
+.admin-page .admin-movement > header + * { margin-top: 2.1rem; }
 
-.admin-board {
+.admin-page .admin-movement h2 {
+  margin: 0;
+  color: #ede9e2;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  font-size: 2.05rem;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.admin-page .admin-movement h3 {
+  margin: 3.25rem 0 0;
+  color: #ede9e2;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.admin-page .admin-movement h3:first-child { margin-top: 0; }
+
+/* A group of lines, named by a mono chip. */
+.admin-page .admin-group { margin-top: 2.25rem; }
+.admin-page .admin-group > .admin-tag { margin-bottom: 0.35rem; }
+
+/* One line. Title left, state right, and the note beneath spanning both. */
+.admin-page .admin-line {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
+  grid-template-columns: 1fr auto;
+  gap: 0 1.75rem;
+  align-items: baseline;
+  padding: 1.05rem 0;
+  border-top: 1px solid rgba(237, 233, 226, 0.1);
 }
 
-/* Panels whose contents are genuinely different lengths, where an equal
-   height would only draw a long empty tail under the shorter one. */
-.admin-board-top { align-items: start; }
-
-/* A panel is told apart by its own ground and by the light falling across
-   its top corner. No rule, no border, no hard edge: three real values, not
-   three tints of one, and the corner bloom does the separating that a bar
-   used to do badly. The word inside always says the same thing the ground
-   says, so nothing here is carried by colour alone. */
-.admin-panel {
-  position: relative;
-  padding: 1.35rem 1.45rem 1.5rem;
-  border-radius: 4px;
-  background:
-    radial-gradient(125% 90% at 0% 0%, rgba(237, 233, 226, 0.055), transparent 56%),
-    #2b241d;
-  box-shadow:
-    inset 0 1px 0 rgba(237, 233, 226, 0.09),
-    inset 0 0 0 1px rgba(237, 233, 226, 0.04),
-    0 16px 36px -24px rgba(0, 0, 0, 0.95);
+.admin-page .admin-line-title {
+  color: #ede9e2;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.45;
 }
 
-.admin-panel > .admin-eyebrow {
-  display: block;
-  margin: 0 0 0.9rem;
+.admin-page .admin-line-note {
+  grid-column: 1 / -1;
+  margin: 0.4rem 0 0;
+  max-width: 40rem;
+  color: #a39b90;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.96rem;
+  line-height: 1.66;
 }
 
-/* Brass: something here to do. It stands a shade above the reading panel
-   and catches more of the light, the way the one lit thing in a dark room
-   does. */
-.admin-panel-act {
-  background:
-    radial-gradient(130% 95% at 0% 0%, rgba(212, 184, 138, 0.15), transparent 58%),
-    #2f2719;
-  box-shadow:
-    inset 0 1px 0 rgba(242, 227, 196, 0.13),
-    inset 0 0 0 1px rgba(212, 184, 138, 0.10),
-    0 16px 36px -24px rgba(0, 0, 0, 0.95);
+.admin-page .admin-line-act { grid-column: 1 / -1; margin-top: 1.05rem; }
+
+.admin-page .admin-state {
+  flex: none;
+  color: #8d867c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/* The copy that must never be shared goes the other way: the darkest ground
-   on the desk, warmed by one ember at the corner, so the thing that should
-   feel sealed reads heavier than everything around it. */
-.admin-panel-warn {
-  background:
-    radial-gradient(130% 95% at 0% 0%, rgba(224, 160, 138, 0.16), transparent 58%),
-    #1a0f0b;
-  box-shadow:
-    inset 0 1px 0 rgba(224, 160, 138, 0.14),
-    inset 0 0 0 1px rgba(224, 160, 138, 0.09),
-    0 18px 40px -22px rgba(0, 0, 0, 1);
-}
+.admin-page .admin-state-warm { color: #f2e3c4; }
+.admin-page .admin-state-brass { color: #d4b88a; }
+.admin-page .admin-state-wrong { color: #e0a08a; }
 
-.admin-section > p,
-.admin-section > form > p,
-.admin-section > header p { max-width: 48rem; }
-
-.admin-alert > div { max-width: 52rem; }
-
-/* One status line. The hue is a wash that fades out across the line rather
-   than a bar cut in at its edge; quiet carries no wash at all, which is the
-   point, since an ordinary line should look ordinary. */
-.admin-status {
-  margin: 0 -1.45rem;
-  padding: 0 1.45rem;
-  border-radius: 3px;
-}
-
-.admin-status + .admin-status { box-shadow: inset 0 1px 0 rgba(237, 233, 226, 0.07); }
-.admin-status-warm { background: linear-gradient(90deg, rgba(242, 227, 196, 0.075), transparent 66%); }
-.admin-status-brass { background: linear-gradient(90deg, rgba(212, 184, 138, 0.095), transparent 66%); }
-.admin-status-wrong { background: linear-gradient(90deg, rgba(224, 160, 138, 0.095), transparent 66%); }
-
-/* The whole line opens. No separate control, and the state word stays
-   readable in place whether it is open or shut. */
-.admin-status > summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 46px;
+/* A line that opens. Same row, plus the mono sign at the end of the state. */
+.admin-page .admin-line > summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 1.75rem;
+  align-items: baseline;
   cursor: pointer;
   list-style: none;
 }
 
-.admin-status > summary::-webkit-details-marker { display: none; }
-.admin-status > summary::marker { content: ''; }
+.admin-page .admin-line > summary::-webkit-details-marker { display: none; }
+.admin-page .admin-line > summary::marker { content: ''; }
+.admin-page .admin-line > summary:hover .admin-line-title { color: #d4b88a; }
+.admin-page .admin-line[open] > summary .admin-state::after { content: '  \2212'; }
+.admin-page .admin-line > summary .admin-state::after { content: '  +'; }
 
-.admin-status > summary::after {
-  content: '+';
-  flex: none;
-  color: #8d867c;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
+.admin-page .admin-code {
+  display: block;
+  margin: 1rem 0 0;
+  padding: 0.85rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.34);
+  color: #c4beb4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86rem;
+  line-height: 1.7;
 }
-
-.admin-status[open] > summary::after { content: '\2212'; }
-.admin-status > summary:hover::after { color: #d4b88a; }
-.admin-status > summary:hover .admin-eyebrow { color: #d4b88a; }
-.admin-status > p { padding-bottom: 0.9rem; }
 
 /* Fields, on the desk.
 
    The ceremony kit draws a field as a lit rule and no box, which is right on
-   a phone holding one field at a time. A desk form is six fields in two
-   columns and that rule vanishes: there is nothing to aim at and no sign of
-   which field holds the cursor, and the placeholder hints read as typed
-   values. So the desk gives the kit's field a recessed well and a brass edge
-   when it has focus. The kit itself is untouched; this is the desk dressing
-   it, scoped to .admin-page. The two !important marks are unavoidable, since
-   the kit sets exactly those two properties inline. */
+   a phone holding one field at a time. On a desk form there was nothing to
+   aim at, no sign of which field held the cursor, and the placeholder hints
+   read as already typed. The kit is untouched; this is the desk dressing it,
+   scoped to .admin-page. The !important marks are unavoidable, since the kit
+   sets exactly those properties inline. */
 .admin-page label:has(> input) {
-  padding: 0.7rem 0.85rem 0.75rem !important;
+  padding: 0.85rem 1rem 0.9rem !important;
   border-bottom: 0 !important;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.24);
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(237, 233, 226, 0.11);
+  background: rgba(0, 0, 0, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.13);
   transition: box-shadow 150ms ease, background 150ms ease;
 }
 
 .admin-page label:has(> input):hover {
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(237, 233, 226, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.24);
 }
 
 .admin-page label:has(> input):focus-within {
   background: rgba(0, 0, 0, 0.34);
   box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 1px rgba(212, 184, 138, 0.65),
-    0 0 0 3px rgba(212, 184, 138, 0.15),
-    0 0 20px -6px rgba(212, 184, 138, 0.45);
+    inset 0 0 0 1px rgba(212, 184, 138, 0.7),
+    0 0 0 3px rgba(212, 184, 138, 0.13);
 }
 
 /* The label goes brass with the edge, so the field you are in is obvious
    from the corner of the eye and not only from the cursor. */
 .admin-page label:has(> input):focus-within span { color: #d4b88a !important; }
 
-.admin-page label:has(> input) > input { margin-top: 5px !important; }
+/* The kit's label is a 11px Karla eyebrow. On a desk that is small print on
+   the one thing you have to read to type into. */
+.admin-page label:has(> input) > span:first-child span {
+  font-size: 0.8125rem !important;
+  letter-spacing: 0.09em !important;
+}
 
-/* The well itself is the focus indicator, and a higher contrast one than
-   the outline it replaces. */
+.admin-page label:has(> input) > input {
+  margin-top: 7px !important;
+  font-size: 1.05rem !important;
+}
+
 .admin-page label:has(> input) > input:focus-visible { outline: none; }
 
-/* Hints are hints. Unstyled they inherit near enough to the ink to read as
-   something already typed. */
 .admin-page input::placeholder {
   color: #6f6a62;
   opacity: 1;
@@ -1354,49 +1313,112 @@ html, body {
   filter: invert(0.7) sepia(0.4) saturate(1.5) hue-rotate(340deg);
 }
 
-.admin-code {
-  margin: 0.8rem 0 0;
-  padding: 0.75rem 1rem;
-  border-radius: 3px;
-  overflow-x: auto;
-  background: rgba(0, 0, 0, 0.28);
-  color: #c4beb4;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
-  line-height: 1.7;
-}
-
-.admin-fold > summary {
+/* A disclosure. Text, never an icon, exactly as the rest of this site
+   states its controls. */
+.admin-page .admin-fold > summary {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  min-height: 44px;
-  padding: 0.85rem 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.13);
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
-  color: #c4beb4;
+  gap: 1.5rem;
+  min-height: 48px;
+  padding: 1.05rem 0;
+  border-top: 1px solid rgba(237, 233, 226, 0.14);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
+  color: #ede9e2;
   cursor: pointer;
   font-family: 'Lora', Georgia, serif;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   list-style: none;
 }
 
-.admin-fold > summary::-webkit-details-marker { display: none; }
-.admin-fold > summary::marker { content: ''; }
+.admin-page .admin-fold > summary::-webkit-details-marker { display: none; }
+.admin-page .admin-fold > summary::marker { content: ''; }
 
-.admin-fold > summary::after {
+.admin-page .admin-fold > summary::after {
   content: 'Read';
+  flex: none;
   color: #d4b88a;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.admin-fold[open] > summary::after { content: 'Close'; }
-.admin-fold[open] > summary { border-bottom-color: transparent; }
-.admin-fold-body { padding: 1.75rem 0 0; }
+.admin-page .admin-fold[open] > summary::after { content: 'Close'; }
+.admin-page .admin-fold[open] > summary { border-bottom-color: transparent; }
+.admin-page .admin-fold-body { padding: 2rem 0 0; }
+
+/* The inline fold that hides a paragraph of why. */
+.admin-page .admin-aside { margin-top: 0.75rem; }
+
+.admin-page .admin-aside > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 40px;
+  color: #d4b88a;
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+.admin-page .admin-aside > summary::-webkit-details-marker { display: none; }
+.admin-page .admin-aside > summary::marker { content: ''; }
+.admin-page .admin-aside > summary::after { content: '+'; }
+.admin-page .admin-aside[open] > summary::after { content: '\2212'; }
+.admin-page .admin-aside-body { max-width: 40rem; padding: 0.1rem 0 0.75rem; }
+
+/* The custody ceremony, and the six words it shows once. The words are the
+   one place a grid is right: they are read back off paper in order, so they
+   are numbered cells and not prose. Mono, because a machine chose them. */
+.admin-page .admin-ceremony { margin-top: 0; }
+
+.admin-page .admin-words {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1px;
+  margin: 1.75rem 0;
+  padding: 0;
+  list-style: none;
+  background: rgba(237, 233, 226, 0.1);
+}
+
+.admin-page .admin-words > li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  background: #17120f;
+}
+
+.admin-page .admin-word {
+  color: #ede9e2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+/* A quotation. The rule is the whole ornament. */
+.admin-page .admin-quote {
+  margin: 2rem 0 0;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(212, 184, 138, 0.4);
+  color: #c4beb4;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.02rem;
+  font-style: italic;
+  line-height: 1.72;
+}
+
+.admin-page .admin-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
 
 .admin-empty-state {
   padding: 3rem 1.5rem;
@@ -1904,7 +1926,7 @@ textarea.maintenance-input { resize: vertical; }
 .admin-eyebrow {
   color: #a39b90;
   font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;

@@ -8,8 +8,8 @@ describe('custody envelope ceremony (components/admin/CustodyEnvelope.tsx)', () 
   const page = source('components/admin/CustodyEnvelope.tsx');
 
   it('uses the shared admin primitives instead of inventing its own, and never modifies AdminPage', () => {
-    assert.match(page, /import \{ AdminSection, adminUI \} from '\.\/AdminPage'/);
-    assert.match(page, /const \{ Body, Brass, Field, Note, Quiet \} = adminUI/);
+    assert.match(page, /import \{ adminUI \} from '\.\/AdminPage'/);
+    assert.match(page, /const \{ Brass, Field, Quiet \} = adminUI/);
     assert.doesNotMatch(page, /export const adminUI/);
   });
 

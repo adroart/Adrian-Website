@@ -35,11 +35,11 @@
  * component's state the moment the envelope has been built and downloaded.
  */
 import React, { useState } from 'react';
-import { AdminSection, adminUI } from './AdminPage';
+import { adminUI } from './AdminPage';
 import AdminAside from './AdminAside';
 import { buildCustodyEnvelope, validateCustodyKeys, type CustodyKeys } from '../../utils/custodyEnvelope';
 
-const { Body, Brass, Field, Note, Quiet } = adminUI;
+const { Brass, Field, Quiet } = adminUI;
 
 export type CustodyEnvelopeProps = {
   /**
@@ -211,71 +211,66 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
   };
 
   return (
-    <AdminSection
-      title="The custody envelope"
-      description="Lets a successor open the encrypted archive without a Cloudflare account."
-    >
-      {/* One raised sheet for the whole ceremony, brass ruled, so the four
-          stages read as one act standing apart from the page around it
-          rather than as more of the desk's prose. The panel is the same one
-          the Succession desk draws its other acts with. */}
-      <div className="admin-panel admin-panel-act">
+    <div className="admin-ceremony">
+      <h3>The custody envelope</h3>
+      <p className="admin-quiet">
+        Lets a successor open the encrypted archive without a Cloudflare account.
+      </p>
+
       {stage === 'idle' && (
         <>
-          <Body>
+          <p className="admin-say">
             Generates a passphrase, shows it once so you can write it on paper, and saves
             custody-envelope.json. Nothing is sent anywhere.
-          </Body>
+          </p>
           {/* Both paragraphs are true and both need saying once. Folded, they
               stop standing between Adrian and the one act on this screen
               every time he passes it. */}
           <AdminAside label="The detail">
-            <Body size={14}>
+            <p className="admin-quiet">
               Pressing the button below asks this browser for the archive's internal keys, generates a fresh
               passphrase on the spot, and shows it to you once, the way a wallet shows a seed phrase, so you can
               write it on paper. The browser then locks the keys behind that passphrase and saves the result as
               custody-envelope.json. The passphrase and the keys are never sent anywhere from this screen, not in
               the request that fetches the keys, not afterward; they exist only in this browser tab, only until
               the file downloads.
-            </Body>
-            <Body size={14} top={10}>
+            </p>
+            <p className="admin-quiet">
               Tell the truth to yourself before you start: this is shown once, nobody, including you, can recover
               it afterward if it is lost, and the paper copy must never be kept in the same place as the envelope
               file.
-            </Body>
+            </p>
           </AdminAside>
-          <div className="mt-5">
+          <div className="admin-shelf mt-6">
             <Brass onClick={() => void begin()}>{busy ? 'Reading the keys' : 'Build the custody envelope'}</Brass>
           </div>
-          {error && <Note top={12}>{error}</Note>}
+          {error && <p className="admin-quiet">{error}</p>}
         </>
       )}
 
       {stage === 'passphrase' && words && (
         <>
-          <Body>
+          <p className="admin-say">
             This is shown once. Write the six words below on paper, in order, exactly as spelled. Once you
             leave this screen nothing here can show them to you again.
-          </Body>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-6">
+          </p>
+          <ol className="admin-words">
             {words.map((word, index) => (
-              <div key={index} className="border border-bronze-500/60 bg-paper-50 px-4 py-3">
-                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-700 mr-2">
-                  {index + 1}
-                </span>
-                <span className="font-title text-2xl tracking-[0.03em] text-wood-900">{word}</span>
-              </div>
+              <li key={index}>
+                <span className="admin-tag">{index + 1}</span>
+                <span className="admin-word">{word}</span>
+              </li>
             ))}
-          </div>
-          <Note>
+          </ol>
+          <p className="admin-quiet">
             {Math.round((entropyBits ?? 0) * 10) / 10} bits. That is the entire security of this envelope;
             guessing it by chance is not a realistic risk.
-          </Note>
-          <Note top={8}>
+          </p>
+          <p className="admin-quiet">
             Write it down before pressing on, twice if you intend to keep two sealed copies. Keep the paper
             apart from custody-envelope.json once it downloads, always.
-          </Note>
-          <div className="flex flex-wrap items-center gap-4 mt-6">
+          </p>
+          <div className="admin-shelf mt-6">
             <Brass onClick={() => void proceedToVerify()}>I have written this down</Brass>
             <Quiet onClick={reset}>Cancel</Quiet>
           </div>
@@ -284,44 +279,43 @@ const CustodyEnvelope: React.FC<CustodyEnvelopeProps> = ({ onEnvelopeMade }) => 
 
       {stage === 'verify' && verifyIndices && (
         <>
-          <Body>
+          <p className="admin-say">
             Type word {verifyIndices[0] + 1} and word {verifyIndices[1] + 1} exactly as you wrote them. This is
             the one check that a passphrase nobody actually recorded cannot slip through.
-          </Body>
+          </p>
           <form
             onSubmit={(event) => { event.preventDefault(); void confirmAndBuild(); }}
-            className="grid gap-6 max-w-sm mt-5"
+            className="grid gap-5 max-w-sm mt-7"
           >
             <Field label={`Word ${verifyIndices[0] + 1}`} value={verifyInputA} onChange={setVerifyInputA} />
             <Field label={`Word ${verifyIndices[1] + 1}`} value={verifyInputB} onChange={setVerifyInputB} />
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="admin-shelf mt-2">
               <Brass onClick={() => void confirmAndBuild()}>
                 {busy ? 'Encrypting' : 'Confirm and build the envelope'}
               </Brass>
               <Quiet onClick={backToPassphrase}>Show the words again</Quiet>
             </div>
-            {verifyError && <Note top={4}>{verifyError}</Note>}
-            {error && <Note top={4}>{error}</Note>}
+            {verifyError && <p className="admin-quiet">{verifyError}</p>}
+            {error && <p className="admin-quiet">{error}</p>}
           </form>
         </>
       )}
 
       {stage === 'done' && (
         <>
-          <Body>
+          <p className="admin-say">
             custody-envelope.json has been saved by your browser, most likely to your downloads folder. Move it
             to wherever the archive folder lives, kept apart from the paper.
-          </Body>
-          <Note top={10}>
+          </p>
+          <p className="admin-quiet">
             One thing left: record today's date below, in the field that tracks when the envelope was made.
-          </Note>
-          <div className="mt-6">
+          </p>
+          <div className="admin-shelf mt-6">
             <Quiet onClick={reset}>Build another</Quiet>
           </div>
         </>
       )}
-      </div>
-    </AdminSection>
+    </div>
   );
 };
 
