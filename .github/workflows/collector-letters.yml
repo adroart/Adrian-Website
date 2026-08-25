@@ -1,8 +1,19 @@
 name: Collector letter anniversaries
 
+# No schedule. This ran nightly from at least 2026-08-20 and skipped every
+# single time, because the feature is deliberately parked three gates deep:
+# LAUNCH_FLAGS.livingLegacy is false (so /api/collector/letters-runner answers
+# 404 in production - probed 2026-08-25), the COLLECTOR_LETTERS_RUNNER_ENABLED
+# repository variable below was never created, and no
+# COLLECTOR_LETTERS_SERVICE_KEY secret exists. The flag stays false until the
+# production and prototype gates in docs/lineage-plate-runbook.md pass, which
+# involves real fabrication, so a nightly no-op tells nobody anything and only
+# makes the Actions history look busier than the work is.
+#
+# To bring it back: pass the runbook gates, set livingLegacy true, add the
+# service key secret and the enabling variable, then restore the schedule.
+# Until then workflow_dispatch is here so it can still be run by hand.
 on:
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
