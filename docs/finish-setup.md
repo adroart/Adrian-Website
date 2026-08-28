@@ -4,7 +4,7 @@ Paste this into an AI assistant that has access to your authenticated terminal,
 or follow it yourself. It provisions the live registry so the guided wizard and
 the QR system function on adrianrasmussen.com.
 
-- **Repo:** `technicianofthesacred/Adrian-Website` (branch `main`)
+- **Repo:** `adroart/Adrian-Website` (branch `main`)
 - **Cloudflare Pages project:** `adrian-website`
 - **Non-destructive:** the new features are additive and fail closed; nothing on
   the public site changes until these are set.
