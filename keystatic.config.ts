@@ -4,8 +4,8 @@ export default config({
   storage: {
     kind: 'github',
     repo: {
-      owner: 'technicianofthesacred',
-      name: 'adrian-website',
+      owner: 'adroart',
+      name: 'Adrian-Website',
     },
   },
 
