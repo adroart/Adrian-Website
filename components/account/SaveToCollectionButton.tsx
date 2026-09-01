@@ -103,7 +103,7 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
 const stcStyles = `
   .stc { position: relative; display: inline-block; }
   .stc__btn {
-    font-family: 'Lato', Helvetica, sans-serif;
+    font-family: var(--font-label);
     font-size: 10px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -167,7 +167,7 @@ const stcStyles = `
     background: var(--color-paper-50);
   }
   .stc__create-btn {
-    font-family: 'Lato', Helvetica, sans-serif;
+    font-family: var(--font-label);
     font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;

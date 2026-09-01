@@ -149,7 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           </div>
 
           {/* Right-side controls: auth + dark mode + cart + mobile hamburger */}
-          <div className="flex items-center gap-0">
+          <div className={`flex items-center gap-0 ${textPrimary}`}>
             <AuthButton />
             <button
               onClick={toggleDarkMode}

@@ -177,12 +177,29 @@ blockquote {
 }
 
 @theme {
-  /* Font families */
-  --font-serif: "Cormorant Garamond", serif;
-  --font-sans: "Lora", serif;
-  --font-mono: "Karla", sans-serif;          /* kept for backward compat */
-  --font-label: "Karla", sans-serif;         /* semantic alias — use font-label in new code */
-  --font-display: "Cormorant Garamond", serif; /* structural titles: brand name, page headings */
+  /* Font families — three roles, named for the role they play.
+   *
+   * Reach for these three and nothing else:
+   *   --font-display  Cormorant Garamond   titles, headings, the brand name
+   *   --font-body     Lora                 running text
+   *   --font-label    Karla                uppercase eyebrows, meta, data
+   *
+   * The --font-sans / --font-mono names below are Tailwind's built-in slots and are
+   * kept only so existing `font-sans` / `font-mono` classes keep rendering. Do NOT
+   * reach for them in new code: --font-sans resolves to Lora, which is a serif, and
+   * --font-mono resolves to Karla, which is a sans and not monospaced. Those two
+   * names have been actively misleading every reader of this file. For real
+   * monospace (tabular data, code) use --font-tabular.
+   */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+  --font-label: "Karla", "Helvetica Neue", Arial, sans-serif;
+  --font-tabular: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Tailwind slot aliases — see the warning above. */
+  --font-serif: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-label);
 
   /* Colors: taupe */
   --color-taupe: #453d39;
@@ -239,7 +256,12 @@ blockquote {
   --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
-  --color-bronze-600: #8a744e;
+  /* Darkened from #8a744e (2026-09-01). text-bronze-600 is the site's eyebrow and
+     meta colour, 152 usages, and at #8a744e it measured 3.66:1 to 4.48:1 on the
+     light grounds, under the 4.5:1 it needs. #7d6640 measures 4.96:1 on paper-50
+     and keeps the bronze character. The .dark block remaps this token, so this
+     value only ever applies on light grounds. */
+  --color-bronze-600: #7d6640;
   --color-bronze-700: #6d5a3c;
   --color-bronze-900: #453825;
 
@@ -386,7 +408,7 @@ blockquote {
   --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
-  --color-bronze-600: #8a744e;
+  --color-bronze-600: #7d6640;
 }
 
 /* bg-white is a Tailwind built-in — override in dark mode */
@@ -432,7 +454,7 @@ blockquote {
   --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
-  --color-bronze-600: #8a744e;
+  --color-bronze-600: #7d6640;
   --color-bronze-700: #6d5a3c;
   --color-bronze-900: #453825;
 }
@@ -2158,4 +2180,63 @@ textarea.maintenance-input { resize: vertical; }
 
 @media (prefers-reduced-motion: reduce) {
   .collector-door { transition: none; }
+}
+
+/* ============================================================
+   Keyboard focus — one ring for the whole public site
+   ============================================================
+   Before this block only .admin-page had a designed focus state. The public site
+   fell through to browser defaults, so tabbing produced three different rings
+   ("2px solid", "1px auto", "3px auto") depending on which element you landed on,
+   and on the dark ground several of them were nearly invisible.
+
+   :focus-visible only, so a mouse click never draws a ring. The offset keeps the
+   ring clear of artwork edges, which matters because the tile IS the link. */
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-bronze-400);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* On paper-coloured surfaces the bronze needs to go darker to stay visible. */
+:where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white)
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--color-bronze-700);
+}
+
+/* ============================================================
+   Skip link
+   ============================================================
+   The nav carries five destinations plus auth, theme and cart before the content
+   starts. Without this, a keyboard or screen-reader visitor tabbed through all of
+   it on every single page load. */
+
+.skip-to-content {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 100;
+  padding: 12px 20px;
+  background: var(--color-paper-50);
+  color: var(--color-wood-900);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--color-wood-700);
+  /* Visually hidden until focused, but still in the tab order and still announced. */
+  transform: translateY(-200%);
+  transition: transform 160ms ease-out;
+}
+
+.skip-to-content:focus-visible {
+  transform: translateY(0);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-to-content { transition: none; }
 }

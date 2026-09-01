@@ -131,6 +131,9 @@ const SiteShell: React.FC = () => {
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       {!isAdmin && !isChromeless && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isWelcome && !isAdmin && !isChromeless && (
+        <a href="#main-content" className="skip-to-content">Skip to content</a>
+      )}
       {!isWelcome && !isAdmin && !isChromeless && <Navigation theme={theme} />}
 
       <main id="main-content">
