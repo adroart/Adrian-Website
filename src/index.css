@@ -2221,3 +2221,35 @@ textarea.maintenance-input { resize: vertical; }
     0 1px 2px rgba(20, 16, 12, 0.55),
     0 2px 18px rgba(20, 16, 12, 0.45);
 }
+
+/* ============================================================
+   Scroll reveal — reduced motion
+   ============================================================
+   Reveal blocks start at opacity: 0 and are brought in by an IntersectionObserver.
+   That means the animation is not decoration layered on top of visible content — it
+   IS what makes the content visible. So "reduce motion" cannot simply mean "skip the
+   transition"; it has to mean "show it immediately", or a visitor who asked for less
+   movement gets a blank page.
+
+   The hook applies the same rule in JS (it adds is-visible on mount when this query
+   matches). Both halves are needed: the CSS also removes the transform and transition
+   for anything revealed later. */
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-block,
+  .reveal-up,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-fade {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .reveal-block .pg-2,
+  .reveal-block .pg-3,
+  .reveal-block .pg-4 {
+    opacity: 1 !important;
+  }
+}

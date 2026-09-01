@@ -658,7 +658,7 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
+            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-16">
                 {/* Images */}
                 <div className="space-y-4">
                     <div
@@ -680,13 +680,14 @@ const PiecePage: React.FC = () => {
                         }}
                     >
                         <img
-                            src={cldImg(allImages[activeImageIndex], { w: 1200 })}
+                            src={cldImg(allImages[activeImageIndex], { w: 1800 })}
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
                             alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
                     </div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 text-center md:hidden">
-                        Tap image to enlarge
+                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 text-center">
+                        <span className="md:hidden">Tap image to enlarge</span>
+                        <span className="hidden md:inline">Click the image to view it full size</span>
                     </p>
 
                     {allImages.length > 1 && (
