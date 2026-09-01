@@ -10,6 +10,7 @@ import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
 import { LAUNCH_FLAGS } from '../launchFlags';
+import { piecePath } from '../utils/pieceSlug';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -240,7 +241,7 @@ const AvailableNowSection: React.FC = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {readyToShip.map(piece => (
-                        <Link key={piece.id} to={`/creations/${piece.id}`} className="group">
+                        <Link key={piece.id} to={piecePath(piece)} className="group">
                             <div className="overflow-hidden aspect-square mb-3">
                                 <ArtImage
                                     publicId={piece.coverImage}

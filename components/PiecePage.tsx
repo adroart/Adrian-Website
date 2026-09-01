@@ -14,6 +14,7 @@ import GalleryTileCard from './GalleryTileCard';
 import SaveToCollectionButton from './account/SaveToCollectionButton';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
+import { resolvePiece, isLegacyPieceParam, piecePath, pieceUrl } from '../utils/pieceSlug';
 
 // --- Helpers ---
 
@@ -199,10 +200,20 @@ const PiecePage: React.FC = () => {
     const purchaseRef = useRef<HTMLDivElement>(null);
     const [purchaseVisible, setPurchaseVisible] = useState(false);
 
-    const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+    // Accepts the canonical title slug (/creations/amphibian-dream) and the legacy
+    // catalog id (/creations/SIG-100), so every link ever shared keeps resolving.
+    const art = useMemo(() => resolvePiece(FULL_ARCHIVE, id), [id]);
 
-    // Recently viewed tracking
-    const recentIds = useRecentlyViewed(id ?? '');
+    // An id URL is a working URL, not the canonical one. Send it to the slug so the
+    // address bar, the share sheet and the analytics all agree on one address per piece.
+    useEffect(() => {
+        if (art && isLegacyPieceParam(art, id)) {
+            navigate(piecePath(art) + location.search, { replace: true, state: location.state });
+        }
+    }, [art, id, navigate, location.search, location.state]);
+
+    // Recently viewed tracking — keyed on the stable id, never the slug
+    const recentIds = useRecentlyViewed(art?.id ?? '');
     const recentPieces = useMemo(
         () => recentIds.map(rid => FULL_ARCHIVE.find(a => a.id === rid)).filter((a): a is Artwork => Boolean(a)),
         [recentIds],
@@ -517,7 +528,7 @@ const PiecePage: React.FC = () => {
         '@type': 'VisualArtwork',
         name: art.title,
         description: isUL ? ulMetaDescription(art) : art.description,
-        url: `https://adrianrasmussen.com/creations/${art.id}`,
+        url: pieceUrl(art),
         image: `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_1200,c_fill,g_auto/${art.coverImage}`,
         creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
         ...(art.year && { dateCreated: art.year }),
@@ -537,7 +548,7 @@ const PiecePage: React.FC = () => {
                 availability: art.availability === 'SOLD'
                     ? 'https://schema.org/SoldOut'
                     : 'https://schema.org/InStock',
-                url: `https://adrianrasmussen.com/creations/${art.id}`,
+                url: pieceUrl(art),
             },
         }),
     };
@@ -551,11 +562,11 @@ const PiecePage: React.FC = () => {
             item: `https://adrianrasmussen.com/creations/multidimensional-art/${seriesSlug}`,
         });
         breadcrumbItems.push({
-            '@type': 'ListItem', position: 3, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+            '@type': 'ListItem', position: 3, name: art.title, item: pieceUrl(art),
         });
     } else {
         breadcrumbItems.push({
-            '@type': 'ListItem', position: 2, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+            '@type': 'ListItem', position: 2, name: art.title, item: pieceUrl(art),
         });
     }
     const breadcrumbSchema = {
@@ -1387,7 +1398,7 @@ const PiecePage: React.FC = () => {
                         {relatedPieces.map((related) => (
                             <Link
                                 key={related.id}
-                                to={`/creations/${related.id}`}
+                                to={piecePath(related)}
                                 className="group"
                             >
                                 <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">

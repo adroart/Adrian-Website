@@ -9,6 +9,7 @@ import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { usePlayer, formatTime } from '../PlayerContext';
+import { piecePath } from '../utils/pieceSlug';
 
 // Build a synthetic Track from a Story's AudioTrack entry so it can play through the global PlayerContext.
 function trackFromAudio(audio: AudioTrack, lyrics: string[] | undefined, storySlug: string): Track {
@@ -322,7 +323,7 @@ export const WritingArticle: React.FC = () => {
                             {relatedArtworks.map(art => (
                                 <Link
                                     key={art.id}
-                                    to={`/creations/${art.id}`}
+                                    to={piecePath(art)}
                                     className="group flex gap-4 items-start"
                                 >
                                     <div className="w-20 h-20 flex-shrink-0 overflow-hidden bg-wood-100 border border-wood-200">
