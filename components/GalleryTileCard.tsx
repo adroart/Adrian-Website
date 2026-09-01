@@ -39,7 +39,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     return (
         <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 touch-active">
             {/* Image - links to the piece */}
-            <Link to={piecePath(art)} className={`block overflow-hidden relative bg-wood-100 border border-wood-200 ${isSquare ? 'aspect-square' : ''}`}>
+            <Link to={piecePath(art)} className={`block overflow-hidden relative bg-wood-100 border border-wood-200 group-hover:border-bronze-400 group-focus-within:border-bronze-400 transition-colors duration-500 ${isSquare ? 'aspect-square' : ''}`}>
                 <ArtImage
                     publicId={art.coverImage}
                     alt={art.series === 'Universal Language' ? ulAltText(art, ulCardNumber(art.coverImage)) : `${art.title} by Adrian Rasmussen`}
@@ -48,12 +48,9 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     loading="lazy"
                 />
 
-                {/* Hover overlay with "View" prompt */}
-                <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/15 group-focus-within:bg-wood-900/15 transition-all duration-500 flex items-center justify-center">
-                    <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
-                        View
-                    </span>
-                </div>
+                {/* No overlay, no pill, nothing laid over the artwork — the house rule
+                    is that the work is never covered. Hover is signalled by the frame
+                    warming instead, on the border and the label band below. */}
             </Link>
 
             {/* Title plaque - sits between image and detail box like a gallery label */}
@@ -68,11 +65,11 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             <Link to={piecePath(art)} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
                 <div className="flex items-center justify-center gap-2">
-                    <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
+                    <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-700 font-semibold leading-none">
                         {subtitleOverride || art.category}
                     </span>
                     {pieceNumber && (
-                        <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-300 font-semibold leading-none">
+                        <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-600 font-semibold leading-none">
                             {pieceNumber}
                         </span>
                     )}
@@ -85,7 +82,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                             <span className="font-sans text-base text-wood-700 font-medium">
                                 {formatPrice(art.price)}
                                 {showRange && (
-                                    <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>
+                                    <span className="text-wood-600 font-light"> to {formatPrice(highPrice!)}</span>
                                 )}
                             </span>
                         )}
@@ -94,7 +91,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         )}
                         {/* Status line */}
                         {(art.availability === 'READY_TO_SHIP' || art.availability === 'MADE_TO_ORDER' || (variants && variants.length > 1)) && (
-                            <p className="mt-1 font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
+                            <p className="mt-1 font-label text-[10px] uppercase tracking-[0.12em] text-wood-600 font-semibold">
                                 {art.availability === 'READY_TO_SHIP' && 'Ready to ship'}
                                 {art.availability === 'MADE_TO_ORDER' && !variants?.some(v => v.availability === 'IN_STOCK') && 'Made to order'}
                                 {variants && variants.length > 1 && (
@@ -110,10 +107,10 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
                 {/* Minimal price for non-detail mode */}
                 {!showDetails && art.price != null && art.availability !== 'SOLD' && (
-                    <span className="block mt-1.5 font-sans text-sm text-wood-500">
+                    <span className="block mt-1.5 font-sans text-sm text-wood-700">
                         {formatPrice(art.price)}
                         {showRange && (
-                            <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>
+                            <span className="text-wood-600 font-light"> to {formatPrice(highPrice!)}</span>
                         )}
                     </span>
                 )}

@@ -253,7 +253,7 @@ const Inquire: React.FC = () => {
   const floatLabel = (field: string) => {
     const isUp = focused[field] || form[field as keyof FormState]?.trim();
     return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.1em] font-semibold transition-all duration-200 ${
-      isUp ? 'top-0 text-[10px] text-wood-500' : 'top-3 text-xs text-wood-500'
+      isUp ? 'top-0 text-[10px] text-wood-700' : 'top-3 text-xs text-wood-700'
     }`;
   };
 
@@ -577,7 +577,7 @@ const Inquire: React.FC = () => {
                       >
                         {chosenPath.suggestLabel}
                       </Link>
-                      <span className="hidden sm:inline text-wood-300">&middot;</span>
+                      <span className="hidden sm:inline text-wood-700">&middot;</span>
                       <Link
                         to="/writings"
                         className="font-serif text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
@@ -608,26 +608,26 @@ const Inquire: React.FC = () => {
                     {purchaseMode && pieceTitle ? (
                       /* Purchase mode: piece summary card */
                       <div className="mb-8">
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mb-4">
+                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 mb-4">
                           Purchase request
                         </p>
                         <div className="border border-wood-200 bg-white p-5 mb-2 space-y-2">
                           <p className="font-serif text-xl text-wood-900 leading-[1.3]">{pieceTitle}</p>
                           {purchaseSize && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Size</span>
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Size</span>
                               {purchaseSize}
                             </p>
                           )}
                           {purchaseAddOns.length > 0 && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Add-ons</span>
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Add-ons</span>
                               {purchaseAddOns.join(', ')}
                             </p>
                           )}
                           {purchaseAvailability && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Availability</span>
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Availability</span>
                               {purchaseAvailability}
                             </p>
                           )}
@@ -641,13 +641,13 @@ const Inquire: React.FC = () => {
                     ) : pieceTitle ? (
                       /* Prefilled commission: piece title IS the heading */
                       <div className="mb-[6px]">
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mb-3">
+                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 mb-3">
                           Commission inquiry
                         </p>
                         <p className="font-serif text-2xl md:text-3xl text-wood-900 leading-[1.25] mb-1">
                           {pieceTitle}
                         </p>
-                        <p className="font-sans text-sm text-wood-500">
+                        <p className="font-sans text-sm text-wood-700">
                           {chosenPath.forText}
                         </p>
                       </div>
@@ -657,12 +657,12 @@ const Inquire: React.FC = () => {
                         <p className="font-serif text-2xl md:text-3xl text-wood-900 leading-[1.25] mb-1">
                           Tell me what you are imagining.
                         </p>
-                        <p className="font-sans text-sm text-wood-500">
+                        <p className="font-sans text-sm text-wood-700">
                           {chosenPath.forText}.{' '}
                           <button
                             type="button"
                             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                            className="text-bronze-400 hover:text-bronze-600 underline underline-offset-2 decoration-1 transition-colors"
+                            className="text-bronze-600 hover:text-bronze-600 underline underline-offset-2 decoration-1 transition-colors"
                           >
                             Change
                           </button>
@@ -675,7 +675,7 @@ const Inquire: React.FC = () => {
                     <div className="mb-[6px]">
                       <label
                         htmlFor="field-vision"
-                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
+                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
                       >
                         {!pieceTitle ? 'What wants to exist?' : null}
                       </label>
@@ -725,7 +725,7 @@ const Inquire: React.FC = () => {
                         Name
                       </label>
                       {touched.name && !getFieldError('name') && form.name.trim() && (
-                        <Check size={13} className="absolute right-0 top-6 text-bronze-400 animate-fade-in" strokeWidth={2.5} />
+                        <Check size={13} className="absolute right-0 top-6 text-bronze-600 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('name') && (
                         <p id="name-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
@@ -755,7 +755,7 @@ const Inquire: React.FC = () => {
                         Email
                       </label>
                       {touched.email && !getFieldError('email') && form.email.trim() && isValidEmail(form.email) && (
-                        <Check size={13} className="absolute right-0 top-6 text-bronze-400 animate-fade-in" strokeWidth={2.5} />
+                        <Check size={13} className="absolute right-0 top-6 text-bronze-600 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('email') && (
                         <p id="email-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
@@ -769,7 +769,7 @@ const Inquire: React.FC = () => {
                     <div className="mb-[6px] pt-3">
                       <label
                         htmlFor="field-vision"
-                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
+                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
                       >
                         Notes or questions
                       </label>
@@ -798,13 +798,13 @@ const Inquire: React.FC = () => {
                       <div className="mt-4 flex flex-col gap-2">
                         {purchaseMode ? (
                           <div className="flex flex-col gap-1.5">
-                            <p className="font-sans text-sm text-wood-400">
+                            <p className="font-sans text-sm text-wood-700">
                               Or reach out directly:
                             </p>
-                            <p className="font-sans text-sm text-wood-400">
+                            <p className="font-sans text-sm text-wood-700">
                               <a
                                 href="mailto:hello@adrianrasmussen.com"
-                                className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                                className="text-bronze-600 hover:text-bronze-600 transition-colors"
                               >
                                 hello@adrianrasmussen.com
                               </a>
@@ -815,7 +815,7 @@ const Inquire: React.FC = () => {
                                     href={`https://wa.me/${WHATSAPP_NUMBER}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                                    className="text-bronze-600 hover:text-bronze-600 transition-colors"
                                   >
                                     WhatsApp
                                   </a>
@@ -825,11 +825,11 @@ const Inquire: React.FC = () => {
                           </div>
                         ) : (
                           <>
-                            <p className="font-sans text-sm text-wood-400">
+                            <p className="font-sans text-sm text-wood-700">
                               Or write directly:{' '}
                               <a
                                 href="mailto:hello@adrianrasmussen.com"
-                                className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                                className="text-bronze-600 hover:text-bronze-600 transition-colors"
                               >
                                 hello@adrianrasmussen.com
                               </a>
@@ -838,7 +838,7 @@ const Inquire: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCommissionType(chosenPath.otherType)}
-                                className="text-left font-sans text-sm text-wood-400 hover:text-wood-600 transition-colors"
+                                className="text-left font-sans text-sm text-wood-700 hover:text-wood-600 transition-colors"
                               >
                                 Switch to {chosenPath.otherLabel} commission instead
                               </button>
@@ -854,12 +854,12 @@ const Inquire: React.FC = () => {
                         <div className="border-t border-wood-150 pt-8 mt-8 mb-8">
                           <div className="flex items-center gap-3 mb-2">
                             <span className="flex-1 h-px bg-wood-100" />
-                            <span className="font-label text-[11px] text-bronze-400 tracking-[0.15em] uppercase">
+                            <span className="font-label text-[11px] text-bronze-600 tracking-[0.15em] uppercase">
                               Optional details
                             </span>
                             <span className="flex-1 h-px bg-wood-100" />
                           </div>
-                          <p className="font-sans text-sm text-wood-500 text-center">
+                          <p className="font-sans text-sm text-wood-700 text-center">
                             Helps me prepare for our conversation.
                           </p>
                         </div>
@@ -870,7 +870,7 @@ const Inquire: React.FC = () => {
                           <div>
                             <label
                               htmlFor="field-budget"
-                              className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3"
+                              className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 font-semibold mb-3"
                             >
                               Budget Range
                             </label>
@@ -903,7 +903,7 @@ const Inquire: React.FC = () => {
                               onBlur={() => handleBlur('location')}
                               className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
                             />
-                            <p className="font-sans text-sm text-wood-500 mt-1.5">
+                            <p className="font-sans text-sm text-wood-700 mt-1.5">
                               City, country, or region where the piece will live.
                             </p>
                           </div>
@@ -1010,7 +1010,7 @@ const Inquire: React.FC = () => {
               Just want to say hello?
             </span>
             <span className="w-6 h-px bg-wood-300 group-hover:bg-bronze-400 group-hover:w-8 transition-all duration-300" />
-            <span className="font-label text-xs uppercase tracking-[0.15em] text-bronze-500 font-semibold group-hover:text-bronze-700 transition-colors">
+            <span className="font-label text-xs uppercase tracking-[0.15em] text-bronze-600 font-semibold group-hover:text-bronze-700 transition-colors">
               Email
             </span>
           </a>

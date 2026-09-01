@@ -73,7 +73,7 @@ const MultidimensionalArt: React.FC = () => {
             {/* Breadcrumb */}
             <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
-                <span className="text-wood-300">/</span>
+                <span className="text-wood-700">/</span>
                 <span className="text-wood-900">Multidimensional Art</span>
             </div>
 

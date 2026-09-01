@@ -341,7 +341,7 @@ const SubcategoryPage: React.FC = () => {
                         {hasFiltersActive && (
                             <button
                                 onClick={clearAllFilters}
-                                className="mt-4 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
+                                className="mt-4 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold"
                             >
                                 Clear filters
                             </button>

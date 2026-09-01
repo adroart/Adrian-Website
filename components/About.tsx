@@ -300,7 +300,7 @@ const About: React.FC = () => {
                 <div className="mt-10">
                   <Link
                     to="/inquire"
-                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-400 hover:text-bronze-300 font-semibold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-300 hover:text-bronze-200 font-semibold border-b border-bronze-300 hover:border-bronze-200 pb-1 transition-colors"
                   >
                     Begin a conversation
                   </Link>
@@ -421,7 +421,7 @@ const About: React.FC = () => {
                       He tapped into something that had always been there inside himself. The art was a
                       gateway. Through it, he felt connected to who he was again.
                     </p>
-                    <p className="font-serif text-xl text-bronze-400">
+                    <p className="font-serif text-xl text-bronze-600">
                       He did the work. The piece just held the space.
                     </p>
                   </div>

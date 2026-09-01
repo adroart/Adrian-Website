@@ -258,10 +258,10 @@ blockquote {
   --color-bronze-500: #ab9266;
   /* Darkened from #8a744e (2026-09-01). text-bronze-600 is the site's eyebrow and
      meta colour, 152 usages, and at #8a744e it measured 3.66:1 to 4.48:1 on the
-     light grounds, under the 4.5:1 it needs. #7d6640 measures 4.96:1 on paper-50
+     light grounds it is used on, under the 4.5:1 it needs. #725d3d measures 4.54:1 on the darkest of them (paper-200)
      and keeps the bronze character. The .dark block remaps this token, so this
      value only ever applies on light grounds. */
-  --color-bronze-600: #7d6640;
+  --color-bronze-600: #725d3d;
   --color-bronze-700: #6d5a3c;
   --color-bronze-900: #453825;
 
@@ -408,7 +408,7 @@ blockquote {
   --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
-  --color-bronze-600: #7d6640;
+  --color-bronze-600: #725d3d;
 }
 
 /* bg-white is a Tailwind built-in — override in dark mode */
@@ -454,7 +454,7 @@ blockquote {
   --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
-  --color-bronze-600: #7d6640;
+  --color-bronze-600: #725d3d;
   --color-bronze-700: #6d5a3c;
   --color-bronze-900: #453825;
 }
@@ -2203,40 +2203,4 @@ textarea.maintenance-input { resize: vertical; }
 :where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white)
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-color: var(--color-bronze-700);
-}
-
-/* ============================================================
-   Skip link
-   ============================================================
-   The nav carries five destinations plus auth, theme and cart before the content
-   starts. Without this, a keyboard or screen-reader visitor tabbed through all of
-   it on every single page load. */
-
-.skip-to-content {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  z-index: 100;
-  padding: 12px 20px;
-  background: var(--color-paper-50);
-  color: var(--color-wood-900);
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: 1px solid var(--color-wood-700);
-  /* Visually hidden until focused, but still in the tab order and still announced. */
-  transform: translateY(-200%);
-  transition: transform 160ms ease-out;
-}
-
-.skip-to-content:focus-visible {
-  transform: translateY(0);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skip-to-content { transition: none; }
 }

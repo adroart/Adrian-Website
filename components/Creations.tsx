@@ -97,7 +97,7 @@ const CreationCategoryCard: React.FC<{
                 <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h2>
-                <p className="font-sans text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
+                <p className="font-sans text-sm text-wood-700 font-light mt-1 leading-relaxed line-clamp-1
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
@@ -173,7 +173,7 @@ const CollectionCard: React.FC<{
                 </h4>
                 <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
-                    {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
+                    {isActive && <span className="text-bronze-600 ml-2">· Active filter</span>}
                 </span>
                 {collection.description && (
                     <p className="hidden sm:block font-sans text-sm text-paper-50 font-light mt-1
@@ -195,13 +195,13 @@ const SortDropdown: React.FC<{
     onChange: (v: SortOption) => void;
 }> = ({ value, onChange }) => (
     <div className="relative flex items-center gap-1.5">
-        <ArrowUpDown size={12} className="text-wood-400 flex-shrink-0" aria-hidden="true" />
+        <ArrowUpDown size={12} className="text-wood-700 flex-shrink-0" aria-hidden="true" />
         <label htmlFor="sort-select" className="sr-only">Sort pieces</label>
         <select
             id="sort-select"
             value={value}
             onChange={e => onChange(e.target.value as SortOption)}
-            className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
+            className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
         >
             {(Object.keys(SORT_LABELS) as SortOption[]).map(opt => (
                 <option key={opt} value={opt}>{SORT_LABELS[opt]}</option>
@@ -227,7 +227,7 @@ const AvailableNowSection: React.FC = () => {
                     <div>
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Ready to Ship</span>
                         <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">Available Now</h2>
-                        <p className="font-sans text-base text-wood-500 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
+                        <p className="font-sans text-base text-wood-700 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
                     </div>
                     {LAUNCH_FLAGS.shopEnabled && (
                         <Link
@@ -251,7 +251,7 @@ const AvailableNowSection: React.FC = () => {
                                 />
                             </div>
                             <p className="font-sans text-sm text-wood-800 font-medium group-hover:text-bronze-600 transition-colors leading-snug">{piece.title}</p>
-                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 mt-1">{piece.series || piece.category}</p>
+                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 mt-1">{piece.series || piece.category}</p>
                         </Link>
                     ))}
                 </div>
@@ -375,7 +375,7 @@ const Creations: React.FC = () => {
                         <p className="font-sans text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-sans text-base text-wood-500 max-w-4xl font-light leading-[1.7] mt-3">
+                        <p className="font-sans text-base text-wood-700 max-w-4xl font-light leading-[1.7] mt-3">
                             These are not decoration. They are portals. A place to sit with. To find your center.
                             To feel an opening. Find what calls to you.
                         </p>
@@ -422,13 +422,13 @@ const Creations: React.FC = () => {
                                 >
                                     All
                                 </button>
-                                <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                <span className="text-wood-700 flex-shrink-0" aria-hidden="true">/</span>
                                 <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-900 truncate">
                                     {filter}
                                 </span>
                                 {activeCollection && (
                                     <>
-                                        <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                        <span className="text-wood-700 flex-shrink-0" aria-hidden="true">/</span>
                                         <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-bronze-600 truncate">
                                             {categoryCollections.find(c => c.id === activeCollection)?.name}
                                         </span>
@@ -512,7 +512,7 @@ const Creations: React.FC = () => {
                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
-                            <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
+                            <span className="text-wood-700 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
                                 · {categoryCollections[0].description}
                             </span>
                         )}
@@ -537,7 +537,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Pendants and Jewelry</h2>
-                                <p className="font-sans text-lg text-wood-500 font-light">Necklaces, pendants, and wearable pieces</p>
+                                <p className="font-sans text-lg text-wood-700 font-light">Necklaces, pendants, and wearable pieces</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.jewelry.map((id, i) => (
@@ -556,7 +556,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Rings</h2>
-                                <p className="font-sans text-lg text-wood-500 font-light">Ye Ming Zhu rings, each unique</p>
+                                <p className="font-sans text-lg text-wood-700 font-light">Ye Ming Zhu rings, each unique</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.rings.map((id, i) => (
@@ -610,7 +610,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setActiveCollection(null)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Clear collection filter
                                 </button>
@@ -619,7 +619,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowAvailableOnly(false)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Show all availability
                                 </button>
@@ -627,7 +627,7 @@ const Creations: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => handleCategoryChange(null)}
-                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                             >
                                 Back to all categories
                             </button>
