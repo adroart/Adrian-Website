@@ -156,7 +156,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               className={`px-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${textPrimary}`}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {isDarkMode ? 'Light' : 'Dark'}
+              {isDarkMode ? 'Day' : 'Night'}
             </button>
             {LAUNCH_FLAGS.shopEnabled && (
             <button

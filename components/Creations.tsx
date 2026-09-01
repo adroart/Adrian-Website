@@ -37,6 +37,17 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
     return pieces[0]?.coverImage;
 }
 
+/**
+ * How many pieces the grid renders before asking.
+ *
+ * The full archive is 173 pieces. Rendered in one go the page measured 22,590px —
+ * twenty-five screens — with 183 lazily-loaded images. Scrolling at any speed
+ * outran the loader, so what a visitor actually saw was a wall of empty tiles
+ * catching up behind them. A page of 48 fills three to four screens, which is
+ * enough to feel abundant without asking anyone to scroll a kilometre.
+ */
+const PAGE_SIZE = 48;
+
 function sortArchive(data: Artwork[], sort: SortOption): Artwork[] {
     if (sort === 'price-asc') return [...data].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     if (sort === 'price-desc') return [...data].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
@@ -252,6 +263,12 @@ const AvailableNowSection: React.FC = () => {
                             </div>
                             <p className="font-sans text-sm text-wood-800 font-medium group-hover:text-bronze-600 transition-colors leading-snug">{piece.title}</p>
                             <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 mt-1">{piece.series || piece.category}</p>
+                            {/* These six are the finished pieces a visitor can have now.
+                                Showing everything except the price made the most
+                                purchase-ready row on the site the least informative. */}
+                            {piece.price != null && (
+                                <p className="font-sans text-sm text-wood-900 font-medium mt-1">{formatPrice(piece.price)}</p>
+                            )}
                         </Link>
                     ))}
                 </div>
@@ -281,6 +298,7 @@ const Creations: React.FC = () => {
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
     const [sort, setSort] = useState<SortOption>('default');
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
     // Jewelry gallery lightbox
     const [jewelryLightbox, setJewelryLightbox] = useState<{ images: string[]; index: number } | null>(null);
@@ -341,7 +359,18 @@ const Creations: React.FC = () => {
         return sortArchive(data, sort);
     }, [filter, activeCollection, showAvailableOnly, sort, categoryCollections, collectionPiecesMap]);
 
-    const displayedPieces = filteredArchive;
+    // Any change to the filters starts the window again — otherwise switching
+    // category while deep into "show more" would silently reveal a different
+    // number of pieces than the count says.
+    useEffect(() => {
+        setVisibleCount(PAGE_SIZE);
+    }, [filter, activeCollection, showAvailableOnly, sort]);
+
+    const displayedPieces = useMemo(
+        () => filteredArchive.slice(0, visibleCount),
+        [filteredArchive, visibleCount],
+    );
+    const remaining = filteredArchive.length - displayedPieces.length;
     const showCollectionCards = !!filter && categoryCollections.length >= 2;
 
     // Count available pieces for the toggle label
@@ -442,23 +471,22 @@ const Creations: React.FC = () => {
 
                     {/* Right: controls */}
                     <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Sort - only shown in filtered views */}
-                        {filter && (
-                            <SortDropdown value={sort} onChange={setSort} />
-                        )}
+                        {/* Sort. This used to render only when a ?category= param was
+                            present, so the bare /creations page — the way nearly everyone
+                            arrives — offered no way to sort 173 pieces at all. */}
+                        <SortDropdown value={sort} onChange={setSort} />
 
-                        {/* Divider */}
-                        {filter && <span className="text-wood-200" aria-hidden="true">|</span>}
+                        <span className="text-wood-300" aria-hidden="true">|</span>
 
                         {/* Available-only toggle */}
                         <button
                             type="button"
                             onClick={() => setShowAvailableOnly(v => !v)}
                             aria-pressed={showAvailableOnly}
-                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors focus-visible:outline-none focus-visible:underline ${
+                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
                                 showAvailableOnly
-                                    ? 'text-bronze-600'
-                                    : 'text-wood-600 hover:text-wood-900'
+                                    ? 'text-paper-50 bg-wood-900 border-wood-900'
+                                    : 'text-wood-700 border-wood-300 hover:border-wood-700 hover:text-wood-900'
                             }`}
                         >
                             {showAvailableOnly
@@ -587,11 +615,31 @@ const Creations: React.FC = () => {
                         </div>
                     </>
                 ) : displayedPieces.length > 0 ? (
-                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
-                        {displayedPieces.map(art => (
-                            <GalleryTileCard key={art.id} art={art} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
+                            {displayedPieces.map(art => (
+                                <GalleryTileCard key={art.id} art={art} />
+                            ))}
+                        </div>
+
+                        {remaining > 0 && (
+                            <div className="flex flex-col items-center gap-3 pt-14">
+                                <p
+                                    className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold"
+                                    aria-live="polite"
+                                >
+                                    Showing {displayedPieces.length} of {filteredArchive.length}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border border-wood-700 hover:border-bronze-600 px-8 py-3 transition-colors"
+                                >
+                                    Show {Math.min(PAGE_SIZE, remaining)} more
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     /* ── Empty State ─────────────────────────────────────── */
                     <div className="text-center py-24 px-6">
