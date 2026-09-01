@@ -24,7 +24,8 @@
     "ledger": "tsx scripts/registry-ledger.ts",
     "atlas:import-source": "tsx scripts/import-atlas-source.ts",
     "collector:prototype": "node scripts/build-collector-prototype.mjs",
-    "prerender": "node --import tsx scripts/prerender-meta.ts"
+    "prerender": "node --import tsx scripts/prerender-meta.ts",
+    "stripe:sync": "node --import tsx scripts/stripe-sync-prices.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.11",
