@@ -48,6 +48,30 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
  */
 const PAGE_SIZE = 48;
 
+/**
+ * Match a piece against a free-text query.
+ *
+ * 173 pieces and no way to search them: someone who remembered "the frog one" or came
+ * looking for "Communion" had to scroll the archive until they found it. Everything
+ * needed is already in the browser, so this needs no index and no request.
+ *
+ * Every term must match somewhere (AND, not OR), which is what makes narrowing feel
+ * like it is working: "wood 2024" gets pieces that are both, not everything that is
+ * either. Fields are joined once per piece and cached by the caller's useMemo.
+ */
+function pieceHaystack(a: Artwork): string {
+    return [a.title, a.series, a.category, a.material, a.year, a.dimensions, a.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+}
+
+function matchesQuery(haystack: string, query: string): boolean {
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return true;
+    return terms.every(t => haystack.includes(t));
+}
+
 function sortArchive(data: Artwork[], sort: SortOption): Artwork[] {
     if (sort === 'price-asc') return [...data].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     if (sort === 'price-desc') return [...data].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
@@ -299,6 +323,7 @@ const Creations: React.FC = () => {
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
     const [sort, setSort] = useState<SortOption>('default');
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [query, setQuery] = useState('');
 
     // Jewelry gallery lightbox
     const [jewelryLightbox, setJewelryLightbox] = useState<{ images: string[]; index: number } | null>(null);
@@ -340,6 +365,13 @@ const Creations: React.FC = () => {
         return map;
     }, [categoryCollections]);
 
+    // Built once for the whole archive, not per keystroke.
+    const haystacks = useMemo(() => {
+        const map = new Map<string, string>();
+        for (const a of FULL_ARCHIVE) map.set(a.id, pieceHaystack(a));
+        return map;
+    }, []);
+
     // Build filtered + sorted list for the grid
     const filteredArchive = useMemo(() => {
         let data = FULL_ARCHIVE;
@@ -356,15 +388,19 @@ const Creations: React.FC = () => {
 
         if (showAvailableOnly) data = data.filter(a => a.availability === 'READY_TO_SHIP');
 
+        if (query.trim()) {
+            data = data.filter(a => matchesQuery(haystacks.get(a.id) ?? '', query));
+        }
+
         return sortArchive(data, sort);
-    }, [filter, activeCollection, showAvailableOnly, sort, categoryCollections, collectionPiecesMap]);
+    }, [filter, activeCollection, showAvailableOnly, sort, query, haystacks, categoryCollections, collectionPiecesMap]);
 
     // Any change to the filters starts the window again — otherwise switching
     // category while deep into "show more" would silently reveal a different
     // number of pieces than the count says.
     useEffect(() => {
         setVisibleCount(PAGE_SIZE);
-    }, [filter, activeCollection, showAvailableOnly, sort]);
+    }, [filter, activeCollection, showAvailableOnly, sort, query]);
 
     const displayedPieces = useMemo(
         () => filteredArchive.slice(0, visibleCount),
@@ -471,6 +507,32 @@ const Creations: React.FC = () => {
 
                     {/* Right: controls */}
                     <div className="flex items-center gap-4 flex-shrink-0">
+                        {/* Search. Filtering by eye across 173 pieces was the only
+                            option before this. */}
+                        <div className="relative flex items-center">
+                            <label htmlFor="piece-search" className="sr-only">Search pieces</label>
+                            <input
+                                id="piece-search"
+                                type="search"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                placeholder="Search"
+                                className="font-label text-xs uppercase tracking-[0.15em] text-wood-900 placeholder:text-wood-700 bg-transparent border-b border-wood-300 focus:border-bronze-600 outline-none py-1.5 w-28 focus:w-44 transition-all duration-300"
+                            />
+                            {query && (
+                                <button
+                                    type="button"
+                                    onClick={() => setQuery('')}
+                                    aria-label="Clear search"
+                                    className="ml-2 font-label text-xs text-wood-700 hover:text-wood-900"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+
+                        <span className="text-wood-300" aria-hidden="true">|</span>
+
                         {/* Sort. This used to render only when a ?category= param was
                             present, so the bare /creations page — the way nearly everyone
                             arrives — offered no way to sort 173 pieces at all. */}
@@ -644,9 +706,11 @@ const Creations: React.FC = () => {
                     /* ── Empty State ─────────────────────────────────────── */
                     <div className="text-center py-24 px-6">
                         <p className="font-serif text-2xl text-wood-600 mb-3">
-                            {showAvailableOnly
-                                ? 'No available pieces in this selection.'
-                                : 'No pieces found.'}
+                            {query.trim()
+                                ? `Nothing matches "${query.trim()}".`
+                                : showAvailableOnly
+                                    ? 'No available pieces in this selection.'
+                                    : 'No pieces found.'}
                         </p>
                         <p className="font-sans text-base text-wood-600 font-light mb-8">
                             {showAvailableOnly
@@ -654,6 +718,15 @@ const Creations: React.FC = () => {
                                 : 'Try a different category or remove active filters.'}
                         </p>
                         <div className="flex flex-wrap justify-center gap-3">
+                            {query.trim() && (
+                                <button
+                                    type="button"
+                                    onClick={() => setQuery('')}
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors"
+                                >
+                                    Clear search
+                                </button>
+                            )}
                             {activeCollection && (
                                 <button
                                     type="button"
