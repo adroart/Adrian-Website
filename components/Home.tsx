@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { STORIES } from '../data/generatedStories';
 import { FULL_ARCHIVE } from '../data/mockData';
+import type { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
 import GalleryTileCard from './GalleryTileCard';
@@ -11,10 +12,44 @@ import { img } from '../utils/cloudinary';
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
 const Home: React.FC = () => {
-    const featuredPieces = useMemo(
-        () => FULL_ARCHIVE.filter(p => p.featured).slice(0, 12),
-        []
-    );
+    /**
+     * The work shown on the front page.
+     *
+     * This section is gated on `featured`, and not one of the 173 catalogued pieces
+     * has it set — every record says `featured: false`. So the whole "Selected Works"
+     * gallery has been rendering nothing, and an artist's home page has been showing
+     * exactly one piece of art: the photograph in the commission block.
+     *
+     * Adrian's own curation still wins the moment any piece is flagged. Until then a
+     * fallback stands in, chosen to be defensible rather than arbitrary: the pieces
+     * someone can actually buy today come first, then one piece per series so the
+     * range of the work reads at a glance rather than twelve variations on a theme.
+     */
+    const featuredPieces = useMemo(() => {
+        const curated = FULL_ARCHIVE.filter(p => p.featured);
+        if (curated.length > 0) return curated.slice(0, 12);
+
+        const picked: Artwork[] = [];
+        const seenSeries = new Set<string>();
+        const take = (piece: Artwork) => {
+            if (picked.length >= 12) return;
+            if (picked.some(p => p.id === piece.id)) return;
+            picked.push(piece);
+            seenSeries.add(piece.series ?? piece.category);
+        };
+
+        for (const p of FULL_ARCHIVE) {
+            if (p.availability === 'READY_TO_SHIP' && p.coverImage) take(p);
+        }
+        for (const p of FULL_ARCHIVE) {
+            const key = p.series ?? p.category;
+            if (p.availability !== 'SOLD' && p.coverImage && !seenSeries.has(key)) take(p);
+        }
+        for (const p of FULL_ARCHIVE) {
+            if (p.availability !== 'SOLD' && p.coverImage) take(p);
+        }
+        return picked;
+    }, []);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">

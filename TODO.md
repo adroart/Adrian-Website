@@ -4,6 +4,21 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
+- [ ] Turn the shop on: create the Stripe catalog, then flip one flag _(band: you-required | effort: moderate)_
+  The shop is finished and switched off. 291 sellable prices across 163 pieces, $299,066 of catalog, all sitting behind `shopEnabled: false` because every Stripe price id is the placeholder `price_REPLACE`. `scripts/stripe-sync-prices.ts` creates the Products and Prices and writes the ids back; it was verified end to end against the real catalog with simulated ids (291 written, 0 unmatched, 0 duplicates, result typechecks). Only the API call itself is unproven, because it needs the key. Dry run first: `infisical run --env=dev -- npm run stripe:sync`, then the same with `-- --apply`, then set `shopEnabled: true`. Check `STRIPE_SECRET_KEY` and `VITE_STRIPE_PUBLISHABLE_KEY` are set for production in Cloudflare Pages before the deploy.
+
+- [ ] Photograph detail shots: 142 of 174 pieces have only one image _(band: you-required | effort: deep)_
+  Eighty-two percent of the catalog is a single cover shot with nothing else. For layered, carved work sold at four figures, the detail shot is the argument — depth, edge, the way light sits in the cuts. The piece page already renders a thumbnail strip and a lightbox, so this is a photography job, not a build one. Start with the six marked Ready to Ship, since those are the ones someone can buy today.
+
+- [ ] Seven signature pieces share one identical description _(band: you-required | effort: quick)_
+  SIG-100, 102, 103, 104, 105, 108 and 110 all carry the same paragraph, word for word ("As the mind quiets and the pencil flows…"). Now that every page has its own meta description, seven pages are competing with identical text, and a reader who opens two of them sees the same words. Their material field was wrong too and has been corrected to "Laser Cut Wood, Acrylic", which their own descriptions describe. The descriptions need your words, not mine.
+
+- [ ] Decide the six launch flags that are still dark _(band: you-required | effort: quick)_
+  `furniture`, `installations`, `spaces`, `aboutMeaning`, `pricingExplorer` and `livingLegacy` are all still false. Each is either close to shipping or dead weight, and the code for all of them is carried on every build either way. A decision each, then ship or delete.
+
+- [ ] A test asserts a cron schedule that was deliberately removed _(band: agent-runnable | effort: quick)_
+  `tests/collector-letter-schedule.test.ts` requires a `schedule:` block in `.github/workflows/collector-letters.yml`, but that schedule was removed on purpose and the workflow file explains at length why. So `npm run test:unit` reports 1178 passing and 1 failing on a clean checkout, which trains everyone to ignore a red suite. Predates the 2026-09-01 audit branch; confirmed failing at `cf8cd8c`. Either update the test to assert the deliberate absence, or restore the schedule.
+
 - [ ] Look at how the 173 undrawn collector screens sit on a desktop screen _(band: you-required | effort: quick)_
   The design file draws one screen for a desk (the piece page) and 173 for a phone only. Rather than invent a desktop layout nobody approved, the ground now fills the screen and the words hold a 520 column inside it, which is the same rule the one desk drawing states. It is live and unreviewed. Open the review link, press "Use it", and say whether the column is right. → Back end: Workshop → Screen development system
 - [ ] Put the full-screen collector display on the page a plate actually opens _(band: agent-runnable | effort: deep)_
