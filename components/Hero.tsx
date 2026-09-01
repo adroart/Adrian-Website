@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom';
 const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 const HERO_VIDEO_MOBILE = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_960/adrian-website/site/hero/studio-creation-process';
 const HERO_VIDEO_DESKTOP = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_1920/adrian-website/site/hero/studio-creation-process';
+// A still pulled from two seconds into the same clip, so the hero shows the work
+// immediately instead of a black rectangle while the video downloads.
+const HERO_POSTER = 'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,w_1920,so_2/adrian-website/site/hero/studio-creation-process';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -69,9 +72,9 @@ const Hero: React.FC = () => {
         className="absolute inset-0 z-0 will-change-transform"
         style={{ transform: `translateY(${videoTranslateY}px)` }}
       >
-          {/* #20 Decorative video gets aria-hidden.
-              No poster — the wood-900 section bg + fallback gradient below
-              provide the dark backdrop until the video frames arrive. */}
+          {/* Decorative video gets aria-hidden.
+              The poster is a frame pulled from the video itself, so the first paint
+              is the work rather than a black rectangle on a slow connection. */}
           <video
               ref={videoRef}
               autoPlay
@@ -80,20 +83,32 @@ const Hero: React.FC = () => {
               playsInline
               preload="auto"
               aria-hidden="true"
-              className="w-full h-full object-cover opacity-60"
+              poster={HERO_POSTER}
+              className="w-full h-full object-cover"
           >
               <source src={HERO_VIDEO_MOBILE} media="(max-width: 767px)" type="video/mp4" />
               <source src={HERO_VIDEO_DESKTOP} type="video/mp4" />
           </video>
           {/* Fallback background if video fails to load */}
           <div className="absolute inset-0 bg-gradient-to-br from-wood-900 via-stone-900 to-wood-800 -z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-950/55 to-stone-950/25 pointer-events-none"></div>
+
+          {/* Scrims.
+              This footage is Adrian working on a piece — the most valuable thing on
+              the page. It used to sit at opacity-60 under a full-frame gradient that
+              reached 95% at the bottom, plus a 10% multiply on top, which is why the
+              hands and the carving read as an unidentifiable dark shape.
+              The video now plays at full strength and the scrims are placed only
+              where type actually sits: a short one under the fixed nav, one rising
+              from the bottom where the headline sits, and on desktop one from the
+              left, because the headline is left-aligned there and the right half of
+              the frame is where the work is. */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-stone-950/65 to-transparent pointer-events-none"></div>
+          <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-stone-950/90 via-stone-950/45 to-transparent pointer-events-none"></div>
+          <div className="hidden md:block absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-stone-950/70 via-stone-950/20 to-transparent pointer-events-none"></div>
       </div>
 
-      <div className="absolute inset-0 bg-wood-900/10 z-1 pointer-events-none mix-blend-multiply"></div>
-
       <div
-        className="absolute bottom-40 md:bottom-[28vh] left-0 w-full z-20 px-6 py-10 md:px-16 flex flex-col items-center md:items-start text-center md:text-left will-change-transform transition-opacity duration-300"
+        className="hero-copy absolute bottom-40 md:bottom-[28vh] left-0 w-full z-20 px-6 py-10 md:px-16 flex flex-col items-center md:items-start text-center md:text-left will-change-transform transition-opacity duration-300"
         style={{
             transform: `translateY(${textTranslateY}px) scale(${textScale})`,
             opacity: safeOpacity
@@ -103,11 +118,11 @@ const Hero: React.FC = () => {
               <span className="font-label text-xs text-bronze-400 uppercase tracking-[0.2em] mb-4 block">
                   Resonant Artifacts
               </span>
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 tracking-tight leading-[0.92] mb-8 drop-shadow-2xl font-medium">
+              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 tracking-tight leading-[0.92] mb-8 font-medium">
                   Bringing the <br/>formless into form.
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
-              <p className="font-sans text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
+              <p className="font-sans text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
                   From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>

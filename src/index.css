@@ -2204,3 +2204,20 @@ textarea.maintenance-input { resize: vertical; }
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-color: var(--color-bronze-700);
 }
+
+/* ============================================================
+   Hero copy over moving video
+   ============================================================
+   The hero plays a loop of Adrian working. Its frames vary a lot in brightness —
+   a pale carved panel passes directly under the subtitle — so no fixed scrim keeps
+   white type legible on every frame without dimming the footage back into the murk
+   it was in before. A halo carried by the text costs the video nothing and holds on
+   every frame. Two offset shadows read as a soft edge rather than a drop shadow. */
+
+.hero-copy h1,
+.hero-copy p,
+.hero-copy span {
+  text-shadow:
+    0 1px 2px rgba(20, 16, 12, 0.55),
+    0 2px 18px rgba(20, 16, 12, 0.45);
+}
