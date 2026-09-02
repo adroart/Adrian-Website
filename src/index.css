@@ -97,15 +97,25 @@ h1, h2, h3, h4, h5, h6 {
 
 /* #8 Hyphenation disabled — mid-word line breaks interrupt reading rhythm */
 
-/* #11 Blockquote styling — left border, indentation, proper spacing */
-blockquote {
-  border-left: 2px solid #c4aa7c;
-  padding-left: 1.5rem;
-  margin-left: 0;
-  margin-right: 0;
-}
-.dark blockquote {
-  border-left-color: #d4b88a;
+/* #11 Blockquote styling — left border, indentation, proper spacing.
+ *
+ * Inside @layer base on purpose. Tailwind v4 puts its utilities in a layer, and
+ * UNLAYERED css beats layered css whatever the specificity — so as a bare rule
+ * this quietly overrode every utility on every blockquote on the site. The home
+ * page's artist statement carried `border-none pl-0` and still rendered with a
+ * left rule and a 24px indent, which on centred text read as a stray line.
+ * Layered, a blockquote keeps this styling by default and any utility that
+ * disagrees now wins, which is what those classes were written expecting. */
+@layer base {
+  blockquote {
+    border-left: 2px solid #c4aa7c;
+    padding-left: 1.5rem;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .dark blockquote {
+    border-left-color: #d4b88a;
+  }
 }
 
 /* #21 Tabular figures on prices — digits align in columns */

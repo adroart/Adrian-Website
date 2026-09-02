@@ -76,17 +76,54 @@ const Home: React.FC = () => {
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
 
-            {/* 3.2 Introduction */}
-            <section className="py-10 md:py-24 px-6">
-                <div className="max-w-3xl mx-auto text-center">
-                    <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light border-none pl-0">
+            {/* ── Who I am ────────────────────────────────────────────────
+                Adrian on this section: "this is where they actually learn about me
+                as an artist and what I value. This is my one opportunity for
+                sharing who I am and what moves me."
+
+                So not a word of it is cut, moved or hidden. What changed is that it
+                is now composed rather than run together. It was two paragraphs of
+                centred prose on the same ground as everything else, reading as one
+                undifferentiated block — on a phone, a full screen of words between
+                the hero and the first artwork.
+
+                Now: the statement, then a photograph of Adrian, then what the
+                statement means, then his name. The picture sits BETWEEN the two
+                paragraphs — his own note about the layout elsewhere on this page,
+                applied here — so the words are met halfway rather than stacked. The
+                photograph is him on a ridge at dawn, which is the register the
+                words are in: presence and place, not another artwork and not
+                another workshop shot, both of which appear further down.
+
+                Given more room than before, not less. A statement that is given
+                space reads as intentional; a compressed one reads as an obstacle. */}
+            <section className="py-14 md:py-24 px-6">
+                <div className="max-w-3xl mx-auto">
+
+                    <blockquote className="font-serif text-[26px] md:text-3xl lg:text-4xl text-wood-800 leading-[1.35] font-light border-none pl-0 text-center text-balance">
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
-                    <div className="mt-7 md:mt-12 space-y-6 text-center">
-                        <p className="font-sans text-lg md:text-xl text-wood-600 leading-[1.7] font-light">
-                            My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
-                        </p>
+
+                    {/* Full bleed on a phone, inset on a desk — the negative margins
+                        undo the section's own padding. */}
+                    <div className="relative -mx-6 sm:mx-0 mt-10 md:mt-14 h-[220px] sm:h-[300px] md:h-[360px] overflow-hidden">
+                        <ArtImage
+                            publicId="path_x92l78"
+                            alt="Adrian Rasmussen above a valley at first light"
+                            variant="cover"
+                            loading="lazy"
+                        />
                     </div>
+
+                    <p className="mt-10 md:mt-14 font-sans text-[17px] md:text-xl text-wood-700 leading-[1.75] font-light text-center text-pretty">
+                        My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
+                    </p>
+
+                    {/* An artist statement should be signed. */}
+                    <p className="mt-8 md:mt-10 font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold text-center">
+                        Adrian Rasmussen
+                    </p>
+
                 </div>
             </section>
 
