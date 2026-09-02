@@ -284,14 +284,19 @@ const Home: React.FC = () => {
                                 to={`/writings/${story.slug}`}
                                 className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md overflow-hidden"
                             >
-                                <div className="aspect-[16/10] overflow-hidden">
-                                    <ArtImage
-                                        publicId={story.image}
-                                        alt={story.title}
-                                        variant="product"
-                                        loading="lazy"
-                                    />
-                                </div>
+                                {/* A writing with no picture gets no frame. Rendering the
+                                    box regardless is what put an empty panel on the live
+                                    home page. */}
+                                {story.image && (
+                                    <div className="aspect-[16/10] overflow-hidden">
+                                        <ArtImage
+                                            publicId={story.image}
+                                            alt={story.title}
+                                            variant="product"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                )}
                                 <div className="p-6 md:p-8">
                                     <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">
                                         {story.category}
@@ -317,6 +322,7 @@ const Home: React.FC = () => {
                                     to={`/writings/${story.slug}`}
                                     className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md flex overflow-hidden"
                                 >
+                                    {story.image && (
                                     <div className="w-28 sm:w-36 md:w-44 flex-shrink-0 overflow-hidden">
                                         <ArtImage
                                             publicId={story.image}
@@ -325,6 +331,7 @@ const Home: React.FC = () => {
                                             loading="lazy"
                                         />
                                     </div>
+                                    )}
                                     <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-center min-w-0">
                                         <h3 className="font-sans text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {story.title}

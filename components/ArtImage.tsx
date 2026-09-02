@@ -87,6 +87,15 @@ const ArtImage: React.FC<ArtImageProps> = ({
     onLoad: externalOnLoad,
     ...rest
 }) => {
+    /**
+     * Nothing to show. Without this the component still rendered an <img> whose src
+     * resolved to undefined, which browsers paint as a broken-image frame — that is
+     * how a writing with no picture ended up as an empty box on the live home page.
+     * A caller that has no image should get nothing back, and lay itself out
+     * accordingly, rather than a hole.
+     */
+    if (!publicId && !rest.src) return null;
+
     const hasFade = FADE_ON_LOAD.has(variant);
     // Gallery starts fully visible (no fade); fixed-container variants start hidden
     const [loaded, setLoaded] = useState(!hasFade);
