@@ -37,6 +37,18 @@ const HOME_IMAGE: Record<string, string> = {
 const ILLUMINATED_STILL =
     'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,so_3,w_700,h_612,c_fill,g_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc';
 
+/**
+ * Phone ordering for the offerings.
+ *
+ * The section's containers go `display: contents` below md, so every frame and
+ * every name becomes a direct child of one grid and `order` can interleave them:
+ * introduction, then piece, name, piece, name — so words never run for more than a
+ * few lines before artwork interrupts them. Written out literally rather than
+ * computed, because Tailwind only generates classes it can see in the source.
+ */
+const IMAGE_ORDER = ['order-2', 'order-4', 'order-6', 'order-8'];
+const NAME_ORDER  = ['order-3', 'order-5', 'order-7', 'order-9'];
+
 const ORDER = ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'];
 
 /**
@@ -65,12 +77,12 @@ const Home: React.FC = () => {
         <div className="bg-paper-50 min-h-screen animate-fade-in">
 
             {/* 3.2 Introduction */}
-            <section className="py-16 md:py-24 px-6">
+            <section className="py-10 md:py-24 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light border-none pl-0">
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
-                    <div className="mt-12 space-y-6 text-center">
+                    <div className="mt-7 md:mt-12 space-y-6 text-center">
                         <p className="font-sans text-lg md:text-xl text-wood-600 leading-[1.7] font-light">
                             My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
                         </p>
@@ -81,28 +93,31 @@ const Home: React.FC = () => {
             {/* ── The Work ─────────────────────────────────────────────────
                 An introduction, not a product listing.
 
-                This was a twelve-piece masonry grid with a price, a READY TO
-                SHIP line and a SAVE button on every tile — a shop shelf on the
-                front page of an artist's site, and ragged besides, because
-                twelve photographs shot in twelve different settings never line
-                up. It also answered the wrong question: a first-time visitor
-                does not know what Adrian makes, and twelve variations on one
-                form does not tell them.
+                This was a twelve-piece masonry grid with a price, a READY TO SHIP
+                line and a SAVE button on every tile — a shop shelf on the front page
+                of an artist's site, and ragged besides, because twelve photographs
+                shot in twelve different settings never line up. It also answered the
+                wrong question: a first-time visitor does not know what Adrian makes,
+                and twelve variations on one form does not tell them.
 
-                It now shows the four things he actually makes, named, with the
-                sentence that introduces them. One piece anchors the section and
-                three state the range beside it — hierarchy is what the flat grid
-                was missing. No prices, no buttons, and nothing laid over the
-                artwork. */}
+                LAYOUT. One set of elements, arranged two ways, with no duplicated
+                markup — the containers go `display: contents` on a phone so their
+                children become direct children of this grid and can be interleaved
+                by `order`.
+
+                  Phone   image, name, image, name, … Each piece is full width and
+                          large. Measured before this: 945px of unbroken text after
+                          the hero — 1.1 screens — and then four 136px thumbnails.
+                          A column of prose is the wrong shape for an art site.
+                  md+     the arrangement Adrian chose: one piece anchoring the
+                          section, three stating the range beside it, names listed
+                          down the left.
+
+                No prices, no buttons, and nothing laid over the artwork. */}
             <section className="py-16 md:py-24 px-6 border-t border-wood-100">
-                <div className="max-w-[1500px] mx-auto grid grid-cols-1 gap-10 md:grid-cols-[92fr_108fr] md:gap-x-14 md:gap-y-12 lg:gap-x-20 xl:gap-x-24 items-start md:items-stretch">
+                <div className="max-w-[1500px] mx-auto grid grid-cols-1 gap-y-8 md:grid-cols-[92fr_108fr] md:gap-x-14 md:gap-y-12 lg:gap-x-20 xl:gap-x-24 items-start md:items-stretch">
 
-                    {/* The heading, across the full width.
-                        Kept inside the left column it had a 380px measure to work in,
-                        so "I create across many forms." broke over two lines and sat
-                        in half the page. The link belongs up here with it rather than
-                        at the foot of the list — a reader who is sold by the sentence
-                        should not have to scan four rows to find the way in. */}
+                    {/* The heading, across the full width, with the way in beside it. */}
                     <div className="md:col-span-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
                         <div>
                             <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
@@ -119,31 +134,22 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* The introduction */}
-                    <div className="md:col-start-1 md:row-start-2">
+                    <div className="order-1 md:order-none md:col-start-1 md:row-start-2">
                         <p className="font-sans text-[15px] leading-[1.85] text-wood-700 max-w-[46ch] text-pretty">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                             These are not decoration. They are portals.
                         </p>
                     </div>
 
-                    {/* The work. Ordered between the introduction and the list on a
-                        narrow screen; on the right, spanning both, from md up. The
-                        lead spans all three rows so its bottom edge always meets the
-                        last small frame's, rather than relying on guessed heights. */}
-                    <div className="grid grid-cols-2 gap-3 md:col-start-2 md:row-start-2 md:row-span-2 md:h-full md:grid-cols-[1.48fr_1fr] md:grid-rows-3">
-                        <Link
-                            to={OFFERINGS[0].link}
-                            aria-label={OFFERINGS[0].label}
-                            className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors md:row-span-3 md:aspect-auto"
-                        >
-                            <ArtImage publicId={OFFERINGS[0].image} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
-                        </Link>
-                        {OFFERINGS.slice(1).map(o => (
+                    {/* The work. `contents` on a phone so each frame becomes a direct
+                        child of the section grid and can sit next to its own name. */}
+                    <div className="contents md:grid md:grid-cols-[1.48fr_1fr] md:grid-rows-3 md:gap-3 md:col-start-2 md:row-start-2 md:row-span-2 md:h-full">
+                        {OFFERINGS.map((o, i) => (
                             <Link
                                 key={o.label}
                                 to={o.link}
                                 aria-label={o.label}
-                                className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors md:aspect-auto"
+                                className={`relative block overflow-hidden border border-wood-200 hover:border-bronze-400 transition-colors aspect-[4/3] md:aspect-auto md:order-none ${IMAGE_ORDER[i]} ${i === 0 ? 'md:row-span-3' : ''}`}
                             >
                                 {o.src
                                     ? <ArtImage src={o.src} alt={o.label} variant="cover" loading="lazy" />
@@ -152,32 +158,30 @@ const Home: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* The four, named. Second on a narrow screen, so the work comes first. */}
-                    <div className="md:col-start-1 md:row-start-3">
-                        <nav aria-label="What Adrian makes" className="border-t border-wood-200">
-                            {OFFERINGS.map(o => (
-                                <Link
-                                    key={o.label}
-                                    to={o.link}
-                                    className="group flex items-baseline justify-between gap-6 py-4 border-b border-wood-200 transition-colors"
-                                >
-                                    <span>
-                                        <span className="block font-display text-xl md:text-[22px] leading-[1.25] text-wood-900 group-hover:text-bronze-600 transition-colors">
-                                            {o.label}
-                                        </span>
-                                        <span className="block mt-1 font-sans text-[12.5px] leading-[1.5] text-wood-700">
-                                            {o.desc}
-                                        </span>
+                    {/* The four, named. Each sits under its own piece on a phone, and
+                        gathers into a list down the left from md up. */}
+                    <div className="contents md:block md:col-start-1 md:row-start-3 md:border-t md:border-wood-200">
+                        {OFFERINGS.map((o, i) => (
+                            <Link
+                                key={o.label}
+                                to={o.link}
+                                className={`group flex items-baseline justify-between gap-6 pb-5 md:py-4 border-b border-wood-200 transition-colors md:order-none ${NAME_ORDER[i]}`}
+                            >
+                                <span>
+                                    <span className="block font-display text-xl md:text-[22px] leading-[1.25] text-wood-900 group-hover:text-bronze-600 transition-colors">
+                                        {o.label}
                                     </span>
-                                    <ArrowRight
-                                        size={14}
-                                        aria-hidden="true"
-                                        className="shrink-0 translate-y-1 text-wood-700 group-hover:text-bronze-600 transition-colors"
-                                    />
-                                </Link>
-                            ))}
-                        </nav>
-
+                                    <span className="block mt-1 font-sans text-[12.5px] leading-[1.5] text-wood-700">
+                                        {o.desc}
+                                    </span>
+                                </span>
+                                <ArrowRight
+                                    size={14}
+                                    aria-hidden="true"
+                                    className="shrink-0 translate-y-1 text-wood-700 group-hover:text-bronze-600 transition-colors"
+                                />
+                            </Link>
+                        ))}
                     </div>
 
                 </div>
