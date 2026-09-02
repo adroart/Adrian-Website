@@ -61,3 +61,40 @@ test('the availability filter reads and behaves as a toggle', async ({ page }) =
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('every card in the grid is the same shape', async ({ page }) => {
+    // Adrian spotted this by eye after a sweep that reported the page clean: the
+    // sweep checked for breakage, not for raggedness. A one-line title and a
+    // two-line title must reserve the same room, or the detail bands start at
+    // different heights across a row and the grid reads as a jumble.
+    await page.goto('/creations', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.columns-2 h3');
+    await page.waitForTimeout(1500);
+
+    const spread = await page.evaluate(() => {
+        const grid = document.querySelector('.columns-2')!;
+        const cards = [...grid.children].filter(c => c.querySelector('h3'));
+        const blocks = cards.map(c => Math.round(c.querySelector('h3')!.closest('a')!.getBoundingClientRect().height));
+        const bands = cards.map(c => {
+            const band = [...c.children].find(x => x.className.toString().includes('relative'));
+            return band ? Math.round(band.getBoundingClientRect().height) : 0;
+        });
+        const lines = cards.map(c => {
+            const h = c.querySelector('h3')!;
+            return Math.round(h.getBoundingClientRect().height / parseFloat(getComputedStyle(h).lineHeight));
+        });
+        return {
+            cards: cards.length,
+            title: Math.max(...blocks) - Math.min(...blocks),
+            band: Math.max(...bands) - Math.min(...bands),
+            maxLines: Math.max(...lines),
+        };
+    });
+
+    expect(spread.cards).toBeGreaterThan(10);
+    expect(spread.title, 'title blocks must all reserve the same height').toBe(0);
+    expect(spread.band, 'detail bands must all be the same height').toBe(0);
+    // line-clamp needs display:-webkit-box; putting flex on the same element
+    // silently disables it and long names run to three lines.
+    expect(spread.maxLines, 'titles must clamp to two lines').toBeLessThanOrEqual(2);
+});

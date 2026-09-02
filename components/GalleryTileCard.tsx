@@ -55,8 +55,13 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
             {/* Title plaque - sits between image and detail box like a gallery label */}
             {/* Title plaque - sits between image and detail box like a gallery label */}
+            {/* The heading reserves two lines of its own type — 2.75em is exactly two
+                lines at leading-snug, so it holds at every breakpoint without a
+                guessed pixel value. The clamp must NOT share an element with `flex`:
+                line-clamp needs `display: -webkit-box` and flex overrides it, which
+                silently let long names run to three lines. */}
             <Link to={piecePath(art)} className="block py-2 text-center">
-                <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug line-clamp-2 min-h-[2.75rem] sm:min-h-[3.1rem] flex items-center justify-center">
+                <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug line-clamp-2 min-h-[2.75em]">
                     {displayTitle}
                 </h3>
             </Link>
