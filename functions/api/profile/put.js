@@ -10,6 +10,7 @@
 
 import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { saveCollectorBirthProfile } from '../_lib/collectorOnboarding.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -36,7 +37,7 @@ export async function onRequest(context) {
       inputs: body?.inputs,
     });
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'profile_save_failed';
+    const code = clientErrorCode(error, 'profile_save_failed');
     return jsonResponse({ error: code }, { status: code === 'invalid_inputs' ? 400 : 500 }, request, env);
   }
 

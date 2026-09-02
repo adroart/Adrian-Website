@@ -4,6 +4,7 @@ import {
   generateCollectorLetters,
   getCollectorLetters,
 } from '../_lib/collectorLetters.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 
 const POST_FIELDS = Object.freeze({
   'kin-claim': new Set(['kind', 'keeperPieceId']),
@@ -83,7 +84,7 @@ export async function onRequest({ request, env }) {
     });
     return jsonResponse({ letters }, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'collector_letters_failed';
+    const code = clientErrorCode(error, 'collector_letters_failed');
     return jsonResponse({ error: code }, { status: errorStatus(code) }, request, env);
   }
 }

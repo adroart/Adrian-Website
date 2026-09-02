@@ -4,6 +4,7 @@ import {
   saveCollectorBirthProfile,
   skipCollectorBirthProfile,
 } from '../_lib/collectorOnboarding.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -38,7 +39,7 @@ export async function onRequest(context) {
     });
     return jsonResponse(result, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'onboarding_failed';
+    const code = clientErrorCode(error, 'onboarding_failed');
     const status = code === 'invalid_inputs' || code === 'invalid_saved_at' ? 400 : 500;
     return jsonResponse({ error: code }, { status }, request, env);
   }

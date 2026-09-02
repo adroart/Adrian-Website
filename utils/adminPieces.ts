@@ -14,6 +14,12 @@ export interface PieceRecordSummary {
   stale: boolean;
 }
 
+export interface RecoveryQualificationSummary {
+  status: 'missing' | 'stale' | 'current';
+  reasons: string[];
+  qualifiedAt: string | null;
+}
+
 export interface PieceRow {
   id: string;
   pieceId: string;
@@ -33,11 +39,12 @@ export interface PieceRow {
   registeredAt: string | null;
   claimedAt: string | null;
   releasedAt: string | null;
-  recoveryQualification?: {
-    status: 'missing' | 'stale' | 'current';
-    reasons: string[];
-    qualifiedAt: string | null;
-  };
+  registrationStatus?: string | null;
+  identityBackupStatus?: string | null;
+  recoveryQualification?: RecoveryQualificationSummary;
+  /** The proof a collector's claim is gated on. Separate from the plate
+   *  qualification above: different artifact, different digest, own row. */
+  identityRecoveryQualification?: RecoveryQualificationSummary;
   record: PieceRecordSummary | null;
 }
 

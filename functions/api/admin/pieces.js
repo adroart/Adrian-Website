@@ -7,8 +7,11 @@ import {
 } from '../_lib/keeper.js';
 import { issueRegistryPlate } from '../_lib/registryPlateIssuance.js';
 import {
+  identityRecoveryDependenciesForRow,
+  identityRecoveryQualificationStatus,
   recoveryDependenciesForRow,
   recoveryQualificationStatus,
+  storedIdentityQualificationFromRow,
   storedQualificationFromRow,
 } from '../_lib/recoveryQualification.js';
 import { plateBackupIsVerified } from '../_lib/plateBackup.js';
@@ -65,7 +68,7 @@ function recordSummary(recordRow) {
   };
 }
 
-function serialize(row, qualification, env, recordByPublicCode) {
+function serialize(row, qualification, identityQualification, env, recordByPublicCode) {
   const backupStatus = row.backup_status === 'verified' && !plateBackupIsVerified(row)
     ? 'pending'
     : row.backup_status || null;
@@ -88,9 +91,18 @@ function serialize(row, qualification, env, recordByPublicCode) {
     registeredAt: row.registered_at || null,
     claimedAt: row.claimed_at || null,
     releasedAt: row.released_at || null,
+    registrationStatus: row.registration_status || null,
+    identityBackupStatus: row.identity_backup_status || null,
     recoveryQualification: recoveryQualificationStatus(
       qualification,
       recoveryDependenciesForRow(row, env),
+    ),
+    // The claim path gates on THIS one, not on the plate qualification above.
+    // It was computed nowhere and shown nowhere, so a piece could look ready
+    // in the wizard while every claim against it was refused.
+    identityRecoveryQualification: identityRecoveryQualificationStatus(
+      identityQualification,
+      identityRecoveryDependenciesForRow(row, env),
     ),
     record: row.public_code ? (recordByPublicCode.get(row.public_code) || null) : null,
   };
@@ -129,13 +141,20 @@ async function loadNewestRecordsByPublicCode(env) {
 
 async function listPieces(env) {
   try {
-    const [{ results }, { results: qualificationRows }, recordByPublicCode] = await Promise.all([
+    const [
+      { results },
+      { results: qualificationRows },
+      { results: identityQualificationRows },
+      recordByPublicCode,
+    ] = await Promise.all([
       env.DB.prepare(
         `SELECT id, piece_id, edition_number, public_code, plate_status,
                 backup_status, backup_reference, backup_sha256,
                 ownership_code_key_version, front_svg_sha256, back_svg_sha256,
                 plate_generated_at, plate_activated_at, backup_at, keeper_user_id,
-                current_display_location, registered_at, claimed_at, released_at
+                current_display_location, registered_at, claimed_at, released_at,
+                registration_status, identity_backup_status,
+                identity_backup_reference, identity_backup_sha256
            FROM keeper_pieces
           ORDER BY COALESCE(plate_generated_at, registered_at, claimed_at) DESC`,
       ).all(),
@@ -147,6 +166,14 @@ async function listPieces(env) {
           WHERE scope = 'piece' AND result = 'passed' AND copied_artifacts = 1
           ORDER BY qualified_at DESC, id DESC`,
       ).all(),
+      env.DB.prepare(
+        `SELECT id, keeper_piece_id, result, copied_artifact, schema_version,
+                build_version, key_version, verifier_version,
+                backup_reference, backup_sha256, qualified_at
+           FROM artwork_identity_recovery_qualifications
+          WHERE result = 'passed' AND copied_artifact = 1
+          ORDER BY qualified_at DESC, id DESC`,
+      ).all(),
       loadNewestRecordsByPublicCode(env),
     ]);
     const latestByPiece = new Map();
@@ -155,11 +182,18 @@ async function listPieces(env) {
         latestByPiece.set(row.keeper_piece_id, storedQualificationFromRow(row));
       }
     }
+    const latestIdentityByPiece = new Map();
+    for (const row of identityQualificationRows || []) {
+      if (!latestIdentityByPiece.has(row.keeper_piece_id)) {
+        latestIdentityByPiece.set(row.keeper_piece_id, storedIdentityQualificationFromRow(row));
+      }
+    }
     return jsonResponse({
       ok: true,
       pieces: (results || []).map((row) => serialize(
         row,
         latestByPiece.get(row.id) || null,
+        latestIdentityByPiece.get(row.id) || null,
         env,
         recordByPublicCode,
       )),

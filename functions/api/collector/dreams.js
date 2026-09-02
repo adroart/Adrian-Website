@@ -1,5 +1,6 @@
 import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { legacyEnabled, notFound } from '../_lib/keeper.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 import {
   appendCollectorDreamMarker,
   createCollectorDream,
@@ -129,7 +130,7 @@ export async function onRequest({ request, env }) {
     }
     return jsonResponse(state, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'collector_dream_failed';
+    const code = clientErrorCode(error, 'collector_dream_failed');
     return jsonResponse({ error: code }, { status: errorStatus(code) }, request, env);
   }
 }

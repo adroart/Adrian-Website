@@ -223,6 +223,20 @@ function failCode(outcome: { ok: boolean; error?: string }): string | null {
   return outcome.ok ? null : outcome.error ?? 'error';
 }
 
+/* Server refusals that are about the caretaker's own record, not about the
+ * network. Reporting these as an unreachable piece is a lie the collector
+ * cannot act on, and the same press will never clear them. */
+const RESOLVABLE_REFUSALS = new Set([
+  'adult_status_required',
+  'minor_publicity_forbidden',
+  'name_consent_required',
+  'user_not_synced',
+]);
+
+function placementRefusal(code: string | null): 'held' | 'unready' {
+  return code !== null && RESOLVABLE_REFUSALS.has(code) ? 'unready' : 'held';
+}
+
 /* ------------------------------------------------------------------ *
  * The journey
  * ------------------------------------------------------------------ */
@@ -248,7 +262,7 @@ type Step =
        * demo surfaces but nothing behind them is wired, so the live door
        * says so instead of staging a passing that cannot happen.
        */
-      key: 'account' | 'plate' | 'offline' | 'notyet';
+      key: 'account' | 'verify' | 'plate' | 'offline' | 'notyet';
       onRetry?: () => void;
       receipt?: [string, string][];
     };
@@ -562,10 +576,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           return { kind: 'handled' };
         case 'needs_verified_email':
           /* not terminal: back through verification. The code stays held and
-             is mirrored again for the round trip that can reload the page. */
+             is mirrored again for the round trip that can reload the page.
+             A signed-in person lands on the confirm-email screen, not the
+             no-account one, whose two buttons do nothing for them. */
           pending.hold(code.publicCode, code.normalizedCode);
           pending.bridge();
-          setStep({ kind: 'state', key: 'account' });
+          setStep({ kind: 'state', key: signedIn ? 'verify' : 'account' });
           return { kind: 'handled' };
         case 'not_registered':
         case 'rate_limited':
@@ -582,7 +598,10 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           return { kind: 'handled' };
       }
     },
-    [pending, refresh],
+    // signedIn is read above: without it the callback keeps the value it
+    // closed over, and a person who just signed in is told they have no
+    // account.
+    [pending, refresh, signedIn],
   );
 
   /** the code page completed. Memory first, then the bind or the bridge. */
@@ -840,9 +859,11 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
             });
             if (!planted.ok) {
               const code = failCode(planted);
-              if (code !== 'dream_tiers_unavailable' && code !== 'invalid_input') return 'held';
+              if (code !== 'dream_tiers_unavailable' && code !== 'invalid_input') {
+                return placementRefusal(code);
+              }
               const fallback = await createCollectorDream({ keeperPieceId, body, scope: 'self' });
-              if (!fallback.ok) return 'held';
+              if (!fallback.ok) return placementRefusal(failCode(fallback));
               landedAny = true;
               if (tier === 'shine' && !(await enterShine(false))) {
                 refresh();
@@ -871,7 +892,8 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
               });
               const editFail = failCode(edited);
               if (editFail !== null) {
-                return editFail === 'outside_birthday_window' ? 'locked' : 'held';
+                if (editFail === 'outside_birthday_window') return 'locked';
+                return placementRefusal(editFail);
               }
               landedAny = true;
             }
@@ -1393,12 +1415,18 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         onPrimary={
           step.key === 'account'
             ? openAccountBridge
-            : step.onRetry ?? (() => setStep({ kind: 'piece' }))
+            : step.key === 'verify'
+              ? openAccountBridge
+              : step.onRetry ?? (() => setStep({ kind: 'piece' }))
         }
         onSecondary={
           step.key === 'account' ? openAccountBridge : () => setStep({ kind: 'piece' })
         }
-        onBack={step.key === 'account' ? abandonAccountBridge : () => setStep({ kind: 'piece' })}
+        onBack={
+          step.key === 'account' || step.key === 'verify'
+            ? abandonAccountBridge
+            : () => setStep({ kind: 'piece' })
+        }
         receipt={step.receipt}
       />
     );

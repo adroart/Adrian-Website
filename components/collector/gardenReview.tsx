@@ -63,6 +63,12 @@ PLACEHOLDERS.add(REVIEW_COMMIT);
 export const GARDEN_HELD_LINE = 'It is held until its day. Nothing you wrote is lost.';
 PLACEHOLDERS.add(GARDEN_HELD_LINE);
 
+/* The piece answered, and asked for something first. Saying it plainly is the
+ * point: the words are safe, and the caretaker knows what clears it. */
+export const GARDEN_UNREADY_LINE =
+  'Your words are here and nothing is lost. The piece asks for your birth day, time and place before words can be placed in it. That question lives in the walk through your record.';
+PLACEHOLDERS.add(GARDEN_UNREADY_LINE);
+
 const T = COPY.garden;
 
 /** What the write screen hands over. Nothing is committed until this page says so. */
@@ -87,7 +93,7 @@ export const GardenReview: React.FC<{
   onDone: () => void;
 }> = ({ question, draft, live, onBack, onDone }) => {
   const [placing, setPlacing] = useState(false);
-  const [held, setHeld] = useState<'held' | 'locked' | null>(null);
+  const [held, setHeld] = useState<'held' | 'locked' | 'unready' | null>(null);
 
   const sealing = draft.tier === 'seal';
   const tierTitle = sealing ? T.tierSealTitle : draft.tier === 'keep' ? T.tierKeepTitle : T.tierShineTitle;
@@ -164,7 +170,13 @@ export const GardenReview: React.FC<{
             this page and the same brass tries again; the yearly gate is a
             state, answered in the held line's own words. */}
         {held && (
-          <Note top={14}>{held === 'locked' ? GARDEN_HELD_LINE : COPY.states.offlineBody}</Note>
+          <Note top={14}>
+            {held === 'locked'
+              ? GARDEN_HELD_LINE
+              : held === 'unready'
+                ? GARDEN_UNREADY_LINE
+                : COPY.states.offlineBody}
+          </Note>
         )}
       </RoomBody>
 

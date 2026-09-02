@@ -216,7 +216,34 @@ export async function buildPublicAtlasState(env, generatedAt = new Date().toISOS
   }
   await verifyLocalLineage(env, pieces);
   const { sourceEventsByPiece } = await loadAndVerifySourceChains(env, pieces);
-  const metadataByArtworkId = new Map(FULL_ARCHIVE.map((artwork) => [artwork.id, artwork]));
+  /* The registry's own artwork catalogue. An artwork registered through the
+     wizard lives only here, never in the published archive, so without this
+     its light reaches the map as a bare identifier with no series, and
+     anything reading the feed types it as 'other'. Its title is already
+     public on the piece's record and registry pages. Read on its own and
+     allowed to fail: a title is decoration, the map is the thing. */
+  let registryArtworkRows = [];
+  try {
+    registryArtworkRows = rows(await env.DB.prepare(
+      `SELECT id, title, series FROM registry_artworks ORDER BY id ASC`,
+    ).all()) || [];
+  } catch {
+    registryArtworkRows = [];
+  }
+  /* The published archive first: for a work that appears in both, its
+     catalogue entry is the one a visitor already sees everywhere else on
+     the site. The registry's own rows fill in every artwork the archive
+     has never heard of. */
+  const metadataByArtworkId = new Map();
+  for (const artwork of registryArtworkRows) {
+    if (typeof artwork?.id !== 'string' || !artwork.id) continue;
+    metadataByArtworkId.set(artwork.id, {
+      id: artwork.id,
+      title: artwork.title,
+      series: artwork.series,
+    });
+  }
+  for (const artwork of FULL_ARCHIVE) metadataByArtworkId.set(artwork.id, artwork);
   return projectCollectorField({
     generatedAt,
     catalogRows,

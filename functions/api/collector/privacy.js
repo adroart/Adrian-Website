@@ -5,6 +5,7 @@ import {
   listCollectorCuratedCities,
   updateCollectorPrivacy,
 } from '../_lib/collectorPrivacy.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -40,7 +41,7 @@ export async function onRequest(context) {
     });
     return jsonResponse(state, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'privacy_update_failed';
+    const code = clientErrorCode(error, 'privacy_update_failed');
     const status = code === 'user_not_synced' || code === 'piece_not_held'
       ? 404
       : code === 'db_not_configured' || code === 'atomic_batch_unavailable'
