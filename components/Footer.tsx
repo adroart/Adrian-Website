@@ -207,7 +207,7 @@ const Footer: React.FC = () => {
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
                         <Link to="/terms" className="hover:text-wood-300 transition-colors">Terms</Link>
                         <button onClick={toggleDarkMode} className="hover:text-bronze-400 transition-colors">
-                            {isDarkMode ? 'Day Mode' : 'Night Mode'}
+                            {isDarkMode ? 'Day' : 'Night'}
                         </button>
                     </div>
                     <div className="flex items-center gap-3">

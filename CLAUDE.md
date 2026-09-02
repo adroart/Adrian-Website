@@ -55,7 +55,19 @@ remains discoverable; oracle framing belongs on mandalacodes, not here.
 
 ## Design system
 - Color palette: `paper / wood / stone / bronze` (defined in `src/index.css`)
-- Fonts: Cormorant Garamond (serif body), Lato (sans), Cinzel (titles)
+- Fonts, three roles, and nothing else: `--font-display` Cormorant Garamond (titles,
+  headings, the brand name), `--font-body` Lora (running text), `--font-label` Karla
+  (uppercase eyebrows, meta, data). `--font-tabular` for real monospace.
+  Do NOT use `--font-sans` or `--font-mono`: they are Tailwind's built-in slot names,
+  kept only so existing `font-sans` / `font-mono` classes keep rendering, and they are
+  misleading — `--font-sans` resolves to Lora, a serif, and `--font-mono` to Karla, a
+  sans. (This entry used to say "Lato"; Lato has not been loaded for some time, and six
+  components referenced it and were silently falling back to Helvetica.)
+- Text colour starts at the 600 step. The 300/400/500 steps of the wood and bronze
+  scales fail WCAG AA on the light grounds (measured 1.52:1 to 3.91:1) and are border
+  and background colours only. Inside a `.dark-preserve` band the scale is NOT
+  inverted, so text there needs a LIGHT step instead — never blanket find-and-replace
+  a text colour class across the codebase. `npm run test:e2e` covers this.
 - No icons, no badges, no stickers — text and color only for states
 - No em dashes — use commas, periods, or "to" for ranges
 - Middle dot separator (·) for inline piece details

@@ -10,6 +10,7 @@ import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
 import { LAUNCH_FLAGS } from '../launchFlags';
+import { piecePath } from '../utils/pieceSlug';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,41 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
     const featured = pieces.find(p => p.featured);
     if (featured) return featured.coverImage;
     return pieces[0]?.coverImage;
+}
+
+/**
+ * How many pieces the grid renders before asking.
+ *
+ * The full archive is 173 pieces. Rendered in one go the page measured 22,590px —
+ * twenty-five screens — with 183 lazily-loaded images. Scrolling at any speed
+ * outran the loader, so what a visitor actually saw was a wall of empty tiles
+ * catching up behind them. A page of 48 fills three to four screens, which is
+ * enough to feel abundant without asking anyone to scroll a kilometre.
+ */
+const PAGE_SIZE = 48;
+
+/**
+ * Match a piece against a free-text query.
+ *
+ * 173 pieces and no way to search them: someone who remembered "the frog one" or came
+ * looking for "Communion" had to scroll the archive until they found it. Everything
+ * needed is already in the browser, so this needs no index and no request.
+ *
+ * Every term must match somewhere (AND, not OR), which is what makes narrowing feel
+ * like it is working: "wood 2024" gets pieces that are both, not everything that is
+ * either. Fields are joined once per piece and cached by the caller's useMemo.
+ */
+function pieceHaystack(a: Artwork): string {
+    return [a.title, a.series, a.category, a.material, a.year, a.dimensions, a.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+}
+
+function matchesQuery(haystack: string, query: string): boolean {
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return true;
+    return terms.every(t => haystack.includes(t));
 }
 
 function sortArchive(data: Artwork[], sort: SortOption): Artwork[] {
@@ -96,7 +132,7 @@ const CreationCategoryCard: React.FC<{
                 <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h2>
-                <p className="font-sans text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
+                <p className="font-sans text-sm text-wood-700 font-light mt-1 leading-relaxed line-clamp-1
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
@@ -172,7 +208,7 @@ const CollectionCard: React.FC<{
                 </h4>
                 <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
-                    {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
+                    {isActive && <span className="text-bronze-600 ml-2">· Active filter</span>}
                 </span>
                 {collection.description && (
                     <p className="hidden sm:block font-sans text-sm text-paper-50 font-light mt-1
@@ -194,13 +230,13 @@ const SortDropdown: React.FC<{
     onChange: (v: SortOption) => void;
 }> = ({ value, onChange }) => (
     <div className="relative flex items-center gap-1.5">
-        <ArrowUpDown size={12} className="text-wood-400 flex-shrink-0" aria-hidden="true" />
+        <ArrowUpDown size={12} className="text-wood-700 flex-shrink-0" aria-hidden="true" />
         <label htmlFor="sort-select" className="sr-only">Sort pieces</label>
         <select
             id="sort-select"
             value={value}
             onChange={e => onChange(e.target.value as SortOption)}
-            className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
+            className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
         >
             {(Object.keys(SORT_LABELS) as SortOption[]).map(opt => (
                 <option key={opt} value={opt}>{SORT_LABELS[opt]}</option>
@@ -226,7 +262,7 @@ const AvailableNowSection: React.FC = () => {
                     <div>
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Ready to Ship</span>
                         <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">Available Now</h2>
-                        <p className="font-sans text-base text-wood-500 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
+                        <p className="font-sans text-base text-wood-700 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
                     </div>
                     {LAUNCH_FLAGS.shopEnabled && (
                         <Link
@@ -240,7 +276,7 @@ const AvailableNowSection: React.FC = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {readyToShip.map(piece => (
-                        <Link key={piece.id} to={`/creations/${piece.id}`} className="group">
+                        <Link key={piece.id} to={piecePath(piece)} className="group">
                             <div className="overflow-hidden aspect-square mb-3">
                                 <ArtImage
                                     publicId={piece.coverImage}
@@ -250,7 +286,13 @@ const AvailableNowSection: React.FC = () => {
                                 />
                             </div>
                             <p className="font-sans text-sm text-wood-800 font-medium group-hover:text-bronze-600 transition-colors leading-snug">{piece.title}</p>
-                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 mt-1">{piece.series || piece.category}</p>
+                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 mt-1">{piece.series || piece.category}</p>
+                            {/* These six are the finished pieces a visitor can have now.
+                                Showing everything except the price made the most
+                                purchase-ready row on the site the least informative. */}
+                            {piece.price != null && (
+                                <p className="font-sans text-sm text-wood-900 font-medium mt-1">{formatPrice(piece.price)}</p>
+                            )}
                         </Link>
                     ))}
                 </div>
@@ -280,6 +322,8 @@ const Creations: React.FC = () => {
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
     const [sort, setSort] = useState<SortOption>('default');
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [query, setQuery] = useState('');
 
     // Jewelry gallery lightbox
     const [jewelryLightbox, setJewelryLightbox] = useState<{ images: string[]; index: number } | null>(null);
@@ -321,6 +365,13 @@ const Creations: React.FC = () => {
         return map;
     }, [categoryCollections]);
 
+    // Built once for the whole archive, not per keystroke.
+    const haystacks = useMemo(() => {
+        const map = new Map<string, string>();
+        for (const a of FULL_ARCHIVE) map.set(a.id, pieceHaystack(a));
+        return map;
+    }, []);
+
     // Build filtered + sorted list for the grid
     const filteredArchive = useMemo(() => {
         let data = FULL_ARCHIVE;
@@ -337,10 +388,25 @@ const Creations: React.FC = () => {
 
         if (showAvailableOnly) data = data.filter(a => a.availability === 'READY_TO_SHIP');
 
-        return sortArchive(data, sort);
-    }, [filter, activeCollection, showAvailableOnly, sort, categoryCollections, collectionPiecesMap]);
+        if (query.trim()) {
+            data = data.filter(a => matchesQuery(haystacks.get(a.id) ?? '', query));
+        }
 
-    const displayedPieces = filteredArchive;
+        return sortArchive(data, sort);
+    }, [filter, activeCollection, showAvailableOnly, sort, query, haystacks, categoryCollections, collectionPiecesMap]);
+
+    // Any change to the filters starts the window again — otherwise switching
+    // category while deep into "show more" would silently reveal a different
+    // number of pieces than the count says.
+    useEffect(() => {
+        setVisibleCount(PAGE_SIZE);
+    }, [filter, activeCollection, showAvailableOnly, sort, query]);
+
+    const displayedPieces = useMemo(
+        () => filteredArchive.slice(0, visibleCount),
+        [filteredArchive, visibleCount],
+    );
+    const remaining = filteredArchive.length - displayedPieces.length;
     const showCollectionCards = !!filter && categoryCollections.length >= 2;
 
     // Count available pieces for the toggle label
@@ -374,7 +440,7 @@ const Creations: React.FC = () => {
                         <p className="font-sans text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-sans text-base text-wood-500 max-w-4xl font-light leading-[1.7] mt-3">
+                        <p className="font-sans text-base text-wood-700 max-w-4xl font-light leading-[1.7] mt-3">
                             These are not decoration. They are portals. A place to sit with. To find your center.
                             To feel an opening. Find what calls to you.
                         </p>
@@ -421,13 +487,13 @@ const Creations: React.FC = () => {
                                 >
                                     All
                                 </button>
-                                <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                <span className="text-wood-700 flex-shrink-0" aria-hidden="true">/</span>
                                 <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-900 truncate">
                                     {filter}
                                 </span>
                                 {activeCollection && (
                                     <>
-                                        <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                        <span className="text-wood-700 flex-shrink-0" aria-hidden="true">/</span>
                                         <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-bronze-600 truncate">
                                             {categoryCollections.find(c => c.id === activeCollection)?.name}
                                         </span>
@@ -441,23 +507,48 @@ const Creations: React.FC = () => {
 
                     {/* Right: controls */}
                     <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Sort - only shown in filtered views */}
-                        {filter && (
-                            <SortDropdown value={sort} onChange={setSort} />
-                        )}
+                        {/* Search. Filtering by eye across 173 pieces was the only
+                            option before this. */}
+                        <div className="relative flex items-center">
+                            <label htmlFor="piece-search" className="sr-only">Search pieces</label>
+                            <input
+                                id="piece-search"
+                                type="search"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                placeholder="Search"
+                                className="font-label text-xs uppercase tracking-[0.15em] text-wood-900 placeholder:text-wood-700 bg-transparent border-b border-wood-300 focus:border-bronze-600 outline-none py-1.5 w-28 focus:w-44 transition-all duration-300"
+                            />
+                            {query && (
+                                <button
+                                    type="button"
+                                    onClick={() => setQuery('')}
+                                    aria-label="Clear search"
+                                    className="ml-2 font-label text-xs text-wood-700 hover:text-wood-900"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
 
-                        {/* Divider */}
-                        {filter && <span className="text-wood-200" aria-hidden="true">|</span>}
+                        <span className="text-wood-300" aria-hidden="true">|</span>
+
+                        {/* Sort. This used to render only when a ?category= param was
+                            present, so the bare /creations page — the way nearly everyone
+                            arrives — offered no way to sort 173 pieces at all. */}
+                        <SortDropdown value={sort} onChange={setSort} />
+
+                        <span className="text-wood-300" aria-hidden="true">|</span>
 
                         {/* Available-only toggle */}
                         <button
                             type="button"
                             onClick={() => setShowAvailableOnly(v => !v)}
                             aria-pressed={showAvailableOnly}
-                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors focus-visible:outline-none focus-visible:underline ${
+                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
                                 showAvailableOnly
-                                    ? 'text-bronze-600'
-                                    : 'text-wood-600 hover:text-wood-900'
+                                    ? 'text-paper-50 bg-wood-900 border-wood-900'
+                                    : 'text-wood-700 border-wood-300 hover:border-wood-700 hover:text-wood-900'
                             }`}
                         >
                             {showAvailableOnly
@@ -511,7 +602,7 @@ const Creations: React.FC = () => {
                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
-                            <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
+                            <span className="text-wood-700 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
                                 · {categoryCollections[0].description}
                             </span>
                         )}
@@ -536,7 +627,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Pendants and Jewelry</h2>
-                                <p className="font-sans text-lg text-wood-500 font-light">Necklaces, pendants, and wearable pieces</p>
+                                <p className="font-sans text-lg text-wood-700 font-light">Necklaces, pendants, and wearable pieces</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.jewelry.map((id, i) => (
@@ -555,7 +646,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Rings</h2>
-                                <p className="font-sans text-lg text-wood-500 font-light">Ye Ming Zhu rings, each unique</p>
+                                <p className="font-sans text-lg text-wood-700 font-light">Ye Ming Zhu rings, each unique</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.rings.map((id, i) => (
@@ -586,18 +677,40 @@ const Creations: React.FC = () => {
                         </div>
                     </>
                 ) : displayedPieces.length > 0 ? (
-                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
-                        {displayedPieces.map(art => (
-                            <GalleryTileCard key={art.id} art={art} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
+                            {displayedPieces.map(art => (
+                                <GalleryTileCard key={art.id} art={art} />
+                            ))}
+                        </div>
+
+                        {remaining > 0 && (
+                            <div className="flex flex-col items-center gap-3 pt-14">
+                                <p
+                                    className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold"
+                                    aria-live="polite"
+                                >
+                                    Showing {displayedPieces.length} of {filteredArchive.length}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border border-wood-700 hover:border-bronze-600 px-8 py-3 transition-colors"
+                                >
+                                    Show {Math.min(PAGE_SIZE, remaining)} more
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     /* ── Empty State ─────────────────────────────────────── */
                     <div className="text-center py-24 px-6">
                         <p className="font-serif text-2xl text-wood-600 mb-3">
-                            {showAvailableOnly
-                                ? 'No available pieces in this selection.'
-                                : 'No pieces found.'}
+                            {query.trim()
+                                ? `Nothing matches "${query.trim()}".`
+                                : showAvailableOnly
+                                    ? 'No available pieces in this selection.'
+                                    : 'No pieces found.'}
                         </p>
                         <p className="font-sans text-base text-wood-600 font-light mb-8">
                             {showAvailableOnly
@@ -605,11 +718,20 @@ const Creations: React.FC = () => {
                                 : 'Try a different category or remove active filters.'}
                         </p>
                         <div className="flex flex-wrap justify-center gap-3">
+                            {query.trim() && (
+                                <button
+                                    type="button"
+                                    onClick={() => setQuery('')}
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors"
+                                >
+                                    Clear search
+                                </button>
+                            )}
                             {activeCollection && (
                                 <button
                                     type="button"
                                     onClick={() => setActiveCollection(null)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Clear collection filter
                                 </button>
@@ -618,7 +740,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowAvailableOnly(false)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Show all availability
                                 </button>
@@ -626,7 +748,7 @@ const Creations: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => handleCategoryChange(null)}
-                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                             >
                                 Back to all categories
                             </button>

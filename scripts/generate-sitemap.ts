@@ -64,8 +64,12 @@ async function main() {
 
   try {
     const { FULL_ARCHIVE, STORIES } = await import('../data/mockData');
-    artworkRoutes = (FULL_ARCHIVE as Array<{ id: string }>).map(artwork =>
-      url(`/creations/${artwork.id}`, '0.8')
+    const { pieceSlug } = await import('../utils/pieceSlug');
+    // Canonical slug only. The legacy /creations/<ID> URLs still resolve and still
+    // carry correct OG tags, but they redirect, so listing them here would advertise
+    // 173 redirects to the crawler instead of 173 pages.
+    artworkRoutes = (FULL_ARCHIVE as Array<{ id: string; title: string }>).map(artwork =>
+      url(`/creations/${pieceSlug(artwork)}`, '0.8')
     );
     storyRoutes = (STORIES as Array<{ slug: string; date?: string }>).map(story =>
       url(`/writings/${story.slug}`, '0.7', story.date || today)

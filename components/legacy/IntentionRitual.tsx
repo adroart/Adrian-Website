@@ -11,7 +11,7 @@ import { useAccount } from '../../lib/account/useAccount';
  * sends/receives the plain body over the authed session; the hashing happens
  * server-side (functions/api/keeper/intention.js).
  *
- * Design system: paper/wood/stone/bronze, Cormorant/Lato/Cinzel, middle-dot
+ * Design system: paper/wood/stone/bronze, Cormorant/Karla/Cinzel, middle-dot
  * separators, no em dashes, no icons, no badges. Calm pacing, nothing loud.
  */
 

@@ -72,7 +72,7 @@ const SaveOrderPrompt: React.FC<Props> = ({ sessionId }) => {
           margin: 0 0 12px;
         }
         .save-order-prompt__cta {
-          font-family: 'Lato', Helvetica, sans-serif;
+          font-family: var(--font-label);
           font-size: 11px;
           letter-spacing: 0.22em;
           text-transform: uppercase;

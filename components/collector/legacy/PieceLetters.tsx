@@ -22,7 +22,7 @@ const styles = `
     max-width: 48rem;
     margin: 0 auto;
     color: #2f2922;
-    font-family: "Lato", system-ui, sans-serif;
+    font-family: var(--font-label);
   }
   .piece-letters, .piece-letters * { box-sizing: border-box; }
   .piece-letters__header { margin-bottom: 1.5rem; }

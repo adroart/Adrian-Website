@@ -68,18 +68,22 @@ const AuthButton: React.FC = () => {
 const authButtonStyles = `
   .ar-auth-button { position: relative; display: inline-flex; align-items: center; }
   .ar-auth-button__signin {
-    font-family: 'Lato', Helvetica, sans-serif;
+    font-family: var(--font-label);
     font-size: 11px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--color-wood-800);
+    /* Inherit the header's own text colour. Hardcoding --color-wood-800 put dark
+       brown on the dark header in both themes: 1.68:1, against 4.5:1 required, and
+       the only contrast failure on the site. */
+    color: inherit;
     background: transparent;
     border: 0;
     padding: 6px 4px;
+    min-height: 44px;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color 0.2s, opacity 0.2s;
   }
-  .ar-auth-button__signin:hover { color: var(--color-bronze-600); }
+  .ar-auth-button__signin:hover { color: var(--color-bronze-400); }
   .ar-auth-menu {
     position: absolute;
     top: calc(100% + 8px);
@@ -92,7 +96,7 @@ const authButtonStyles = `
     padding: 6px;
   }
   .ar-auth-menu__email {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--font-display);
     font-size: 13px;
     color: var(--color-wood-500);
     padding: 6px 8px;
@@ -106,7 +110,7 @@ const authButtonStyles = `
     display: block;
     width: 100%;
     text-align: left;
-    font-family: 'Lato', Helvetica, sans-serif;
+    font-family: var(--font-label);
     font-size: 11px;
     letter-spacing: 0.12em;
     text-transform: uppercase;

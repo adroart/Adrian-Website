@@ -14,6 +14,7 @@ import GalleryTileCard from './GalleryTileCard';
 import SaveToCollectionButton from './account/SaveToCollectionButton';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
+import { resolvePiece, isLegacyPieceParam, piecePath, pieceUrl } from '../utils/pieceSlug';
 
 // --- Helpers ---
 
@@ -126,7 +127,7 @@ const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({
     return (
         <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 md:mt-32">
             <div className="border-t border-wood-200 pt-12 mb-10">
-                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">
                     More from this series
                 </span>
             </div>
@@ -144,7 +145,7 @@ const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({
                 <div className="mt-10 text-center">
                     <Link
                         to={seriesLink}
-                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border-b border-bronze-300 pb-1 transition-colors"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border-b border-bronze-300 pb-1 transition-colors"
                     >
                         View all {art.series} <ArrowRight size={12} />
                     </Link>
@@ -199,10 +200,20 @@ const PiecePage: React.FC = () => {
     const purchaseRef = useRef<HTMLDivElement>(null);
     const [purchaseVisible, setPurchaseVisible] = useState(false);
 
-    const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+    // Accepts the canonical title slug (/creations/amphibian-dream) and the legacy
+    // catalog id (/creations/SIG-100), so every link ever shared keeps resolving.
+    const art = useMemo(() => resolvePiece(FULL_ARCHIVE, id), [id]);
 
-    // Recently viewed tracking
-    const recentIds = useRecentlyViewed(id ?? '');
+    // An id URL is a working URL, not the canonical one. Send it to the slug so the
+    // address bar, the share sheet and the analytics all agree on one address per piece.
+    useEffect(() => {
+        if (art && isLegacyPieceParam(art, id)) {
+            navigate(piecePath(art) + location.search, { replace: true, state: location.state });
+        }
+    }, [art, id, navigate, location.search, location.state]);
+
+    // Recently viewed tracking — keyed on the stable id, never the slug
+    const recentIds = useRecentlyViewed(art?.id ?? '');
     const recentPieces = useMemo(
         () => recentIds.map(rid => FULL_ARCHIVE.find(a => a.id === rid)).filter((a): a is Artwork => Boolean(a)),
         [recentIds],
@@ -517,7 +528,7 @@ const PiecePage: React.FC = () => {
         '@type': 'VisualArtwork',
         name: art.title,
         description: isUL ? ulMetaDescription(art) : art.description,
-        url: `https://adrianrasmussen.com/creations/${art.id}`,
+        url: pieceUrl(art),
         image: `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_1200,c_fill,g_auto/${art.coverImage}`,
         creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
         ...(art.year && { dateCreated: art.year }),
@@ -537,7 +548,7 @@ const PiecePage: React.FC = () => {
                 availability: art.availability === 'SOLD'
                     ? 'https://schema.org/SoldOut'
                     : 'https://schema.org/InStock',
-                url: `https://adrianrasmussen.com/creations/${art.id}`,
+                url: pieceUrl(art),
             },
         }),
     };
@@ -551,11 +562,11 @@ const PiecePage: React.FC = () => {
             item: `https://adrianrasmussen.com/creations/multidimensional-art/${seriesSlug}`,
         });
         breadcrumbItems.push({
-            '@type': 'ListItem', position: 3, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+            '@type': 'ListItem', position: 3, name: art.title, item: pieceUrl(art),
         });
     } else {
         breadcrumbItems.push({
-            '@type': 'ListItem', position: 2, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+            '@type': 'ListItem', position: 2, name: art.title, item: pieceUrl(art),
         });
     }
     const breadcrumbSchema = {
@@ -634,7 +645,7 @@ const PiecePage: React.FC = () => {
                             navigate(-1);
                         }
                     }}
-                    className="min-h-[44px] inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold hover:text-wood-900 transition-colors"
                 >
                     <ArrowRight size={14} className="rotate-180" />
                     {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
@@ -647,7 +658,7 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
+            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-16">
                 {/* Images */}
                 <div className="space-y-4">
                     <div
@@ -669,13 +680,14 @@ const PiecePage: React.FC = () => {
                         }}
                     >
                         <img
-                            src={cldImg(allImages[activeImageIndex], { w: 1200 })}
+                            src={cldImg(allImages[activeImageIndex], { w: 1800 })}
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
                             alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
                     </div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500 text-center md:hidden">
-                        Tap image to enlarge
+                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 text-center">
+                        <span className="md:hidden">Tap image to enlarge</span>
+                        <span className="hidden md:inline">Click the image to view it full size</span>
                     </p>
 
                     {allImages.length > 1 && (
@@ -742,7 +754,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
                                 </button>
-                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" />
+                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" variant="inline" />
                             </div>
                         </div>
 
@@ -813,10 +825,10 @@ const PiecePage: React.FC = () => {
                             className="flex items-center gap-3 px-5 py-4 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
                         >
                             <BookOpen size={16} className="text-bronze-600 shrink-0" />
-                            <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 group-hover:text-bronze-500 font-semibold">
+                            <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
                                 Read the story behind this piece
                             </span>
-                            <ArrowRight size={12} className="text-bronze-400 ml-auto shrink-0" />
+                            <ArrowRight size={12} className="text-bronze-600 ml-auto shrink-0" />
                         </Link>
                     )}
 
@@ -853,7 +865,7 @@ const PiecePage: React.FC = () => {
                                             className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors ${
                                                 configStep === 1
                                                     ? 'text-wood-900'
-                                                    : 'text-wood-500 hover:text-wood-700'
+                                                    : 'text-wood-700 hover:text-wood-700'
                                             }`}
                                         >
                                             <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
@@ -869,7 +881,7 @@ const PiecePage: React.FC = () => {
                                             className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                                 configStep === 2
                                                     ? 'text-wood-900'
-                                                    : 'text-wood-500 hover:text-wood-700'
+                                                    : 'text-wood-700 hover:text-wood-700'
                                             }`}
                                         >
                                             <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
@@ -883,7 +895,7 @@ const PiecePage: React.FC = () => {
                                 {/* --- Step 1: Size --- */}
                                 {configStep === 1 && variants.length > 1 && (
                                     <div className="mb-2">
-                                        <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                                        <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                                             Select your size
                                         </p>
                                         <div className="space-y-2">
@@ -910,7 +922,7 @@ const PiecePage: React.FC = () => {
                                                             <div className="flex flex-col">
                                                                 <span className="font-sans text-lg text-wood-900">{sizeOption.size}</span>
                                                                 <span className={`font-label text-[10px] uppercase tracking-[0.15em] font-semibold ${
-                                                                    isInStock ? 'text-avail-ready' : 'text-wood-400'
+                                                                    isInStock ? 'text-avail-ready' : 'text-wood-700'
                                                                 }`}>
                                                                     {isInStock
                                                                         ? `In stock${sizeOption.editionNumber ? ` · #${sizeOption.editionNumber}` : ''}`
@@ -956,10 +968,10 @@ const PiecePage: React.FC = () => {
                                                 className="w-full flex items-center justify-between px-4 py-3 mb-6 border border-wood-200 hover:border-wood-400 transition-colors text-left group"
                                             >
                                                 <div>
-                                                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold block">Size</span>
+                                                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-700 font-semibold block">Size</span>
                                                     <span className="font-sans text-base text-wood-900">{selectedSizeData.size}</span>
                                                 </div>
-                                                <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-500 font-semibold">
+                                                <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
                                                     Change
                                                 </span>
                                             </button>
@@ -968,7 +980,7 @@ const PiecePage: React.FC = () => {
                                         {/* Add-on checkboxes — filtered to what THIS piece offers */}
                                         {hasAnyAddOn && (
                                             <div className="mb-6">
-                                                <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                                                <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                                                     Add to your piece
                                                 </p>
                                                 <div className="space-y-6">
@@ -1052,7 +1064,7 @@ const PiecePage: React.FC = () => {
 
                                                 <Link
                                                     to="/creations"
-                                                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mt-6 transition-colors"
+                                                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-6 transition-colors"
                                                 >
                                                     See what's possible <ArrowRight size={12} />
                                                 </Link>
@@ -1062,7 +1074,7 @@ const PiecePage: React.FC = () => {
                                         {/* Live total with dynamic availability */}
                                         <div className="border-t border-wood-200 pt-6 pb-6 bg-wood-50/60 -mx-5 px-5 md:-mx-8 md:px-8">
                                             <div className="flex items-end justify-between mb-3">
-                                                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
+                                                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">Total</span>
                                                 <span className="font-serif text-3xl text-wood-900 font-medium">
                                                     {formatPrice(mtoTotal)}
                                                 </span>
@@ -1129,7 +1141,7 @@ const PiecePage: React.FC = () => {
                                         <Link
                                             to="/inquire"
                                             state={{ piece: art.title, pieceId: art.id }}
-                                            className="block text-center font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mt-4 transition-colors"
+                                            className="block text-center font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-4 transition-colors"
                                         >
                                             Or commission a similar piece
                                         </Link>
@@ -1260,7 +1272,7 @@ const PiecePage: React.FC = () => {
                         </span>
                         <Link
                             to={isMultidimensional ? '/creations/multidimensional-art' : `/creations?category=${encodeURIComponent(art.category)}`}
-                            className="inline-flex items-center gap-1 font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold hover:text-bronze-500 transition-colors"
+                            className="inline-flex items-center gap-1 font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold hover:text-bronze-600 transition-colors"
                         >
                             Browse all <ArrowRight size={11} />
                         </Link>
@@ -1345,7 +1357,7 @@ const PiecePage: React.FC = () => {
             {recentPieces.length > 0 && (
                 <div className="max-w-7xl mx-auto px-6 md:px-12 mt-16 md:mt-24">
                     <div className="border-t border-wood-200 pt-12 mb-10">
-                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">
                             Recently Viewed
                         </span>
                     </div>
@@ -1364,7 +1376,7 @@ const PiecePage: React.FC = () => {
                         <h2 className="font-serif text-2xl text-wood-700 font-medium mb-3">Explore more</h2>
                         <Link
                             to="/creations"
-                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold transition-colors border-b border-wood-300 pb-1"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 font-semibold transition-colors border-b border-wood-300 pb-1"
                         >
                             Browse all creations <ArrowRight size={12} />
                         </Link>
@@ -1377,7 +1389,7 @@ const PiecePage: React.FC = () => {
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">
                             {art.series ? `More from ${art.series}` : 'Related Works'}
                         </h2>
-                        <p className="font-sans text-base text-wood-500 mt-2">
+                        <p className="font-sans text-base text-wood-700 mt-2">
                             {art.series
                                 ? `Explore other pieces in the ${art.series} series`
                                 : 'You may also be drawn to these pieces'}
@@ -1387,7 +1399,7 @@ const PiecePage: React.FC = () => {
                         {relatedPieces.map((related) => (
                             <Link
                                 key={related.id}
-                                to={`/creations/${related.id}`}
+                                to={piecePath(related)}
                                 className="group"
                             >
                                 <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">

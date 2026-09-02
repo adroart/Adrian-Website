@@ -14,6 +14,7 @@ import { useCart } from '../CartContext';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
 import SaveToCollectionButton from './account/SaveToCollectionButton';
+import { piecePath } from '../utils/pieceSlug';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -480,7 +481,7 @@ const InspectionDrawer: React.FC<{
 
                     {/* View in Gallery link */}
                     <Link
-                        to={`/creations/${product.id}`}
+                        to={piecePath(product)}
                         onClick={onClose}
                         className="flex items-center gap-1.5 mb-8 font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 hover:text-bronze-600 font-semibold transition-colors"
                     >
@@ -620,7 +621,7 @@ const InspectionDrawer: React.FC<{
                     {product.available ? (
                         product.hasVariants ? (
                             <Link
-                                to={`/creations/${product.id}`}
+                                to={piecePath(product)}
                                 onClick={onClose}
                                 className="w-full py-5 flex items-center justify-center gap-3 text-xs font-label uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
                             >
@@ -641,7 +642,7 @@ const InspectionDrawer: React.FC<{
                             </button>
                         ) : (
                             <Link
-                                to={`/creations/${product.id}`}
+                                to={piecePath(product)}
                                 onClick={onClose}
                                 className="w-full py-5 flex items-center justify-center gap-3 text-xs font-label uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
                             >
@@ -654,7 +655,7 @@ const InspectionDrawer: React.FC<{
                         </div>
                     )}
                     <div className="flex justify-center mt-3">
-                        <SaveToCollectionButton kind="product" itemRef={product.id} label="Save to collection" />
+                        <SaveToCollectionButton kind="product" itemRef={product.id} label="Save" variant="inline" />
                     </div>
                 </div>
             </div>
