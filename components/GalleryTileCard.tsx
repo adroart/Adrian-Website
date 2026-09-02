@@ -56,7 +56,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             {/* Title plaque - sits between image and detail box like a gallery label */}
             {/* Title plaque - sits between image and detail box like a gallery label */}
             <Link to={piecePath(art)} className="block py-2 text-center">
-                <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug truncate">
+                <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug line-clamp-2 min-h-[2.75rem] sm:min-h-[3.1rem] flex items-center justify-center">
                     {displayTitle}
                 </h3>
             </Link>
@@ -65,16 +65,10 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             <div className="relative">
             <Link to={piecePath(art)} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
-                <div className="flex items-center justify-center gap-2">
-                    <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-700 font-semibold leading-none">
-                        {subtitleOverride || art.category}
-                    </span>
-                    {pieceNumber && (
-                        <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-600 font-semibold leading-none">
-                            {pieceNumber}
-                        </span>
-                    )}
-                </div>
+                <p className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-700 font-semibold leading-[1.45] text-balance">
+                    {subtitleOverride || art.category}
+                    {pieceNumber && <span className="text-wood-600"> &middot; {pieceNumber}</span>}
+                </p>
 
                 {/* Detail mode: price + status */}
                 {showDetails && (
