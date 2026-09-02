@@ -443,7 +443,7 @@ const Creations: React.FC = () => {
                         <p className="font-sans text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-sans text-base text-wood-700 max-w-4xl font-light leading-[1.7] mt-3">
+                        <p className="font-sans text-base text-wood-700 max-w-[68ch] font-light leading-[1.7] mt-3">
                             These are not decoration. They are portals. A place to sit with. To find your center.
                             To feel an opening. Find what calls to you.
                         </p>
