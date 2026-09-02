@@ -4,6 +4,9 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
+- [ ] One writing card shows an empty image frame on the home page _(band: you-required | effort: quick)_
+  "When Poetry Becomes Sound" has no `image:` field in `content/stories/when-poetry-becomes-sound.md`, so the From the Writings card renders an `<img>` with no source. Pre-existing, and visible on the live site. Either add a picture for that piece or let the card render without an image frame at all.
+
 - [ ] Answer "where does this ship from and how long does it take" per piece, before the shop can ever open _(band: you-required | effort: deep)_
   The shop stays OFF on purpose. Decided 2026-09-02: stock sits in several places, some pieces ship from Bali and some from the US, many are made to order, so shipping cost and lead time depend on the piece, the size and the buyer's location. A cart cannot answer that; a conversation can. "Request to Purchase" leading into the enquiry form is the intended path, not a shortfall — and the enquiry already carries piece, price, size, add-ons and availability across, so the conversation opens with the facts in hand. Nothing is blocked on code: `scripts/stripe-sync-prices.ts` will create all 291 prices whenever the logistics question has an answer, and nothing has been created in Stripe yet. The real work here is the inventory model, not the checkout.
   Smallest useful step, if it helps the direct conversations: the catalog has no field for where a piece lives, so no page can say "ships from Bali, allow three weeks" and every enquiry starts by asking. Adding an origin and lead-time field per piece would take that question off your plate without opening a cart.
