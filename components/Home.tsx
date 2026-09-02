@@ -95,15 +95,32 @@ const Home: React.FC = () => {
                 was missing. No prices, no buttons, and nothing laid over the
                 artwork. */}
             <section className="py-16 md:py-24 px-6 border-t border-wood-100">
-                <div className="max-w-[1500px] mx-auto grid grid-cols-1 gap-10 md:grid-cols-[92fr_108fr] md:gap-14 lg:gap-20 xl:gap-24 items-start md:items-stretch">
+                <div className="max-w-[1500px] mx-auto grid grid-cols-1 gap-10 md:grid-cols-[92fr_108fr] md:gap-x-14 md:gap-y-12 lg:gap-x-20 xl:gap-x-24 items-start md:items-stretch">
+
+                    {/* The heading, across the full width.
+                        Kept inside the left column it had a 380px measure to work in,
+                        so "I create across many forms." broke over two lines and sat
+                        in half the page. The link belongs up here with it rather than
+                        at the foot of the list — a reader who is sold by the sentence
+                        should not have to scan four rows to find the way in. */}
+                    <div className="md:col-span-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+                        <div>
+                            <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
+                            <h2 className="font-display font-light text-4xl md:text-5xl lg:text-[3.4rem] leading-[1.1] tracking-[-0.012em] text-wood-900 text-balance">
+                                I create across many forms.
+                            </h2>
+                        </div>
+                        <Link
+                            to="/creations"
+                            className="inline-flex items-center gap-2.5 pb-1.5 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
+                        >
+                            Explore all creations <ArrowRight size={13} aria-hidden="true" />
+                        </Link>
+                    </div>
 
                     {/* The introduction */}
-                    <div className="md:col-start-1 md:row-start-1">
-                        <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
-                        <h2 className="font-display font-light text-4xl md:text-5xl leading-[1.12] tracking-[-0.012em] text-wood-900 text-balance mb-5">
-                            I create across many forms.
-                        </h2>
-                        <p className="font-sans text-[15px] leading-[1.85] text-wood-700 max-w-[42ch] text-pretty mb-10 md:mb-12">
+                    <div className="md:col-start-1 md:row-start-2">
+                        <p className="font-sans text-[15px] leading-[1.85] text-wood-700 max-w-[46ch] text-pretty">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                             These are not decoration. They are portals.
                         </p>
@@ -113,7 +130,7 @@ const Home: React.FC = () => {
                         narrow screen; on the right, spanning both, from md up. The
                         lead spans all three rows so its bottom edge always meets the
                         last small frame's, rather than relying on guessed heights. */}
-                    <div className="grid grid-cols-2 gap-3 md:col-start-2 md:row-start-1 md:row-span-2 md:h-full md:grid-cols-[1.48fr_1fr] md:grid-rows-3">
+                    <div className="grid grid-cols-2 gap-3 md:col-start-2 md:row-start-2 md:row-span-2 md:h-full md:grid-cols-[1.48fr_1fr] md:grid-rows-3">
                         <Link
                             to={OFFERINGS[0].link}
                             aria-label={OFFERINGS[0].label}
@@ -136,7 +153,7 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* The four, named. Second on a narrow screen, so the work comes first. */}
-                    <div className="md:col-start-1 md:row-start-2">
+                    <div className="md:col-start-1 md:row-start-3">
                         <nav aria-label="What Adrian makes" className="border-t border-wood-200">
                             {OFFERINGS.map(o => (
                                 <Link
@@ -161,15 +178,6 @@ const Home: React.FC = () => {
                             ))}
                         </nav>
 
-                        {/* The link that used to sit on its own between the quote and
-                            this section, offering the same destination as the four
-                            names directly beneath it. It belongs here, after them. */}
-                        <Link
-                            to="/creations"
-                            className="inline-flex items-center gap-2.5 mt-8 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
-                        >
-                            Explore all creations <ArrowRight size={13} aria-hidden="true" />
-                        </Link>
                     </div>
 
                 </div>
