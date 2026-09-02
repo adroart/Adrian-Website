@@ -202,11 +202,11 @@ const Footer: React.FC = () => {
 
                 {/* Bottom bar */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-6">
-                    <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2">
-                        <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
-                        <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
-                        <Link to="/terms" className="hover:text-wood-300 transition-colors">Terms</Link>
-                        <button onClick={toggleDarkMode} className="hover:text-bronze-400 transition-colors">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 md:-my-3">
+                        <span className="py-3 md:py-0">© {new Date().getFullYear()} Adrian Rasmussen</span>
+                        <Link to="/privacy" className="py-3 hover:text-bronze-400 transition-colors">Privacy</Link>
+                        <Link to="/terms" className="py-3 hover:text-bronze-400 transition-colors">Terms</Link>
+                        <button onClick={toggleDarkMode} className="py-3 hover:text-bronze-400 transition-colors">
                             {isDarkMode ? 'Day' : 'Night'}
                         </button>
                     </div>
