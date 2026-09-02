@@ -4,6 +4,7 @@ import {
   completeYearlyRitual,
   getYearlyRitualEligibility,
 } from '../_lib/collectorDreams.js';
+import { clientErrorCode } from '../_lib/clientError.js';
 
 const ACTION_FIELDS = Object.freeze({
   reinforce: new Set(['keeperPieceId', 'action', 'idempotencyKey']),
@@ -64,7 +65,7 @@ export async function onRequest({ request, env }) {
     });
     return jsonResponse(result, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'collector_ritual_failed';
+    const code = clientErrorCode(error, 'collector_ritual_failed');
     return jsonResponse({ error: code }, { status: errorStatus(code) }, request, env);
   }
 }

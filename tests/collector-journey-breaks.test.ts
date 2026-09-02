@@ -24,6 +24,7 @@ import {
   identityBackupSha256,
 } from '../functions/api/_lib/identityBackup.js';
 import { hashRecoveryCode } from '../functions/api/_lib/keeper.js';
+import { clientErrorCode } from '../functions/api/_lib/clientError.js';
 
 const ADMIN_SECRET = 'registry-admin-secret';
 const ADMIN_IDENTITY = {
@@ -181,12 +182,19 @@ describe('the identity recovery copy is reachable', () => {
 
 describe('a refused dream says what is missing', () => {
   it('answers the database trigger with the same code the request-time check uses', () => {
+    // The rule itself, and its own tests, live in client-error-code.test.ts.
+    // What matters here is that the dream path goes through it rather than
+    // handing a caller whatever was thrown.
     const source = readSource('functions/api/collector/dreams.js');
-    assert.match(source, /public dream requires established adult/);
-    assert.match(source, /return 'adult_status_required';/);
-    // and never hands a driver error to a collector
-    assert.match(source, /D1_ERROR\|SQLITE_/);
-    assert.match(source, /normalizeDreamError\(/);
+    assert.match(source, /clientErrorCode\(error, 'collector_dream_failed'\)/);
+    assert.doesNotMatch(source, /error instanceof Error \? error\.message/);
+    assert.equal(
+      clientErrorCode(
+        new Error('D1_ERROR: public dream requires established adult: SQLITE_CONSTRAINT'),
+        'collector_dream_failed',
+      ),
+      'adult_status_required',
+    );
   });
 
   it('separates a refusal the caretaker can resolve from an unreachable piece', () => {
