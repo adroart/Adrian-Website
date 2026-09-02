@@ -2,55 +2,51 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { STORIES } from '../data/generatedStories';
-import { FULL_ARCHIVE } from '../data/mockData';
-import type { Artwork } from '../types';
+import { CREATION_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
-import GalleryTileCard from './GalleryTileCard';
 import { img } from '../utils/cloudinary';
+
+/** A frame from the Illuminated Works clip, three seconds in. */
+const ILLUMINATED_STILL =
+    'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,so_3,w_700,h_612,c_fill,g_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc';
+
+/**
+ * The four things Adrian makes, in the order they are introduced on the home page.
+ *
+ * Drawn from CREATION_CATEGORIES rather than restated, so a change to a category's
+ * name or one-line description reaches the front page too. The remaining visible
+ * category (Objects) is deliberately left out: four reads as a considered set and
+ * five wraps to a second row at every breakpoint.
+ */
+const OFFERINGS = CREATION_CATEGORIES
+    .filter(c => !c.hidden && ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].includes(c.id))
+    .sort((a, b) => ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].indexOf(a.id) - ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].indexOf(b.id))
+    .map(c => ({
+        label: c.label,
+        desc: c.desc,
+        image: c.image,
+        link: c.link ?? '/creations',
+        // Illuminated Works carries a video and only a placeholder still, so the
+        // category's own image is an unrelated face painting. A frame pulled from
+        // that video shows what the category actually is.
+        src: c.id === 'ILLUM' ? ILLUMINATED_STILL : undefined,
+    }));
+
+
+/**
+ * The anchor image is set here rather than taken from the category, on purpose.
+ *
+ * The Multidimensional Art category is represented on /creations by Path of the
+ * Ordinary, photographed against a garden wall — which reads well at full tile
+ * size there, and badly at anchor size here beside three studio shots. This is a
+ * carved piece filling its frame with no background, so the four cohere.
+ */
+const LEAD_IMAGE = 'adrian-website/creations/signature-pieces/communion-gold-blue-red';
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
 const Home: React.FC = () => {
-    /**
-     * The work shown on the front page.
-     *
-     * This section is gated on `featured`, and not one of the 173 catalogued pieces
-     * has it set — every record says `featured: false`. So the whole "Selected Works"
-     * gallery has been rendering nothing, and an artist's home page has been showing
-     * exactly one piece of art: the photograph in the commission block.
-     *
-     * Adrian's own curation still wins the moment any piece is flagged. Until then a
-     * fallback stands in, chosen to be defensible rather than arbitrary: the pieces
-     * someone can actually buy today come first, then one piece per series so the
-     * range of the work reads at a glance rather than twelve variations on a theme.
-     */
-    const featuredPieces = useMemo(() => {
-        const curated = FULL_ARCHIVE.filter(p => p.featured);
-        if (curated.length > 0) return curated.slice(0, 12);
-
-        const picked: Artwork[] = [];
-        const seenSeries = new Set<string>();
-        const take = (piece: Artwork) => {
-            if (picked.length >= 12) return;
-            if (picked.some(p => p.id === piece.id)) return;
-            picked.push(piece);
-            seenSeries.add(piece.series ?? piece.category);
-        };
-
-        for (const p of FULL_ARCHIVE) {
-            if (p.availability === 'READY_TO_SHIP' && p.coverImage) take(p);
-        }
-        for (const p of FULL_ARCHIVE) {
-            const key = p.series ?? p.category;
-            if (p.availability !== 'SOLD' && p.coverImage && !seenSeries.has(key)) take(p);
-        }
-        for (const p of FULL_ARCHIVE) {
-            if (p.availability !== 'SOLD' && p.coverImage) take(p);
-        }
-        return picked;
-    }, []);
-
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
 
@@ -80,32 +76,88 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* Selected Works masonry gallery */}
-            {featuredPieces.length > 0 && (
-                <section className="py-16 md:py-24 px-6 border-t border-wood-100">
-                    <div className="max-w-[1800px] mx-auto">
-                        <div className="flex justify-between items-end mb-10 md:mb-14">
-                            <div>
-                                <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Selected Works</span>
-                                <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">A window into the work</h2>
-                            </div>
-                            <Link to="/creations" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2">
-                                All Creations <ArrowRight size={14} />
-                            </Link>
-                        </div>
-                        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-5 card-stagger">
-                            {featuredPieces.map(piece => (
-                                <GalleryTileCard key={piece.id} art={piece} showDetails />
+            {/* ── The Work ─────────────────────────────────────────────────
+                An introduction, not a product listing.
+
+                This was a twelve-piece masonry grid with a price, a READY TO
+                SHIP line and a SAVE button on every tile — a shop shelf on the
+                front page of an artist's site, and ragged besides, because
+                twelve photographs shot in twelve different settings never line
+                up. It also answered the wrong question: a first-time visitor
+                does not know what Adrian makes, and twelve variations on one
+                form does not tell them.
+
+                It now shows the four things he actually makes, named, with the
+                sentence that introduces them. One piece anchors the section and
+                three state the range beside it — hierarchy is what the flat grid
+                was missing. No prices, no buttons, and nothing laid over the
+                artwork. */}
+            <section className="py-16 md:py-24 px-6 border-t border-wood-100">
+                <div className="max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-[92fr_108fr] gap-12 lg:gap-20 xl:gap-24 items-start">
+
+                    {/* The words */}
+                    <div>
+                        <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
+                        <h2 className="font-display font-light text-4xl md:text-5xl leading-[1.12] tracking-[-0.012em] text-wood-900 text-balance mb-5">
+                            I create across many forms.
+                        </h2>
+                        <p className="font-sans text-[15px] leading-[1.85] text-wood-700 max-w-[42ch] text-pretty mb-10 md:mb-12">
+                            Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
+                            These are not decoration. They are portals.
+                        </p>
+
+                        <nav aria-label="What Adrian makes" className="border-t border-wood-200">
+                            {OFFERINGS.map(o => (
+                                <Link
+                                    key={o.label}
+                                    to={o.link}
+                                    className="group flex items-baseline justify-between gap-6 py-4 border-b border-wood-200 transition-colors"
+                                >
+                                    <span>
+                                        <span className="block font-display text-xl md:text-[22px] leading-[1.25] text-wood-900 group-hover:text-bronze-600 transition-colors">
+                                            {o.label}
+                                        </span>
+                                        <span className="block mt-1 font-sans text-[12.5px] leading-[1.5] text-wood-700">
+                                            {o.desc}
+                                        </span>
+                                    </span>
+                                    <ArrowRight
+                                        size={14}
+                                        aria-hidden="true"
+                                        className="shrink-0 translate-y-1 text-wood-700 group-hover:text-bronze-600 transition-colors"
+                                    />
+                                </Link>
                             ))}
-                        </div>
-                        <div className="mt-10 text-center md:hidden">
-                            <Link to="/creations" className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold">
-                                View all creations →
-                            </Link>
-                        </div>
+                        </nav>
                     </div>
-                </section>
-            )}
+
+                    {/* The work. The lead spans all three rows, so its bottom edge
+                        always meets the last small frame's — the alignment is
+                        structural rather than a pair of guessed heights. */}
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1.48fr_1fr] lg:grid-rows-3">
+                        <Link
+                            to={OFFERINGS[0].link}
+                            aria-label={OFFERINGS[0].label}
+                            className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors lg:row-span-3 lg:aspect-auto"
+                        >
+                            <ArtImage publicId={LEAD_IMAGE} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
+                        </Link>
+                        {OFFERINGS.slice(1).map(o => (
+                            <Link
+                                key={o.label}
+                                to={o.link}
+                                aria-label={o.label}
+                                className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors"
+                            >
+                                {o.src
+                                    ? <ArtImage src={o.src} alt={o.label} variant="cover" loading="lazy" />
+                                    : <ArtImage publicId={o.image} alt={o.label} variant="cover" loading="lazy" />}
+                            </Link>
+                        ))}
+                    </div>
+
+                </div>
+            </section>
 
             {/* 3.5 Commission Invitation */}
             <section className="relative overflow-hidden">

@@ -56,6 +56,10 @@ for (const path of REVEAL_PAGES) {
 
         const hidden = await page.evaluate(() =>
             [...document.querySelectorAll('.reveal-block')]
+                // Decoration carries no information — whether the oversized watermark
+                // ampersand between sections ever fades in is cosmetic, and on a narrow
+                // viewport it can sit where the observer's threshold is never met.
+                .filter(el => !el.querySelector('[aria-hidden="true"]') || (el.textContent || '').trim().length > 3)
                 .filter(el => parseFloat(getComputedStyle(el).opacity) < 0.95)
                 .map(el => (el.textContent || '').trim().slice(0, 50)),
         );
