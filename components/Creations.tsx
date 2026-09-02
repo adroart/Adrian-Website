@@ -132,7 +132,10 @@ const CreationCategoryCard: React.FC<{
                 <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h2>
-                <p className="font-sans text-sm text-wood-700 font-light mt-1 leading-relaxed line-clamp-1
+                {/* Two lines, and the room for both reserved so the four tiles stay
+                    level. Clamped to one, "Wearable pieces and talismans" lost half
+                    of itself on a phone: it needs 46px and was given 23. */}
+                <p className="font-sans text-sm text-wood-700 font-light mt-1 leading-relaxed line-clamp-2 min-h-[2.9em]
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}

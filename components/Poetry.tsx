@@ -69,7 +69,7 @@ const Poetry: React.FC = () => {
                                         to={`/poetry/${track.slug}`}
                                         className="flex-1 min-w-0 group"
                                     >
-                                        <p className={`font-serif italic leading-snug truncate ${
+                                        <p className={`font-serif italic leading-snug line-clamp-2 min-h-[2.6em] ${
                                             isCurrent
                                                 ? 'text-wood-900 text-xl sm:text-2xl'
                                                 : 'text-wood-700 text-lg sm:text-2xl'
