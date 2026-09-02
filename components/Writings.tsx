@@ -416,15 +416,11 @@ export const WritingArticle: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Admin edit shortcut - links directly into Keystatic editor */}
-                <div className="mt-6 text-center">
-                    <a
-                        href={`/keystatic/collections/stories/${slug}`}
-                        className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-700 hover:text-bronze-600 transition-colors font-semibold"
-                    >
-                        Edit story
-                    </a>
-                </div>
+                {/* The Keystatic edit shortcut that used to sit here was shown to
+                    everyone, on every article, on the public site. Keystatic itself
+                    requires a session so nothing was exposed, but it put CMS
+                    plumbing at the foot of a piece of writing and told every reader
+                    which editor the site runs. Reach it directly at /keystatic. */}
             </div>
 
             {/* #14 Floating back to top button */}
