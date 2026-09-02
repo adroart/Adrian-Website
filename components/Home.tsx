@@ -7,42 +7,56 @@ import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
 import { img } from '../utils/cloudinary';
 
-/** A frame from the Illuminated Works clip, three seconds in. */
+/**
+ * The picture each offering shows on the home page.
+ *
+ * Three of the four differ from the category's own image, and each for a reason
+ * that only applies here — where the four sit side by side and have to read as one
+ * set. On /creations they are shown one per large tile, where the category images
+ * work, so those are deliberately left alone.
+ *
+ *   MULTI    /creations uses Path of the Ordinary, photographed against a garden
+ *            wall. Environmental at full tile size is fine; beside three studio
+ *            shots at anchor size it is the odd one out. This is a carved piece
+ *            filling its frame with no background.
+ *   ILLUM    The category points at a placeholder that is an unrelated face
+ *            painting. This is a frame from the category's own video, three
+ *            seconds in — the only picture of the work that exists.
+ *   ORACLE   The category uses a full card mock-up: white mat, border, and the
+ *            deck's typography. That is the right image for the oracle, and the
+ *            wrong one next to three bare artworks. This is the same piece
+ *            (card two, Beyond the Shell) as artwork alone.
+ *   JEWELRY  Unchanged — the category image is already a plain studio shot.
+ */
+const HOME_IMAGE: Record<string, string> = {
+    MULTI: 'adrian-website/creations/signature-pieces/communion-gold-blue-red',
+    ORACLE: '2_kvndyq',
+};
+
+/** Illuminated Works has no still of its own, only a clip. */
 const ILLUMINATED_STILL =
     'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,so_3,w_700,h_612,c_fill,g_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc';
 
+const ORDER = ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'];
+
 /**
- * The four things Adrian makes, in the order they are introduced on the home page.
+ * The four things Adrian makes, in the order they are introduced.
  *
- * Drawn from CREATION_CATEGORIES rather than restated, so a change to a category's
- * name or one-line description reaches the front page too. The remaining visible
- * category (Objects) is deliberately left out: four reads as a considered set and
- * five wraps to a second row at every breakpoint.
+ * Names, one-line descriptions and links come from CREATION_CATEGORIES rather than
+ * being restated, so editing a category reaches the front page too. The remaining
+ * visible category (Objects) is left out: four reads as a considered set, and five
+ * wraps to a second row at every breakpoint.
  */
 const OFFERINGS = CREATION_CATEGORIES
-    .filter(c => !c.hidden && ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].includes(c.id))
-    .sort((a, b) => ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].indexOf(a.id) - ['MULTI', 'ILLUM', 'JEWELRY', 'ORACLE'].indexOf(b.id))
+    .filter(c => !c.hidden && ORDER.includes(c.id))
+    .sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id))
     .map(c => ({
         label: c.label,
         desc: c.desc,
-        image: c.image,
+        image: HOME_IMAGE[c.id] ?? c.image,
         link: c.link ?? '/creations',
-        // Illuminated Works carries a video and only a placeholder still, so the
-        // category's own image is an unrelated face painting. A frame pulled from
-        // that video shows what the category actually is.
         src: c.id === 'ILLUM' ? ILLUMINATED_STILL : undefined,
     }));
-
-
-/**
- * The anchor image is set here rather than taken from the category, on purpose.
- *
- * The Multidimensional Art category is represented on /creations by Path of the
- * Ordinary, photographed against a garden wall — which reads well at full tile
- * size there, and badly at anchor size here beside three studio shots. This is a
- * carved piece filling its frame with no background, so the four cohere.
- */
-const LEAD_IMAGE = 'adrian-website/creations/signature-pieces/communion-gold-blue-red';
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
@@ -140,7 +154,7 @@ const Home: React.FC = () => {
                             aria-label={OFFERINGS[0].label}
                             className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors lg:row-span-3 lg:aspect-auto"
                         >
-                            <ArtImage publicId={LEAD_IMAGE} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
+                            <ArtImage publicId={OFFERINGS[0].image} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
                         </Link>
                         {OFFERINGS.slice(1).map(o => (
                             <Link
