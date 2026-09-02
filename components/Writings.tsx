@@ -562,7 +562,12 @@ const Writings: React.FC = () => {
                                                 </div>
                                             )}
                                             {/* Content */}
-                                            <div className={`p-4 md:p-8 flex-1 flex flex-col justify-center ${story.image ? 'md:w-3/5' : 'w-full'}`}>
+                                            {/* Without a thumbnail the text had the whole 1024px card
+                                                to itself and ran to about 120 characters a line on a
+                                                desktop, roughly twice a comfortable measure. The cap
+                                                only bites on the imageless case; with an image the
+                                                column is already narrow. */}
+                                            <div className={`p-4 md:p-8 flex-1 flex flex-col justify-center ${story.image ? 'md:w-3/5' : 'w-full max-w-[68ch]'}`}>
                                                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                                     {story.title}
                                                 </h3>

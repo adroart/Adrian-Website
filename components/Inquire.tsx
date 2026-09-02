@@ -967,7 +967,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   How long does a commission take?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to
                   completion. Spatial commissions and installations vary widely depending on
                   scope, anywhere from 2 months to a year. We'll establish a timeline together
@@ -979,7 +979,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
                   Most pieces are created in my studio and ship internationally. Ready-to-ship
                   items typically arrive within 2 to 3 weeks. Commissioned work ships upon
                   completion. I handle packaging personally to ensure safe arrival.
@@ -990,7 +990,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   What sizes are available?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
                   I work across all scales, from palm-sized talismans and jewelry to
                   room-filling installations. For commissions, size is part of the conversation.
                   For ready-to-ship pieces, dimensions are listed on each piece's page.
