@@ -754,7 +754,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
                                 </button>
-                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" />
+                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" variant="inline" />
                             </div>
                         </div>
 

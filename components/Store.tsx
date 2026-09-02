@@ -655,7 +655,7 @@ const InspectionDrawer: React.FC<{
                         </div>
                     )}
                     <div className="flex justify-center mt-3">
-                        <SaveToCollectionButton kind="product" itemRef={product.id} label="Save to collection" />
+                        <SaveToCollectionButton kind="product" itemRef={product.id} label="Save" variant="inline" />
                     </div>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCollections, type CollectionItemKind } from '../../lib/collections/context';
 import { useAccount } from '../../lib/account/useAccount';
+import { Bookmark } from 'lucide-react';
 import SignInTrigger from './SignInTrigger';
 
 interface Props {
@@ -9,6 +10,19 @@ interface Props {
   itemRef: string;
   /** Optional label override; defaults to "Save to collection". */
   label?: string;
+  /**
+   * 'button' is the outlined text control — right for a piece page, where saving
+   * is a deliberate act the visitor came to perform.
+   *
+   * 'icon' is a bookmark that sits inside a gallery tile's detail band. On a wall
+   * of tiles the text button was its own outlined box hanging below every card,
+   * which made the save affordance compete with the artwork for attention and
+   * left the column looking gappy. Same behaviour, quieter.
+   *
+   * 'inline' is a bookmark and a word, no border — for sitting in a row beside
+   * other plain controls, which is what Share already is on the piece page.
+   */
+  variant?: 'button' | 'icon' | 'inline';
 }
 
 /**
@@ -16,7 +30,7 @@ interface Props {
  * product into one of their collections. Hidden when accounts are
  * unavailable. Signed-out visitors see a sign-in prompt before the chooser.
  */
-const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save to collection' }) => {
+const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save to collection', variant = 'button' }) => {
   const account = useAccount();
   const { collections, createCollection, addItem } = useCollections();
   const [open, setOpen] = useState(false);
@@ -24,12 +38,23 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
 
   if (!account.available) return null;
 
-  // Signed out: a single button that opens the sign-in modal.
+  const isIcon = variant === 'icon';
+  const isInline = variant === 'inline';
+  const btnClass = isIcon ? 'stc__icon' : isInline ? 'stc__inline' : 'stc__btn';
+  /** The icon carries the label for assistive tech, since it shows no text. */
+  const a11y = isIcon ? { 'aria-label': label, title: label } : {};
+  const face = isIcon
+    ? <Bookmark size={14} strokeWidth={1.5} aria-hidden="true" />
+    : isInline
+      ? <><Bookmark size={12} strokeWidth={1.5} aria-hidden="true" /> {label}</>
+      : label;
+
+  // Signed out: a single control that opens the sign-in modal.
   if (!account.isSignedIn) {
     return (
-      <div className="stc">
+      <div className={`stc${isIcon ? ' stc--icon' : ''}`}>
         <SignInTrigger>
-          <button type="button" className="stc__btn">{label}</button>
+          <button type="button" className={btnClass} {...a11y}>{face}</button>
         </SignInTrigger>
         <style>{stcStyles}</style>
       </div>
@@ -52,9 +77,16 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
 
   // Signed in: the collection chooser.
   return (
-    <div className="stc">
-      <button type="button" className="stc__btn" onClick={() => setOpen((o) => !o)}>
-        {label}
+    <div className={`stc${isIcon ? ' stc--icon' : ''}`}>
+      <button
+        type="button"
+        className={btnClass}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        {...a11y}
+      >
+        {face}
       </button>
       {open && (
         <div className="stc__menu">
@@ -102,6 +134,40 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
 
 const stcStyles = `
   .stc { position: relative; display: inline-block; }
+  /* Sits in the top-right of a tile's detail band — in the gutter beneath the
+     artwork, never over it. */
+  .stc--icon { position: absolute; top: 6px; right: 6px; }
+  .stc__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    color: var(--color-wood-600);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .stc__icon:hover { color: var(--color-bronze-600); }
+  /* Matches the Share control it sits beside: plain, small caps, no box. */
+  .stc__inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-wood-600);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .stc__inline:hover { color: var(--color-wood-900); }
   .stc__btn {
     font-family: var(--font-label);
     font-size: 10px;

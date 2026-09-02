@@ -62,6 +62,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             </Link>
 
             {/* Detail band - entire tag links to piece, centered like a gallery label */}
+            <div className="relative">
             <Link to={piecePath(art)} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
                 <div className="flex items-center justify-center gap-2">
@@ -116,13 +117,16 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 )}
             </Link>
 
-            {/* Save affordance — only in detail mode, sits below the label so it
-                never overlaps the artwork and is outside the card's Link. */}
+            {/* Save sits inside the detail band, top right — in the gutter under the
+                artwork, never over it, and outside the card's Link so the two
+                controls do not nest. It used to be an outlined text button in its
+                own box below every tile, which made a column of cards read as a
+                row of forms and put the save affordance in competition with the
+                work. */}
             {showDetails && (
-                <div className="mt-2 flex justify-center">
-                    <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" />
-                </div>
+                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save to collection" variant="icon" />
             )}
+            </div>
         </div>
     );
 };

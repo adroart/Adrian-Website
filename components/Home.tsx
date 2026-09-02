@@ -15,10 +15,10 @@ import { img } from '../utils/cloudinary';
  * set. On /creations they are shown one per large tile, where the category images
  * work, so those are deliberately left alone.
  *
- *   MULTI    /creations uses Path of the Ordinary, photographed against a garden
- *            wall. Environmental at full tile size is fine; beside three studio
- *            shots at anchor size it is the odd one out. This is a carved piece
- *            filling its frame with no background.
+ *   MULTI    Path of the Ordinary, chosen by Adrian for being the tallest piece
+ *            in the set — the anchor slot is a tall one, and a squarer picture
+ *            left it looking cropped. Same image as /creations, so this entry
+ *            only pins it against a later category change.
  *   ILLUM    The category points at a placeholder that is an unrelated face
  *            painting. This is a frame from the category's own video, three
  *            seconds in — the only picture of the work that exists.
@@ -29,7 +29,7 @@ import { img } from '../utils/cloudinary';
  *   JEWELRY  Unchanged — the category image is already a plain studio shot.
  */
 const HOME_IMAGE: Record<string, string> = {
-    MULTI: 'adrian-website/creations/signature-pieces/communion-gold-blue-red',
+    MULTI: 'adrian-website/creations/signature-pieces/path-of-the-ordinary',
     ORACLE: '2_kvndyq',
 };
 
@@ -78,18 +78,6 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* Explore Creations link */}
-            <section className="py-12 sm:py-16 px-6">
-                <div className="max-w-3xl mx-auto text-center">
-                    <Link
-                        to="/creations"
-                        className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors py-3 px-2 -my-3 -mx-2"
-                    >
-                        Explore Creations <ArrowRight size={14} />
-                    </Link>
-                </div>
-            </section>
-
             {/* ── The Work ─────────────────────────────────────────────────
                 An introduction, not a product listing.
 
@@ -107,10 +95,10 @@ const Home: React.FC = () => {
                 was missing. No prices, no buttons, and nothing laid over the
                 artwork. */}
             <section className="py-16 md:py-24 px-6 border-t border-wood-100">
-                <div className="max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-[92fr_108fr] gap-12 lg:gap-20 xl:gap-24 items-start">
+                <div className="max-w-[1500px] mx-auto grid grid-cols-1 gap-10 md:grid-cols-[92fr_108fr] md:gap-14 lg:gap-20 xl:gap-24 items-start md:items-stretch">
 
-                    {/* The words */}
-                    <div>
+                    {/* The introduction */}
+                    <div className="md:col-start-1 md:row-start-1">
                         <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
                         <h2 className="font-display font-light text-4xl md:text-5xl leading-[1.12] tracking-[-0.012em] text-wood-900 text-balance mb-5">
                             I create across many forms.
@@ -119,7 +107,36 @@ const Home: React.FC = () => {
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                             These are not decoration. They are portals.
                         </p>
+                    </div>
 
+                    {/* The work. Ordered between the introduction and the list on a
+                        narrow screen; on the right, spanning both, from md up. The
+                        lead spans all three rows so its bottom edge always meets the
+                        last small frame's, rather than relying on guessed heights. */}
+                    <div className="grid grid-cols-2 gap-3 md:col-start-2 md:row-start-1 md:row-span-2 md:h-full md:grid-cols-[1.48fr_1fr] md:grid-rows-3">
+                        <Link
+                            to={OFFERINGS[0].link}
+                            aria-label={OFFERINGS[0].label}
+                            className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors md:row-span-3 md:aspect-auto"
+                        >
+                            <ArtImage publicId={OFFERINGS[0].image} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
+                        </Link>
+                        {OFFERINGS.slice(1).map(o => (
+                            <Link
+                                key={o.label}
+                                to={o.link}
+                                aria-label={o.label}
+                                className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors md:aspect-auto"
+                            >
+                                {o.src
+                                    ? <ArtImage src={o.src} alt={o.label} variant="cover" loading="lazy" />
+                                    : <ArtImage publicId={o.image} alt={o.label} variant="cover" loading="lazy" />}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* The four, named. Second on a narrow screen, so the work comes first. */}
+                    <div className="md:col-start-1 md:row-start-2">
                         <nav aria-label="What Adrian makes" className="border-t border-wood-200">
                             {OFFERINGS.map(o => (
                                 <Link
@@ -143,31 +160,16 @@ const Home: React.FC = () => {
                                 </Link>
                             ))}
                         </nav>
-                    </div>
 
-                    {/* The work. The lead spans all three rows, so its bottom edge
-                        always meets the last small frame's — the alignment is
-                        structural rather than a pair of guessed heights. */}
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1.48fr_1fr] lg:grid-rows-3">
+                        {/* The link that used to sit on its own between the quote and
+                            this section, offering the same destination as the four
+                            names directly beneath it. It belongs here, after them. */}
                         <Link
-                            to={OFFERINGS[0].link}
-                            aria-label={OFFERINGS[0].label}
-                            className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors lg:row-span-3 lg:aspect-auto"
+                            to="/creations"
+                            className="inline-flex items-center gap-2.5 mt-8 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
                         >
-                            <ArtImage publicId={OFFERINGS[0].image} alt={OFFERINGS[0].label} variant="cover" loading="lazy" />
+                            Explore all creations <ArrowRight size={13} aria-hidden="true" />
                         </Link>
-                        {OFFERINGS.slice(1).map(o => (
-                            <Link
-                                key={o.label}
-                                to={o.link}
-                                aria-label={o.label}
-                                className="relative block overflow-hidden aspect-[8/7] border border-wood-200 hover:border-bronze-400 transition-colors"
-                            >
-                                {o.src
-                                    ? <ArtImage src={o.src} alt={o.label} variant="cover" loading="lazy" />
-                                    : <ArtImage publicId={o.image} alt={o.label} variant="cover" loading="lazy" />}
-                            </Link>
-                        ))}
                     </div>
 
                 </div>
