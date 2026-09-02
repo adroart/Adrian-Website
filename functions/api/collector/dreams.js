@@ -48,6 +48,23 @@ function exactBody(body, fields) {
     && [...fields.required].every((field) => keys.includes(field));
 }
 
+/**
+ * The database enforces the adult rule with its own triggers as well as the
+ * request-time check, and a trigger abort arrives as a raw D1 error string.
+ * Sent on unchanged it reaches the collector as database wording no client
+ * can classify, so the honest refusal it deserves never renders. Same cause,
+ * so it answers with the same code the request-time check uses.
+ */
+function normalizeDreamError(code) {
+  if (typeof code !== 'string') return 'collector_dream_failed';
+  if (code.includes('public dream requires established adult')) {
+    return 'adult_status_required';
+  }
+  // Never let a raw driver error reach a collector.
+  if (/^D1_ERROR|SQLITE_/.test(code)) return 'collector_dream_failed';
+  return code;
+}
+
 function errorStatus(code) {
   if (code === 'piece_not_held' || code === 'current_dream_missing') return 404;
   if (code === 'current_dream_exists' || code === 'version_conflict'
@@ -129,7 +146,9 @@ export async function onRequest({ request, env }) {
     }
     return jsonResponse(state, { status: 200 }, request, env);
   } catch (error) {
-    const code = error instanceof Error ? error.message : 'collector_dream_failed';
+    const code = normalizeDreamError(
+      error instanceof Error ? error.message : 'collector_dream_failed',
+    );
     return jsonResponse({ error: code }, { status: errorStatus(code) }, request, env);
   }
 }

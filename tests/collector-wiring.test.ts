@@ -145,7 +145,14 @@ describe('the vault is gated on a bound outcome', () => {
     // and to the settled destinations
     assert.match(source, /case 'pending':[\s\S]{0,200}key: 'receiving'/);
     assert.match(source, /case 'not_ready':[\s\S]{0,200}key: 'plate'/);
-    assert.match(source, /case 'needs_verified_email':[\s\S]{0,400}key: 'account'/);
+    // A signed-in person whose email is unconfirmed goes to the screen that
+    // says so, not the no-account screen, whose two buttons do nothing for
+    // them. Anonymous still goes to 'account'.
+    assert.match(source, /case 'needs_verified_email':[\s\S]{0,600}key: signedIn \? 'verify' : 'account'/);
+    // and the callback must actually read the current session: without
+    // signedIn in its deps it keeps the value it closed over and tells a
+    // person who just signed in that they have no account.
+    assert.match(source, /\[pending, refresh, signedIn\],/);
     assert.match(source, /case 'bound':[\s\S]{0,120}kind: 'vault'/);
     assert.match(source, /case 'mismatch':[\s\S]{0,120}kind: 'wrong'/);
   });

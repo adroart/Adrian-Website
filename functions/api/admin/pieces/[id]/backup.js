@@ -24,11 +24,33 @@ export async function onRequest({ request, env, params }) {
     const row = await env.DB.prepare(
       'SELECT * FROM keeper_pieces WHERE id = ?1',
     ).bind(params.id).first();
-    if (!row || !['generated', 'active'].includes(row.plate_status)) {
-      return jsonResponse({ ok: false, error: 'plate_not_found' }, 404);
+    const identityAvailable = row?.registration_status === 'registered';
+    const plateAvailable = ['generated', 'active'].includes(row?.plate_status);
+
+    if (request.method === 'GET') {
+      // Which encrypted copy the administrator is archiving. The identity
+      // envelope is its own artifact with its own prefix and digest, and the
+      // claim path's qualification is scoped to it, so it needs its own
+      // download. Default matches verify-recovery's: identity before a plate
+      // exists, plate once one does.
+      const requested = new URL(request.url).searchParams.get('kind');
+      if (requested !== null && !['identity', 'plate'].includes(requested)) {
+        return jsonResponse({ ok: false, error: 'invalid_backup_kind' }, 400);
+      }
+      const kind = requested || (identityAvailable && !plateAvailable ? 'identity' : 'plate');
+      if (kind === 'identity') {
+        if (!identityAvailable) {
+          return jsonResponse({ ok: false, error: 'identity_not_registered' }, 404);
+        }
+        return downloadBackupCopy(env, row, IDENTITY_COPY);
+      }
+      if (!plateAvailable) return jsonResponse({ ok: false, error: 'plate_not_found' }, 404);
+      return downloadBackupCopy(env, row, PLATE_COPY);
     }
 
-    if (request.method === 'GET') return downloadBackupCopy(env, row);
+    if (!row || !plateAvailable) {
+      return jsonResponse({ ok: false, error: 'plate_not_found' }, 404);
+    }
 
     const result = await backupRegistryPlate(env, row);
     if (result.warning === 'backup_status_record_failed') {
@@ -48,41 +70,66 @@ export async function onRequest({ request, env, params }) {
   }
 }
 
-async function downloadBackupCopy(env, row) {
+/* The two encrypted copies an administrator can archive. Each names the
+ * columns that carry its status, object reference and digest, the object
+ * prefix its reference must match, the audit action, and the filename the
+ * download lands under. */
+const PLATE_COPY = {
+  statusColumn: 'backup_status',
+  referenceColumn: 'backup_reference',
+  digestColumn: 'backup_sha256',
+  prefix: 'plates',
+  auditAction: 'download_recovery_copy',
+  filenameSuffix: 'encrypted-recovery',
+};
+
+const IDENTITY_COPY = {
+  statusColumn: 'identity_backup_status',
+  referenceColumn: 'identity_backup_reference',
+  digestColumn: 'identity_backup_sha256',
+  prefix: 'identities',
+  auditAction: 'download_identity_recovery_copy',
+  filenameSuffix: 'encrypted-identity-recovery',
+};
+
+async function downloadBackupCopy(env, row, copy) {
   if (!env.ARTWORK_REGISTRY_BACKUP) {
     return jsonResponse({ ok: false, error: 'backup_not_configured' }, 503);
   }
+  const status = row[copy.statusColumn];
+  const reference = row[copy.referenceColumn];
+  const digestOfRecord = row[copy.digestColumn];
   if (
-    row.backup_status !== 'verified'
-    || typeof row.backup_sha256 !== 'string'
-    || !/^[0-9a-f]{64}$/.test(row.backup_sha256)
-    || row.backup_reference !== `plates/${row.public_code}/${row.backup_sha256}.json`
+    status !== 'verified'
+    || typeof digestOfRecord !== 'string'
+    || !/^[0-9a-f]{64}$/.test(digestOfRecord)
+    || reference !== `${copy.prefix}/${row.public_code}/${digestOfRecord}.json`
   ) {
     return jsonResponse({ ok: false, error: 'verified_backup_required' }, 409);
   }
   try {
     await writeOwnershipAudit(env, {
       keeperPieceId: row.id,
-      action: 'download_recovery_copy',
+      action: copy.auditAction,
       outcome: 'authorized',
     });
   } catch {
     return jsonResponse({ ok: false, error: 'audit_unavailable' }, 503);
   }
   try {
-    const stored = await env.ARTWORK_REGISTRY_BACKUP.get(row.backup_reference);
+    const stored = await env.ARTWORK_REGISTRY_BACKUP.get(reference);
     if (!stored) return jsonResponse({ ok: false, error: 'backup_unavailable' }, 503);
     const bytes = await readBackupObjectBytes(stored);
     const digest = await backupDocumentSha256(bytes);
-    if (!constantTimeEqual(digest, row.backup_sha256)) {
+    if (!constantTimeEqual(digest, digestOfRecord)) {
       return jsonResponse({ ok: false, error: 'backup_digest_mismatch' }, 409);
     }
     return new Response(bytes, {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="${row.public_code}-encrypted-recovery.json"`,
+        'Content-Disposition': `attachment; filename="${row.public_code}-${copy.filenameSuffix}.json"`,
         'Cache-Control': 'no-store',
-        'X-Backup-Sha256': row.backup_sha256,
+        'X-Backup-Sha256': digestOfRecord,
       },
     });
   } catch {

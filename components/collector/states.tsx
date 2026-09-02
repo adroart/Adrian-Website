@@ -25,7 +25,7 @@ import { COPY, PIECE, PLACEHOLDERS } from './copy';
 import { Body, Brass, Eyebrow, Flag, Ground, Head, Ledger, Note, TLink } from './ui';
 import { Drawing } from './drawings';
 
-export type StateKey = 'account' | 'held' | 'plate' | 'offline' | 'recordonly' | 'notyet';
+export type StateKey = 'account' | 'verify' | 'held' | 'plate' | 'offline' | 'recordonly' | 'notyet';
 
 /**
  * The honest passing (D4). The passing screens exist as demo surfaces, but
@@ -37,6 +37,14 @@ export type StateKey = 'account' | 'held' | 'plate' | 'offline' | 'recordonly' |
  * registered as placeholders so the dev marker shows. T2b: hoist into
  * copy.ts once the passing copy is worked.
  */
+const VERIFY_HEAD = 'Confirm your email first';
+const VERIFY_BODY =
+  'You are signed in, and the piece will not bind to an account whose email has not been confirmed. Sign in again with an emailed code and it is confirmed in the same motion. Your code stays held while you do it.';
+PLACEHOLDERS.add(VERIFY_HEAD);
+PLACEHOLDERS.add(VERIFY_BODY);
+const VERIFY_PRIMARY = 'Email me a code';
+PLACEHOLDERS.add(VERIFY_PRIMARY);
+
 const NOTYET_HEAD = 'The passing is not open yet';
 const NOTYET_BODY =
   'Passing a piece on will happen right here, and it is not ready to be done yet. Nothing about your piece or its record is affected. When the passing opens, this door leads into it.';
@@ -85,6 +93,9 @@ export const StateScreen: React.FC<Props> = ({
         onHave={onSecondary ?? onBack}
       />
     );
+  }
+  if (state === 'verify') {
+    return <VerifyEmail onBack={onBack} onVerify={onPrimary ?? onBack} />;
   }
   if (state === 'held') return <AlreadyHeld onBack={onBack} onClaim={onPrimary ?? onBack} />;
   if (state === 'notyet') return <PassingNotYet onReturn={onPrimary ?? onBack} />;
@@ -250,6 +261,50 @@ const AlreadyHeld: React.FC<{ onBack?: () => void; onClaim?: () => void }> = ({ 
  * back to the piece. No prompt, no count, no blame, no locked door — the
  * piece is exactly as it was, and the screen says so.
  * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ * Signed in, and the account's email has never been confirmed.
+ *
+ * This used to land on the no-account screen, which offered a signed-in
+ * person two buttons that did nothing and never mentioned email. The
+ * refusal is real; what was missing was saying so and opening the one
+ * door that clears it.
+ * ------------------------------------------------------------------ */
+
+const VerifyEmail: React.FC<{ onBack?: () => void; onVerify?: () => void }> = ({
+  onBack,
+  onVerify,
+}) => (
+  <Ground light="c" pad="52px 30px 30px">
+    <div style={{ position: 'relative', flex: 'none', display: 'grid', placeItems: 'center', height: 150 }}>
+      <Drawing motif="vault" size={104} draw />
+    </div>
+    <div style={{ position: 'relative', flex: 'none' }}>
+      <Head size={34}>
+        <Flag text={VERIFY_HEAD} />
+      </Head>
+    </div>
+    <Body top={16}>{VERIFY_BODY}</Body>
+
+    <div style={{ position: 'relative', flex: 1 }} />
+    <div
+      style={{
+        position: 'relative',
+        flex: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 20,
+        paddingTop: 24,
+      }}
+    >
+      <Brass full onClick={onVerify}>
+        {VERIFY_PRIMARY}
+      </Brass>
+      <TLink onClick={onBack}>{COPY.page.back}</TLink>
+    </div>
+  </Ground>
+);
 
 const PassingNotYet: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => (
   <Ground light="f" pad="52px 30px 30px">

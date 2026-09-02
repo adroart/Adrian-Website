@@ -33,8 +33,12 @@ export type Quiet<T> =
  *   held    the quiet failure: nothing is lost, the same brass tries again
  *   locked  the server's yearly gate answered: the words settle until the
  *           birthday window opens. A state, never an error.
+ *   unready the server refused for a reason the caretaker can resolve, and
+ *           retrying alone never will. Distinct from `held` because the
+ *           honest thing is to say what is missing and open the door to it,
+ *           not to report a reachable server as unreachable.
  */
-export type GardenPlaceOutcome = 'landed' | 'held' | 'locked';
+export type GardenPlaceOutcome = 'landed' | 'held' | 'locked' | 'unready';
 
 /** What the wired garden can do. All writes go through api.ts in wired.tsx. */
 export type GardenLive = {

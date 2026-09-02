@@ -136,10 +136,16 @@ Codes, claim evidence, administrator references, or recovery qualifications.
 8. Compare public code, artwork ID, edition, generation time, filenames, and
    both SHA-256 hashes across the screen, manifest, and files.
 9. Confirm the encrypted online backup is **Verified**.
-10. Download its encrypted recovery JSON, archive it outside the site, re-upload
-    that downloaded copy, and require recovery status **Current**.
+10. Prove **both** encrypted copies, one at a time, in the wizard's recovery
+    step. Pick a copy, download it, archive it outside the site, choose that
+    archived file, and require its status **Current**. Then do the other.
+    - **The identity copy.** What a collector's claim is gated on. Until it
+      reads Current, every claim against this piece is refused, whatever the
+      plate says.
+    - **The plate copy.** What no metal may be cut without.
 
-Do not send files to the engraver until steps 1 to 10 pass.
+Do not send files to the engraver until steps 1 to 10 pass, with both copies
+reading Current.
 
 ## Material prototype qualification
 

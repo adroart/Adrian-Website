@@ -134,8 +134,13 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /type="file"/);
     assert.match(wizard, /backupDocument/);
     assert.match(wizard, /piece\?\.recoveryQualification\?\.status === 'current'/);
-    assert.match(wizard, /case 'recovery':\s*\n\s*return piece\?\.recoveryQualification\?\.status === 'current';/);
-    assert.match(wizard, /Recovery proof is stale/);
+    // Advancing needs BOTH proofs. The plate one guards engraving; the
+    // identity one is what every collector claim is refused without, and
+    // until 2026-09-02 nothing in the wizard computed or required it.
+    assert.match(wizard, /piece\?\.recoveryQualification\?\.status === 'current'\s*\n\s*&& piece\?\.identityRecoveryQualification\?\.status === 'current';/);
+    assert.match(wizard, /qualificationKind: recoveryKind/);
+    assert.match(wizard, /backup\?kind=\$\{recoveryKind\}/);
+    assert.match(wizard, /proof is stale/);
   });
 
   it('lets the operator choose another registered artwork after completion, with no restart-from-scratch path', () => {
