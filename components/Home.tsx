@@ -164,7 +164,7 @@ const Home: React.FC = () => {
                         </div>
                         <Link
                             to="/creations"
-                            className="inline-flex items-center gap-2.5 pb-1.5 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
+                            className="inline-flex items-center gap-2.5 py-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
                         >
                             Explore all creations <ArrowRight size={13} aria-hidden="true" />
                         </Link>
@@ -349,7 +349,7 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="mt-8 md:hidden text-center">
-                        <Link to="/writings" className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 border-b border-wood-900 pb-1 font-semibold">
+                        <Link to="/writings" className="inline-block py-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold border-b border-wood-900">
                             Explore All Writings
                         </Link>
                     </div>
