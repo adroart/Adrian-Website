@@ -15,8 +15,27 @@
 export const LAUNCH_FLAGS = {
   /**
    * SHOP / CART — Online purchasing via Stripe
-   * Disabled because: All stripePriceIds are 'price_REPLACE' placeholders.
-   * To re-enable: Set up Stripe Products/Prices, replace IDs in mockData.ts,
+   *
+   * OFF ON PURPOSE. Not a missing feature, and not a placeholder problem any more.
+   *
+   * Adrian's decision, 2026-09-02: stock sits in several places, some pieces ship
+   * from Bali and some from the US, and a good share are made to order. Shipping
+   * cost and lead time therefore depend on which piece, which size, and where the
+   * buyer is — none of which a cart can work out on its own. Until that is solved,
+   * a direct conversation gives the buyer a better answer than a checkout would,
+   * so "Request to Purchase" into the enquiry flow IS the intended path, not a
+   * fallback. The enquiry carries piece, price, size, add-ons and availability
+   * through to the form, so the conversation starts with the details already known.
+   *
+   * Do NOT propose flipping this because the code is ready. The code being ready
+   * was never the blocker. The blocker is logistics, and it is Adrian's call.
+   *
+   * The groundwork is done and waiting: scripts/stripe-sync-prices.ts creates the
+   * Stripe catalog (291 prices, verified end to end against the real data) whenever
+   * the logistics question is answered. Nothing has been created in Stripe yet.
+   *
+   * To re-enable, once shipping origin and lead time can be answered per piece:
+   *   run `infisical run --env=dev -- npm run stripe:sync -- --apply`,
    *   set env vars (STRIPE_SECRET_KEY, VITE_STRIPE_PUBLISHABLE_KEY), flip to true.
    * Files affected:
    *   - Navigation.tsx (Shop nav item hidden, cart icon hidden)
