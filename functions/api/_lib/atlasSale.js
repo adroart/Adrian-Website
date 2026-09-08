@@ -1,117 +1,144 @@
 /**
- * notifyMandalacodes(env, sale)
+ * recordPendingAtlasSale(env, sale)
  *
- * Fires the M4 sale webhook to mandalacodes after a successful checkout.
- * Contract: mandalacodes/todo/handoff/adrian-website/sale-webhook-spec.md
+ * Enqueues a confirmed Stripe sale as a PENDING row in atlas_sale_events —
+ * the same table the mandalacodes admin queue (`/admin/atlas` → Pending
+ * Sales, via functions/api/atlas/sales/*) has always read. Ported from
+ * mandalacodes' POST /api/atlas/sale receiver (functions/api/atlas/sale.ts)
+ * on 2026-09-08.
  *
- * A verified call lands the sale as a PENDING row in the shared D1 table
- * atlas_sale_events; nothing touches the ledger or steward records until
- * Adrian confirms it in /admin/atlas. This call is best-effort: if it fails
- * after retries, the sale still exists in Stripe and Adrian issues the
- * steward manually, exactly as before M4. Never let it block or fail the
- * order write.
+ * Retired 2026-09-08: this used to be an HTTP call to
+ * https://mandalacodes.com/api/atlas/sale, HMAC-signed with
+ * SALE_WEBHOOK_SECRET. That endpoint moved the Atlas collector record to
+ * this site on 2026-08-09 and its middleware now answers every non-read
+ * request with 410 atlas_moved (probed live 2026-09-08) — the webhook
+ * retried three times and gave up silently, so no sale ever became a
+ * pending row anywhere. atlas_sale_events lives in the SAME D1 database
+ * this site already binds as `DB` for orders (migrations/005_atlas_legacy.sql,
+ * "OWNED BY ADRIAN-WEBSITE"; mandalacodes reads it through the identical
+ * shared binding), so the fix is a direct write, not a network call. No
+ * HTTP, no HMAC, no SALE_WEBHOOK_SECRET, no retries — a same-process D1
+ * insert either succeeds or it doesn't, and Stripe's own webhook retries
+ * cover the "didn't land" case exactly the way idempotent saleId already
+ * assumes.
  *
- * Signature: hex( HMAC-SHA256( SALE_WEBHOOK_SECRET, `${timestamp}.${rawBody}` ) )
- * timestamp is unix SECONDS, re-stamped on every retry (receiver enforces a
- * ±5-minute replay window). Idempotent on saleId (INSERT OR IGNORE), so
- * retries are safe.
+ * Nothing touches the ledger or steward records here — this only enqueues
+ * a pending row; confirmation stays an explicit admin action in
+ * /admin/atlas, exactly as before. Best-effort and non-fatal: if the D1
+ * write fails, the sale still exists in Stripe and Adrian issues the
+ * steward by hand, exactly as before this chain existed.
  */
 
-const ENDPOINT = 'https://mandalacodes.com/api/atlas/sale';
+const SALE_STRING_MAX = 300;
 
-// Retry backoff in ms. 400 = sender bug, never retried. 401/5xx/network = retry.
-// Kept short so the whole sequence finishes inside the waitUntil window after
-// we've already 200'd Stripe; long multi-minute sleeps were silently killed.
-const BACKOFF_MS = [1_000, 5_000, 15_000];
+function isValidEmail(value) {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
 
-async function hmacHex(secret, message) {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+function isIsoDate(value) {
+  if (typeof value !== 'string') return false;
+  if (!/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2})?)?$/.test(value)) return false;
+  return !Number.isNaN(Date.parse(value));
+}
+
+function trimmedOrUndefined(value) {
+  if (value == null) return undefined;
+  const trimmed = String(value).trim();
+  if (!trimmed || trimmed.length > SALE_STRING_MAX) return undefined;
+  return trimmed;
 }
 
 /**
- * Build the canonical payload. Only the fields the spec accepts; unknown
- * fields are rejected (400) by the receiver. Drops undefined/null so the
- * body stays minimal and stable.
+ * Validate + normalize a sale into exactly the fields atlas_sale_events
+ * accepts. Mirrors mandalacodes' parseSalePayload (utils/saleBridge.ts)
+ * closely enough that a row this writes is indistinguishable from one the
+ * old webhook would have produced — same whitelist discipline, since this
+ * call is now internal but the row is still read by an admin queue.
  */
-function buildPayload(sale) {
-  const out = {
-    saleId: sale.saleId,
-    buyerEmail: sale.buyerEmail,
-    saleDate: sale.saleDate,
-  };
-  if (sale.sku != null) out.sku = sale.sku;
-  if (sale.pieceId != null) out.pieceId = sale.pieceId;
-  if (sale.editionNumber != null) out.editionNumber = sale.editionNumber;
-  if (sale.buyerName) out.buyerName = sale.buyerName;
-  if (sale.priceCents != null) out.priceCents = sale.priceCents;
-  if (sale.currency) out.currency = sale.currency;
-  return out;
-}
+function normalizeSale(sale) {
+  const saleId = trimmedOrUndefined(sale?.saleId);
+  if (!saleId) return { ok: false, reason: 'missing_required_fields' };
 
-async function sendOnce(secret, rawBody) {
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = await hmacHex(secret, `${timestamp}.${rawBody}`);
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Sale-Timestamp': timestamp,
-      'X-Sale-Signature': signature,
+  const buyerEmail = typeof sale?.buyerEmail === 'string' ? sale.buyerEmail.trim() : '';
+  if (!isValidEmail(buyerEmail)) return { ok: false, reason: 'missing_required_fields' };
+
+  if (!isIsoDate(sale?.saleDate)) return { ok: false, reason: 'missing_required_fields' };
+
+  if (
+    sale.editionNumber !== undefined
+    && sale.editionNumber !== null
+    && (!Number.isInteger(sale.editionNumber) || sale.editionNumber < 0)
+  ) {
+    return { ok: false, reason: 'invalid_edition_number' };
+  }
+
+  if (
+    sale.priceCents !== undefined
+    && sale.priceCents !== null
+    && (!Number.isSafeInteger(sale.priceCents) || sale.priceCents < 0)
+  ) {
+    return { ok: false, reason: 'invalid_price_cents' };
+  }
+
+  const currency = trimmedOrUndefined(sale.currency);
+  if (currency !== undefined && !/^[A-Za-z]{3}$/.test(currency)) {
+    return { ok: false, reason: 'invalid_currency' };
+  }
+
+  return {
+    ok: true,
+    value: {
+      saleId,
+      sku: trimmedOrUndefined(sale.sku) ?? null,
+      pieceId: trimmedOrUndefined(sale.pieceId) ?? null,
+      editionNumber: sale.editionNumber ?? null,
+      buyerEmail,
+      buyerName: trimmedOrUndefined(sale.buyerName) ?? null,
+      saleDate: sale.saleDate,
+      priceCents: sale.priceCents ?? null,
+      currency: currency ? currency.toUpperCase() : null,
     },
-    body: rawBody,
-  });
-  return res;
+  };
 }
 
 /**
- * @param {object} env  Cloudflare env (needs SALE_WEBHOOK_SECRET)
+ * @param {object} env  Cloudflare env (needs DB)
  * @param {object} sale { saleId, buyerEmail, saleDate, [sku, pieceId,
  *                        editionNumber, buyerName, priceCents, currency] }
- * @returns {Promise<{ ok: boolean, status?: string, reason?: string }>}
+ * @returns {Promise<{ ok: boolean, status?: 'queued' | 'duplicate', reason?: string }>}
  */
-export async function notifyMandalacodes(env, sale) {
-  if (!env?.SALE_WEBHOOK_SECRET) {
-    // Secret not provisioned yet (step c of MORNING-AFTER). No-op quietly;
-    // the queue is convenience, not source of truth.
-    return { ok: false, reason: 'secret_unset' };
-  }
-  if (!sale?.saleId || !sale?.buyerEmail || !sale?.saleDate) {
-    return { ok: false, reason: 'missing_required_fields' };
-  }
+export async function recordPendingAtlasSale(env, sale) {
+  if (!env?.DB) return { ok: false, reason: 'db_not_configured' };
 
-  // Serialize ONCE; sign and send these exact bytes (re-serialization breaks
-  // the signature). Re-sign timestamp per attempt, same rawBody.
-  const rawBody = JSON.stringify(buildPayload(sale));
+  const parsed = normalizeSale(sale);
+  if (!parsed.ok) return parsed;
+  const value = parsed.value;
 
-  for (let attempt = 0; ; attempt++) {
-    try {
-      const res = await sendOnce(env.SALE_WEBHOOK_SECRET, rawBody);
-      if (res.status === 200) {
-        const data = await res.json().catch(() => ({}));
-        return { ok: true, status: data.status }; // 'queued' | 'duplicate'
-      }
-      if (res.status === 400) {
-        // Payload itself is wrong — retrying as-is can't help.
-        console.warn('[atlasSale] 400 rejected; not retrying:', await res.text().catch(() => ''));
-        return { ok: false, reason: 'rejected_400' };
-      }
-      // 401 (clock skew) / 503 (receiver not ready) / 5xx → retry.
-    } catch (err) {
-      console.warn('[atlasSale] send failed:', err);
-    }
-
-    if (attempt >= BACKOFF_MS.length) {
-      return { ok: false, reason: 'retries_exhausted' };
-    }
-    await new Promise((r) => setTimeout(r, BACKOFF_MS[attempt]));
+  try {
+    const result = await env.DB
+      .prepare(
+        `INSERT OR IGNORE INTO atlas_sale_events
+           (sale_id, sku, piece_id, edition_number, buyer_email, buyer_name,
+            sale_date, price_cents, currency, status, raw_json)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 'pending', ?10)`,
+      )
+      .bind(
+        value.saleId,
+        value.sku,
+        value.pieceId,
+        value.editionNumber,
+        value.buyerEmail,
+        value.buyerName,
+        value.saleDate,
+        value.priceCents,
+        value.currency,
+        JSON.stringify(value),
+      )
+      .run();
+    const inserted = (result?.meta?.changes ?? 0) > 0;
+    return { ok: true, status: inserted ? 'queued' : 'duplicate' };
+  } catch (err) {
+    console.warn('[atlasSale] pending sale insert failed:', err);
+    return { ok: false, reason: 'db_write_failed' };
   }
 }

@@ -16,7 +16,7 @@
  */
 
 import { verifyStripeWebhook } from '../_lib/stripe.js';
-import { notifyMandalacodes } from '../_lib/atlasSale.js';
+import { recordPendingAtlasSale } from '../_lib/atlasSale.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -126,14 +126,15 @@ export async function onRequest(context) {
     }
   }
 
-  // Notify the mandalacodes living-legacy atlas of the sale (M4 sale bridge).
-  // Best-effort and out-of-band: it enqueues a PENDING row for Adrian to
-  // confirm in /admin/atlas, never touches the ledger, and must never block
-  // or fail this order write. waitUntil lets its retries finish after we've
-  // already 200'd Stripe. No-ops quietly until SALE_WEBHOOK_SECRET is set.
+  // Enqueue the living-legacy atlas sale bridge (M4): a direct D1 write
+  // into atlas_sale_events, the same table the mandalacodes admin queue
+  // reads via the shared `DB` binding. Best-effort and non-fatal: it must
+  // never block or fail this order write, and a failed write here just
+  // means Adrian issues the steward by hand, exactly as before this chain
+  // existed.
   if (status === 'paid') {
-    context.waitUntil(
-      notifyMandalacodes(env, {
+    try {
+      await recordPendingAtlasSale(env, {
         saleId: sessionId,
         buyerEmail: email,
         buyerName: s.customer_details?.name || undefined,
@@ -142,8 +143,10 @@ export async function onRequest(context) {
         currency,
         // sku/pieceId/editionNumber left unset: Adrian picks the piece in the
         // admin queue (the webhook's word never decides which piece moves).
-      }).catch((err) => console.warn('[stripe/webhook] atlas notify failed:', err)),
-    );
+      });
+    } catch (err) {
+      console.warn('[stripe/webhook] atlas pending sale enqueue failed:', err);
+    }
   }
 
   return new Response('ok', { status: 200 });

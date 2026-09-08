@@ -348,7 +348,7 @@ functions/api/_lib/artworkInvitations.js → readArtworkInvitationProjection, cr
 functions/api/_lib/artworkLedgerMedia.js → storeArtworkLedgerMedia
 functions/api/_lib/artworkRegistration.js → readRegisteredArtworkIdentity, registerArtwork, registerArtworkWithRecord
 functions/api/_lib/artworkWorkspace.js → getArtworkWorkspace
-functions/api/_lib/atlasSale.js → notifyMandalacodes
+functions/api/_lib/atlasSale.js → recordPendingAtlasSale
 functions/api/_lib/auth.js → privateJsonResponse, isAllowedOrigin, corsHeaders, jsonResponse, normalizeEmail, isSameOrigin, safeReturnPath, validateReturnPath, verifyRequest, requireUser, requireAdmin
 functions/api/_lib/catalogSnapshot.js → canonicalizeCatalogMetadata, catalogSnapshotDigest, ensureCatalogSnapshot, latestCatalogSnapshot
 functions/api/_lib/certificateContent.js → normalizeCertificateContent, createCertificateTemplate, listCertificateTemplates, assignCertificateTemplate, setCertificateOverride, resolveArtworkCertificate, getCertificateArtworkEditorState, resolveInstanceCertificate, resolveInstanceCertificateByPublicCode, resolvePublicArtworkLedger, resolvePublicArtworkLedgerMedia, resolveCurrentKeeperPriceHistory
