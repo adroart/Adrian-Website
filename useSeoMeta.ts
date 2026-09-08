@@ -67,6 +67,10 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     description:
       'Multidimensional art by Adrian Rasmussen. Explore creations, writings, and commissions.',
   },
+  '/atlas': {
+    title: 'Atlas | Adrian Rasmussen',
+    description: 'Every piece that leaves the studio can come to rest on a shared map. See the atlas on mandalacodes.com.',
+  },
   '/privacy': {
     title: 'Privacy Policy | Adrian Rasmussen',
     description: 'Privacy policy for adrianrasmussen.com.',
