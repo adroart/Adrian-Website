@@ -42,6 +42,7 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
     label: 'Sales',
     items: [
       { label: 'Verified sales', href: '/admin/collector-sales' },
+      { label: 'Atlas pending sales', href: '/admin/atlas-sales' },
       { label: 'Private viewings', href: '/admin/viewings' },
       { label: 'Pricing', href: '/admin/pricing' },
       { label: 'Invoices', href: '/admin/invoices' },

@@ -18,7 +18,7 @@ describe('admin studio shell', () => {
         // The address lives on a permanent branch and nowhere else, so this
         // entry is the only place it is written down.
         ['Workshop', ['Screen development system']],
-        ['Sales', ['Verified sales', 'Private viewings', 'Pricing', 'Invoices']],
+        ['Sales', ['Verified sales', 'Atlas pending sales', 'Private viewings', 'Pricing', 'Invoices']],
       ],
     );
   });
