@@ -59,6 +59,7 @@ const GenerativeBackground = lazy(() => import('./components/GenerativeBackgroun
 const Poetry = lazy(() => import('./components/Poetry'));
 const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
 const CollectorFieldPage = lazy(() => import('./components/collector/legacy/CollectorFieldPage'));
+const AtlasPage = lazy(() => import('./components/AtlasPage'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';
@@ -212,7 +213,9 @@ const SiteShell: React.FC = () => {
             <Route path="/collector" element={<CollectorShell />} />
             <Route path="/qr" element={<QRIndex />} />
             <Route path="/viewing/:token" element={<Viewing />} />
-            <Route path="/atlas" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />
+            <Route path="/atlas" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasPage />} />
+            {/* Sub-paths keep the old external bounce: there is no local page
+                for a deep link here, only for the bare /atlas root above. */}
             <Route path="/atlas/*" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
             <Route path="/account" element={<AccountDashboard />} />
@@ -258,8 +261,10 @@ const RegistrationsRedirect: React.FC = () => {
   return <Navigate to={`/admin/register${location.search}`} replace />;
 };
 
-/** The atlas moved to mandalacodes.com. Anyone hitting an old /atlas* URL
- *  on adrianrasmussen.com is sent across with a hard browser redirect. */
+/** The atlas record and globe live on mandalacodes.com; /atlas itself is now
+ *  a quiet local page (AtlasPage) instead of bouncing there. This redirect
+ *  still handles the /atlas/* sub-paths, which have no local page of their
+ *  own to land on. */
 const AtlasExternalRedirect: React.FC = () => {
   useEffect(() => {
     window.location.replace('https://mandalacodes.com/atlas');

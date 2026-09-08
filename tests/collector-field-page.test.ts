@@ -23,12 +23,17 @@ describe('collector field page', () => {
     assert.match(failed, />Try again</);
   });
 
-  it('keeps the local field behind the living-legacy launch gate', () => {
+  it('keeps the local field behind the living-legacy launch gate, with a quiet atlas page while it is off', () => {
     const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
     assert.match(app, /lazy\(\(\) => import\('\.\/components\/collector\/legacy\/CollectorFieldPage'\)\)/);
     assert.match(
       app,
-      /path="\/atlas" element=\{LAUNCH_FLAGS\.livingLegacy \? <CollectorFieldPage\s*\/> : <AtlasExternalRedirect\s*\/>\}/,
+      /path="\/atlas" element=\{LAUNCH_FLAGS\.livingLegacy \? <CollectorFieldPage\s*\/> : <AtlasPage\s*\/>\}/,
+    );
+    // Sub-paths still bounce to mandalacodes.com: no local page exists for them.
+    assert.match(
+      app,
+      /path="\/atlas\/\*" element=\{LAUNCH_FLAGS\.livingLegacy \? <CollectorFieldPage\s*\/> : <AtlasExternalRedirect\s*\/>\}/,
     );
   });
 
