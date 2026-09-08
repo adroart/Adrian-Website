@@ -79,6 +79,15 @@ const AccountDashboard: React.FC = () => {
           </Link>
         )}
       </div>
+
+      <p className="mt-10">
+        <a
+          href={`/api/auth/handoff?next=${encodeURIComponent('/account')}`}
+          className="font-serif text-sm text-bronze-600 hover:text-bronze-700"
+        >
+          Continue to the oracle
+        </a>
+      </p>
     </AccountLayout>
   );
 };
