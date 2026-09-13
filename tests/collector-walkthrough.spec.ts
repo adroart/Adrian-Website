@@ -26,7 +26,7 @@
  * this spec never duplicates their wording, only walks the real screens.
  */
 
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test } from './fixtures';
 
 test.use({ viewport: { width: 390, height: 844 } });
 

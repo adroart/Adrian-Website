@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Page, type Route } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 
 const now = '2026-08-10T00:00:00.000Z';

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
 const SECOND_PUBLIC_CODE = 'AR-ABCDEFGH';

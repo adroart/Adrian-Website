@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
 const WORK_PATH = `/works/MD-905?instance=${PUBLIC_CODE}&ref=qr`;
