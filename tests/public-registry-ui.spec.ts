@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
 

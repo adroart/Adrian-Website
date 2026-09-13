@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 /**
  * Scroll-reveal blocks start at opacity: 0, so the animation is not decoration on top

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 const fixture = {
   schemaVersion: 3,
   generatedAt: '2026-08-09T12:00:00.000Z',
