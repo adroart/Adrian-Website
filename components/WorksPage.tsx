@@ -142,13 +142,15 @@ const WorksPage: React.FC = () => {
     // this branch is unreachable and the current behavior below is unchanged.
     if (legacyOn && publicCode && verifiedIdentity) {
         return (
-            <Suspense fallback={null}>
-                <CollectorPieceArrival
-                    identity={verifiedIdentity}
-                    artwork={artwork ?? null}
-                    beginClaim={searchParams.get('claim') === '1'}
-                />
-            </Suspense>
+            <div data-testid="collector-page-inset" style={{ paddingTop: 'var(--nav-height)' }}>
+                <Suspense fallback={null}>
+                    <CollectorPieceArrival
+                        identity={verifiedIdentity}
+                        artwork={artwork ?? null}
+                        beginClaim={searchParams.get('claim') === '1'}
+                    />
+                </Suspense>
+            </div>
         );
     }
 

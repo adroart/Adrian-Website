@@ -88,21 +88,37 @@ function livePlaced(live: GardenLive): (string | null)[] {
   return placed;
 }
 
+/** Resolve index rows without allowing a real, empty surface to borrow the
+ * walkthrough's sample answers. Exported so this privacy boundary stays
+ * directly testable without mounting the animated room. */
+export function gardenPlaced(live: GardenLive | undefined, liveEmpty = false): (string | null)[] {
+  if (live) return livePlaced(live);
+  return liveEmpty ? COPY.garden.questions.map(() => null) : PLACED;
+}
+
 export const Garden: React.FC<{
   onWalk?: (key: string) => void;
   onClose?: () => void;
   /** wired: the real dream state and the place call. Absent, demo unchanged. */
   live?: GardenLive;
+  /** Explicit live surface with no garden access/content. This is distinct
+   *  from omitting `live` in the standalone design preview, which deliberately
+   *  keeps the sample answers below. */
+  liveEmpty?: boolean;
   /** whether the caretaker's name lamp is lit, for the write screen's §7
    *  reminder. Absent, the demo flag answers; wired callers thread it in
    *  once a wire from the lamps exists. */
   nameShines?: boolean;
-}> = ({ onClose, live, nameShines }) => {
+}> = ({ onClose, live, liveEmpty = false, nameShines }) => {
   const [view, setView] = useState<View>('ask');
   const [which, setWhich] = useState(live ? 0 : 3);
   /** the words in flight between write and review; the review page commits,
    *  and going back hands every choice to the write screen intact */
   const [draft, setDraft] = useState<GardenDraft | null>(null);
+  /* Access can disappear while an async publish/refetch or account remount is
+   * in flight. Never leave a now-live-empty surface inside the demo-capable
+   * write/review branches. */
+  const safeView: View = liveEmpty && (view === 'write' || view === 'review') ? 'index' : view;
 
   /* forward and back through the eight questions, both wrapping. "Next" is
      the cycle the file already had (askOwn kept wired to it, unchanged); the
@@ -111,17 +127,18 @@ export const Garden: React.FC<{
   const goNext = () => setWhich(i => (i + 1) % questionCount);
   const goPrev = () => setWhich(i => (i - 1 + questionCount) % questionCount);
 
-  if (view === 'index') {
+  if (safeView === 'index') {
     return (
       <GardenIndex
         onBack={() => setView('ask')}
         onPick={i => {
+          if (liveEmpty) return;
           setWhich(i);
           setDraft(null);
           setView('write');
         }}
         onClose={onClose}
-        placed={live ? livePlaced(live) : undefined}
+        placed={gardenPlaced(live, liveEmpty)}
         historicalSeals={live?.dreams.status === 'ready'
           ? live.dreams.data?.history.filter(dream => dream.tier === 'seal' && Boolean(dream.body)) ?? []
           : []}
@@ -130,7 +147,7 @@ export const Garden: React.FC<{
     );
   }
 
-  if (view === 'review' && draft) {
+  if (safeView === 'review' && draft) {
     return (
       <GardenReview
         question={COPY.garden.questions[which]}
@@ -145,7 +162,7 @@ export const Garden: React.FC<{
     );
   }
 
-  if (view === 'write' || view === 'review') {
+  if (safeView === 'write' || safeView === 'review') {
     return (
       <QuestionPage
         index={which}
@@ -173,7 +190,7 @@ export const Garden: React.FC<{
     <GardenAsk
       index={which}
       onSeeAll={() => setView('index')}
-      onWrite={() => setView('write')}
+      onWrite={() => { if (!liveEmpty) setView('write'); }}
       onAnother={goNext}
       onPrev={goPrev}
       onNext={goNext}
@@ -371,8 +388,8 @@ const GardenIndex: React.FC<{
   onBack: () => void;
   onPick: (i: number) => void;
   onClose?: () => void;
-  /** wired: the real answers; absent, the shell's samples */
-  placed?: (string | null)[];
+  /** resolved real answers, or the deliberate shell samples */
+  placed: (string | null)[];
   historicalSeals?: Array<{ id: string; body: string }>;
   onPublishHistorical?: (dreamId: string) => Promise<boolean>;
 }> = ({
@@ -397,7 +414,7 @@ const GardenIndex: React.FC<{
     <RoomHead title={COPY.garden.title} onBack={onBack} />
     <RoomBody top={20}>
       {COPY.garden.questions.map((q, i) => {
-        const answer = (placed ?? PLACED)[i];
+        const answer = placed[i];
         return (
           <button
             key={q}

@@ -9,16 +9,24 @@ encrypted Ownership Code envelopes. The private archive is never sent through th
 Schema 10 adds caretaker passing (including terminal state, private declarations and
 notification evidence), silence windows/reminders/deliveries, historical-author
 publication and permanent shine-removal marks. Restoring those marks prevents
-removed writing from resurfacing when a record is regenerated. Schema 1–9
+removed writing from resurfacing when a record is regenerated. Schema 11 adds the
+explicit `piece_records.legacy_sections` fact, preserving whether a permanent Piece
+Record was generated with legacy placeholder sections. Schema 1–10
 archives remain decryptable and inspectable, with their authenticated source schema
 retained. They cannot supply tables their manifests never included. SQL generation
 refuses `recovery_privacy_evidence_unavailable` when an older archive includes any
 current or historical public share, publication mutation, or opaque public-record
 reference. The refusal occurs before SQL is returned or a destination is changed.
-An authenticated schema-10 export containing the removal evidence is the remedy;
+An authenticated export originally captured at schema 10 or later, containing the removal evidence, is the remedy;
 when it cannot be recovered, public restoration remains unresolved. A manually
 invented empty removal list is not an override. Safe older archives without any
 potentially republished content remain restorable.
+
+Upgrading or re-encrypting an older archive preserves its original authenticated
+source schema; wrapping schema-9 content in schema 10 or 11 cannot make missing
+removal evidence complete. Schema-10 Piece Record rows retain their six-column
+format and restore `legacy_sections` as migration 043's default, `0`. Native
+schema-11 archives preserve the recorded value, `0` or `1`.
 
 The archive does not include `piece_media`, `artist_messages`, R2 media bytes,
 book/poetry/music indexes, invoices or manual payment events, orders, payment-provider

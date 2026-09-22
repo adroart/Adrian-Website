@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
-  existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync,
+  existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,6 +32,7 @@ import {
   REGISTRY_RECOVERY_V7_TABLES,
   REGISTRY_RECOVERY_V8_TABLES,
   REGISTRY_RECOVERY_V9_TABLES,
+  REGISTRY_RECOVERY_V10_TABLES,
   REGISTRY_RECOVERY_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
@@ -67,17 +68,10 @@ const phase1Migrations = `${readMigration('025_artwork_registration.sql')}
 \n${readMigration('028_collector_privacy.sql')}`;
 const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 \n${readMigration('030_collector_field.sql')}\n${readMigration('031_collector_letters.sql')}`;
-const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
-\n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
-\n${readMigration('033_artwork_contributors.sql')}
-\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}
-\n${readMigration('035_city_floor_removal.sql')}
-\n${readMigration('036_artwork_catalog_snapshots.sql')}
-\n${readMigration('037_piece_records.sql')}
-\n${readMigration('038_transfer_silence.sql')}
-\n${readMigration('039_piece_media.sql')}
-\n${readMigration('040_artist_messages.sql')}
-\n${readMigration('041_collector_shine_removals.sql')}\n${readMigration('042_collector_dream_tiers.sql')}\n${readMigration('046_caretaker_passing.sql')}\n${readMigration('047_claim_silence_delivery.sql')}\n${readMigration('049_historical_dream_publications.sql')}`;
+const registryMigrationNames = readdirSync(new URL('../migrations/', import.meta.url))
+  .filter((name) => name.endsWith('.sql'))
+  .sort();
+const registryMigrations = registryMigrationNames.map(readMigration).join('\n');
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -89,6 +83,11 @@ const legacyRecoveryTables = REGISTRY_RECOVERY_V1_TABLES;
 function withoutDreamTierColumns(name: string, rows: any[]) {
   if (name !== 'collector_dreams') return rows;
   return rows.map(({ tier, heirs_may_share, ...rest }) => rest);
+}
+
+function withoutPieceRecordSections(name: string, rows: any[]) {
+  if (name !== 'piece_records') return rows;
+  return rows.map(({ legacy_sections: _legacySections, ...row }) => row);
 }
 
 async function sha256Hex(value: string) {
@@ -107,7 +106,8 @@ async function encryptLegacyPayload(payload: any) {
           : payload.schemaVersion === 5 ? REGISTRY_RECOVERY_V5_TABLES
             : payload.schemaVersion === 6 ? REGISTRY_RECOVERY_V6_TABLES
               : payload.schemaVersion === 7 ? REGISTRY_RECOVERY_V7_TABLES
-                : payload.schemaVersion === 8 ? REGISTRY_RECOVERY_V8_TABLES : REGISTRY_RECOVERY_V9_TABLES;
+                : payload.schemaVersion === 8 ? REGISTRY_RECOVERY_V8_TABLES
+                  : payload.schemaVersion === 9 ? REGISTRY_RECOVERY_V9_TABLES : REGISTRY_RECOVERY_V10_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -679,13 +679,13 @@ function seedCompleteRegistry(database: DatabaseSync, verifiedLineage?: { issued
        '{"category":"multidimensional-art","id":"UL-101","title":"Invitation Work"}',
        'admin', '${exportedAt}');
     INSERT INTO piece_records
-      (id, public_code, record_hash, r2_key, trigger_event, created_at)
+      (id, public_code, record_hash, r2_key, trigger_event, created_at, legacy_sections)
     VALUES
       ('pr-${'5'.repeat(64)}', 'AR-7KQ9M2WX', '${'5'.repeat(64)}',
-       'records/AR-7KQ9M2WX/${'5'.repeat(64)}.html', 'registration', '${exportedAt}'),
+       'records/AR-7KQ9M2WX/${'5'.repeat(64)}.html', 'registration', '${exportedAt}', 0),
       ('pr-${'6'.repeat(64)}', 'AR-8KQ9M2WX', '${'6'.repeat(64)}',
        'records/AR-8KQ9M2WX/${'6'.repeat(64)}.html', 'on_demand',
-       '2026-08-02T03:04:05.000Z');
+       '2026-08-02T03:04:05.000Z', 1);
   `);
 }
 
@@ -1144,7 +1144,7 @@ describe('private registry recovery export', () => {
     assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artwork_catalog_snapshots, [
       'id', 'artwork_id', 'snapshot_hash', 'canonical_json', 'source', 'created_at',
     ]);
-    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.piece_records, [
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.piece_records.slice(0, -1), [
       'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
     ]);
     assert.deepEqual(REGISTRY_RECOVERY_ORDER_COLUMNS.artwork_catalog_snapshots, ['id']);
@@ -1168,7 +1168,7 @@ describe('private registry recovery export', () => {
   });
 
   it('freezes the schema-v8 manifest and adds the dream tier-change ledger in schema v9', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 10);
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 11);
     assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(0, REGISTRY_RECOVERY_V8_TABLES.length),
       REGISTRY_RECOVERY_V8_TABLES);
     assert.deepEqual(REGISTRY_RECOVERY_V9_TABLES.slice(-1), ['collector_dream_tier_changes']);
@@ -1189,6 +1189,22 @@ describe('private registry recovery export', () => {
       database.exec('PRAGMA foreign_keys = ON;');
       database.exec(registryMigrations);
       for (const table of ['collector_dreams', 'collector_dream_tier_changes'] as const) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+    } finally {
+      database.close();
+    }
+  });
+
+  it('freezes schema v10 and adds the Piece Record section fact only in schema v11', () => {
+    assert.deepEqual(REGISTRY_RECOVERY_V10_TABLES, REGISTRY_RECOVERY_TABLES);
+    assert.equal(REGISTRY_RECOVERY_COLUMNS.piece_records.at(-1), 'legacy_sections');
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of REGISTRY_RECOVERY_TABLES) {
         assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
           .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
       }
@@ -1559,6 +1575,10 @@ describe('private registry recovery export', () => {
       assert.equal(payload.tables.artwork_acquisitions[0].private_notes, 'private acquisition note');
       assert.equal(payload.tables.artwork_claim_evidence[0].verified_email, 'prior@example.com');
       assert.equal(payload.tables.artwork_claim_requests[0].status, 'pending');
+      assert.deepEqual(payload.tables.piece_records.map((row) => [row.id, row.legacy_sections]), [
+        [`pr-${'5'.repeat(64)}`, 0],
+        [`pr-${'6'.repeat(64)}`, 1],
+      ]);
       assert.equal(payload.tables.keeper_pieces.find((row: any) => row.id === 'kp-recovery')
         ?.last_transfer_id, 'transfer-recovery');
       const originalTransfer = payload.tables.artwork_transfer_intents
@@ -1690,6 +1710,40 @@ describe('private registry recovery export', () => {
 });
 
 describe('clean-only private registry restore', () => {
+  it('authenticates schema v10 with six-column Piece Records and restores migration defaults', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      const current = await decryptPrivateRecoveryExport(await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt }), { key: exportKey, keyId: exportKeyId });
+      const v10 = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 10,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V10_TABLES.map((name) => [
+          name, withoutPieceRecordSections(name, current.tables[name]),
+        ])),
+      };
+      const upgraded = await decryptPrivateRecoveryExport(await encryptLegacyPayload(v10) as any,
+        { key: exportKey, keyId: exportKeyId });
+      assert.equal(upgraded.sourceSchemaVersion, 10);
+      assert.deepEqual(upgraded.tables.piece_records.map((row) => row.legacy_sections), [0, 0]);
+      target.database.exec(buildRegistryRestoreSql(upgraded));
+      assert.deepEqual(target.database.prepare(
+        'SELECT legacy_sections FROM piece_records ORDER BY id',
+      ).all().map((row: any) => row.legacy_sections), [0, 0]);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
   it('retains authenticated v9 provenance and refuses unsafe restore before any SQL exists', async () => {
     const source = createSqliteD1();
     try {
@@ -1698,7 +1752,9 @@ describe('clean-only private registry restore', () => {
         REGISTRY_RECOVERY_EXPORT_KEY: exportKey, REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId }, { exportedAt }),
         { key: exportKey, keyId: exportKeyId });
       const legacy = (tables: any) => ({ kind: PRIVATE_RECOVERY_PAYLOAD_KIND, schemaVersion: 9, exportedAt, tables });
-      const tables = Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map(name => [name, current.tables[name]]));
+      const tables = Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map(name => [
+        name, withoutPieceRecordSections(name, current.tables[name]),
+      ]));
       const decode = async (rows: any) => decryptPrivateRecoveryExport(await encryptLegacyPayload(legacy(rows)) as any,
         { key: exportKey, keyId: exportKeyId });
       const unsafe = await decode(tables);
@@ -1706,6 +1762,29 @@ describe('clean-only private registry restore', () => {
       assert.ok(unsafe.tables.collector_dreams.some(row => row.body));
       assert.throws(() => buildRegistryRestoreSql(unsafe), /recovery_privacy_evidence_unavailable/);
       await assert.rejects(buildVerifiedRegistryRestoreSql(unsafe), /recovery_privacy_evidence_unavailable/);
+      const v10Envelope = await encryptLegacyPayload({
+        ...unsafe,
+        schemaVersion: 10,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V10_TABLES.map((name) => [
+          name, withoutPieceRecordSections(name, unsafe.tables[name]),
+        ])),
+      });
+      const twiceUpgraded = await decryptPrivateRecoveryExport(v10Envelope as any,
+        { key: exportKey, keyId: exportKeyId });
+      assert.equal(twiceUpgraded.sourceSchemaVersion, 9);
+      assert.throws(() => buildRegistryRestoreSql(twiceUpgraded), /recovery_privacy_evidence_unavailable/);
+      const repeated = await decryptPrivateRecoveryExport(
+        await encryptLegacyPayload(twiceUpgraded) as any,
+        { key: exportKey, keyId: exportKeyId },
+      );
+      assert.equal(repeated.sourceSchemaVersion, 9);
+      assert.throws(() => buildRegistryRestoreSql(repeated), /recovery_privacy_evidence_unavailable/);
+      await assert.rejects(decryptPrivateRecoveryExport(await encryptLegacyPayload({
+        ...legacy(tables), sourceSchemaVersion: 10,
+      }) as any, { key: exportKey, keyId: exportKeyId }), /recovery_source_schema_invalid/);
+      await assert.rejects(decryptPrivateRecoveryExport(await encryptLegacyPayload({
+        ...legacy(tables), sourceSchemaVersion: 0,
+      }) as any, { key: exportKey, keyId: exportKeyId }), /recovery_source_schema_invalid/);
       const directory = mkdtempSync(join(tmpdir(), 'legacy-privacy-refusal-'));
       try {
         const archivePath = join(directory, 'legacy.json'); const keyPath = join(directory, 'key');
@@ -1873,10 +1952,15 @@ describe('clean-only private registry restore', () => {
       assert.throws(() => target.database.exec(buildRegistryRestoreSql(payload)), /target_not_empty/);
 
       const v9 = { kind: PRIVATE_RECOVERY_PAYLOAD_KIND, schemaVersion: 9, exportedAt,
-        tables: Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map((name) => [name, payload.tables[name]])) };
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map((name) => [
+          name, withoutPieceRecordSections(name, payload.tables[name]),
+        ])) };
       const legacy = await decryptPrivateRecoveryExport(await encryptLegacyPayload(v9) as any,
         { key: exportKey, keyId: exportKeyId });
-      for (const name of REGISTRY_RECOVERY_V9_TABLES) assert.deepEqual(legacy.tables[name], payload.tables[name], name);
+      for (const name of REGISTRY_RECOVERY_V9_TABLES) assert.deepEqual(legacy.tables[name],
+        name === 'piece_records'
+          ? payload.tables[name].map((row) => ({ ...row, legacy_sections: 0 }))
+          : payload.tables[name], name);
       for (const name of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V9_TABLES.length)) assert.deepEqual(legacy.tables[name], []);
     } finally { source.database.close(); target.database.close(); }
   });
@@ -2389,7 +2473,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 5,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V5_TABLES.map((name) => [
-          name, withoutDreamTierColumns(name, current.tables[name]),
+          name, withoutPieceRecordSections(name, withoutDreamTierColumns(name, current.tables[name])),
         ])),
       };
       const archive = await encryptLegacyPayload(v5Payload);
@@ -2431,7 +2515,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 6,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V6_TABLES.map((name) => [
-          name, withoutDreamTierColumns(name, current.tables[name]),
+          name, withoutPieceRecordSections(name, withoutDreamTierColumns(name, current.tables[name])),
         ])),
       };
       const archive = await encryptLegacyPayload(v6Payload);
@@ -2477,7 +2561,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 7,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V7_TABLES.map((name) => [
-          name, withoutDreamTierColumns(name, current.tables[name]),
+          name, withoutPieceRecordSections(name, withoutDreamTierColumns(name, current.tables[name])),
         ])),
       };
       const archive = await encryptLegacyPayload(v7Payload);
@@ -2523,7 +2607,7 @@ describe('clean-only private registry restore', () => {
         schemaVersion: 8,
         exportedAt,
         tables: Object.fromEntries(REGISTRY_RECOVERY_V8_TABLES.map((name) => [
-          name, withoutDreamTierColumns(name, current.tables[name]),
+          name, withoutPieceRecordSections(name, withoutDreamTierColumns(name, current.tables[name])),
         ])),
       };
       const archive = await encryptLegacyPayload(v8Payload);
@@ -2535,7 +2619,9 @@ describe('clean-only private registry restore', () => {
       for (const table of REGISTRY_RECOVERY_V8_TABLES) {
         if (table === 'collector_dreams') continue;
         assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
-          canonicalRecoveryJson(v8Payload.tables[table]), table);
+          canonicalRecoveryJson(table === 'piece_records'
+            ? v8Payload.tables[table].map((row: any) => ({ ...row, legacy_sections: 0 }))
+            : v8Payload.tables[table]), table);
       }
       assert.deepEqual(upgraded.tables.collector_dream_tier_changes, [], 'no ledger yet in v8');
       // Every archived pre-tier row lands on the ALTER TABLE column defaults
@@ -2686,6 +2772,9 @@ describe('clean-only private registry restore', () => {
       for (const table of REGISTRY_RECOVERY_TABLES) {
         assert.equal(tableCount(target.database, table), payload.tables[table].length, table);
       }
+      assert.deepEqual(target.database.prepare(
+        'SELECT legacy_sections FROM piece_records ORDER BY id',
+      ).all().map((row: any) => row.legacy_sections), [0, 1]);
       assert.equal(target.database.prepare(
         "SELECT last_transfer_id FROM keeper_pieces WHERE id = 'kp-recovery'",
       ).get()?.last_transfer_id, 'transfer-recovery');
@@ -3095,6 +3184,20 @@ describe('clean-only private registry restore', () => {
       assert.throws(
         () => buildRegistryRestoreSql(missingId),
         /recovery_payload_columns_artwork_acquisitions/i,
+      );
+      for (const invalid of [2, '1']) {
+        const malformedSections = structuredClone(payload) as any;
+        malformedSections.tables.piece_records[0].legacy_sections = invalid;
+        assert.throws(
+          () => buildRegistryRestoreSql(malformedSections),
+          /recovery_payload_rows_piece_records/i,
+        );
+      }
+      const unknownPieceRecordField = structuredClone(payload) as any;
+      unknownPieceRecordField.tables.piece_records[0].unexpected = true;
+      assert.throws(
+        () => buildRegistryRestoreSql(unknownPieceRecordField),
+        /recovery_payload_(?:rows|columns)_piece_records/i,
       );
       const inconsistentCertificate = structuredClone(payload) as any;
       inconsistentCertificate.tables.certificate_artwork_overrides[0].value_json = '"Tampered"';

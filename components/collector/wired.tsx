@@ -43,7 +43,7 @@
  *                          outcome: "stays until it lands")
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAccount } from '../../lib/account/useAccount';
 import SignInModal from '../account/SignInModal';
 import { C } from './tokens';
@@ -284,12 +284,31 @@ export type WiredJourneyProps = {
   beginClaim?: boolean;
 };
 
-export const WiredJourney: React.FC<WiredJourneyProps> = ({
+/** Account-owned rooms, drafts and async results must never survive an identity
+ * change. Keep the pending-code provider outside this boundary so the deliberate
+ * anonymous-to-sign-in bridge still works; discard it when leaving a known user. */
+export const WiredJourney: React.FC<WiredJourneyProps> = props => {
+  const account = useAccount();
+  const pending = usePendingBind();
+  const confirmedOwner = useRef<string | null>(null);
+  if (account.isLoaded) confirmedOwner.current = account.isSignedIn ? account.userId : null;
+  const owner = confirmedOwner.current;
+  const previousOwner = useRef(owner);
+  useLayoutEffect(() => {
+    if (previousOwner.current && previousOwner.current !== owner) pending.settle();
+    previousOwner.current = owner;
+  }, [owner, pending]);
+  return <AccountJourney key={`${props.identity.publicCode}:${owner ?? 'anonymous'}`} {...props} />;
+};
+
+const AccountJourney: React.FC<WiredJourneyProps> = ({
   identity,
   story = null,
   beginClaim = false,
 }) => {
   const publicCode = identity.publicCode;
+  const mounted = useRef(true);
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const account = useAccount();
   const pending = usePendingBind();
   const signedIn = account.available && account.isLoaded && account.isSignedIn;
@@ -601,6 +620,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return { kind: 'handled' };
       }
 
+      if (!mounted.current) return { kind: 'handled' };
       if (outcome.kind === 'bound') {
         /* the sealed message, before the four: fetched now so it is ready
            the moment the vault carries through to 'codetrue'. Never blocks
@@ -617,6 +637,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         }
       }
 
+      if (!mounted.current) return { kind: 'handled' };
       switch (outcome.kind) {
         case 'bound':
           pending.settle();
