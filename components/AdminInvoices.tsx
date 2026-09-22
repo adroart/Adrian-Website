@@ -623,7 +623,7 @@ const AdminInvoices: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => deletePreset(preset.id)}
-                                  className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-400 hover:text-red-700"
+                                  className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-400 hover:text-[#e0a08a]"
                                 >
                                   Remove
                                 </button>
@@ -774,7 +774,7 @@ const AdminInvoices: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => removeLineItem(index)}
-                          className="self-end border border-wood-300 bg-paper-50 px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-red-500 hover:text-red-700"
+                          className="self-end border border-wood-300 bg-paper-50 px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-[#e0a08a] hover:text-[#e0a08a]"
                         >
                           Remove
                         </button>
@@ -800,7 +800,7 @@ const AdminInvoices: React.FC = () => {
                                   onChange={e => updateVariant(index, vi, { amountCents: parseMoneyToCents(e.target.value) })}
                                   placeholder="0.00"
                                 />
-                                <button type="button" onClick={() => removeVariant(index, vi)} className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-500 hover:text-red-700">Remove</button>
+                                <button type="button" onClick={() => removeVariant(index, vi)} className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-500 hover:text-[#e0a08a]">Remove</button>
                               </div>
                             ))}
                           </div>

@@ -320,7 +320,7 @@ const AdminBookEditor: React.FC = () => {
                                             </button>
                                             <button
                                                 onClick={() => remove(art.id)}
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-red-500 font-semibold"
+                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-[#e0a08a] font-semibold"
                                             >
                                                 Clear
                                             </button>

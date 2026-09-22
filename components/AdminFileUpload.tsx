@@ -106,7 +106,7 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
             onClick={handleDelete}
             disabled={deleting}
             className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold transition-colors ${
-              confirmDelete ? 'text-red-600 hover:text-red-800' : 'text-wood-300 hover:text-red-500'
+              confirmDelete ? 'text-[#e0a08a] hover:text-[#e0a08a]' : 'text-wood-300 hover:text-[#e0a08a]'
             }`}
           >
             {deleting ? 'Deleting...' : confirmDelete ? 'Confirm' : 'Delete'}

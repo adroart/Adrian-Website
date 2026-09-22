@@ -53,8 +53,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   A collector who scans a plate can now reach the file written to outlive the site, but only on the pre-launch page. Once the Living Legacy flag is on, scans route past it to the newer arrival screens, which have no link to the record at all. That surface belongs to another session, so the link needs adding there before the flag flips.
 - [ ] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
   "Rebuild all records" walks every piece in one request, writing two files each. At a few hundred pieces it risks running past the request limit and losing its report. Nothing is corrupted if it does, since rebuilding is safe to repeat, but the summary is lost.
-- [ ] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
-  Four delete controls still use a plain web red that is too loud on the new ground, and at its darkest is hard to read. The palette already has its own tone for something gone wrong. The word on the button carries the meaning, so the quieter colour loses nothing.
+- [x] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
+  The delete/remove controls across `AdminFileUpload`, `AdminBookEditor`, `AdminPoetry`, and `AdminInvoices` now use the desk's existing `#e0a08a` "wrong" tone instead of Tailwind red.
 - [ ] Find a piece by who holds it _(band: agent-runnable | effort: moderate)_
   Searching the registry works by code, title, artwork or edition number. There is no way to search by the collector, which is often the only thing you remember. This never existed; it is new work, not a regression.
 - [ ] **Enter historical verified sales.** _(band: you-required)_ After the private workspace is rolled out, add known buyer emails, dates, private prices, artwork mappings, pictures, and optional creator messages gradually. Unknown artworks may remain email-only reconnection cases until Adrian and the collector identify them together.
