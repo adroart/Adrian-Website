@@ -6,7 +6,8 @@ import {
 
 export type GatheringStage = 'read' | 'birth' | 'privacy';
 export type GatheringOutcome =
-  | { kind: 'saved' | 'cancelled' }
+  | { kind: 'saved' }
+  | { kind: 'cancelled' }
   | { kind: 'pending' | 'rejected' | 'network'; stage: GatheringStage; error?: string };
 
 function refusal(outcome: ApiOutcome<unknown>, stage: GatheringStage): GatheringOutcome | null {
