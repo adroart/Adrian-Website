@@ -12,7 +12,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, it } from 'node:test';
 
-import { onRequest as atlasSalesList } from '../functions/api/admin/atlas-sales.js';
+import { listAtlasSales, onRequest as atlasSalesList } from '../functions/api/admin/atlas-sales.js';
 import { onRequest as atlasSalesConfirm } from '../functions/api/admin/atlas-sales/[id].js';
 import { confirmPendingAtlasSale } from '../functions/api/_lib/atlasSaleConfirm.js';
 
@@ -305,6 +305,92 @@ describe('the admin atlas-sales routes require an authenticated admin', () => {
         .prepare('SELECT status FROM atlas_sale_events WHERE sale_id = ?')
         .get('cs_test_confirm_4') as any;
       assert.equal(sale.status, 'pending', 'an unauthenticated confirm never touches the row');
+    } finally {
+      database.close();
+    }
+  });
+});
+
+describe('resolved atlas sale pagination', () => {
+  it('uses a stable unique cursor without gaps or mutations', async () => {
+    const database = freshDatabase();
+    try {
+      for (let index = 0; index < 13; index += 1) {
+        const saleId = `cs_page_${String(index).padStart(2, '0')}`;
+        seedPendingSale(database, {
+          sale_id: saleId,
+          piece_id: `UL-${index}`,
+          edition_number: 0,
+          status: index === 12 ? 'dismissed' : 'confirmed',
+        });
+        database.prepare(
+          `UPDATE atlas_sale_events
+              SET received_at = 100, confirmed_at = ?
+            WHERE sale_id = ?`,
+        ).run(index === 12 ? null : index < 10 ? 300 : 200, saleId);
+        database.prepare('UPDATE atlas_sale_events SET received_at = ? WHERE sale_id = ?')
+          .run(index < 5 ? 200 : 100, saleId);
+      }
+      seedPendingSale(database, { sale_id: 'cs_still_pending' });
+      const before = database.prepare(
+        'SELECT sale_id, status, piece_id, edition_number FROM atlas_sale_events ORDER BY sale_id',
+      ).all();
+
+      const first = await listAtlasSales(d1(database), 'https://example.test/api/admin/atlas-sales');
+      assert.equal(first.resolved.length, 10);
+      assert.deepEqual(first.resolved.map((row: any) => row.saleId),
+        Array.from({ length: 10 }, (_, index) => `cs_page_${String(index).padStart(2, '0')}`));
+      assert.equal(first.pending.length, 1);
+      assert.equal(first.pagination.resolved.hasMore, true);
+      assert.ok(first.pagination.resolved.nextCursor);
+
+      const second = await listAtlasSales(
+        d1(database),
+        `https://example.test/api/admin/atlas-sales?cursor=${first.pagination.resolved.nextCursor}`,
+      );
+      assert.deepEqual(second.resolved.map((row: any) => row.saleId),
+        ['cs_page_10', 'cs_page_11', 'cs_page_12']);
+      assert.equal(second.resolved[2].status, 'dismissed');
+      assert.equal(second.pagination.resolved.hasMore, false);
+      assert.equal(second.pagination.resolved.nextCursor, null);
+      assert.deepEqual(
+        [...first.resolved, ...second.resolved].map((row: any) => row.saleId),
+        Array.from({ length: 13 }, (_, index) => `cs_page_${String(index).padStart(2, '0')}`),
+      );
+      const five = await listAtlasSales(
+        d1(database), 'https://example.test/api/admin/atlas-sales?limit=5',
+      );
+      assert.deepEqual(five.resolved.map((row: any) => row.saleId),
+        ['cs_page_00', 'cs_page_01', 'cs_page_02', 'cs_page_03', 'cs_page_04']);
+      const afterReceivedAtBoundary = await listAtlasSales(
+        d1(database),
+        `https://example.test/api/admin/atlas-sales?limit=5&cursor=${five.pagination.resolved.nextCursor}`,
+      );
+      assert.deepEqual(afterReceivedAtBoundary.resolved.map((row: any) => row.saleId),
+        ['cs_page_05', 'cs_page_06', 'cs_page_07', 'cs_page_08', 'cs_page_09']);
+      const replay = await listAtlasSales(
+        d1(database),
+        `https://example.test/api/admin/atlas-sales?limit=5&cursor=${five.pagination.resolved.nextCursor}`,
+      );
+      assert.deepEqual(replay.resolved, afterReceivedAtBoundary.resolved, 'cursor replay is stable');
+      assert.deepEqual(database.prepare(
+        'SELECT sale_id, status, piece_id, edition_number FROM atlas_sale_events ORDER BY sale_id',
+      ).all(), before, 'pagination is read-only');
+      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 0);
+    } finally {
+      database.close();
+    }
+  });
+
+  it('rejects malformed or unbounded pagination inputs', async () => {
+    const database = freshDatabase();
+    try {
+      assert.equal((await listAtlasSales(d1(database), 'https://example.test/api/admin/atlas-sales?limit=26')).error,
+        'invalid_pagination');
+      assert.equal((await listAtlasSales(d1(database), 'https://example.test/api/admin/atlas-sales?limit=1.5')).error,
+        'invalid_pagination');
+      assert.equal((await listAtlasSales(d1(database), 'https://example.test/api/admin/atlas-sales?cursor=not-a-cursor')).error,
+        'invalid_pagination');
     } finally {
       database.close();
     }

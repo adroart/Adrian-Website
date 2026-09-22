@@ -34,6 +34,7 @@ interface QueueResponse {
   ok: boolean;
   pending?: SaleQueueItem[];
   resolved?: SaleQueueItem[];
+  pagination?: { resolved?: { hasMore?: boolean; nextCursor?: string | null } };
   error?: string;
 }
 
@@ -225,6 +226,9 @@ const ResolvedRow: React.FC<{ sale: SaleQueueItem }> = ({ sale }) => {
 const AtlasPendingSales: React.FC = () => {
   const [pending, setPending] = useState<SaleQueueItem[] | null>(null);
   const [resolved, setResolved] = useState<SaleQueueItem[]>([]);
+  const [resolvedCursor, setResolvedCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmations, setConfirmations] = useState<ConfirmationResult[]>([]);
 
@@ -238,11 +242,41 @@ const AtlasPendingSales: React.FC = () => {
       }
       setPending(data.pending ?? []);
       setResolved(data.resolved ?? []);
+      setResolvedCursor(data.pagination?.resolved?.hasMore
+        ? data.pagination.resolved.nextCursor ?? null
+        : null);
+      setLoadMoreError(null);
       setError(null);
     } catch {
       setError('The pending sales queue did not load.');
     }
   }, []);
+
+  const loadMoreResolved = useCallback(async () => {
+    if (!resolvedCursor || loadingMore) return;
+    setLoadingMore(true);
+    setLoadMoreError(null);
+    try {
+      const params = new URLSearchParams({ cursor: resolvedCursor });
+      const response = await fetch(`/api/admin/atlas-sales?${params}`, { cache: 'no-store' });
+      const data: QueueResponse = await response.json();
+      if (!response.ok || !data.ok) {
+        setLoadMoreError('More resolved sales could not be loaded.');
+        return;
+      }
+      setResolved((current) => {
+        const seen = new Set(current.map((sale) => sale.saleId));
+        return [...current, ...(data.resolved ?? []).filter((sale) => !seen.has(sale.saleId))];
+      });
+      setResolvedCursor(data.pagination?.resolved?.hasMore
+        ? data.pagination.resolved.nextCursor ?? null
+        : null);
+    } catch {
+      setLoadMoreError('More resolved sales could not be loaded.');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, resolvedCursor]);
 
   useEffect(() => {
     void load();
@@ -302,6 +336,14 @@ const AtlasPendingSales: React.FC = () => {
                 : <ResolvedRow key={sale.saleId} sale={sale} />
             ))}
           </ul>
+          {loadMoreError && (
+            <p className="admin-atlas-sale-row-error">{loadMoreError}</p>
+          )}
+          {resolvedCursor && (
+            <button type="button" onClick={() => void loadMoreResolved()} disabled={loadingMore}>
+              {loadingMore ? 'Loading…' : loadMoreError ? 'Try loading more again' : 'Load more'}
+            </button>
+          )}
         </AdminSection>
       )}
     </AdminPage>
