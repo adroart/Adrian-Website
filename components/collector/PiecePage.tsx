@@ -20,7 +20,8 @@
  * for exactly that reason.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { publicRecordUrl } from './api';
 import { C, F } from './tokens';
 import { COPY, PIECE, PLACEHOLDERS } from './copy';
 import { Brass, Eyebrow, Flag, Ground, Note, Row, TLink } from './ui';
@@ -72,6 +73,44 @@ const DEMO_GROUND: GroundInputs = {
   birthMonthIndex: null,
 };
 
+type RecordProbeState =
+  | { status: 'idle' }
+  | { status: 'checking'; publicCode: string }
+  | { status: 'present'; publicCode: string }
+  | { status: 'absent'; publicCode: string };
+
+function usePublicRecordProbe(publicCode: string | null): RecordProbeState {
+  const [state, setState] = useState<RecordProbeState>(
+    publicCode ? { status: 'checking', publicCode } : { status: 'idle' },
+  );
+
+  useEffect(() => {
+    if (!publicCode) {
+      setState({ status: 'idle' });
+      return;
+    }
+
+    const controller = new AbortController();
+    setState({ status: 'checking', publicCode });
+    fetch(publicRecordUrl(publicCode), {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(response => {
+        if (controller.signal.aborted) return;
+        setState({ status: response.ok ? 'present' : 'absent', publicCode });
+      })
+      .catch(error => {
+        if (error?.name !== 'AbortError') setState({ status: 'absent', publicCode });
+      });
+
+    return () => controller.abort();
+  }, [publicCode]);
+
+  return state;
+}
+
 type Props = {
   relationship: Relationship;
   /** everything ever placed in the piece. Drives the orbit, nothing else. */
@@ -119,6 +158,8 @@ export const PiecePage: React.FC<Props> = ({
 
   const isCaretaker = relationship === 'yours';
   const registered = relationship !== 'unclaimed' && relationship !== 'loading';
+  const publicCode = live?.identity.publicCode ?? null;
+  const recordProbe = usePublicRecordProbe(publicCode);
 
   /* the glow dot's warmth, fed by the piece's own interactions: how much
      lineage the piece carries and how many letters it has been sent. Demo
@@ -371,8 +412,25 @@ export const PiecePage: React.FC<Props> = ({
           </>
         )}
 
-        {/* a link, not a row, because rows open in place and links travel */}
+        {/* links, not rows, because rows open in place and links travel */}
         <div style={{ paddingTop: 17, textAlign: 'var(--pp-link-align,inherit)' as React.CSSProperties['textAlign'] }}>
+          {recordProbe.status === 'present' && recordProbe.publicCode === publicCode && (
+            <a
+              href={publicRecordUrl(publicCode!)}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'block',
+                fontFamily: F.body,
+                fontSize: 14,
+                color: C.inkQuiet,
+                textDecoration: 'none',
+                marginBottom: 10,
+              }}
+            >
+              {COPY.page.recordLink}
+            </a>
+          )}
           <a
             href="/"
             style={{ fontFamily: F.body, fontSize: 14, color: C.inkQuiet, textDecoration: 'none' }}

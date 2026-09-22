@@ -49,13 +49,13 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   `claude/collector-piece-flow-design-szc3vs` is the only branch not merged into main. It holds a pinned wrangler version and self-serve deploy and migration scripts, and it has been waiting on a Cloudflare token since 2026-08-20. The `awgolive` script now covers the same ground, so this is probably a delete rather than a merge.
 - [x] The old todo folder still has a readme that lies _(band: agent-runnable | effort: quick)_
   `todo/README.md` is deleted; the plan docs in `todo/plans/` are untouched.
-- [ ] Give the permanent record a door on the collector journey too _(band: agent-runnable | effort: quick)_
+- [x] Give the permanent record a door on the collector journey too _(band: agent-runnable | effort: quick)_
   A collector who scans a plate can now reach the file written to outlive the site, but only on the pre-launch page. Once the Living Legacy flag is on, scans route past it to the newer arrival screens, which have no link to the record at all. That surface belongs to another session, so the link needs adding there before the flag flips.
 - [x] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
   `POST /api/admin/records/rebuild` now returns a capped page (`RECORDS_REBUILD_BATCH_LIMIT`) plus `hasMore`/`nextCursor`, and the desk's "Rebuild all records" pages through automatically; covered by `tests/records-rebuild-paging.test.ts`.
 - [x] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
   The delete/remove controls across `AdminFileUpload`, `AdminBookEditor`, `AdminPoetry`, and `AdminInvoices` now use the desk's existing `#e0a08a` "wrong" tone instead of Tailwind red.
-- [ ] Find a piece by who holds it _(band: agent-runnable | effort: moderate)_
+- [x] Find a piece by who holds it _(band: agent-runnable | effort: moderate)_
   Searching the registry works by code, title, artwork or edition number. There is no way to search by the collector, which is often the only thing you remember. This never existed; it is new work, not a regression.
 - [ ] **Enter historical verified sales.** _(band: you-required)_ After the private workspace is rolled out, add known buyer emails, dates, private prices, artwork mappings, pictures, and optional creator messages gradually. Unknown artworks may remain email-only reconnection cases until Adrian and the collector identify them together.
 

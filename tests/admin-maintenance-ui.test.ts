@@ -38,6 +38,7 @@ describe('registry Maintenance client contract', () => {
       artworkId: 'UL-100',
       title: 'Art of Living',
       editionNumber: 0,
+      holderName: 'Mira Collector',
       hasAcquisition: true,
       stewardEmail: 'private@example.com',
       acquiredFrom: '2026-07-01',
@@ -54,7 +55,49 @@ describe('registry Maintenance client contract', () => {
       title: 'Art of Living',
       editionNumber: '0',
     });
-    assert.doesNotMatch(path, /private|acquired|amount|currency|notes|hasAcquisition|987654321|XTS/i);
+    assert.doesNotMatch(path, /private|acquired|amount|currency|notes|hasAcquisition|987654321|XTS|Mira|holder/i);
+  });
+
+  it('searches by collector name through POST and keeps names out of list results', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
+      requests.push({ url: String(input), init });
+      return new Response(JSON.stringify({
+        ok: true,
+        pieces: [{
+          id: 'kp-1',
+          artworkId: 'UL-100',
+          title: 'Art of Living',
+          editionNumber: 0,
+          publicCode: 'AR-7KQ9M2WX',
+          plateStatus: 'active',
+          holderName: 'Mira Collector',
+          stewardEmail: 'mira@example.com',
+        }],
+      }), { status: 200 });
+    });
+
+    const { searchMaintenance } = await import('../utils/adminRegistryMaintenance.ts');
+    const results = await searchMaintenance({
+      title: 'Art of Living',
+      holderName: ' Mira ',
+    });
+    assert.deepEqual(results, [{
+      id: 'kp-1',
+      artworkId: 'UL-100',
+      title: 'Art of Living',
+      editionNumber: 0,
+      publicCode: 'AR-7KQ9M2WX',
+      plateStatus: 'active',
+    }]);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/api/admin/maintenance');
+    assert.equal(requests[0].init?.method, 'POST');
+    assert.doesNotMatch(String(requests[0].init?.body), /mira@example\.com/i);
+    assert.deepEqual(JSON.parse(String(requests[0].init?.body)), {
+      title: 'Art of Living',
+      holderName: 'Mira',
+    });
   });
 
   it('builds a legacy sale handoff URL from stable identifiers only', async () => {
@@ -595,6 +638,7 @@ describe('registry Maintenance workspace wiring', () => {
       'maintenance-artwork-id',
       'maintenance-title',
       'maintenance-edition',
+      'maintenance-holder-name',
       'maintenance-acquisition-type',
       'maintenance-acquired-at',
       'maintenance-amount',

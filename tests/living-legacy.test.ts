@@ -3333,3 +3333,21 @@ describe('steward status and display location by public identity', () => {
     }
   });
 });
+
+describe('collector arrival permanent-record door', () => {
+  it('probes for the record quietly and links only when it is present', () => {
+    const piecePage = readFileSync(
+      new URL('../components/collector/PiecePage.tsx', import.meta.url),
+      'utf8',
+    );
+    const copy = readFileSync(
+      new URL('../components/collector/copy.ts', import.meta.url),
+      'utf8',
+    );
+    assert.match(copy, /recordLink:\s*ph\(/);
+    assert.match(piecePage, /COPY\.page\.recordLink/);
+    assert.match(piecePage, /publicRecordUrl/);
+    assert.match(piecePage, /method:\s*'HEAD'/);
+    assert.match(piecePage, /recordProbe\.status === 'present'/);
+  });
+});

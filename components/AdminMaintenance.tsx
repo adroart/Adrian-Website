@@ -56,6 +56,7 @@ type SearchDraft = {
   artworkId: string;
   title: string;
   editionNumber: string;
+  holderName: string;
 };
 
 type AcquisitionDraft = {
@@ -114,7 +115,7 @@ const AMBIGUOUS_ATTEMPT_MESSAGE =
   'The outcome could not be confirmed. Retry the unchanged request before editing, cancelling, searching, or leaving this record.';
 
 const EMPTY_SEARCH: SearchDraft = {
-  publicCode: '', artworkId: '', title: '', editionNumber: '',
+  publicCode: '', artworkId: '', title: '', editionNumber: '', holderName: '',
 };
 
 const EMPTY_ACQUISITION: AcquisitionDraft = {
@@ -564,6 +565,7 @@ const AdminMaintenance: React.FC = () => {
       publicCode: searchDraft.publicCode,
       artworkId: searchDraft.artworkId,
       title: searchDraft.title,
+      holderName: searchDraft.holderName,
       ...(edition ? { editionNumber: Number(edition) } : {}),
     };
   };
@@ -1274,7 +1276,7 @@ const AdminMaintenance: React.FC = () => {
         <div className="maintenance-search-heading">
           <div>
             <h2>Find an artwork</h2>
-            <p>Search fields are public identity only. Private values never enter the URL.</p>
+            <p>Public identity fields may appear in the URL. Collector name stays in the request body only.</p>
           </div>
           <div className="maintenance-actions">
             <button type="button" className={quietButtonClass} onClick={clearSearch} disabled={transitionBusy}>Clear</button>
@@ -1297,6 +1299,10 @@ const AdminMaintenance: React.FC = () => {
           <label htmlFor="maintenance-edition">
             <span className={labelClass}>Edition number</span>
             <input id="maintenance-edition" className={inputClass} inputMode="numeric" value={searchDraft.editionNumber} onChange={event => setSearchDraft(draft => ({ ...draft, editionNumber: event.target.value }))} autoComplete="off" />
+          </label>
+          <label htmlFor="maintenance-holder-name">
+            <span className={labelClass}>Collector name</span>
+            <input id="maintenance-holder-name" className={inputClass} value={searchDraft.holderName} onChange={event => setSearchDraft(draft => ({ ...draft, holderName: event.target.value }))} autoComplete="off" />
           </label>
         </div>
       </form>
