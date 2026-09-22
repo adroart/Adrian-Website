@@ -20,8 +20,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] Decide the six launch flags that are still dark _(band: you-required | effort: quick)_
   `furniture`, `installations`, `spaces`, `aboutMeaning`, `pricingExplorer` and `livingLegacy` are all still false. Each is either close to shipping or dead weight, and the code for all of them is carried on every build either way. A decision each, then ship or delete.
 
-- [ ] A test asserts a cron schedule that was deliberately removed _(band: agent-runnable | effort: quick)_
-  `tests/collector-letter-schedule.test.ts` requires a `schedule:` block in `.github/workflows/collector-letters.yml`, but that schedule was removed on purpose and the workflow file explains at length why. So `npm run test:unit` reports 1178 passing and 1 failing on a clean checkout, which trains everyone to ignore a red suite. Predates the 2026-09-01 audit branch; confirmed failing at `cf8cd8c`. Either update the test to assert the deliberate absence, or restore the schedule.
+- [x] A test asserts a cron schedule that was deliberately removed _(band: agent-runnable | effort: quick)_
+  `tests/collector-letter-schedule.test.ts` already asserts the deliberate absence of the `schedule:` block (and that the workflow's own explanation is still there); confirmed green on a clean checkout, nothing left to change.
 
 - [ ] Look at how the 173 undrawn collector screens sit on a desktop screen _(band: you-required | effort: quick)_
   The design file draws one screen for a desk (the piece page) and 173 for a phone only. Rather than invent a desktop layout nobody approved, the ground now fills the screen and the words hold a 520 column inside it, which is the same rule the one desk drawing states. It is live and unreviewed. Open the review link, press "Use it", and say whether the column is right. → Back end: Workshop → Screen development system
