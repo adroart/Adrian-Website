@@ -8,7 +8,7 @@ const source = readFileSync(
 );
 
 describe('atlas sale confirmation UI', () => {
-  it('keeps the server confirmation visible after removing and reloading the queue row', () => {
+  it('keeps the immediate server confirmation visible after removing the queue row', () => {
     assert.match(source, /setConfirmations\(\(current\) => \[/);
     assert.match(source, /setPending\(\(current\).*filter/);
     assert.match(source, /No identity was created/);

@@ -58,6 +58,20 @@ function artworkTitle(pieceId: string | null): string | null {
   return artwork ? artwork.title.replace(/\s*-\s*\d+$/, '') : null;
 }
 
+const ConfirmationSummary: React.FC<{ result: ConfirmationResult }> = ({ result }) => (
+  result.registrationStatus === 'registered' ? (
+    <p>
+      Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+      {' '}Linked to canonical identity {result.publicCode}.
+    </p>
+  ) : (
+    <p>
+      Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+      {' '}No identity was created. <Link to="/admin/register">Complete canonical registration</Link> when the edition facts and backup evidence are ready.
+    </p>
+  )
+);
+
 const PendingRow: React.FC<{
   sale: SaleQueueItem;
   onConfirmed: (result: ConfirmationResult) => void;
@@ -137,17 +151,76 @@ const PendingRow: React.FC<{
   );
 };
 
-const ResolvedRow: React.FC<{ sale: SaleQueueItem }> = ({ sale }) => (
-  <li className="admin-atlas-sale-row admin-atlas-sale-row-resolved">
-    <div className="admin-atlas-sale-row-facts">
-      <p className="admin-atlas-sale-row-buyer">{sale.buyerEmail}</p>
-      <p className="admin-atlas-sale-row-muted">
-        {sale.status} &middot; {sale.pieceId ?? '—'}
-        {sale.editionNumber != null ? ` (edition ${sale.editionNumber})` : ''}
-      </p>
-    </div>
-  </li>
-);
+const ResolvedRow: React.FC<{ sale: SaleQueueItem }> = ({ sale }) => {
+  const canCheckRegistration = sale.status === 'confirmed'
+    && Boolean(sale.pieceId?.trim())
+    && Number.isSafeInteger(sale.editionNumber)
+    && (sale.editionNumber ?? -1) >= 0
+    && (sale.editionNumber ?? 10_000) <= 9999;
+  const [registration, setRegistration] = useState<
+    { state: 'idle' | 'checking' | 'error' } | { state: 'ready'; result: ConfirmationResult }
+  >({ state: canCheckRegistration ? 'checking' : 'idle' });
+
+  const checkRegistration = useCallback(async (signal?: AbortSignal) => {
+    if (!canCheckRegistration || !sale.pieceId || sale.editionNumber == null) return;
+    setRegistration({ state: 'checking' });
+    try {
+      const response = await fetch(`/api/admin/atlas-sales/${encodeURIComponent(sale.saleId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pieceId: sale.pieceId, editionNumber: sale.editionNumber }),
+        signal,
+      });
+      const data = await response.json();
+      const exactResult = response.ok && data.ok
+        && data.saleId === sale.saleId
+        && data.pieceId === sale.pieceId
+        && data.editionNumber === sale.editionNumber
+        && (data.registrationStatus === 'pending'
+          || (data.registrationStatus === 'registered' && typeof data.publicCode === 'string' && data.publicCode));
+      if (!exactResult) {
+        setRegistration({ state: 'error' });
+        return;
+      }
+      setRegistration({ state: 'ready', result: data as ConfirmationResult });
+    } catch (error) {
+      if ((error as { name?: string })?.name !== 'AbortError') setRegistration({ state: 'error' });
+    }
+  }, [canCheckRegistration, sale.editionNumber, sale.pieceId, sale.saleId]);
+
+  useEffect(() => {
+    if (!canCheckRegistration) {
+      setRegistration({ state: 'idle' });
+      return undefined;
+    }
+    const controller = new AbortController();
+    void checkRegistration(controller.signal);
+    return () => controller.abort();
+  }, [canCheckRegistration, checkRegistration]);
+
+  return (
+    <li className="admin-atlas-sale-row admin-atlas-sale-row-resolved">
+      <div className="admin-atlas-sale-row-facts">
+        <p className="admin-atlas-sale-row-buyer">{sale.buyerEmail}</p>
+        {registration.state === 'ready' ? (
+          <ConfirmationSummary result={registration.result} />
+        ) : (
+          <p className="admin-atlas-sale-row-muted">
+            {sale.status} &middot; {sale.pieceId ?? '—'}
+            {sale.editionNumber != null ? ` (edition ${sale.editionNumber})` : ''}
+            {registration.state === 'checking' && <> &middot; Checking canonical registration…</>}
+          </p>
+        )}
+        {registration.state === 'error' && (
+          <p className="admin-atlas-sale-row-error">
+            Canonical registration status could not be checked.{' '}
+            <button type="button" onClick={() => void checkRegistration()}>Try again</button>
+          </p>
+        )}
+      </div>
+    </li>
+  );
+};
 
 const AtlasPendingSales: React.FC = () => {
   const [pending, setPending] = useState<SaleQueueItem[] | null>(null);
@@ -200,17 +273,7 @@ const AtlasPendingSales: React.FC = () => {
           <ul className="admin-atlas-sale-list">
             {confirmations.map((result) => (
               <li key={result.saleId} className="admin-atlas-sale-row admin-atlas-sale-row-done">
-                {result.registrationStatus === 'registered' ? (
-                  <p>
-                    Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
-                    {' '}Linked to canonical identity {result.publicCode}.
-                  </p>
-                ) : (
-                  <p>
-                    Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
-                    {' '}No identity was created. <Link to="/admin/register">Complete canonical registration</Link> when the edition facts and backup evidence are ready.
-                  </p>
-                )}
+                <ConfirmationSummary result={result} />
               </li>
             ))}
           </ul>
@@ -234,7 +297,9 @@ const AtlasPendingSales: React.FC = () => {
         <AdminSection title="Recently resolved">
           <ul className="admin-atlas-sale-list">
             {resolved.map((sale) => (
-              <ResolvedRow key={sale.saleId} sale={sale} />
+              confirmations.some((result) => result.saleId === sale.saleId)
+                ? null
+                : <ResolvedRow key={sale.saleId} sale={sale} />
             ))}
           </ul>
         </AdminSection>
