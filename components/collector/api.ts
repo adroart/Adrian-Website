@@ -1331,16 +1331,14 @@ export interface FirstBindInvitationInspection {
 }
 
 /**
- * POST /api/invitations/:token — public, no auth required. Note the handler
- * (functions/api/invitations/[token].js) reads `token` from the JSON body,
- * not the URL segment; this file still puts the token in the path too, for
- * a legible request line, and always sends it in the body since that is
- * what the server actually reads.
+ * POST /api/invitations/inspect — public, no auth required. The private proof
+ * travels only in the JSON body, never in a URL, request line, or browser
+ * history.
  */
 export async function inspectFirstBindInvitation(token: string): Promise<ApiOutcome<FirstBindInvitationInspection>> {
   const trimmed = token.trim();
   return jsonRequest<{ ok: true } & FirstBindInvitationInspection>(
-    `/api/invitations/${encodeURIComponent(trimmed)}`,
+    '/api/invitations/inspect',
     { method: 'POST', body: JSON.stringify({ token: trimmed }) },
   ).then((outcome) => (outcome.ok ? { ok: true, status: outcome.status, data: outcome.data } : outcome));
 }
