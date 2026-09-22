@@ -22,7 +22,7 @@ function outputFormat(request, value) {
   return 'image/jpeg';
 }
 
-export const onRequest = async ({ request, env, waitUntil }) => {
+async function handle(request, env, ctx) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
@@ -66,7 +66,6 @@ export const onRequest = async ({ request, env, waitUntil }) => {
   if (!object) return new Response('Not found', { status: 404 });
 
   let response;
-
   if (!needsTransform) {
     const headers = new Headers();
     object.writeHttpMetadata(headers);
@@ -82,6 +81,10 @@ export const onRequest = async ({ request, env, waitUntil }) => {
   const headers = new Headers(response.headers);
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   const cacheable = new Response(response.body, { status: response.status, headers });
-  if (request.method === 'GET') waitUntil(cache.put(cacheKey, cacheable.clone()));
+  if (request.method === 'GET') ctx.waitUntil(cache.put(cacheKey, cacheable.clone()));
   return request.method === 'HEAD' ? new Response(null, cacheable) : cacheable;
+}
+
+export default {
+  fetch: handle,
 };
