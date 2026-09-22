@@ -14,10 +14,16 @@ test('selected artwork and size survive purchase inquiry failure and retry witho
   await page.goto('/creations/UL-100');
   await expect(page.getByRole('heading', { name: 'Art of Living - 32', exact: true })).toBeVisible();
   await page.locator('label').filter({ has: page.locator('input[value="58 cm"]') }).click();
+  await expect(page.locator('input[value="58 cm"]')).toBeChecked();
   await page.getByRole('button', { name: /Continue to (options|review)/ }).click();
   await page.getByRole('link', { name: 'Request to Purchase', exact: true }).first().click();
   await expect(page).toHaveURL(/\/inquire$/);
-  await expect(page.getByText('58 cm', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inquire', exact: true })).toBeVisible();
+  const purchaseForm = page.locator('form');
+  await expect(purchaseForm.getByText('Art of Living - 32', { exact: true })).toBeVisible();
+  await expect(purchaseForm.getByText(/^Size\s*58 cm$/)).toBeVisible();
+  await expect(purchaseForm.getByText(/^Availability\s*Made to order$/)).toBeVisible();
+  await expect(purchaseForm.getByText('$1,111', { exact: true })).toBeVisible();
   await page.getByLabel('Name', { exact: true }).fill('Synthetic Collector');
   await page.getByRole('textbox', { name: 'Email', exact: true }).fill('synthetic@example.test');
   await page.locator('textarea[name="vision"]').fill('Synthetic request only.');
