@@ -81,7 +81,7 @@ export const SERIES_LIST = [
 // rather than filtering the archive inline.
 export const CREATION_CATEGORIES = [
     { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art', image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
-    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
+    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2', video: '/media/video/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
     { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans',                                                                                image: 'yemingzhu-jewelrt-3_hfk7nj' },
     { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/oracle', image: '2_d74upi' },
     { id: 'FURNITURE', label: 'Furniture',            desc: 'Functional art for gathering',                                                                                 image: 'adrian-website/placeholders/artwork-square-5', hidden: true },
@@ -97,7 +97,7 @@ export const MULTIDIMENSIONAL_CATEGORIES = [
     { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces',   image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
     { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala',            image: 'Mandala-1_tyujra' },
     { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes', image: 'adrian-website/creations/light-codes/suni' },
-    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
+    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5', video: '/media/video/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
 ];
 
 export const LIGHT_CODE_SUBCATEGORIES = [

@@ -46,7 +46,7 @@ import type { Artwork } from '../types';
 const PLACEHOLDER = 'price_REPLACE';
 const DATA_FILE = join(process.cwd(), 'data', 'mockData.ts');
 const APPLY = process.argv.includes('--apply');
-const CLOUDINARY = 'https://res.cloudinary.com/dobbosnda/image/upload';
+const MEDIA_ORIGIN = 'https://adrianrasmussen.com/media/image';
 
 const key = process.env.STRIPE_SECRET_KEY;
 if (!key) {
@@ -145,7 +145,7 @@ for (const [n, item] of items.entries()) {
         const product = await stripe('products', {
             name: item.label,
             description: (item.artwork.description || detail || item.artwork.title).slice(0, 500),
-            'images[0]': `${CLOUDINARY}/f_auto,q_auto,w_1200,c_fill,g_auto/${item.artwork.coverImage}`,
+            'images[0]': `${MEDIA_ORIGIN}/${item.artwork.coverImage.split('/').map(encodeURIComponent).join('/')}?w=1200`,
             'metadata[artworkId]': item.artwork.id,
             'metadata[syncKey]': syncKey,
             ...(item.size && { 'metadata[size]': item.size }),

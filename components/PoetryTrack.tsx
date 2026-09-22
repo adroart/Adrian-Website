@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Track, Stanza } from '../types';
 import { usePlayer, formatTime } from '../PlayerContext';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 // Find the index of the active stanza given the current playback time.
 // Returns -1 if no stanza has a startSeconds <= time, or if no stanzas have timestamps.
@@ -84,7 +84,7 @@ const PoetryTrack: React.FC = () => {
             ? `A poem by Adrian Rasmussen, with an accompanying song.`
             : 'Poetry by Adrian Rasmussen.',
         image: track?.coverImage
-            ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${track.coverImage}`
+            ? `https://adrianrasmussen.com${img(track.coverImage, { w: 1200, h: 630 })}`
             : undefined,
     });
 

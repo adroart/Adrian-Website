@@ -6,7 +6,7 @@ import { FULL_ARCHIVE, SERIES_DATA, LIGHT_CODE_SUBCATEGORIES } from '../data/moc
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
 import Breadcrumb from './Breadcrumb';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 import { useMetaTags } from '../hooks/useMetaTags';
 
 // --- Subcategory config ---
@@ -142,7 +142,7 @@ const SubcategoryPage: React.FC = () => {
     }, [subcategory]);
 
     const ogImage = config?.image
-        ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${config.image}`
+        ? `https://adrianrasmussen.com${img(config.image, { w: 1200, h: 630 })}`
         : undefined;
     useMetaTags({ title: config?.title, description: config?.description, image: ogImage });
 

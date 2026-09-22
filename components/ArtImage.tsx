@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { img, srcset } from '../utils/cloudinary';
+import { img, srcset } from '../utils/media';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DESIGN TOKENS - the single source of truth for all art image styling.

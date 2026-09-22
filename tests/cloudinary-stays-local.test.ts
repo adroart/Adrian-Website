@@ -3,9 +3,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 /* Every Playwright spec takes `test` from tests/fixtures.ts, which answers all
-   Cloudinary requests locally. A spec that imports '@playwright/test' directly
-   bypasses that and spends delivery credits on every run. This is the tripwire. */
-describe('Playwright specs stay off Cloudinary', () => {
+   production media requests locally. A spec that imports '@playwright/test'
+   directly bypasses that and spends metered R2 operations. */
+describe('Playwright specs stay off production media', () => {
   const dir = new URL('./', import.meta.url);
 
   it('every spec imports test from the shared fixtures, never from @playwright/test', () => {
@@ -17,9 +17,9 @@ describe('Playwright specs stay off Cloudinary', () => {
     assert.deepEqual(offenders, []);
   });
 
-  it('the fixture answers res.cloudinary.com itself', () => {
+  it('the fixture answers /media itself', () => {
     const source = readFileSync(new URL('fixtures.ts', dir), 'utf8');
-    assert.ok(source.includes('res\\.cloudinary\\.com'));
+    assert.ok(source.includes('\\/media\\/'));
     assert.ok(source.includes('route.fulfill'));
   });
 });

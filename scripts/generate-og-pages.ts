@@ -13,8 +13,6 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 const DIST      = join(process.cwd(), 'dist');
-const CLOUDINARY = 'https://res.cloudinary.com/dobbosnda/image/upload';
-const OG_CROP   = 'f_auto,q_auto,w_300,h_300,c_fill,g_center';
 const SITE_URL  = 'https://www.adrianrasmussen.com';
 
 /* ─── Card data (mirrors functions/oracle/universal-language/[number].js) ─── */
@@ -168,7 +166,7 @@ for (let num = 1; num <= 64; num++) {
 
   const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
   const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
-  const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
+  const image       = `${SITE_URL}/media/image/${imageId}?w=400&h=400&gravity=center`;
   const url         = `${SITE_URL}/oracle/universal-language/${num}`;
 
   let html = template;

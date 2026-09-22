@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ArtImage from './ArtImage';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Product, Collection } from '../types';

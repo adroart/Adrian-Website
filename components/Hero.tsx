@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom';
 
 // Detect touch/low-end devices - disable parallax to save battery and avoid jank
 const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-const HERO_VIDEO_MOBILE = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_960/adrian-website/site/hero/studio-creation-process';
-const HERO_VIDEO_DESKTOP = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_1920/adrian-website/site/hero/studio-creation-process';
+const HERO_VIDEO_MOBILE = '/media/video/adrian-website/site/hero/studio-creation-process.mp4';
+const HERO_VIDEO_DESKTOP = HERO_VIDEO_MOBILE;
 // A still pulled from two seconds into the same clip, so the hero shows the work
 // immediately instead of a black rectangle while the video downloads.
-const HERO_POSTER = 'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,w_1920,so_2/adrian-website/site/hero/studio-creation-process';
+const HERO_POSTER = '/media/image/video-posters/adrian-website/site/hero/studio-creation-process';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);

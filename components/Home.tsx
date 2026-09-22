@@ -5,7 +5,7 @@ import { STORIES } from '../data/generatedStories';
 import { CREATION_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 /**
  * The picture each offering shows on the home page.
@@ -35,7 +35,7 @@ const HOME_IMAGE: Record<string, string> = {
 
 /** Illuminated Works has no still of its own, only a clip. */
 const ILLUMINATED_STILL =
-    'https://res.cloudinary.com/dobbosnda/video/upload/f_jpg,q_auto,so_3,w_700,h_612,c_fill,g_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc';
+    '/media/image/video-posters/technicianofthesacred_-_Bc27Krhn7j__kwimjc';
 
 /**
  * Phone ordering for the offerings.

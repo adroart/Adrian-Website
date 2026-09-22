@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayer } from '../PlayerContext';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 const openingLineFor = (track: { openingLine?: string; poem: { lines: string[] }[] }): string => {
     if (track.openingLine) return track.openingLine;

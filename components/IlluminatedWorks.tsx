@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 // --- Main component ---
 
@@ -27,7 +27,7 @@ const IlluminatedWorks: React.FC = () => {
             {/* Hero video */}
             <div className="relative overflow-hidden mb-0 dark-preserve bg-stone-950 max-w-4xl mx-auto">
                 <video
-                    src="https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_960,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4"
+                    src="/media/video/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4"
                     autoPlay
                     loop
                     muted

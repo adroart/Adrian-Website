@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpDown, ArrowRight, X } from 'lucide-react';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 import BackToTop from './shared/BackToTop';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS, JEWELRY_GALLERY } from '../data/mockData';

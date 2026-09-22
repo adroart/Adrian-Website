@@ -5,7 +5,7 @@ import { Story, StoryCategory, AudioTrack, Track } from '../types';
 import { STORIES } from '../data/generatedStories';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 import BackToTop from './shared/BackToTop';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { usePlayer, formatTime } from '../PlayerContext';
@@ -201,7 +201,7 @@ export const WritingArticle: React.FC = () => {
 
     const storyUrl = `https://adrianrasmussen.com/writings/${story.slug}`;
     const storyImageUrl = story.image
-        ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${story.image}`
+        ? `https://adrianrasmussen.com${img(story.image, { w: 1200, h: 630 })}`
         : undefined;
 
     useMetaTags({

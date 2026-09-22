@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 // Update this with your actual WhatsApp number (international format, no + or spaces, e.g. 6281234567890)
 const WHATSAPP_NUMBER = '18313259164';

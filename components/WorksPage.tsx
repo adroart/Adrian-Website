@@ -3,7 +3,7 @@ import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
-import { img as cldImg } from '../utils/cloudinary';
+import { img as cldImg } from '../utils/media';
 import { ulAltText, ulCardNumber } from '../utils/universalLanguage';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { LAUNCH_FLAGS } from '../launchFlags';

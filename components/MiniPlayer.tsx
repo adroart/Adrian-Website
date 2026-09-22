@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { usePlayer, formatTime } from '../PlayerContext';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 
 const MiniPlayer: React.FC = () => {
     const { currentTrack, isPlaying, currentTime, duration, toggle, stop, next, prev } = usePlayer();

@@ -18,7 +18,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { img } from '../../utils/cloudinary';
+import { img } from '../../utils/media';
 import type { ViewingData, ViewingPiece } from './viewingTypes';
 import { SAMPLE_VIEWING } from './sampleViewing';
 import { UL_COVER_BY_CODE } from './ulCovers';

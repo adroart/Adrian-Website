@@ -1,16 +1,14 @@
 /**
- * The suite must never fetch from Cloudinary again (2026-09-02: ten hours of
- * hero video delivered in a day by test runs; the shared account then ran out
- * of free credits). tests/fixtures.ts answers every res.cloudinary.com
+ * The suite must never read metered production media. tests/fixtures.ts answers every /media
  * request locally; this proves the route is live on the page that costs the
  * most, the home page with its autoplaying hero video.
  */
 import { test, expect } from './fixtures';
 
-test('the home page asks Cloudinary for images and video, and every one is answered locally', async ({ page }) => {
+test('the home page asks for images and video, and every one is answered locally', async ({ page }) => {
   const sizes: number[] = [];
   page.on('response', async (r) => {
-    if (/res\.cloudinary\.com/.test(r.url())) {
+    if (/\/media\//.test(r.url())) {
       try { sizes.push((await r.body()).length); } catch { sizes.push(-1); }
     }
   });

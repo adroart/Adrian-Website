@@ -13,11 +13,6 @@ export const BREAKPOINTS = {
   xl: 1280,
 } as const;
 
-export const CLOUDINARY = {
-  cloudName: 'dobbosnda',
-  baseUrl: 'https://res.cloudinary.com/dobbosnda/image/upload',
-} as const;
-
 export const SITE = {
   origin: 'https://adrianrasmussen.com',
   name: 'Adrian Rasmussen',

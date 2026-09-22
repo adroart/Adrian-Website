@@ -6,7 +6,7 @@ import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockDa
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { LAUNCH_FLAGS } from '../launchFlags';
-import { img as cldImg } from '../utils/cloudinary';
+import { img as cldImg } from '../utils/media';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
 import Breadcrumb, { type Crumb } from './Breadcrumb';
@@ -220,7 +220,7 @@ const PiecePage: React.FC = () => {
     );
 
     // Dynamic meta tags for sharing
-    const ogImage = art ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${art.coverImage}` : undefined;
+    const ogImage = art ? `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 630 })}` : undefined;
     const isUL = art?.series === 'Universal Language';
     useMetaTags({
         title: art ? (isUL ? ulMetaTitle(art) : art.title) : undefined,
@@ -529,7 +529,7 @@ const PiecePage: React.FC = () => {
         name: art.title,
         description: isUL ? ulMetaDescription(art) : art.description,
         url: pieceUrl(art),
-        image: `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_1200,c_fill,g_auto/${art.coverImage}`,
+        image: `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 1200 })}`,
         creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
         ...(art.year && { dateCreated: art.year }),
         ...(art.material && { artMedium: art.material }),

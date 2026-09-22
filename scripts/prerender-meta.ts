@@ -26,12 +26,11 @@ import type { Artwork } from '../types';
 
 const DIST = join(process.cwd(), 'dist');
 const SITE = 'https://adrianrasmussen.com';
-const CLD = 'https://res.cloudinary.com/dobbosnda/image/upload';
-
 /** 1200x630 social card crop. */
-const og = (publicId: string) => `${CLD}/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${publicId}`;
+const media = (publicId: string, query: string) => `${SITE}/media/image/${publicId.split('/').map(encodeURIComponent).join('/')}?${query}`;
+const og = (publicId: string) => media(publicId, 'w=1200&h=630');
 /** Square crop — Pinterest and WhatsApp both prefer it for a single object. */
-const ogSquare = (publicId: string) => `${CLD}/f_auto,q_auto,w_1200,h_1200,c_fill,g_auto/${publicId}`;
+const ogSquare = (publicId: string) => media(publicId, 'w=1200&h=1200');
 
 const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

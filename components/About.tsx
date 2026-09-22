@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { img } from '../utils/cloudinary';
+import { img } from '../utils/media';
 import Reveal from './shared/Reveal';
 import ProgressBar from './shared/ProgressBar';
 import SideNav from './shared/SideNav';
@@ -196,7 +196,7 @@ const About: React.FC = () => {
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover object-center grayscale opacity-70"
           >
-            <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_60,w_1280,br_1500k/1659598159715_vc8cqr" type="video/mp4" />
+            <source src="/media/video/1659598159715_vc8cqr.mp4" type="video/mp4" />
           </video>
         </div>
 
