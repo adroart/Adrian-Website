@@ -238,7 +238,7 @@ test('invoice and viewing work links select the exact record on fresh load and U
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 
-test('admin artwork navigation exposes registration, invitations, certificates, and optional plates', async ({ page }) => {
+test('admin Artwork navigation reaches registration and its identity follow-up actions', async ({ page }) => {
   const registrationBodies: Array<Record<string, unknown>> = [];
   await page.route('/api/admin/verify', route => route.fulfill({
     status: 200,
@@ -252,12 +252,27 @@ test('admin artwork navigation exposes registration, invitations, certificates, 
       ok: true, queue: { complete: true, items: [] }, recentArtworks: [], recentCollectors: [],
     }),
   }));
-  await page.route('/api/admin/registry-unlock', async route => route.fulfill({
-    status: route.request().postDataJSON()?.secret === 'local-development-secret' ? 200 : 401,
+  await page.route('/api/admin/artworks', route => route.fulfill({
+    status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ ok: true }),
+    body: JSON.stringify({
+      ok: true,
+      artworks: [
+        { id: 'TST-900', title: 'Test unique work', series: 'Test', editionKind: 'unique', editionSize: null },
+        { id: 'TST-901', title: 'Test numbered work', series: 'Test', editionKind: 'numbered', editionSize: 5 },
+      ],
+    }),
   }));
-  await page.route('/api/admin/registrations', async route => {
+  await page.route('/api/admin/registry-unlock', async route => {
+    const isPost = route.request().method() === 'POST';
+    const valid = !isPost || route.request().postDataJSON()?.secret === 'local-development-secret';
+    return route.fulfill({
+      status: valid ? 200 : 401,
+      contentType: 'application/json',
+      body: JSON.stringify(isPost ? { ok: valid } : { ok: true, unlocked: false }),
+    });
+  });
+  await page.route('/api/admin/register-artwork', async route => {
     registrationBodies.push(route.request().postDataJSON());
     const registrationNumber = registrationBodies.length;
     await route.fulfill({
@@ -265,76 +280,69 @@ test('admin artwork navigation exposes registration, invitations, certificates, 
       contentType: 'application/json',
       body: JSON.stringify({
         ok: true,
+        artwork: registrationNumber === 1
+          ? { id: 'TST-900', title: 'Test unique work', series: 'Test' }
+          : { id: 'TST-901', title: 'Test numbered work', series: 'Test' },
         keeperPieceId: `kp-admin-registration-${registrationNumber}`,
         publicCode: registrationNumber === 1 ? 'AR-BCDEFGHJ' : 'AR-CDEFGHJK',
         ownershipCode: registrationNumber === 1 ? 'BCDE-FGHJ-KMNP-QRST' : 'CDEF-GHJK-MNPQ-RSTU',
-        codeAccess: 'created',
         registrationStatus: 'registered',
         backupStatus: 'verified',
+        record: { status: 'generated' },
       }),
     });
   });
+
   await page.goto('/admin');
   const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
-  await expect(navigation.getByRole('link', { name: 'Artwork registration' })).toBeVisible();
-  await expect(navigation.getByRole('link', { name: 'Collector invitations' })).toBeVisible();
-  await expect(navigation.getByRole('link', { name: 'Certificate editor' })).toBeVisible();
-  await expect(navigation.getByRole('link', { name: 'Optional plate wizard' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Register an artwork' })).toHaveAttribute('href', '/admin/register');
+  await expect(navigation.getByRole('link', { name: 'Artworks' })).toHaveAttribute('href', '/admin/artworks');
 
-  if ((page.viewportSize()?.width || 0) < 768) {
-    await page.getByRole('button', { name: 'Menu' }).click();
-  }
-  await navigation.getByRole('link', { name: 'Artwork registration' }).click();
-  await expect(page.getByRole('heading', { name: 'Artwork registration' })).toBeVisible();
-  await expect(page.getByText(/physical plate is an optional later step/i)).toBeVisible();
+  if ((page.viewportSize()?.width || 0) < 768) await page.getByRole('button', { name: 'Menu' }).click();
+  await navigation.getByRole('link', { name: 'Register an artwork' }).click();
+  await expect(page.getByRole('heading', { name: 'Register an artwork.' })).toBeVisible();
+  await expect(page.getByText(/physical plate is optional and can come later/i)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Begin' }).click();
+  await page.getByLabel('Search').fill('TST-900');
+  await page.getByRole('button', { name: 'Test unique work' }).click();
+  await expect(page.getByText('This work is recorded as a unique piece.')).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByLabel('Registry secret').fill('local-development-secret');
-  await page.getByRole('button', { name: 'Unlock registry' }).click();
-  const firstArtworkLabel = await page.getByRole('combobox', { name: 'Artwork' }).locator('option:checked').textContent();
-  await page.getByLabel('Unique work').check();
-  await page.getByRole('button', { name: 'Register artwork' }).click();
-  await expect(page.getByRole('heading', { name: 'Artwork registered' })).toBeVisible();
-  await expect(page.getByText(firstArtworkLabel || '', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Unlock', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ready to register.' })).toBeVisible();
+  await expect(page.getByText('TST-900', { exact: true })).toBeVisible();
   await expect(page.getByText('Unique work', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Register', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Artwork registered.' })).toBeVisible();
+  await expect(page.getByText('Test unique work · TST-900', { exact: true })).toBeVisible();
   await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Dismiss Ownership Code' }).click();
-  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
-    'href',
-    /\/admin\/artworks\/.+\?instance=kp-admin-registration-1$/,
-  );
-  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Register artwork' })).toHaveCount(0);
-  expect(registrationBodies[0]).toEqual({
-    artworkId: expect.any(String),
-    edition: { kind: 'unique' },
-    idempotencyKey: expect.any(String),
-  });
+  await page.getByRole('button', { name: 'Dismiss it, I have saved it' }).click();
   await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toHaveCount(0);
-  await expect(page.getByText(/plate preparation remains optional/i)).toBeVisible();
-  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Register artwork' })).toHaveCount(0);
+  for (const action of ['View and save codes', 'Prepare a physical plate', 'Assign to a keeper', 'Add to this piece']) {
+    await expect(page.getByRole('button', { name: action })).toBeVisible();
+  }
   expect(registrationBodies).toHaveLength(1);
+  expect(registrationBodies[0]).toEqual({
+    artworkId: 'TST-900', edition: { kind: 'unique' }, idempotencyKey: expect.any(String),
+  });
 
   await page.getByRole('button', { name: 'Register another artwork' }).click();
-  const artworkSelect = page.getByRole('combobox', { name: 'Artwork' });
-  await expect(artworkSelect).toBeVisible();
-  await artworkSelect.selectOption({ index: 1 });
-  const secondArtworkLabel = await artworkSelect.locator('option:checked').textContent();
-  await page.getByLabel('Numbered edition').check();
-  await page.getByRole('spinbutton', { name: 'Number', exact: true }).fill('2');
-  await page.getByRole('spinbutton', { name: 'Edition size, optional' }).fill('5');
-  await page.getByRole('button', { name: 'Register artwork' }).click();
-
-  await expect(page.getByText(secondArtworkLabel || '', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Begin' }).click();
+  await page.getByLabel('Search').fill('TST-901');
+  await page.getByRole('button', { name: 'Test numbered work' }).click();
+  await expect(page.getByText('This work is a numbered edition of 5.')).toBeVisible();
+  await page.getByLabel('Number').fill('2');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Register', exact: true }).click();
+  await expect(page.getByText('Test numbered work · TST-901', { exact: true })).toBeVisible();
   await expect(page.getByText('Number 2 of 5', { exact: true })).toBeVisible();
   await expect(page.getByText('CDEF-GHJK-MNPQ-RSTU')).toBeVisible();
   expect(registrationBodies).toHaveLength(2);
   expect(registrationBodies[1]).toEqual({
-    artworkId: expect.any(String),
-    edition: { kind: 'numbered', number: 2, size: 5 },
+    artworkId: 'TST-901', edition: { kind: 'numbered', number: 2, size: 5 },
     idempotencyKey: expect.any(String),
   });
-  expect(registrationBodies[1].artworkId).not.toBe(registrationBodies[0].artworkId);
   expect(registrationBodies[1].idempotencyKey).not.toBe(registrationBodies[0].idempotencyKey);
 });
 
@@ -482,7 +490,7 @@ test('registration nextAction verifies and locks the exact catalog sales record'
       }),
     });
   });
-  await page.route('/api/admin/registrations', async route => {
+  await page.route('/api/admin/register-artwork', async route => {
     registrationBodies.push(route.request().postDataJSON());
     return route.fulfill({
       status: 201, contentType: 'application/json',
@@ -538,18 +546,26 @@ test('registration nextAction verifies and locks the exact catalog sales record'
   });
 
   await page.goto('/admin/registrations?artworkId=UL-100&artistArtworkRecordId=record-identified');
-  await expect(page.getByText('Sales record record-identified')).toBeVisible();
+  await expect(page.getByText(/Sales record record-identified.*UL-100/)).toBeVisible();
+  await page.getByRole('button', { name: 'Begin' }).click();
+  await expect(page.getByLabel('Search')).toHaveCount(0);
+  await expect(page.getByLabel('Number')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Back' })).toHaveCount(0);
   await page.getByLabel('Registry secret').fill('local-development-secret');
-  await page.getByRole('button', { name: 'Unlock registry' }).click();
-  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveValue('UL-100');
-  await expect(page.getByRole('combobox', { name: 'Artwork' })).toBeDisabled();
-  await expect(page.getByLabel('Unique work')).toBeChecked();
-  await expect(page.getByLabel('Unique work')).toBeDisabled();
-  await page.getByRole('button', { name: 'Register artwork' }).click();
+  await page.getByRole('button', { name: 'Unlock', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ready to register.' })).toBeVisible();
+  await expect(page.getByText('UL-100', { exact: true })).toBeVisible();
+  await expect(page.getByText('Unique work', { exact: true })).toBeVisible();
+  await expect(page.getByText('record-identified', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Register', exact: true }).click();
   await expect(page.getByText(/identity was registered, but its exact sales relationship is not yet confirmed/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'View and save codes' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Prepare a physical plate' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Assign to a keeper' })).toHaveCount(0);
+  await expect(page.getByLabel('Registry secret')).toHaveCount(0);
   expect(registrationBodies).toHaveLength(1);
   expect(linkBodies).toHaveLength(1);
-  await page.getByRole('button', { name: 'Retry identity link' }).click();
+  await page.getByRole('button', { name: 'Retry the identity link' }).click();
   await expect(page.getByText('Sales record linked to keeper-created.')).toBeVisible();
   expect(registrationBodies).toHaveLength(1);
   expect(registrationBodies[0]).toMatchObject({ artworkId: 'UL-100', edition: { kind: 'unique' } });
@@ -567,12 +583,14 @@ test('registration nextAction verifies and locks the exact catalog sales record'
       artistArtworkRecordId: 'record-identified',
     },
   ]);
-  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Dismiss Ownership Code' }).click();
-  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
-    'href', '/admin/artworks/UL-100?instance=keeper-created&record=record-identified',
-  );
+  await expect(page.getByRole('button', { name: 'View and save codes' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Dismiss it, I have saved it' }).click();
+  const openArtwork = page.getByRole('button', { name: 'View and save codes' });
+  await expect(openArtwork).toBeVisible();
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Register another artwork' })).toHaveCount(0);
+  await openArtwork.click();
+  await expect(page).toHaveURL('/admin/artworks/UL-100?instance=keeper-created&record=record-identified');
   expect(registrationBodies).toHaveLength(1);
   expect(linkBodies).toHaveLength(2);
 });
@@ -1087,16 +1105,43 @@ test('plate wizard deep link resumes the exact physical identity on a fresh load
 });
 
 test('opens Maintenance from Artwork and renders the private five-section detail accessibly', async ({ page }) => {
+  await page.route('**/api/admin/artwork-workspace**', route => {
+    const query = Object.fromEntries(new URL(route.request().url()).searchParams);
+    expect(query).toEqual({ artworkId: 'UL-100', keeperPieceId: 'kp-local-maintenance' });
+    return route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({
+        ok: true,
+        workspace: {
+          catalog: { artworkId: 'UL-100', title: 'Art of Living - 32' },
+          salesRecord: null,
+          identity: { keeperPieceId: 'kp-local-maintenance', publicCode: 'AR-7KQ9M2WX', state: 'registered' },
+          certificate: { state: 'complete', missingFields: [] }, invitation: null,
+          caretaker: { state: 'active' },
+          plate: { state: 'active', recoveryState: 'current' }, sale: null,
+          nextAction: null,
+          activity: [{ kind: 'identity_registered', occurredAt: '2026-08-01T00:00:00.000Z', label: 'Artwork registered' }],
+        },
+      }),
+    });
+  });
   await page.goto('/admin');
   if ((page.viewportSize()?.width || 0) < 768) {
     await page.getByRole('button', { name: 'Menu' }).click();
   }
   const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
   await expect(navigation.getByText('Artwork', { exact: true })).toBeVisible();
-  await navigation.getByRole('link', { name: 'Maintenance' }).click();
-  await expect(page).toHaveURL(/\/admin\/maintenance$/);
+  await navigation.getByRole('link', { name: 'Artworks' }).click();
+  await expect(page).toHaveURL(/\/admin\/artworks$/);
+  await expect(page.getByRole('heading', { name: 'Artworks', exact: true })).toBeVisible();
+  const artworkLink = page.getByRole('link', { name: /Art of Living - 32.*UL-100.*AR-7KQ9M2WX/ });
+  await expect(artworkLink).toHaveAttribute('href', '/admin/artworks/UL-100?instance=kp-local-maintenance');
+  await artworkLink.click();
+  await expect(page).toHaveURL(/\/admin\/artworks\/UL-100\?instance=kp-local-maintenance$/);
+  await expect(page.getByRole('heading', { name: 'Maintenance and custody history' })).toBeVisible();
+  await page.getByRole('link', { name: 'Open Maintenance' }).click();
+  await expect(page).toHaveURL(/\/admin\/maintenance\?artworkId=UL-100&keeperPieceId=kp-local-maintenance$/);
   await expect(page.getByRole('heading', { name: 'Maintenance', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await expect(page.getByRole('heading', { name: 'Art of Living' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
     'href', /\/admin\/artworks\/UL-100\?instance=kp-local-maintenance$/,
   );
