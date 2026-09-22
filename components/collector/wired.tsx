@@ -72,6 +72,7 @@ import {
   getCollectorDreamState,
   getCollectorLetters,
   getCollectorOnboarding,
+  getCollectorPrivacy,
   getCurrentKeeperPriceHistory,
   getKeeperMessage,
   getKeeperPieceStatus,
@@ -85,13 +86,11 @@ import {
   listKeeperContributors,
   revokeKeeperContributor,
   resendCaretakerPassing,
-  saveCollectorBirthProfile,
   setCollectorDreamTier,
   publishHistoricalCollectorDream,
   setKeeperDisplayLocation,
   shareCollectorDream,
   updateCollectorDream,
-  updateCollectorPrivacy,
   CollectorApiNetworkError,
 } from './api';
 import type {
@@ -99,6 +98,8 @@ import type {
   CollectorDreamState,
   CollectorLetter,
   CollectorOnboardingState,
+  CollectorPrivacyState,
+  CollectorBirthInputs,
   CollectorRitualAction,
   CollectorRitualEligibility,
   CurrentKeeperPriceEntry,
@@ -112,7 +113,13 @@ import type {
 import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import { searchPlaces } from '../../lib/astrology/places';
 
+import { persistCollectorGathering, type GatheringOutcome } from './gathering';
+
 const G = COPY.gathering;
+const PRIVATE_READ_ERROR = 'Your private choices could not be opened right now. Please try again.';
+const BIRTH_SAVE_ERROR = 'Your birth details could not be saved right now. You can skip and add them later.';
+const PRIVACY_SAVE_ERROR = 'Your privacy choices could not be saved right now. Please try again.';
+const PRIVACY_PENDING = 'Birth details remain optional. Public choices stay closed until adulthood is confirmed.';
 
 /**
  * Strings no copy.ts key exists for yet. copy.ts is frozen this pass, so they
@@ -274,6 +281,7 @@ type Step =
       key: 'account' | 'verify' | 'plate' | 'offline';
       onRetry?: () => void;
       receipt?: [string, string][];
+      message?: string;
     };
 
 export type WiredJourneyProps = {
@@ -319,7 +327,9 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
   const [authOpen, setAuthOpen] = useState(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
-  const [cityId, setCityId] = useState<string | null>(null);
+  const lampsEdited = useRef(false);
+  const gatheringInFlight = useRef(false);
+  const [gatheringBusy, setGatheringBusy] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
 
@@ -523,10 +533,28 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
     signedIn && isYours,
     async () => {
       const outcome = await getCollectorOnboarding();
-      return outcome.ok ? outcome.data : null;
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
     },
     [account.userId, isYours],
   );
+  const privacy = useQuiet<CollectorPrivacyState>(
+    signedIn && isYours && Boolean(keeperPieceId),
+    async () => {
+      const outcome = await getCollectorPrivacy(keeperPieceId ?? undefined);
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
+    },
+    [account.userId, keeperPieceId, isYours],
+  );
+  useEffect(() => {
+    if (privacy.status !== 'ready' || lampsEdited.current) return;
+    const saved = privacy.data;
+    if (!saved?.ring3 || !saved?.ring4) return;
+    setLamps([true, true, saved.ring4.shareName, saved.ring4.shareFace,
+      saved.ring3.shareDerivedChart, saved.ring4.shareBusiness, saved.ring4.shareMission]);
+  }, [privacy]);
+
   const birthMonthIndex = useMemo(() => {
     if (onboarding.status !== 'ready' || !onboarding.data) return null;
     const state = onboarding.data;
@@ -714,79 +742,49 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
 
-  /* ---------------- the gathering submissions ----------------
-   * Failures never cost the person their words: everything typed stays in
-   * the `typed` record, network drops surface the offline receipt state, and
-   * server-rule rejections (no adult birth profile on file, an uncurated
-   * city) quietly keep the value client-side. */
-
-  const submitBorn = useCallback(async (): Promise<'landed' | 'kept' | 'dropped'> => {
-    const date = parseBirthDate(typed[G.fieldDate] ?? '');
-    const time = parseBirthTime(typed[G.fieldTime] ?? '');
-    const placeText = (typed[G.fieldPlace] ?? '').trim();
-    if (!date || !time || !placeText) return 'kept';
-    let place;
-    try {
-      [place] = await searchPlaces(placeText, 1);
-    } catch {
-      place = undefined;
-    }
-    if (!place) return 'kept';
-    try {
-      const outcome = await saveCollectorBirthProfile({ date, time, place });
-      return outcome.ok ? 'landed' : 'kept';
-    } catch (cause) {
-      if (cause instanceof CollectorApiNetworkError) return 'dropped';
-      return 'kept';
-    }
-  }, [typed]);
-
-  const resolveCity = useCallback(async (): Promise<void> => {
-    const cityText = (typed[G.fieldCity] ?? '').trim().toLowerCase();
-    if (!cityText) return;
-    try {
-      const outcome = await getCollectorCuratedCities();
-      if (!outcome.ok) return;
-      const hit = outcome.data.find(city => city.label.toLowerCase().includes(cityText));
-      setCityId(hit ? hit.id : null);
-    } catch {
-      /* uncurated for now; the light stays client-side until it can be placed */
-    }
-  }, [typed]);
-
-  /* the lamps, one per real privacy field, in SHOW_LAMPS wire order:
-     0 shareIntention · 1 shareCity (the piece ring) · 2 shareName ·
-     3 shareFace · 4 shareDerivedChart · 5 shareBusiness · 6 shareMission.
-     No links lamp exists because no links field exists. */
-  const submitShows = useCallback(
-    async (chosen: boolean[]): Promise<'landed' | 'kept' | 'dropped'> => {
-      let landed = false;
-      try {
-        if (keeperPieceId && cityId) {
-          const outcome = await updateCollectorPrivacy({
-            piece: { keeperPieceId, shareCity: Boolean(chosen[1]), cityId },
-          });
-          landed = landed || outcome.ok;
-        }
-        const personRings = await updateCollectorPrivacy({
-          person: {
-            shareIntention: Boolean(chosen[0]),
-            shareName: Boolean(chosen[2]),
-            shareFace: Boolean(chosen[3]),
-            shareDerivedChart: Boolean(chosen[4]),
-            shareBusiness: Boolean(chosen[5]),
-            shareMission: Boolean(chosen[6]),
-          },
-        });
-        landed = landed || personRings.ok;
-        return landed ? 'landed' : 'kept';
-      } catch (cause) {
-        if (cause instanceof CollectorApiNetworkError) return 'dropped';
-        return 'kept';
+  /* Gathering stays on its authored screen until every dependent save lands.
+   * The account boundary owns the draft and invalidates any old continuation. */
+  const submitGathering = useCallback(async (chosen: boolean[], withBirth: boolean): Promise<GatheringOutcome> => {
+    if (!keeperPieceId) return { kind: 'pending', stage: 'read' };
+    let birth: CollectorBirthInputs | null = null;
+    if (withBirth) {
+      const raw = [typed[G.fieldDate] ?? '', typed[G.fieldTime] ?? '', typed[G.fieldPlace] ?? ''];
+      if (raw.some(value => value.trim())) {
+        const date = parseBirthDate(raw[0]);
+        const time = parseBirthTime(raw[1]);
+        if (!date || !time || !raw[2].trim()) return { kind: 'rejected', stage: 'birth' };
+        try {
+          const [place] = await searchPlaces(raw[2].trim(), 1);
+          if (!mounted.current) return { kind: 'cancelled' };
+          if (!place) return { kind: 'rejected', stage: 'birth' };
+          birth = { date, time, place };
+        } catch { return { kind: 'network', stage: 'birth' }; }
       }
-    },
-    [keeperPieceId, cityId],
-  );
+    }
+    const cityText = (typed[G.fieldCity] ?? '').trim().toLowerCase();
+    let piece;
+    if (cityText) {
+      try {
+        const cities = await getCollectorCuratedCities();
+        if (!mounted.current) return { kind: 'cancelled' };
+        if (!cities.ok) return { kind: 'rejected', stage: 'privacy' };
+        const city = cities.data.find(item => item.label.toLowerCase().includes(cityText));
+        if (!city) return { kind: 'rejected', stage: 'privacy' };
+        piece = { keeperPieceId, shareCity: Boolean(chosen[1]), cityId: city.id };
+      } catch { return { kind: 'network', stage: 'privacy' }; }
+    }
+    return persistCollectorGathering({
+      keeperPieceId, birth, isCurrent: () => mounted.current,
+      privacy: {
+        ...(piece ? { piece } : {}),
+        person: {
+          shareIntention: Boolean(chosen[0]), shareName: Boolean(chosen[2]),
+          shareFace: Boolean(chosen[3]), shareDerivedChart: Boolean(chosen[4]),
+          shareBusiness: Boolean(chosen[5]), shareMission: Boolean(chosen[6]),
+        },
+      },
+    });
+  }, [typed, keeperPieceId]);
 
   /* the year's answer, whichever of the three it is. plant-new carries the
      field's words; reinforce and fulfilled carry nothing, exactly as the
@@ -1309,57 +1307,32 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       /* the armed removal disarms the moment any other press happens */
       if (key !== '__personRemove' && removeArmed) setRemoveArmed(false);
 
-      /* side effects on leaving a gathering screen by its own brass.
-         §7 2026-08-20 then the artist's second walk: lives leads into
-         who1, and who2 (not who1) is the screen that now carries the
-         birth-fields and shows submissions on its way into light47 — the
-         gathering's final two screens, split from the one combined page. */
-      if (from === 'lives' && key === 'who1') void resolveCity();
-      if (from === 'shows' && key === 'light47') {
-        void submitShows(lamps).then(result => {
-          if (result === 'dropped') {
+      if (gatheringInFlight.current) return;
+      if ((from === 'who2' || from === 'shows') && key === 'light47') {
+        gatheringInFlight.current = true;
+        setGatheringBusy(true);
+        void submitGathering(from === 'who2' ? lamps.map((v, i) => i < 2 ? true : v) : lamps, from === 'who2')
+          .then(result => {
+            if (!mounted.current || result.kind === 'cancelled') return;
+            if (result.kind === 'saved') {
+              refresh();
+              setStep({ kind: 'walk', key: 'light47' });
+              return;
+            }
+            const returnTo = result.stage === 'birth' ? 'who1' : from;
             setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: (typed[G.fieldCity]
-                ? [[G.fieldCity, typed[G.fieldCity]]]
-                : []) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'shows' }),
+              kind: 'state', key: 'offline', receipt: [],
+              message: result.kind === 'network' ? undefined
+                : result.stage === 'read' ? PRIVATE_READ_ERROR
+                  : result.kind === 'pending' && result.error === 'adult_profile_required' ? PRIVACY_PENDING
+                    : result.stage === 'birth' ? BIRTH_SAVE_ERROR : PRIVACY_SAVE_ERROR,
+              onRetry: () => setStep({ kind: 'walk', key: returnTo }),
             });
-          }
-        });
-      }
-      /* who2 → light47: fires both submissions the split gathering pages
-         now carry between them. shareIntention and shareCity go true
-         always (the piece's own facts are not optional, §7); the five
-         identity lamps come from who1's state, at indices 2..6 of the
-         shared lamps array. */
-      if (from === 'who2' && key === 'light47') {
-        void submitBorn().then(result => {
-          if (result === 'dropped') {
-            setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: [
-                [G.fieldDate, typed[G.fieldDate] ?? ''],
-                [G.fieldPlace, typed[G.fieldPlace] ?? ''],
-              ].filter(([, value]) => value) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
-            });
-          }
-        });
-        void submitShows(lamps.map((v, i) => (i < 2 ? true : v))).then(result => {
-          if (result === 'dropped') {
-            setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: (typed[G.fieldCity]
-                ? [[G.fieldCity, typed[G.fieldCity]]]
-                : []) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
-            });
-          }
-        });
+          }).finally(() => {
+            gatheringInFlight.current = false;
+            if (mounted.current) setGatheringBusy(false);
+          });
+        return;
       }
       /* the year's three answers. Planting anew submits the field's words on
          the way out of its own screen; the one-press answers submit here.
@@ -1487,7 +1460,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       }
       if (key in WALK) setStep({ kind: 'walk', key: key as keyof typeof WALK });
     },
-    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, submitResendInvite, submitPassing, cancelPassing, acceptPassing, resendPassing, person, removeArmed, lamps, typed, refresh, senderPassing],
+    [step, submitGathering, submitRitual, submitInvite, submitRemove, submitResendInvite, submitPassing, cancelPassing, acceptPassing, resendPassing, person, removeArmed, lamps, typed, refresh, senderPassing],
   );
 
   /* ---------------- the account bridge ---------------- */
@@ -1545,7 +1518,19 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       />
     );
   } else if (step.kind === 'walk') {
-    if (step.key === 'light47' && ordinalValue === null) {
+    if (['who1', 'who2', 'shows'].includes(step.key)
+      && (onboarding.status !== 'ready' || privacy.status !== 'ready')) {
+      const failed = onboarding.status === 'failed' || privacy.status === 'failed';
+      surface = failed ? (
+        <StateScreen state="offline" message={PRIVATE_READ_ERROR} receipt={[]}
+          onPrimary={() => {
+            if (onboarding.status === 'failed') onboarding.retry();
+            if (privacy.status === 'failed') privacy.retry();
+          }}
+          onSecondary={() => setStep({ kind: 'piece' })}
+          onBack={() => setStep({ kind: 'piece' })} />
+      ) : <Ground light="i" wash><div style={{ flex: 1 }} /></Ground>;
+    } else if (step.key === 'light47' && ordinalValue === null) {
       /* ignition waits for the real ordinal: a quiet hold while the atlas
          answers, the quiet retry state if it cannot */
       if (ordinal.status === 'loading') {
@@ -1576,6 +1561,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       surface = <VaultArrival play={play} onGo={go} screen={wiredScreen('codetrue')} />;
     } else {
       surface = (
+        <fieldset disabled={gatheringBusy} aria-busy={gatheringBusy} style={{ display: 'contents' }}>
         <WalkScreen
           screen={wiredScreen(step.key)}
           onGo={go}
@@ -1587,8 +1573,9 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
             setTyped(t => ({ ...t, [label]: value }));
           }}
           lampsValue={lamps}
-          onLamps={setLamps}
+          onLamps={next => { lampsEdited.current = true; setLamps(next); }}
         />
+        </fieldset>
       );
     }
   } else if (step.kind === 'gift-message') {
@@ -1650,6 +1637,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
             : () => setStep({ kind: 'piece' })
         }
         receipt={step.receipt}
+        message={step.message}
       />
     );
   }
