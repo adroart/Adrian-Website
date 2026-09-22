@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 10 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 11 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -165,7 +165,8 @@ export const REGISTRY_RECOVERY_V9_TABLES = [
   'collector_dream_tier_changes',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+/** The exact schema-v10 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V10_TABLES = [
   ...REGISTRY_RECOVERY_V9_TABLES,
   'caretaker_passing_requests',
   'claim_silence_windows',
@@ -174,6 +175,8 @@ export const REGISTRY_RECOVERY_TABLES = [
   'collector_historical_dream_publications',
   'collector_shine_removals',
 ] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [...REGISTRY_RECOVERY_V10_TABLES] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
   ...REGISTRY_RECOVERY_TABLES,
@@ -419,6 +422,7 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
   ],
   piece_records: [
     'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
+    'legacy_sections',
   ],
   caretaker_passing_requests: [
     'id', 'keeper_piece_id', 'sender_user_id', 'recipient_email', 'token_hash',
@@ -453,7 +457,9 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  /** Authenticated original format carried forward by an earlier upgrade. */
+  sourceSchemaVersion?: number;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -481,7 +487,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -631,6 +637,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 7) return REGISTRY_RECOVERY_V7_TABLES;
   if (schemaVersion === 8) return REGISTRY_RECOVERY_V8_TABLES;
   if (schemaVersion === 9) return REGISTRY_RECOVERY_V9_TABLES;
+  if (schemaVersion === 10) return REGISTRY_RECOVERY_V10_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -642,6 +649,9 @@ function recoveryColumns(table: RegistryRecoveryTable, schemaVersion: number) {
   if (table === 'collector_dreams' && schemaVersion < 9) {
     return REGISTRY_RECOVERY_COLUMNS.collector_dreams.filter(
       (column) => !V9_DREAM_COLUMNS.has(column));
+  }
+  if (table === 'piece_records' && schemaVersion < 11) {
+    return REGISTRY_RECOVERY_COLUMNS.piece_records.filter((column) => column !== 'legacy_sections');
   }
   return REGISTRY_RECOVERY_COLUMNS[table];
 }
@@ -706,7 +716,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, 6, 7, 8, 9, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -726,6 +736,10 @@ export function validatePrivateRecoveryPayload(
     }
     if (rows.some((row) => !hasExactKeys(row, recoveryColumns(table, payload.schemaVersion as number)))) {
       throw new Error(`recovery_payload_columns_${table}`);
+    }
+    if (table === 'piece_records' && Number(payload.schemaVersion) >= 11
+      && rows.some((row) => row.legacy_sections !== 0 && row.legacy_sections !== 1)) {
+      throw new Error('recovery_payload_rows_piece_records');
     }
     for (let index = 1; index < rows.length; index += 1) {
       if (compareRecoveryRows(rows[index - 1], rows[index],
@@ -760,7 +774,7 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
   return {
     kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
     schemaVersion: PRIVATE_RECOVERY_SCHEMA_VERSION,
-    sourceSchemaVersion: payload.schemaVersion,
+    sourceSchemaVersion: payload.sourceSchemaVersion ?? payload.schemaVersion,
     exportedAt: payload.exportedAt,
     tables: {
       ...payload.tables,
@@ -867,6 +881,10 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         collector_dream_tier_changes: [],
       } : {}),
       ...(payload.schemaVersion < 10 ? { caretaker_passing_requests: [], claim_silence_windows: [], claim_silence_reminders: [], claim_silence_deliveries: [], collector_historical_dream_publications: [], collector_shine_removals: [] } : {}),
+      ...(payload.schemaVersion < 11 ? {
+        piece_records: ((payload.tables as { piece_records?: RecoveryRow[] }).piece_records ?? [])
+          .map((row) => ({ ...row, legacy_sections: 0 })),
+      } : {}),
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -887,7 +905,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, 6, 7, 8, 9, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
