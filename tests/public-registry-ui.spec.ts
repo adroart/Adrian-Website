@@ -93,7 +93,7 @@ test('a mismatched route is replaced with the canonical server identity route', 
   await expect(identity).toContainText('Joined the final assembly.');
   await expect(identity).not.toContainText('999');
   await expect(page.getByTestId('catalog-artwork-record')).toHaveCount(0);
-  await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');
+  await expect(page.getByTestId('draft-artwork-record')).toContainText('Server Verified Study');
   await expect(page.getByText('Art of Living - 32')).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 });
@@ -129,7 +129,7 @@ test('a registry-only draft shows exact identity before its draft record', async
   await page.goto(`/works/MD-905?instance=${PUBLIC_CODE}&edition=88`);
   await expect(page.getByTestId('public-registry-identity')).toContainText('Server Verified Study');
   await expect(page.getByTestId('public-registry-identity')).toContainText('Edition 2 of 7');
-  await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');
+  await expect(page.getByTestId('draft-artwork-record')).toContainText('Server Verified Study');
   await expect(page.getByTestId('public-registry-identity')).not.toContainText('88');
   await assertNoHorizontalOverflow(page);
 });

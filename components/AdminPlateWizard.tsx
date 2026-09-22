@@ -218,7 +218,7 @@ const AdminPlateWizard: React.FC = () => {
         throw new Error(data?.error || `Ledger export failed (${response.status})`);
       }
       downloadText('registry-ledger.jsonl', 'application/x-ndjson', await response.text());
-      setStepNote('Offline master ledger downloaded. Store it with your recovery set; online is a mirror you can rebuild from it.');
+      setStepNote('Issuance ledger downloaded. It preserves public identities and issuance evidence. Keep the separate encrypted private recovery archive, media copies and key custody instructions to restore the registry.');
     } catch (error) {
       setStepError(registryErrorMessage(error, 'Could not export the offline ledger.'));
     }

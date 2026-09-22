@@ -584,9 +584,13 @@ export async function saveMaintenancePlateAction(
     replacement?: unknown;
   }>(response);
   if (request.action === 'replace_plate') {
+    if (!data.record || !Number.isSafeInteger(data.record.recordVersion)) {
+      throw new Error('Incomplete plate maintenance response');
+    }
     return {
       action: request.action,
       replacement: projectIssuedPlateResponse(data.replacement),
+      record: data.record,
     };
   }
   if (!data.record || !Number.isSafeInteger(data.record.recordVersion)) {

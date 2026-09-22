@@ -244,6 +244,28 @@ export async function buildPublicAtlasState(env, generatedAt = new Date().toISOS
     });
   }
   for (const artwork of FULL_ARCHIVE) metadataByArtworkId.set(artwork.id, artwork);
+  // Match Piece Record and public registry precedence without rewriting any
+  // historical document or substituting the companion card's title.
+  try {
+    const snapshots = rows(await env.DB.prepare(
+      `SELECT artwork_id, canonical_json FROM artwork_catalog_snapshots AS snapshot
+        WHERE id = (SELECT newest.id FROM artwork_catalog_snapshots AS newest
+          WHERE newest.artwork_id = snapshot.artwork_id
+          ORDER BY newest.created_at DESC, newest.id DESC LIMIT 1)`,
+    ).all()) || [];
+    for (const row of snapshots) {
+      const metadata = JSON.parse(row.canonical_json);
+      if (metadata?.id !== row.artwork_id || typeof metadata.title !== 'string' || !metadata.title.trim()) {
+        throw new Error('atlas_snapshot_invalid');
+      }
+      metadataByArtworkId.set(row.artwork_id, {
+        ...metadataByArtworkId.get(row.artwork_id),
+        id: row.artwork_id, title: metadata.title, series: metadata.series ?? null, year: metadata.year ?? null,
+      });
+    }
+  } catch (error) {
+    if (!/no such table/i.test(String(error?.message))) throw error;
+  }
   return projectCollectorField({
     generatedAt,
     catalogRows,

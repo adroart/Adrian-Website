@@ -7,16 +7,11 @@ import {
   projectMaintenanceHistorySnapshots,
 } from './registryMaintenance.js';
 import {
-  lineageAnchorStatement,
-  lineageStatement,
   prepareNextLineageEvent,
 } from './lineage.js';
 import {
-  backupRegistryPlate,
-  createRegistryPlateCandidate,
   packageFromStoredRegistryPlate,
-  registryPlateCryptoConfigured,
-  registryPlateInsertStatement,
+  createRegistryPlateCandidate,
 } from './registryPlateIssuance.js';
 import { decryptOwnershipCode } from '../../../utils/ownershipCodeCrypto.ts';
 
@@ -164,6 +159,45 @@ async function exactReplay(env, existing, input, keeperPieceId, authorization) {
       return response({ ok: false, error: 'idempotency_conflict' }, 409);
     }
     return response({ ok: true, replayed: true, eventId: existing.id, record });
+  }
+
+  // Historical replacement events minted a successor row. Keep replay support for
+  // those immutable events while new repairs re-engrave the existing identity.
+  if (snapshots.after?.keeperPieceId === keeperPieceId
+    && snapshots.after?.publicCode === snapshots.before?.publicCode) {
+    const keys = [
+      'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
+      'physicalDisposition', 'replacedAt', 'recordVersion',
+    ];
+    if (!hasExactKeys(snapshots.before, keys) || !hasExactKeys(snapshots.after, keys)
+      || existing.artwork_id !== snapshots.before.artworkId
+      || existing.related_record_id !== keeperPieceId
+      || snapshots.before.plateStatus !== 'active'
+      || snapshots.before.recordVersion !== input.expectedRecordVersion
+      || snapshots.after.plateStatus !== 'active'
+      || snapshots.after.physicalDisposition !== input.physicalDisposition
+      || snapshots.after.recordVersion !== input.expectedRecordVersion + 1) {
+      return response({ ok: false, error: 'idempotency_conflict' }, 409);
+    }
+    const row = await env.DB.prepare('SELECT * FROM keeper_pieces WHERE id = ?1')
+      .bind(keeperPieceId).first();
+    if (!row || row.public_code !== snapshots.after.publicCode
+      || row.plate_status !== 'active' || row.replaced_at !== snapshots.after.replacedAt) {
+      return response({ ok: false, error: 'maintenance_write_failed' }, 503);
+    }
+    try {
+      return response({
+        ok: true, replayed: true, eventId: existing.id,
+        replacement: {
+          ...await packageFromStoredRegistryPlate(row, env),
+          generatedAt: row.plate_generated_at,
+          backupStatus: row.backup_status,
+        },
+        record: snapshots.after,
+      });
+    } catch {
+      return response({ ok: false, error: 'maintenance_write_failed' }, 503);
+    }
   }
 
   const replacementId = snapshots.after?.keeperPieceId;
@@ -402,119 +436,59 @@ async function voidPlate(env, input, row, keeperPieceId, authorization, fingerpr
   return response({ ok: true, replayed: false, eventId, record: after });
 }
 
-async function replacementIssuanceKey(input, keeperPieceId) {
-  const digest = await maintenanceMutationFingerprint({
-    kind: 'replacement_issuance', keeperPieceId, idempotencyKey: input.idempotencyKey,
-  });
-  return `replacement-${digest}`;
-}
-
 async function replacePlate(env, input, row, keeperPieceId, authorization, fingerprint) {
-  if (!registryPlateCryptoConfigured(env)) {
-    return response({ ok: false, error: 'ownership_code_crypto_not_configured' }, 503);
-  }
   if (row.plate_status !== 'active') {
     return response({ ok: false, error: 'plate_not_active' }, 409);
   }
-  const generatedAt = new Date().toISOString();
+  let plate;
+  try {
+    // Rebuild from the stored identity. This deliberately retains the public
+    // number, Ownership Code, custody, recovery proof and all prior history.
+    plate = await packageFromStoredRegistryPlate(row, env);
+  } catch {
+    return response({ ok: false, error: 'maintenance_write_failed' }, 503);
+  }
+  const replacedAt = new Date().toISOString();
   const eventId = `rme-${crypto.randomUUID()}`;
-  const issuanceKey = await replacementIssuanceKey(input, keeperPieceId);
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    let candidate;
-    let oldLineage;
-    try {
-      candidate = await createRegistryPlateCandidate(env, {
-        pieceId: row.piece_id,
-        editionNumber: row.edition_number,
-        issuanceKey,
-        generatedAt,
-      });
-      oldLineage = await prepareNextLineageEvent(env, {
-        keeperPieceId, eventType: 'superseded', eventAt: generatedAt,
-        publicPayload: { plateStatus: 'superseded' }, onlyIfPreviousChanged: true,
-      });
-    } catch {
-      return response({ ok: false, error: 'maintenance_write_failed' }, 503);
-    }
-    const before = {
-      keeperPieceId, artworkId: row.piece_id, publicCode: row.public_code,
-      plateStatus: 'active', supersedesKeeperPieceId: row.supersedes_keeper_piece_id ?? null,
-      supersededByKeeperPieceId: null, replacedAt: row.replaced_at ?? null,
-      recordVersion: row.record_version,
-    };
-    const after = {
-      keeperPieceId: candidate.id, artworkId: row.piece_id, publicCode: candidate.publicCode,
-      plateStatus: 'generated', supersedesKeeperPieceId: keeperPieceId,
-      supersededByKeeperPieceId: null, replacedAt: generatedAt, recordVersion: 0,
-    };
+  const before = {
+    keeperPieceId, artworkId: row.piece_id, publicCode: row.public_code,
+    plateStatus: 'active', physicalDisposition: row.physical_disposition ?? null,
+    replacedAt: row.replaced_at ?? null, recordVersion: row.record_version,
+  };
+  const after = {
+    keeperPieceId, artworkId: row.piece_id, publicCode: row.public_code,
+    plateStatus: 'active', physicalDisposition: input.physicalDisposition,
+    replacedAt, recordVersion: input.expectedRecordVersion + 1,
+  };
     const mutation = env.DB.prepare(
       `UPDATE keeper_pieces
-          SET plate_status = 'superseded', superseded_by_keeper_piece_id = ?1,
-              physical_disposition = ?2, replaced_at = ?3,
+          SET physical_disposition = ?1, replaced_at = ?2,
               record_version = record_version + 1
-        WHERE id = ?4 AND record_version = ?5 AND piece_id IS ?6
-          AND edition_number IS ?7 AND plate_status = 'active'
+        WHERE id = ?3 AND record_version = ?4 AND piece_id IS ?5
+          AND edition_number IS ?6 AND plate_status = 'active'
           AND superseded_by_keeper_piece_id IS NULL`,
     ).bind(
-      candidate.id, input.physicalDisposition, generatedAt, keeperPieceId,
+      input.physicalDisposition, replacedAt, keeperPieceId,
       input.expectedRecordVersion, row.piece_id, row.edition_number,
     );
     const event = buildMaintenanceEventStatement(env, eventDetails({
       input, keeperPieceId, artworkId: row.piece_id, authorization, before, after,
-      eventType: 'plate_replaced', relatedRecordId: candidate.id,
-      createdAt: generatedAt, fingerprint, eventId,
+      eventType: 'plate_replaced', relatedRecordId: keeperPieceId,
+      createdAt: replacedAt, fingerprint, eventId,
     }));
-    const statements = [
-      mutation,
-      event,
-      registryPlateInsertStatement(env, candidate, {
-        supersedesKeeperPieceId: keeperPieceId,
-        onlyIfPreviousChanged: true,
-      }),
-      oldLineage.statement,
-      oldLineage.anchorStatement,
-      lineageStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
-      lineageAnchorStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
-    ];
-    try {
-      const results = await env.DB.batch(statements);
-      if (!batchSucceeded(results, statements.length)) {
-        return response({ ok: false, error: 'version_conflict' }, 409);
-      }
-    } catch (error) {
-      const message = String(error?.message || '');
-      if (/public_code/i.test(message) && /unique/i.test(message)) continue;
-      if (/unique/i.test(message)) return response({ ok: false, error: 'link_collision' }, 409);
-      return response({ ok: false, error: 'maintenance_write_failed' }, 503);
-    }
-
-    const replacementRow = {
-      id: candidate.id,
-      public_code: candidate.publicCode,
-      piece_id: candidate.pieceId,
-      edition_number: candidate.editionNumber,
-      plate_generated_at: candidate.generatedAt,
-      ownership_code_ciphertext: candidate.envelope.ciphertext,
-      ownership_code_nonce: candidate.envelope.nonce,
-      ownership_code_key_version: candidate.envelope.keyVersion,
-      backup_status: 'pending',
-    };
-    const backup = await backupRegistryPlate(env, replacementRow);
+  const result = await appendLifecycleBatch(env, [mutation, event]);
+  if (!result.ok) return response(result, statusFor(result.error));
     return response({
       ok: true,
       replayed: false,
       eventId,
       replacement: {
-        ok: true,
-        ownershipCode: candidate.ownershipCode,
-        ...candidate.plate,
-        generatedAt,
-        backupStatus: backup.status,
-        ...(backup.warning ? { warning: backup.warning } : {}),
+        ...plate,
+        generatedAt: row.plate_generated_at,
+        backupStatus: row.backup_status,
       },
-    }, 201);
-  }
-  return response({ ok: false, error: 'public_code_collision' }, 503);
+      record: after,
+    });
 }
 
 export async function handleRegistryPlateLifecycle({ body, env, keeperPieceId, authorization }) {

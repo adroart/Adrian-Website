@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../../data/mockData';
 import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection } from './AdminPage';
 
@@ -36,6 +37,15 @@ interface QueueResponse {
   error?: string;
 }
 
+interface ConfirmationResult {
+  saleId: string;
+  pieceId: string;
+  editionNumber: number;
+  keeperPieceId: string | null;
+  registrationStatus: 'registered' | 'pending';
+  publicCode?: string;
+}
+
 function money(cents: number | null, currency: string | null): string {
   if (cents == null) return '—';
   const amount = (cents / 100).toFixed(2);
@@ -50,15 +60,14 @@ function artworkTitle(pieceId: string | null): string | null {
 
 const PendingRow: React.FC<{
   sale: SaleQueueItem;
-  onConfirmed: (saleId: string) => void;
+  onConfirmed: (result: ConfirmationResult) => void;
 }> = ({ sale, onConfirmed }) => {
   const [pieceId, setPieceId] = useState(sale.pieceId ?? sale.sku ?? '');
   const [editionNumber, setEditionNumber] = useState(
-    sale.editionNumber != null ? String(sale.editionNumber) : '0',
+    sale.editionNumber != null ? String(sale.editionNumber) : '',
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
 
   const confirm = useCallback(async () => {
     const trimmed = pieceId.trim();
@@ -67,7 +76,7 @@ const PendingRow: React.FC<{
       return;
     }
     const edition = Number(editionNumber);
-    if (!Number.isInteger(edition) || edition < 0) {
+    if (!editionNumber.trim() || !Number.isInteger(edition) || edition < 0) {
       setError('Edition must be a whole number, zero or more.');
       return;
     }
@@ -84,26 +93,13 @@ const PendingRow: React.FC<{
         setError(data.error ?? 'The confirm did not go through.');
         return;
       }
-      if (data.recoveryCode) setRecoveryCode(data.recoveryCode);
-      onConfirmed(sale.saleId);
+      onConfirmed(data as ConfirmationResult);
     } catch {
       setError('The confirm did not go through.');
     } finally {
       setBusy(false);
     }
   }, [pieceId, editionNumber, sale.saleId, onConfirmed]);
-
-  if (recoveryCode) {
-    return (
-      <li className="admin-atlas-sale-row admin-atlas-sale-row-done">
-        <p>
-          Confirmed. A new piece record was registered for <strong>{pieceId}</strong> — this
-          recovery code exists only here, once. Copy it and send it to the collector:
-        </p>
-        <code>{recoveryCode}</code>
-      </li>
-    );
-  }
 
   return (
     <li className="admin-atlas-sale-row">
@@ -125,7 +121,7 @@ const PendingRow: React.FC<{
           />
         </label>
         <label>
-          Edition
+          Edition (0 for a unique piece)
           <input
             value={editionNumber}
             onChange={(e) => setEditionNumber(e.target.value)}
@@ -157,6 +153,7 @@ const AtlasPendingSales: React.FC = () => {
   const [pending, setPending] = useState<SaleQueueItem[] | null>(null);
   const [resolved, setResolved] = useState<SaleQueueItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [confirmations, setConfirmations] = useState<ConfirmationResult[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -179,8 +176,12 @@ const AtlasPendingSales: React.FC = () => {
   }, [load]);
 
   const handleConfirmed = useCallback(
-    (saleId: string) => {
-      setPending((current) => (current ?? []).filter((s) => s.saleId !== saleId));
+    (result: ConfirmationResult) => {
+      setConfirmations((current) => [
+        result,
+        ...current.filter((item) => item.saleId !== result.saleId),
+      ]);
+      setPending((current) => (current ?? []).filter((s) => s.saleId !== result.saleId));
       void load();
     },
     [load],
@@ -191,10 +192,29 @@ const AtlasPendingSales: React.FC = () => {
       <AdminPageHeader
         eyebrow="Atlas"
         title="Pending sales"
-        description="Sales that arrived from the checkout flow and are waiting to be confirmed into a piece record. Confirming registers the piece if it is not already registered, and hands you a one-time recovery code to send the collector."
+        description="Sales that arrived from checkout and are waiting to be matched to an artwork and edition. Confirmation links a complete registered identity when one exists. Otherwise the sale stays confirmed while canonical registration remains to be done."
       />
       {error && <AdminAlert tone="error">{error}</AdminAlert>}
       <AdminSection title="Waiting">
+        {confirmations.length > 0 && (
+          <ul className="admin-atlas-sale-list">
+            {confirmations.map((result) => (
+              <li key={result.saleId} className="admin-atlas-sale-row admin-atlas-sale-row-done">
+                {result.registrationStatus === 'registered' ? (
+                  <p>
+                    Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+                    {' '}Linked to canonical identity {result.publicCode}.
+                  </p>
+                ) : (
+                  <p>
+                    Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+                    {' '}No identity was created. <Link to="/admin/register">Complete canonical registration</Link> when the edition facts and backup evidence are ready.
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
         {pending === null ? (
           <p>Loading…</p>
         ) : pending.length === 0 ? (

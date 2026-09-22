@@ -1,6 +1,6 @@
 /**
- * Confirming a pending atlas sale creates a steward record (a fresh
- * keeper_pieces row when none exists yet) and flips the row to 'confirmed'.
+ * Confirming a pending atlas sale records the artwork selection and reuses a
+ * complete canonical identity when one exists. A sale alone never mints one.
  *
  * Same in-memory D1 harness as tests/atlas-sale-pending.test.ts, extended to
  * the full migration chain (001-045) so keeper_pieces carries every trigger
@@ -106,7 +106,7 @@ async function adminRequest(url: string, init: RequestInit = {}) {
 }
 
 describe('confirming a pending atlas sale', () => {
-  it('creates a fresh keeper_pieces row when none exists, and flips the sale to confirmed', async () => {
+  it('records an honest pending canonical registration without creating an identity', async () => {
     const database = freshDatabase();
     try {
       seedPendingSale(database);
@@ -119,19 +119,14 @@ describe('confirming a pending atlas sale', () => {
       });
 
       assert.equal(result.ok, true);
-      assert.equal(result.created, true);
-      assert.ok(result.recoveryCode, 'a fresh registration returns a one-time recovery code');
-
-      const piece = database
-        .prepare('SELECT * FROM keeper_pieces WHERE id = ?')
-        .get(result.keeperPieceId) as any;
-      assert.ok(piece, 'expected a new keeper_pieces row');
-      assert.equal(piece.piece_id, 'UL-100');
-      assert.equal(piece.edition_number, 0);
-      assert.equal(piece.keeper_user_id, null, 'no identity is bound at confirm time');
-      assert.equal(piece.claimed_at, null);
-      assert.ok(piece.recovery_code_hash, 'a recovery code hash is stored');
-      assert.notEqual(piece.recovery_code_hash, result.recoveryCode, 'the plaintext code is never stored');
+      assert.equal(result.registrationStatus, 'pending');
+      assert.equal(result.keeperPieceId, null);
+      assert.equal(result.reason, 'canonical_registration_required');
+      assert.equal(
+        database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count,
+        0,
+        'sale evidence must not mint a hash-only keeper identity',
+      );
 
       const sale = database
         .prepare('SELECT * FROM atlas_sale_events WHERE sale_id = ?')
@@ -145,17 +140,30 @@ describe('confirming a pending atlas sale', () => {
     }
   });
 
-  it('reuses an existing keeper_pieces row untouched when the piece is already registered', async () => {
+  it('reuses a complete canonical registered identity untouched', async () => {
     const database = freshDatabase();
     try {
       seedPendingSale(database, { sale_id: 'cs_test_confirm_2' });
       const now = new Date().toISOString();
-      database
-        .prepare(
-          `INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash, registered_at)
-           VALUES ('kp-preexisting', 'UL-101', 0, 'deadbeef', ?)`,
-        )
-        .run(now);
+      const recoveryHash = 'a'.repeat(64);
+      const backupHash = 'b'.repeat(64);
+      database.prepare(
+        `INSERT INTO keeper_pieces
+           (id, piece_id, edition_number, recovery_code_hash, public_code,
+            issuance_key, registered_at, plate_status, ownership_code_ciphertext,
+            ownership_code_nonce, ownership_code_key_version, registration_status,
+            registered_by_user_id, identity_backup_status,
+            identity_backup_reference, identity_backup_sha256, identity_backup_at)
+         VALUES ('kp-preexisting', 'UL-101', 0, ?, 'AR-7KQ9M2WX',
+                 'sale-test-registration', ?, 'legacy', 'ciphertext', 'nonce', 1,
+                 'registered', 'admin-test', 'verified', ?, ?, ?)`,
+      ).run(
+        recoveryHash,
+        now,
+        `identities/AR-7KQ9M2WX/${backupHash}.json`,
+        backupHash,
+        now,
+      );
       const env = { DB: d1(database) };
 
       const result = await confirmPendingAtlasSale(env, {
@@ -164,30 +172,85 @@ describe('confirming a pending atlas sale', () => {
         editionNumber: 0,
       });
 
-      assert.equal(result.created, false);
+      assert.equal(result.registrationStatus, 'registered');
       assert.equal(result.keeperPieceId, 'kp-preexisting');
-      assert.equal(result.recoveryCode, undefined);
+      assert.equal(result.publicCode, 'AR-7KQ9M2WX');
 
       const piece = database
         .prepare('SELECT recovery_code_hash FROM keeper_pieces WHERE id = ?')
         .get('kp-preexisting') as any;
-      assert.equal(piece.recovery_code_hash, 'deadbeef', 'the existing row is untouched');
+      assert.equal(piece.recovery_code_hash, recoveryHash, 'the existing row is untouched');
     } finally {
       database.close();
     }
   });
 
-  it('a second confirm on the same sale is rejected (already resolved)', async () => {
+  it('an exact retry is idempotent and never creates a parallel identity', async () => {
     const database = freshDatabase();
     try {
       seedPendingSale(database, { sale_id: 'cs_test_confirm_3' });
       const env = { DB: d1(database) };
-      await confirmPendingAtlasSale(env, { saleId: 'cs_test_confirm_3', pieceId: 'UL-102' });
+      const first = await confirmPendingAtlasSale(env, {
+        saleId: 'cs_test_confirm_3', pieceId: 'UL-102', editionNumber: 2,
+      });
+      const retry = await confirmPendingAtlasSale(env, {
+        saleId: 'cs_test_confirm_3', pieceId: 'UL-102', editionNumber: 2,
+      });
+      assert.equal(first.replayed, false);
+      assert.equal(retry.replayed, true);
+      assert.equal(retry.registrationStatus, 'pending');
+      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 0);
+    } finally {
+      database.close();
+    }
+  });
 
+  it('preserves a pre-canonical row and still reports registration pending', async () => {
+    const database = freshDatabase();
+    try {
+      seedPendingSale(database, { sale_id: 'cs_test_confirm_legacy' });
+      database.prepare(
+        `INSERT INTO keeper_pieces
+           (id, piece_id, edition_number, recovery_code_hash, registered_at)
+         VALUES ('kp-hash-only', 'UL-103', 0, ?, ?)`,
+      ).run('c'.repeat(64), new Date().toISOString());
+
+      const result = await confirmPendingAtlasSale({ DB: d1(database) }, {
+        saleId: 'cs_test_confirm_legacy', pieceId: 'UL-103', editionNumber: 0,
+      });
+
+      assert.equal(result.registrationStatus, 'pending');
+      assert.equal(result.keeperPieceId, null);
+      const rows = database.prepare(
+        `SELECT id, recovery_code_hash, registration_status
+           FROM keeper_pieces WHERE piece_id = 'UL-103'`,
+      ).all() as any[];
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].id, 'kp-hash-only');
+      assert.equal(rows[0].recovery_code_hash, 'c'.repeat(64));
+      assert.equal(rows[0].registration_status, null);
+    } finally {
+      database.close();
+    }
+  });
+
+  it('rejects a retry that attempts to remap the resolved sale', async () => {
+    const database = freshDatabase();
+    try {
+      seedPendingSale(database, { sale_id: 'cs_test_confirm_conflict' });
+      const env = { DB: d1(database) };
+      await confirmPendingAtlasSale(env, {
+        saleId: 'cs_test_confirm_conflict', pieceId: 'UL-104', editionNumber: 1,
+      });
       await assert.rejects(
-        () => confirmPendingAtlasSale(env, { saleId: 'cs_test_confirm_3', pieceId: 'UL-102' }),
-        (err: any) => err.code === 'sale_already_resolved',
+        () => confirmPendingAtlasSale(env, {
+          saleId: 'cs_test_confirm_conflict', pieceId: 'UL-104', editionNumber: 2,
+        }),
+        (error: any) => error.code === 'sale_already_resolved',
       );
+      assert.equal(database.prepare(
+        `SELECT edition_number FROM atlas_sale_events WHERE sale_id = 'cs_test_confirm_conflict'`,
+      ).get().edition_number, 1);
     } finally {
       database.close();
     }
@@ -198,7 +261,7 @@ describe('confirming a pending atlas sale', () => {
     try {
       const env = { DB: d1(database) };
       await assert.rejects(
-        () => confirmPendingAtlasSale(env, { saleId: 'cs_does_not_exist', pieceId: 'UL-100' }),
+        () => confirmPendingAtlasSale(env, { saleId: 'cs_does_not_exist', pieceId: 'UL-100', editionNumber: 0 }),
         (err: any) => err.code === 'sale_not_found',
       );
     } finally {

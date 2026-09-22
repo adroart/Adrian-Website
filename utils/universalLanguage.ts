@@ -27,6 +27,40 @@ export function ulCardNumber(coverImage: string): number | null {
   return null;
 }
 
+/** A sculpture and its companion card join by number, never by their titles. */
+export function companionCardUrl(art: Pick<Artwork, 'series' | 'coverImage'>): string | null {
+  const number = ulCardNumber(art.coverImage);
+  return art.series === 'Universal Language' && number !== null && number >= 1 && number <= 64
+    ? `https://mandalacodes.com/universal-language/${number}`
+    : null;
+}
+
+/** External navigation has no React router state. Accept only this piece's card. */
+export function contextualCardReturn(
+  art: Pick<Artwork, 'series' | 'coverImage'>,
+  search: string,
+  legacyOrigin?: unknown,
+): string | null {
+  const destination = companionCardUrl(art);
+  if (!destination) return null;
+  const number = ulCardNumber(art.coverImage);
+  const params = new URLSearchParams(search);
+  if (params.getAll('from').length === 1 && params.get('from') === 'mandalacodes'
+    && params.getAll('card').length === 1 && params.get('card') === String(number)) {
+    return destination;
+  }
+  if (typeof legacyOrigin !== 'string') return null;
+  try {
+    const origin = new URL(legacyOrigin, 'https://mandalacodes.com');
+    if (origin.origin !== 'https://mandalacodes.com' || origin.username || origin.password
+      || ![`/universal-language/${number}`, `/oracle/universal-language/${number}`].includes(origin.pathname)) return null;
+    const target = new URL(destination);
+    const system = origin.searchParams.get('system');
+    if (system && /^[a-z-]{1,40}$/.test(system)) target.searchParams.set('system', system);
+    return target.href;
+  } catch { return null; }
+}
+
 /**
  * SEO-optimised alt text for a Universal Language artwork.
  * Pattern: "[Piece Name], Universal Language [Number]. Original multi-dimensional wooden sculpture by Adrian Rasmussen."

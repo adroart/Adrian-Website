@@ -807,13 +807,14 @@ const AdminMaintenance: React.FC = () => {
       plateAttemptRef.current = null;
       setAmbiguousAttempt(null);
       if (saved.action === 'replace_plate' && saved.replacement) {
+        const record = saved.record!;
         setSelected(current => current && current.id === attempt.request.keeperPieceId
           ? {
               ...current,
-              public: { ...current.public, plateStatus: 'superseded' },
+              public: { ...current.public, plateStatus: 'active' },
               physical: {
                 ...current.physical,
-                recordVersion: current.physical.recordVersion + 1,
+                recordVersion: record.recordVersion,
               },
             }
           : current);
@@ -822,7 +823,7 @@ const AdminMaintenance: React.FC = () => {
         setPlateEditor(null);
         setPlateReview(null);
         setPlateReason('');
-        setNotice('Replacement identity created. Download and secure the one-time package before leaving this record.');
+        setNotice('Same-number re-engraving package prepared. Download it before leaving this record.');
         return;
       }
 
@@ -1391,7 +1392,7 @@ const AdminMaintenance: React.FC = () => {
                     <button type="button" className={primaryButtonClass} onClick={() => openPlateEditor('void_plate')} disabled={transitionBusy}>Void generated plate</button>
                   )}
                   {selected.public.plateStatus === 'active' && (
-                    <button type="button" className={primaryButtonClass} onClick={() => openPlateEditor('replace_plate')} disabled={transitionBusy}>Replace physical plate</button>
+                    <button type="button" className={primaryButtonClass} onClick={() => openPlateEditor('replace_plate')} disabled={transitionBusy}>Re-engrave damaged plate</button>
                   )}
                 </div>
                 {!['generated', 'active'].includes(selected.public.plateStatus) && (
@@ -1402,7 +1403,7 @@ const AdminMaintenance: React.FC = () => {
 
             {plateEditor && !plateReview && !replacementPackage && (
               <form className="maintenance-acquisition-form" onSubmit={preparePlateReview}>
-                <h3>{plateEditor === 'correct_link' ? 'Correct digital link' : plateEditor === 'void_plate' ? 'Void generated plate' : 'Replace physical plate'}</h3>
+                <h3>{plateEditor === 'correct_link' ? 'Correct digital link' : plateEditor === 'void_plate' ? 'Void generated plate' : 'Re-engrave damaged plate'}</h3>
                 {plateEditor === 'correct_link' ? (
                   <>
                     <p>This keeps the permanent public code but rebuilds its encrypted recovery package for the artwork and edition actually engraved on the metal.</p>
@@ -1425,7 +1426,7 @@ const AdminMaintenance: React.FC = () => {
                   <>
                     <p>{plateEditor === 'void_plate'
                       ? 'The generated identity will be permanently retired and its code can never be reused.'
-                      : 'The active identity will become superseded. A new public code, Ownership Code, and fabrication package will be created once.'}</p>
+                      : 'The piece keeps its public number, Ownership Code, caretaker, recovery qualification, and history. This recreates the existing fabrication package for new metal.'}</p>
                     <label htmlFor="maintenance-plate-disposition">
                       <span className={labelClass}>Physical disposition</span>
                       <textarea id="maintenance-plate-disposition" className={inputClass} rows={3} maxLength={1000} value={plateDisposition} onChange={event => { clearPlateAttempt(); setPlateDisposition(event.target.value); }} placeholder="Example: Incorrect plate destroyed and photographed; it will not be attached or circulated." required />
@@ -1445,12 +1446,12 @@ const AdminMaintenance: React.FC = () => {
               <div className="maintenance-review" aria-labelledby="maintenance-plate-review-title">
                 <div className="maintenance-review-heading">
                   <p className="admin-eyebrow">Permanent consequence</p>
-                  <h3 id="maintenance-plate-review-title">Review {plateReview.action === 'correct_link' ? 'digital relink' : plateReview.action === 'void_plate' ? 'plate void' : 'plate replacement'}</h3>
+                  <h3 id="maintenance-plate-review-title">Review {plateReview.action === 'correct_link' ? 'digital relink' : plateReview.action === 'void_plate' ? 'plate void' : 'same-number re-engraving'}</h3>
                   <p>{plateReview.action === 'correct_link'
                     ? 'The public code stays the same. The database identity, fabrication hashes, and encrypted recovery envelope change to match the metal, and backup verification returns to pending.'
                     : plateReview.action === 'void_plate'
                       ? 'This generated public identity becomes void forever. It cannot be reactivated or reused.'
-                      : 'The old public identity becomes superseded forever. A new generated identity and one-time secret package are created for replacement metal.'}</p>
+                      : 'The same identity stays active. Its public number and Ownership Code remain unchanged, and this repair is appended to its permanent history.'}</p>
                 </div>
                 <div className="maintenance-review-grid">
                   <div>
@@ -1472,10 +1473,10 @@ const AdminMaintenance: React.FC = () => {
                       ['Backup status', 'Pending re-verification'],
                       ['Record version', plateReview.expectedRecordVersion + 1],
                     ] : [
-                      ['Old plate status', plateReview.action === 'void_plate' ? 'Void' : 'Superseded'],
+                      ['Plate status', plateReview.action === 'void_plate' ? 'Void' : 'Active'],
                       ['Physical disposition', plateReview.physicalDisposition],
-                      ['Old public code', 'Permanently retired'],
-                      ['New identity', plateReview.action === 'replace_plate' ? 'Generated after confirmation' : 'Not created here'],
+                      ['Public code', plateReview.action === 'replace_plate' ? selected.public.publicCode : 'Permanently retired'],
+                      ['Identity', plateReview.action === 'replace_plate' ? 'Same identity retained' : 'Not created here'],
                     ]} />
                   </div>
                 </div>
@@ -1500,7 +1501,7 @@ const AdminMaintenance: React.FC = () => {
                 {plateError && <p className="maintenance-inline-error" role="alert">{plateError}</p>}
                 <div className="maintenance-actions">
                   <button type="button" className={quietButtonClass} onClick={closePlateEditor} disabled={plateSaving || ambiguousAttempt === 'plate'}>Cancel</button>
-                  <button type="button" className={primaryButtonClass} onClick={() => void confirmPlateSave()} disabled={plateSaving || !registryUnlocked || !plateReason.trim()}>{plateSaving ? 'Saving…' : plateReview.action === 'correct_link' ? 'Confirm digital relink' : plateReview.action === 'void_plate' ? 'Confirm permanent void' : 'Confirm replacement and mint new identity'}</button>
+                  <button type="button" className={primaryButtonClass} onClick={() => void confirmPlateSave()} disabled={plateSaving || !registryUnlocked || !plateReason.trim()}>{plateSaving ? 'Saving…' : plateReview.action === 'correct_link' ? 'Confirm digital relink' : plateReview.action === 'void_plate' ? 'Confirm permanent void' : 'Confirm same-number re-engraving'}</button>
                 </div>
               </div>
             )}
@@ -1508,11 +1509,11 @@ const AdminMaintenance: React.FC = () => {
             {replacementPackage && (
               <div className="maintenance-review" aria-labelledby="maintenance-replacement-package-title">
                 <div className="maintenance-review-heading">
-                  <p className="admin-eyebrow">One-time private package</p>
-                  <h3 id="maintenance-replacement-package-title">Replacement identity {replacementPackage.publicCode}</h3>
-                  <p>The old plate is already superseded. This Ownership Code and fabrication package are held only in this screen memory. Download and secure all three files before clearing it.</p>
+                  <p className="admin-eyebrow">Private fabrication package</p>
+                  <h3 id="maintenance-replacement-package-title">Same-number plate {replacementPackage.publicCode}</h3>
+                  <p>This is the existing identity and Ownership Code, reconstructed for re-engraving. Download all three files before clearing them from this screen.</p>
                 </div>
-                <AdminAlert tone="warning"><p>Do not engrave until the replacement package passes the same copied-backup recovery check and physical qualification as every new plate.</p></AdminAlert>
+                <AdminAlert tone="warning"><p>This package reuses the qualified recovery contract. Physical fabrication and the new metal scan still require their normal checks before attachment.</p></AdminAlert>
                 <DefinitionList items={[
                   ['Ownership Code', <span className="maintenance-secret-value">{replacementPackage.ownershipCode}</span>],
                   ['Public code', replacementPackage.publicCode],
