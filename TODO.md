@@ -20,8 +20,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] Decide the six launch flags that are still dark _(band: you-required | effort: quick)_
   `furniture`, `installations`, `spaces`, `aboutMeaning`, `pricingExplorer` and `livingLegacy` are all still false. Each is either close to shipping or dead weight, and the code for all of them is carried on every build either way. A decision each, then ship or delete.
 
-- [ ] A test asserts a cron schedule that was deliberately removed _(band: agent-runnable | effort: quick)_
-  `tests/collector-letter-schedule.test.ts` requires a `schedule:` block in `.github/workflows/collector-letters.yml`, but that schedule was removed on purpose and the workflow file explains at length why. So `npm run test:unit` reports 1178 passing and 1 failing on a clean checkout, which trains everyone to ignore a red suite. Predates the 2026-09-01 audit branch; confirmed failing at `cf8cd8c`. Either update the test to assert the deliberate absence, or restore the schedule.
+- [x] A test asserts a cron schedule that was deliberately removed _(band: agent-runnable | effort: quick)_
+  `tests/collector-letter-schedule.test.ts` already asserts the deliberate absence of the `schedule:` block (and that the workflow's own explanation is still there); confirmed green on a clean checkout, nothing left to change.
 
 - [ ] Look at how the 173 undrawn collector screens sit on a desktop screen _(band: you-required | effort: quick)_
   The design file draws one screen for a desk (the piece page) and 173 for a phone only. Rather than invent a desktop layout nobody approved, the ground now fills the screen and the words hold a 520 column inside it, which is the same rule the one desk drawing states. It is live and unreviewed. Open the review link, press "Use it", and say whether the column is right. → Back end: Workshop → Screen development system
@@ -41,20 +41,20 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] **Finish the artwork registry rollout and handover.** _(band: you-required)_ The Register an artwork ceremony at `/admin/register` (plate optional, everything additive after), the fabrication-only wizard, the desk, Piece Records with the continuity archive, the Successor's Handbook, and the one-passkey custody envelope are built. Remaining work is yours: fill the handbook's custody placeholder lines, create the custody envelope offline (`npx tsx scripts/custody-envelope.ts create`), seal the passkey on paper away from the files, run the catalog-snapshot backfill (`npx tsx scripts/backfill-catalog-snapshots.ts`) once against production, approve the plate design in Illustrator, and run the non-production canary. → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md) · Guide: [registry-custodian-guide.md](docs/registry-custodian-guide.md)
 - [ ] Check the register ceremony is not stretched on a wide screen _(band: you-required | effort: quick)_
   On a wide desk the registration card grew to fill the space, leaving the words at the top and the button at the bottom with a gap between them. You said this was fixed in another branch, but no open pull request or unmerged branch on the remote contains it, so it may still be sitting in a session that never pushed. Worth opening the page once to see which is true.
-- [ ] The registry's own reference guide has never heard of Piece Records _(band: agent-runnable | effort: quick)_
-  `docs/registry-master-reference.md` is the map of how the registry works, and it predates the permanent record entirely. It does not mention the record, the archive, the rebuild, or the succession page. Anyone handed that document as the explanation would miss the part the whole thing exists for.
+- [x] The registry's own reference guide has never heard of Piece Records _(band: agent-runnable | effort: quick)_
+  `docs/registry-master-reference.md` now documents Piece Records, the piece-records archive, the capped rebuild, and the succession page, cross-checked against the actual code.
 - [ ] The collector journey is on the live site while the checklist says it is not _(band: you-required | effort: quick)_
   `/collector` is routed unconditionally, so the half-built review journey is reachable on adrianrasmussen.com by anyone who types the address. Nothing links to it and nothing there is real, but the click-through checklist tells you it opens in dev builds only, which is not true. Either gate the route or correct the sentence.
 - [ ] Delete or merge the leftover deploy-scripts branch _(band: you-required | effort: quick)_
   `claude/collector-piece-flow-design-szc3vs` is the only branch not merged into main. It holds a pinned wrangler version and self-serve deploy and migration scripts, and it has been waiting on a Cloudflare token since 2026-08-20. The `awgolive` script now covers the same ground, so this is probably a delete rather than a merge.
-- [ ] The old todo folder still has a readme that lies _(band: agent-runnable | effort: quick)_
-  `todo/README.md` says it is everything left to do, updated March 2026, and points at three files that no longer exist. The folder itself is still live because the plans live there. Delete the readme so the folder stops claiming to be the list.
+- [x] The old todo folder still has a readme that lies _(band: agent-runnable | effort: quick)_
+  `todo/README.md` is deleted; the plan docs in `todo/plans/` are untouched.
 - [ ] Give the permanent record a door on the collector journey too _(band: agent-runnable | effort: quick)_
   A collector who scans a plate can now reach the file written to outlive the site, but only on the pre-launch page. Once the Living Legacy flag is on, scans route past it to the newer arrival screens, which have no link to the record at all. That surface belongs to another session, so the link needs adding there before the flag flips.
-- [ ] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
-  "Rebuild all records" walks every piece in one request, writing two files each. At a few hundred pieces it risks running past the request limit and losing its report. Nothing is corrupted if it does, since rebuilding is safe to repeat, but the summary is lost.
-- [ ] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
-  Four delete controls still use a plain web red that is too loud on the new ground, and at its darkest is hard to read. The palette already has its own tone for something gone wrong. The word on the button carries the meaning, so the quieter colour loses nothing.
+- [x] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
+  `POST /api/admin/records/rebuild` now returns a capped page (`RECORDS_REBUILD_BATCH_LIMIT`) plus `hasMore`/`nextCursor`, and the desk's "Rebuild all records" pages through automatically; covered by `tests/records-rebuild-paging.test.ts`.
+- [x] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
+  The delete/remove controls across `AdminFileUpload`, `AdminBookEditor`, `AdminPoetry`, and `AdminInvoices` now use the desk's existing `#e0a08a` "wrong" tone instead of Tailwind red.
 - [ ] Find a piece by who holds it _(band: agent-runnable | effort: moderate)_
   Searching the registry works by code, title, artwork or edition number. There is no way to search by the collector, which is often the only thing you remember. This never existed; it is new work, not a regression.
 - [ ] **Enter historical verified sales.** _(band: you-required)_ After the private workspace is rolled out, add known buyer emails, dates, private prices, artwork mappings, pictures, and optional creator messages gradually. Unknown artworks may remain email-only reconnection cases until Adrian and the collector identify them together.

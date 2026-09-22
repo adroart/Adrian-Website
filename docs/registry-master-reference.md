@@ -2,7 +2,9 @@
 
 This is the system map for Adrian Rasmussen's permanent artwork identities. The
 operational engraving procedure is `docs/lineage-plate-runbook.md`. Full private
-recovery is `docs/registry-private-recovery.md`.
+recovery is `docs/registry-private-recovery.md`. The permanent Piece Record
+format is `docs/piece-record-format.md`. The custodian handbook is
+`docs/registry-custodian-guide.md`.
 
 ## System boundary
 
@@ -46,11 +48,17 @@ time. Exact amounts never appear in public responses.
 ## Primary screens
 
 - `/admin/pieces/wizard`: required guided issue, recovery, and activation flow.
-- `/admin/pieces`: flat registry desk for overview and specialist actions.
+- `/admin/pieces`: flat registry desk for overview and specialist actions,
+  including per-piece and registry-wide Piece Record rebuild.
 - `/admin/maintenance`: searchable private acquisitions, creator history,
   steward repairs, link corrections, voids, and replacements.
+- `/admin/succession`: the custodian's own record, holding custody envelope
+  and passkey locations, drill dates, the rendered Successor's Handbook, and
+  the three exports (offline ledger, Piece Records archive, encrypted
+  recovery archive).
 - `/qr/:code`: permanent public redirect resolver.
-- `/works/:id`: public artwork record.
+- `/works/:id`: public artwork record. With `?instance=AR-XXXXXXXX` it probes
+  for a Piece Record and links to it when one exists.
 
 ## Important endpoints
 
@@ -70,6 +78,21 @@ private recovery also require a recent identity-bound registry unlock.
 - `POST /api/admin/registry-ledger`: sync that ledger to Google Drive.
 - `GET /api/admin/registry-recovery-export`: encrypted full private archive.
 - `POST /api/keeper/bind`: first steward bind or governed later claim.
+- `GET/HEAD /api/records/:publicCode`: serve the newest permanent Piece
+  Record for one piece. Not gated on `livingLegacy`; the lineage/shines
+  sections a record may contain are decided at generation time instead.
+- `POST /api/admin/records/rebuild`: regenerate the Piece Record for one
+  piece (`{ publicCode }`) or, when the body omits `publicCode`, one capped
+  page of every piece with a public registry identity, returning
+  `{ hasMore, nextCursor }` so a large registry is walked as several
+  bounded requests (`{ cursor }`) rather than one that could outrun the
+  request limit (see Piece Records below).
+- `GET /api/admin/records/export`: download the Piece Records archive
+  (`piece-records.zip`).
+- `POST /api/admin/records/export`: sync that same archive to Google Drive.
+- `GET/POST /api/admin/succession`: read or save the custodian's own
+  succession record (custody envelope location, passkey locations, contacts,
+  drill dates) behind the rendered Successor's Handbook.
 
 ## Storage model
 
@@ -86,6 +109,10 @@ D1 is the live registry. Important groups include:
 - append-only maintenance events;
 - private claim evidence and ownership-access audits;
 - copied-file recovery qualifications;
+- `piece_records`, an append-only (no `UPDATE`/`DELETE`) index of every
+  generated permanent Piece Record, one row per generation with its content
+  hash and R2 key;
+- `succession_settings`, the custodian's own record backing `/admin/succession`;
 - only the authentication rows referenced by registry records in private export.
 
 Migration 022 detaches the dormant legacy fulfillment table from commerce
@@ -104,6 +131,52 @@ Conditional creation prevents replacement. An existing object is accepted only
 when its bytes exactly match. A verified database state requires status,
 reference, and digest to agree. Failed retries retain the last known good
 reference and digest instead of erasing recovery evidence.
+
+### Piece Records, the permanent record
+
+Every registered piece has a **Piece Record**: one self-contained, offline-
+readable HTML file with its own embedded canonical JSON and SHA-256
+verification (format: `docs/piece-record-format.md`). It is public-safe by
+construction and is generated, not authored, by
+`functions/api/_lib/pieceRecord.js`.
+
+Storage is content-addressed and append-only, alongside the plate backups:
+
+```text
+records/<public-code>/<sha256>.html
+records/<public-code>/<sha256>.json
+```
+
+A generation event (registration, activation, bind, transfer, a lineage
+contribution, or an on-demand rebuild) writes both files and one new
+`piece_records` row only when the content actually changed; unchanged
+content is reported and nothing new is written. `GET/HEAD /api/records/:code`
+always serves the newest row's file.
+
+**Rebuild** (`POST /api/admin/records/rebuild`) is the on-demand path: given
+a `publicCode` it refreshes one record, and given no `publicCode` it
+refreshes one capped page (ordered by public code, `RECORDS_REBUILD_BATCH_LIMIT`
+per call) and reports `{ hasMore, nextCursor }` so the admin desk keeps
+calling with `{ cursor: nextCursor }` until the whole registry is covered.
+A large registry is walked as several bounded requests instead of one that
+could outrun the platform's request limit and lose the report. Rebuilding
+is always safe to repeat, whole or in part, since it is idempotent on
+unchanged content and never mutates or deletes an existing record.
+
+**The Piece Records archive** (`piece-records.zip`, built by
+`functions/api/_lib/recordArchive.js`, downloaded or Drive-synced through
+`/api/admin/records/export`) bundles the newest record per piece, a
+generated index page, and the rendered **Successor's Handbook**
+(`docs/registry-custodian-guide.md`) into one deterministic, unencrypted zip
+that a custodian can hold and open with nothing but a browser. It is the
+piece-level companion to the encrypted private recovery archive below: this
+one is safe to share, that one never is.
+
+**The succession page** (`/admin/succession`) is the custodian's own record:
+custody envelope location, passkey locations, family and technical contacts,
+recovery drill dates, and the three exports a successor would need (the
+public integrity ledger, the Piece Records archive, and the encrypted
+recovery archive).
 
 ### Public integrity ledger
 
@@ -229,6 +302,17 @@ The principal coverage lives in:
 - `tests/registry-ledger.test.ts`, public ledger integrity;
 - `tests/registry-recovery.test.ts`, encrypted full export and clean restore;
 - `tests/admin-plate-wizard.test.ts`, guided fail-closed stage logic;
+- `tests/piece-record-format.test.ts`, `tests/piece-record-refresh.test.ts`,
+  `tests/piece-record-triggers.test.ts`, `tests/piece-record-head.test.ts`,
+  and `tests/piece-record-privacy.test.ts`, the permanent Piece Record's
+  format, refresh idempotency, generation triggers, HEAD probe, and privacy
+  strip-pass;
+- `tests/record-archive.test.ts`, the Piece Records archive zip and its
+  determinism;
+- `tests/records-rebuild-paging.test.ts`, the bulk rebuild's capped paging
+  contract (`hasMore`/`nextCursor`, no piece skipped or repeated across
+  pages);
+- `tests/admin-succession-ui.test.ts`, the succession page and handbook;
 - browser tests for lost responses and the administrator workflow.
 
 Production remains untouched until migrations, secrets, canary recovery,
