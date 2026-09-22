@@ -47,8 +47,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   `/collector` is routed unconditionally, so the half-built review journey is reachable on adrianrasmussen.com by anyone who types the address. Nothing links to it and nothing there is real, but the click-through checklist tells you it opens in dev builds only, which is not true. Either gate the route or correct the sentence.
 - [ ] Delete or merge the leftover deploy-scripts branch _(band: you-required | effort: quick)_
   `claude/collector-piece-flow-design-szc3vs` is the only branch not merged into main. It holds a pinned wrangler version and self-serve deploy and migration scripts, and it has been waiting on a Cloudflare token since 2026-08-20. The `awgolive` script now covers the same ground, so this is probably a delete rather than a merge.
-- [ ] The old todo folder still has a readme that lies _(band: agent-runnable | effort: quick)_
-  `todo/README.md` says it is everything left to do, updated March 2026, and points at three files that no longer exist. The folder itself is still live because the plans live there. Delete the readme so the folder stops claiming to be the list.
+- [x] The old todo folder still has a readme that lies _(band: agent-runnable | effort: quick)_
+  `todo/README.md` is deleted; the plan docs in `todo/plans/` are untouched.
 - [ ] Give the permanent record a door on the collector journey too _(band: agent-runnable | effort: quick)_
   A collector who scans a plate can now reach the file written to outlive the site, but only on the pre-launch page. Once the Living Legacy flag is on, scans route past it to the newer arrival screens, which have no link to the record at all. That surface belongs to another session, so the link needs adding there before the flag flips.
 - [ ] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
