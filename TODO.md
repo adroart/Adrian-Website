@@ -51,8 +51,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   `todo/README.md` is deleted; the plan docs in `todo/plans/` are untouched.
 - [ ] Give the permanent record a door on the collector journey too _(band: agent-runnable | effort: quick)_
   A collector who scans a plate can now reach the file written to outlive the site, but only on the pre-launch page. Once the Living Legacy flag is on, scans route past it to the newer arrival screens, which have no link to the record at all. That surface belongs to another session, so the link needs adding there before the flag flips.
-- [ ] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
-  "Rebuild all records" walks every piece in one request, writing two files each. At a few hundred pieces it risks running past the request limit and losing its report. Nothing is corrupted if it does, since rebuilding is safe to repeat, but the summary is lost.
+- [x] Cap or page the bulk record rebuild before the registry gets large _(band: agent-runnable | effort: quick)_
+  `POST /api/admin/records/rebuild` now returns a capped page (`RECORDS_REBUILD_BATCH_LIMIT`) plus `hasMore`/`nextCursor`, and the desk's "Rebuild all records" pages through automatically; covered by `tests/records-rebuild-paging.test.ts`.
 - [x] Settle what red becomes on the dark desk _(band: agent-runnable | effort: quick)_
   The delete/remove controls across `AdminFileUpload`, `AdminBookEditor`, `AdminPoetry`, and `AdminInvoices` now use the desk's existing `#e0a08a` "wrong" tone instead of Tailwind red.
 - [ ] Find a piece by who holds it _(band: agent-runnable | effort: moderate)_

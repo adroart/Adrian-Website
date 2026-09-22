@@ -33,9 +33,11 @@ import {
   recordLabel,
   recordHoverText,
   requestRecordRebuild,
+  mergeRecordRebuildResults,
   summarizeRecordRebuild,
   summarizeRecordRebuildAll,
   type PieceRow,
+  type RecordRebuildResult,
 } from '../utils/adminPieces';
 
 type RegistrySensitiveState = Omit<SensitivePlateState, 'stepUpSecret'>;
@@ -258,16 +260,33 @@ const AdminPieces: React.FC = () => {
     }
     if (!window.confirm(
       'Rebuild the permanent record for every registered piece? This writes two files per '
-      + 'piece and runs as one request; a large registry will take a while. Records that '
-      + 'already match are left unchanged.',
+      + 'piece. A large registry is paged in bounded batches rather than one request, so '
+      + 'the report is never lost partway through. Records that already match are left '
+      + 'unchanged.',
     )) return;
     setRecordsBusy(true);
     setRecordsStatus('');
     setRecordsFailed(false);
     try {
-      const data = await requestRecordRebuild('/api/admin/records/rebuild');
-      setRecordsStatus(summarizeRecordRebuildAll(data));
-      setRecordsFailed(data.failed > 0);
+      // Paged, not one request per registry: each call rebuilds one capped
+      // batch and returns hasMore/nextCursor so a registry of any size
+      // finishes as several small, boundable requests instead of one that
+      // could outrun the platform's request time limit and lose the whole
+      // summary. Every page's outcomes are folded into the running total as
+      // it goes, so the status line always reflects real progress even if
+      // the run is interrupted.
+      let accumulated: RecordRebuildResult | null = null;
+      let cursor: string | undefined;
+      do {
+        const page = await requestRecordRebuild(
+          '/api/admin/records/rebuild',
+          cursor ? { cursor } : undefined,
+        );
+        accumulated = mergeRecordRebuildResults(accumulated, page);
+        setRecordsStatus(summarizeRecordRebuildAll(accumulated));
+        setRecordsFailed(accumulated.failed > 0);
+        cursor = page.hasMore ? (page.nextCursor ?? undefined) : undefined;
+      } while (cursor);
       await loadPieces();
     } catch (error) {
       setRecordsStatus(registryErrorMessage(error, 'Could not rebuild the registry’s records.'));
