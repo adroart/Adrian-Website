@@ -90,6 +90,7 @@ type Props = {
   initialRoom?: RoomKey | null;
   /** the ground reading's inputs; absent, the fixed demo ground stands */
   ground?: GroundInputs | null;
+  canOpenGarden?: boolean;
 };
 
 export const PiecePage: React.FC<Props> = ({
@@ -102,6 +103,7 @@ export const PiecePage: React.FC<Props> = ({
   live,
   initialRoom = null,
   ground = null,
+  canOpenGarden = false,
 }) => {
   const [room, setRoom] = useState<RoomKey | null>(initialRoom);
   /* true only while the room now showing was opened by pressing the orbit
@@ -360,7 +362,11 @@ export const PiecePage: React.FC<Props> = ({
         <Row label={COPY.page.rowStory} onClick={() => setRoom('story')} />
         <Row label={COPY.page.rowInformation} onClick={() => setRoom('information')} />
         <Row label={COPY.page.rowHistory} onClick={() => setRoom('history')} />
-        <Row label={COPY.page.rowDreams} onClick={() => setRoom('dreams')} last={!isCaretaker} />
+        <Row label={COPY.page.rowDreams} onClick={() => setRoom('dreams')} last={!isCaretaker && !canOpenGarden} />
+
+        {!isCaretaker && canOpenGarden && (
+          <Row label={COPY.page.rowGarden} warm onClick={() => setRoom('garden')} last />
+        )}
 
         {isCaretaker && (
           <>

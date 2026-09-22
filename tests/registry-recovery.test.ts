@@ -31,6 +31,7 @@ import {
   REGISTRY_RECOVERY_V6_TABLES,
   REGISTRY_RECOVERY_V7_TABLES,
   REGISTRY_RECOVERY_V8_TABLES,
+  REGISTRY_RECOVERY_V9_TABLES,
   REGISTRY_RECOVERY_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
@@ -76,8 +77,7 @@ const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migra
 \n${readMigration('038_transfer_silence.sql')}
 \n${readMigration('039_piece_media.sql')}
 \n${readMigration('040_artist_messages.sql')}
-\n${readMigration('041_collector_shine_removals.sql')}
-\n${readMigration('042_collector_dream_tiers.sql')}`;
+\n${readMigration('041_collector_shine_removals.sql')}\n${readMigration('042_collector_dream_tiers.sql')}\n${readMigration('046_caretaker_passing.sql')}\n${readMigration('047_claim_silence_delivery.sql')}\n${readMigration('049_historical_dream_publications.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -107,7 +107,7 @@ async function encryptLegacyPayload(payload: any) {
           : payload.schemaVersion === 5 ? REGISTRY_RECOVERY_V5_TABLES
             : payload.schemaVersion === 6 ? REGISTRY_RECOVERY_V6_TABLES
               : payload.schemaVersion === 7 ? REGISTRY_RECOVERY_V7_TABLES
-                : REGISTRY_RECOVERY_V8_TABLES;
+                : payload.schemaVersion === 8 ? REGISTRY_RECOVERY_V8_TABLES : REGISTRY_RECOVERY_V9_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -173,7 +173,7 @@ function createSqliteD1(database = new DatabaseSync(':memory:')) {
   return { database, env: { DB } };
 }
 
-function seedCompleteRegistry(database: DatabaseSync) {
+function seedCompleteRegistry(database: DatabaseSync, verifiedLineage?: { issuedHash: string; transferHash: string }) {
   database.exec(`
     INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt) VALUES
       ('steward-current', 'Current Steward', 'current@example.com', 1, 1, 1),
@@ -220,7 +220,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
        '${'b'.repeat(64)}', '${'c'.repeat(64)}', 'ENCRYPTED-OWNERSHIP-ENVELOPE',
        'ENCRYPTED-NONCE', 7, 'verified',
        'plates/AR-7KQ9M2WX/${'d'.repeat(64)}.json', '${'d'.repeat(64)}', '${exportedAt}',
-       '${'e'.repeat(64)}', 1);
+       '${verifiedLineage?.issuedHash || 'e'.repeat(64)}', 1);
 
     INSERT INTO keeper_intentions
       (id, piece_id, edition_number, author_user_id, kind, body, body_hash,
@@ -273,7 +273,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
        event_hash, public_payload_json)
     VALUES
       ('lineage-recovery', 'kp-recovery', 1, 'issued', '${exportedAt}', NULL,
-       '${'e'.repeat(64)}', '{"publicCode":"AR-7KQ9M2WX"}');
+       '${verifiedLineage?.issuedHash || 'e'.repeat(64)}', '${verifiedLineage ? JSON.stringify({ pieceId: 'UL-100', editionNumber: 0, publicCode: 'AR-7KQ9M2WX' }) : JSON.stringify({ publicCode: 'AR-7KQ9M2WX' })}');
 
     INSERT INTO ownership_code_audit
       (id, keeper_piece_id, action, request_id, outcome, created_at)
@@ -341,7 +341,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
     VALUES
       ('transfer-recovery', 'kp-recovery', 'steward-prior', 'steward-current',
        '${'3'.repeat(64)}',
-       0, 1, '${'e'.repeat(64)}', 'gift', 'maintenance-recovery',
+       0, 1, '${verifiedLineage?.issuedHash || 'e'.repeat(64)}', 'gift', 'maintenance-recovery',
        'lineage-transfer-recovery', '${exportedAt}');
     INSERT INTO artwork_transfer_parties
       (id, transfer_intent_id, party_role, user_id, public_ref, created_at)
@@ -355,7 +355,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
        event_hash, public_payload_json)
     VALUES
       ('lineage-transfer-recovery', 'kp-recovery', 2, 'transferred', '${exportedAt}',
-       '${'e'.repeat(64)}', '${'2'.repeat(64)}',
+       '${verifiedLineage?.issuedHash || 'e'.repeat(64)}', '${verifiedLineage?.transferHash || '2'.repeat(64)}',
        '{"fromRef":"tp-00000000-0000-4000-8000-000000000001","toRef":"tp-00000000-0000-4000-8000-000000000002","transferKind":"gift"}');
     INSERT INTO artwork_transfer_receipts (id, transfer_intent_id, committed_at)
     VALUES ('receipt-recovery', 'transfer-recovery', '${exportedAt}');
@@ -1168,10 +1168,10 @@ describe('private registry recovery export', () => {
   });
 
   it('freezes the schema-v8 manifest and adds the dream tier-change ledger in schema v9', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 9);
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 10);
     assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(0, REGISTRY_RECOVERY_V8_TABLES.length),
       REGISTRY_RECOVERY_V8_TABLES);
-    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-1), ['collector_dream_tier_changes']);
+    assert.deepEqual(REGISTRY_RECOVERY_V9_TABLES.slice(-1), ['collector_dream_tier_changes']);
     assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.collector_dream_tier_changes, [
       'id', 'dream_id', 'author_user_id', 'from_tier', 'to_tier', 'idempotency_key',
       'resulting_version', 'created_at',
@@ -1690,6 +1690,197 @@ describe('private registry recovery export', () => {
 });
 
 describe('clean-only private registry restore', () => {
+  it('retains authenticated v9 provenance and refuses unsafe restore before any SQL exists', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations); seedCompleteRegistry(source.database);
+      const current = await decryptPrivateRecoveryExport(await buildPrivateRecoveryExport({ ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey, REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId }, { exportedAt }),
+        { key: exportKey, keyId: exportKeyId });
+      const legacy = (tables: any) => ({ kind: PRIVATE_RECOVERY_PAYLOAD_KIND, schemaVersion: 9, exportedAt, tables });
+      const tables = Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map(name => [name, current.tables[name]]));
+      const decode = async (rows: any) => decryptPrivateRecoveryExport(await encryptLegacyPayload(legacy(rows)) as any,
+        { key: exportKey, keyId: exportKeyId });
+      const unsafe = await decode(tables);
+      assert.equal(unsafe.sourceSchemaVersion, 9);
+      assert.ok(unsafe.tables.collector_dreams.some(row => row.body));
+      assert.throws(() => buildRegistryRestoreSql(unsafe), /recovery_privacy_evidence_unavailable/);
+      await assert.rejects(buildVerifiedRegistryRestoreSql(unsafe), /recovery_privacy_evidence_unavailable/);
+      const directory = mkdtempSync(join(tmpdir(), 'legacy-privacy-refusal-'));
+      try {
+        const archivePath = join(directory, 'legacy.json'); const keyPath = join(directory, 'key');
+        const sqlPath = join(directory, 'restore.sql');
+        writeFileSync(archivePath, JSON.stringify(await encryptLegacyPayload(legacy(tables))));
+        writeFileSync(keyPath, `${exportKeyId}\n${exportKey}\n`);
+        const refused = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/registry-ledger.ts',
+          'restore-sql', archivePath, keyPath, sqlPath], { cwd: process.cwd(), encoding: 'utf8' });
+        assert.notEqual(refused.status, 0);
+        assert.match(refused.stderr, /recovery_privacy_evidence_unavailable/);
+        assert.equal(existsSync(sqlPath), false);
+        assert.doesNotMatch(refused.stdout, /BEGIN IMMEDIATE|private acquisition note|current-password-hash/);
+      } finally { rmSync(directory, { recursive: true, force: true }); }
+
+      // Archived publication evidence is just as consequential as current.
+      const historical = await decode({ ...tables, piece_records: [],
+        collector_dreams: tables.collector_dreams.filter((row: any) => row.archived_at),
+        collector_dream_mutations: [{ ...tables.collector_dream_mutations[0], action: 'share' }] });
+      assert.throws(() => buildRegistryRestoreSql(historical), /recovery_privacy_evidence_unavailable/);
+      // Even without a share row, opaque old public record references cannot certify absence.
+      const opaqueRecords = await decode({ ...tables, collector_dreams: [], collector_dream_mutations: [] });
+      assert.throws(() => buildRegistryRestoreSql(opaqueRecords), /recovery_privacy_evidence_unavailable/);
+      const safe = await decode(Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map(name => [name, []])));
+      const sql = buildRegistryRestoreSql(safe);
+      assert.match(sql, /BEGIN IMMEDIATE/);
+    } finally { source.database.close(); }
+  });
+
+  it('restores real accepted, cancelled and expired passing operations with exact private-state parity', async () => {
+    const { createCaretakerPassing, cancelCaretakerPassing, inspectCaretakerPassing, acceptCaretakerPassing } =
+      await import('../functions/api/_lib/caretakerPassing.js');
+    const source = createSqliteD1(); const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations); target.database.exec(registryMigrations);
+      const { buildLineageEvent } = await import('../functions/api/_lib/lineage.js');
+      const issued = await buildLineageEvent({ keeperPieceId: 'kp-recovery', sequence: 1,
+        eventType: 'issued', eventAt: exportedAt, publicPayload: { pieceId: 'UL-100', editionNumber: 0, publicCode: 'AR-7KQ9M2WX' } });
+      const transferred = await buildLineageEvent({ keeperPieceId: 'kp-recovery', sequence: 2,
+        eventType: 'transferred', eventAt: exportedAt, previousHash: issued.eventHash,
+        publicPayload: { fromRef: 'tp-00000000-0000-4000-8000-000000000001', toRef: 'tp-00000000-0000-4000-8000-000000000002', transferKind: 'gift' } });
+      seedCompleteRegistry(source.database, { issuedHash: issued.eventHash, transferHash: transferred.eventHash });
+      const env = { ...source.env, CARETAKER_PASSING_SECRET: 'synthetic-recovery-passing-secret-32-plus' };
+      const input = { senderUserId: 'steward-current', keeperPieceId: 'kp-recovery',
+        recipientEmail: 'prior@example.com', confirmedRecipientEmail: 'prior@example.com', transferKind: 'gift' };
+      const token = async (passingId: string) => {
+        const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.CARETAKER_PASSING_SECRET),
+          { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`caretaker-passing:v1:${passingId}`));
+        return Buffer.from(signature).toString('hex');
+      };
+      const cancelled = await createCaretakerPassing(env, { ...input, idempotencyKey: 'restore-cancelled', now: '2026-08-01T00:00:00.000Z' });
+      await cancelCaretakerPassing(env, { passingId: cancelled.passing.id, senderUserId: input.senderUserId, now: '2026-08-01T01:00:00.000Z' });
+      const expired = await createCaretakerPassing(env, { ...input, idempotencyKey: 'restore-expired', now: '2026-08-01T02:00:00.000Z' });
+      await inspectCaretakerPassing(env, { token: await token(expired.passing.id), accountEmail: input.recipientEmail,
+        emailVerified: true, now: '2026-09-01T00:00:00.000Z' });
+      const accepted = await createCaretakerPassing(env, { ...input, idempotencyKey: 'restore-accepted', now: '2026-09-02T00:00:00.000Z' });
+      await acceptCaretakerPassing(env, { token: await token(accepted.passing.id), userId: 'steward-prior',
+        accountEmail: input.recipientEmail, emailVerified: true, now: '2026-09-03T00:00:00.000Z' });
+      assert.equal(source.database.prepare("SELECT keeper_user_id FROM keeper_pieces WHERE id='kp-recovery'").get()?.keeper_user_id, 'steward-prior');
+      const { createCollectorDream, publishHistoricalCollectorDream, getCollectorDreamState } =
+        await import('../functions/api/_lib/collectorDreams.js');
+      const sealed = await createCollectorDream(env, { userId: 'steward-prior', keeperPieceId: 'kp-recovery',
+        body: 'Original writer chooses to publish this exact historical seal.', scope: 'self', tier: 'seal',
+        idempotencyKey: 'recovery-historical-seal', now: '2026-09-04T00:00:00.000Z' });
+      const passedBack = await createCaretakerPassing(env, { senderUserId: 'steward-prior', keeperPieceId: 'kp-recovery',
+        recipientEmail: 'current@example.com', confirmedRecipientEmail: 'current@example.com', transferKind: 'gift',
+        idempotencyKey: 'restore-pass-back', now: '2026-09-05T00:00:00.000Z' });
+      await acceptCaretakerPassing(env, { token: await token(passedBack.passing.id), userId: 'steward-current',
+        accountEmail: 'current@example.com', emailVerified: true, now: '2026-09-05T01:00:00.000Z' });
+      await publishHistoricalCollectorDream(env, { userId: 'steward-prior', keeperPieceId: 'kp-recovery',
+        dreamId: sealed.current!.id, idempotencyKey: 'restore-publish-history', now: '2026-09-06T00:00:00.000Z' });
+      source.database.exec(`INSERT INTO collector_shine_removals
+        (id, content_id, keeper_piece_id, removed_reason, removed_by_user_id, idempotency_key, removed_at)
+        VALUES ('csr-restore-removal', 'dream-current', 'kp-recovery', 'Private moderation reason',
+          'admin-user', 'restore-removal', '2026-09-06T01:00:00.000Z')`);
+      const archive = await buildPrivateRecoveryExport({ ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey, REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, { key: exportKey, keyId: exportKeyId });
+      assert.deepEqual(payload.tables.caretaker_passing_requests.map((row) => row.status).sort(), ['accepted', 'accepted', 'cancelled', 'expired']);
+      target.database.exec(buildRegistryRestoreSql(payload));
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
+      const restoredArchive = await buildPrivateRecoveryExport({ ...target.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey, REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId }, { exportedAt });
+      const restored = await decryptPrivateRecoveryExport(restoredArchive, { key: exportKey, keyId: exportKeyId });
+      for (const table of REGISTRY_RECOVERY_TABLES) assert.equal(canonicalRecoveryJson(restored.tables[table]), canonicalRecoveryJson(payload.tables[table]), table);
+      assert.equal(target.database.prepare('SELECT COUNT(*) AS n FROM artwork_transfer_receipts').get()?.n, 4,
+        'two seeded transfers and two accepted passings; cancel and expiry added no receipt');
+      const author = await getCollectorDreamState(target.env, { userId: 'steward-prior', keeperPieceId: 'kp-recovery' });
+      assert.equal(author.history.find(row => row.id === sealed.current!.id)?.tier, 'shine');
+      assert.equal(author.history.find(row => row.id === sealed.current!.id)?.body, 'Original writer chooses to publish this exact historical seal.');
+      assert.equal(target.database.prepare("SELECT tier, body FROM collector_dreams WHERE id = ?").get(sealed.current!.id)?.tier, 'seal',
+        'publication remains an additive event; historical source is unchanged');
+      const { gatherShines, buildPieceRecord } = await import('../functions/api/_lib/pieceRecord.js');
+      const shines = await gatherShines(target.env, 'kp-recovery');
+      assert.ok(shines.some(row => row.words === 'Original writer chooses to publish this exact historical seal.'));
+      assert.ok(!shines.some(row => row.words === 'A current keeper dream shared by consent.'), 'abuse removal remains suppressed after restore');
+      const regenerated = await buildPieceRecord(target.env, { publicCode: 'AR-7KQ9M2WX',
+        trigger: 'on_demand', generatedAt: '2026-09-07T00:00:00.000Z', includeLegacySections: true });
+      assert.ok(regenerated.html.includes('Original writer chooses to publish this exact historical seal.'));
+      assert.ok(!regenerated.html.includes('A current keeper dream shared by consent.'));
+      assert.ok(!regenerated.canonicalJson.includes('Private moderation reason'));
+
+      assert.doesNotMatch(JSON.stringify(restoredArchive), /prior@example|private intention|private acquisition note|synthetic-recovery-passing-secret|Private moderation reason/);
+    } finally { source.database.close(); target.database.close(); }
+  });
+
+  it('restores passing and terminal silence history exactly, preserving live guards', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      source.database.exec(`
+        INSERT INTO caretaker_passing_requests
+          (id, keeper_piece_id, sender_user_id, recipient_email, token_hash, transfer_kind,
+           status, idempotency_key, transfer_intent_id, provider_idempotency_key, sender_notice_provider_idempotency_key,
+           created_at, expires_at, accepted_at, updated_at)
+        VALUES ('maintenance-recovery', 'kp-recovery', 'steward-prior', 'current@example.com',
+          '${'1'.repeat(64)}', 'gift', 'accepted', 'accepted-recovery', 'transfer-recovery',
+          'passing:accepted', 'passing:accepted:notice', '${exportedAt}', '2026-08-30T03:04:05.000Z', '${exportedAt}', '${exportedAt}');
+        INSERT INTO caretaker_passing_requests
+          (id, keeper_piece_id, sender_user_id, recipient_email, token_hash, transfer_kind,
+           idempotency_key, provider_idempotency_key, sender_notice_provider_idempotency_key, created_at, expires_at, updated_at)
+        VALUES ('passing-pending', 'kp-recovery', 'steward-current', 'new@example.com',
+          '${'2'.repeat(64)}', 'sale', 'pending-recovery', 'passing:pending', 'passing:pending:notice',
+          '${exportedAt}', '2026-08-30T03:04:05.000Z', '${exportedAt}');
+        INSERT INTO claim_silence_windows
+          (id, claim_request_id, keeper_piece_id, opened_at, deadline_at)
+        VALUES ('csw-recovery', 'claim-request-recovery', 'kp-recovery',
+          '${exportedAt}', '2026-08-30T03:04:05.000Z');
+        INSERT INTO claim_silence_reminders (id, window_id, kind, sent_at) VALUES
+          ('csr-one', 'csw-recovery', 'day7', '2026-08-07T03:04:05.000Z'),
+          ('csr-two', 'csw-recovery', 'day21', '2026-08-21T03:04:05.000Z');
+        UPDATE claim_silence_windows SET status = 'refused', refused_at = '2026-08-22T03:04:05.000Z',
+          refusal_note = 'Private refusal evidence' WHERE id = 'csw-recovery';
+        INSERT INTO claim_silence_deliveries
+          (id, window_id, kind, provider_idempotency_key, sent_at)
+        VALUES ('csd-recovery', 'csw-recovery', 'initial_steward', 'silence:initial:recovery', '${exportedAt}');
+      `);
+      const archive = await buildPrivateRecoveryExport({ ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey, REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, { key: exportKey, keyId: exportKeyId });
+      assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V9_TABLES.length), [
+        'caretaker_passing_requests', 'claim_silence_windows', 'claim_silence_reminders', 'claim_silence_deliveries', 'collector_historical_dream_publications', 'collector_shine_removals',
+      ]);
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V9_TABLES.length)) {
+        assert.deepEqual(source.database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table]);
+        if (!['collector_historical_dream_publications', 'collector_shine_removals'].includes(table)) assert.ok(payload.tables[table].length > 0, table);
+      }
+      target.database.exec(buildRegistryRestoreSql(payload));
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V9_TABLES.length)) {
+        assert.deepEqual(target.database.prepare(`SELECT * FROM ${table} ORDER BY id`).all(),
+          source.database.prepare(`SELECT * FROM ${table} ORDER BY id`).all(), table);
+      }
+      for (const name of ['claim_silence_windows_insert_guard', 'claim_silence_reminders_active_window_guard',
+        'caretaker_passing_receipt_guard', 'caretaker_passing_receipt_commit']) {
+        const sql = (db: DatabaseSync) => String(db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(name)?.sql)
+          .replace(/\s+/g, ' ').trim();
+        assert.equal(sql(target.database), sql(source.database), name);
+      }
+      assert.throws(() => target.database.exec("INSERT INTO claim_silence_reminders (id, window_id, kind, sent_at) VALUES ('csr-three', 'csw-recovery', 'day29', '2026-08-28T03:04:05.000Z')"), /active silence window/);
+      assert.throws(() => target.database.exec(buildRegistryRestoreSql(payload)), /target_not_empty/);
+
+      const v9 = { kind: PRIVATE_RECOVERY_PAYLOAD_KIND, schemaVersion: 9, exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V9_TABLES.map((name) => [name, payload.tables[name]])) };
+      const legacy = await decryptPrivateRecoveryExport(await encryptLegacyPayload(v9) as any,
+        { key: exportKey, keyId: exportKeyId });
+      for (const name of REGISTRY_RECOVERY_V9_TABLES) assert.deepEqual(legacy.tables[name], payload.tables[name], name);
+      for (const name of REGISTRY_RECOVERY_TABLES.slice(REGISTRY_RECOVERY_V9_TABLES.length)) assert.deepEqual(legacy.tables[name], []);
+    } finally { source.database.close(); target.database.close(); }
+  });
+
   it('restores exact contributor lifecycle and epoch state with live SQL parity', async () => {
     const source = createSqliteD1();
     const target = createSqliteD1();
@@ -2398,7 +2589,12 @@ describe('clean-only private registry restore', () => {
       source.database.exec(readMigration('033_artwork_contributors.sql'));
       source.database.exec(readMigration('036_artwork_catalog_snapshots.sql'));
       source.database.exec(readMigration('037_piece_records.sql'));
+      source.database.exec(readMigration('041_collector_shine_removals.sql'));
       source.database.exec(readMigration('042_collector_dream_tiers.sql'));
+      source.database.exec(readMigration('038_transfer_silence.sql'));
+      source.database.exec(readMigration('046_caretaker_passing.sql'));
+      source.database.exec(readMigration('047_claim_silence_delivery.sql'));
+      source.database.exec(readMigration('049_historical_dream_publications.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference

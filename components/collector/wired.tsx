@@ -61,6 +61,9 @@ import { PendingBindProvider, usePendingBind, normalizeTypedCode } from './pendi
 import type { FamilyLive, FamilyPerson, GardenLive, PieceLive, Quiet } from './live';
 import {
   bindKeeper,
+  acceptCaretakerPassing,
+  cancelCaretakerPassing,
+  createCaretakerPassing,
   completeYearlyRitual,
   createCollectorDream,
   getAtlasOrdinal,
@@ -72,15 +75,19 @@ import {
   getCurrentKeeperPriceHistory,
   getKeeperMessage,
   getKeeperPieceStatus,
+  getCaretakerPassingForSender,
   getLineage,
   getPublicDream,
   getRegistryIdentity,
+  inspectCaretakerPassing,
   getYearlyRitualEligibility,
   inviteKeeperContributor,
   listKeeperContributors,
   revokeKeeperContributor,
+  resendCaretakerPassing,
   saveCollectorBirthProfile,
   setCollectorDreamTier,
+  publishHistoricalCollectorDream,
   setKeeperDisplayLocation,
   shareCollectorDream,
   updateCollectorDream,
@@ -100,6 +107,7 @@ import type {
   KeeperPieceStatus,
   LineageOutcome,
   PublicCollectorDream,
+  CaretakerPassing,
 } from './api';
 import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import { searchPlaces } from '../../lib/astrology/places';
@@ -255,6 +263,7 @@ type Step =
    * as authored.
    */
   | { kind: 'gift-message'; stage: 'sealed' | 'written' }
+  | { kind: 'passing-result'; state: 'accepted' | 'cancelled' | 'expired' | 'error' }
   | {
       kind: 'state';
       /**
@@ -262,7 +271,7 @@ type Step =
        * demo surfaces but nothing behind them is wired, so the live door
        * says so instead of staging a passing that cannot happen.
        */
-      key: 'account' | 'verify' | 'plate' | 'offline' | 'notyet';
+      key: 'account' | 'verify' | 'plate' | 'offline';
       onRetry?: () => void;
       receipt?: [string, string][];
     };
@@ -310,6 +319,16 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
      'codetrue' is reached right after this bind, so a later visit to
      'codetrue' (e.g. back from 'fork') never re-triggers the detour. */
   const [giftMessageBody, setGiftMessageBody] = useState<string | null>(null);
+  const passingToken = useMemo(() => typeof window === 'undefined'
+    ? ''
+    : new URLSearchParams(window.location.search).get('passing') || '', []);
+  const [activePassing, setActivePassing] = useState<CaretakerPassing | null>(null);
+  const passingAttempt = useRef<string | null>(null);
+  const [passingKind, setPassingKind] = useState<'sale' | 'gift'>('sale');
+  const [passingValueMethod, setPassingValueMethod] = useState<
+    'paid' | 'part_trade_paid' | 'traded' | 'given' | null
+  >(null);
+  const [incomingPassingError, setIncomingPassingError] = useState<string | null>(null);
   const giftPendingRef = useRef(false);
 
   /* the vault arrival's own once-only guard: true the first time this
@@ -334,6 +353,46 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const isYours = Boolean(keeperStatus?.byYou);
   const keeperPieceId = keeperStatus?.keeperPieceId ?? null;
 
+  const incomingPassing = useQuiet<CaretakerPassing | null>(
+    Boolean(passingToken && signedIn),
+    async () => {
+      const outcome = await inspectCaretakerPassing(passingToken);
+      if (!outcome.ok) {
+        setIncomingPassingError(failCode(outcome) || 'passing_failed');
+        return null;
+      }
+      setIncomingPassingError(null);
+      return outcome.data;
+    },
+    [passingToken, account.userId, refreshTick],
+  );
+  const senderPassing = useQuiet<CaretakerPassing | null>(
+    Boolean(signedIn && keeperPieceId),
+    async () => {
+      const outcome = await getCaretakerPassingForSender(keeperPieceId || '');
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
+    },
+    [keeperPieceId, account.userId, refreshTick],
+  );
+
+  useEffect(() => {
+    if (!passingToken) return;
+    if (!signedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    if (incomingPassing.status === 'ready' && incomingPassing.data?.status === 'pending') {
+      setActivePassing(incomingPassing.data);
+      setStep({ kind: 'walk', key: 'passaccept' });
+    } else if (incomingPassing.status === 'ready' && incomingPassing.data) {
+      setStep({ kind: 'passing-result', state: incomingPassing.data.status === 'accepted'
+        ? 'accepted' : incomingPassing.data.status === 'cancelled' ? 'cancelled' : 'expired' });
+    } else if (incomingPassingError) {
+      setStep({ kind: 'passing-result', state: 'error' });
+    }
+  }, [passingToken, signedIn, incomingPassing, incomingPassingError]);
+
   const lineage = useQuiet<LineageOutcome>(
     true,
     () => getLineage(publicCode),
@@ -354,7 +413,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const certificate = useQuiet<CertificateContent | null>(
     true,
     async () => {
-      const outcome = await getCertificate(identity.artworkId, publicCode);
+      const outcome = await getCertificate(identity.artworkId, publicCode, identity.edition);
       if (outcome.ok) return outcome.data;
       if (outcome.status === 404) return null;
       throw outcome;
@@ -812,7 +871,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const ritualEligibility = ritual.status === 'ready' ? ritual.data : null;
 
   const gardenLive: GardenLive | null = useMemo(() => {
-    if (!isYours || !keeperPieceId) return null;
+    const hasOwnHistoricalSeal = dreams.status === 'ready'
+      && Boolean(dreams.data?.history.some(entry => entry.tier === 'seal' && entry.body));
+    if ((!isYours && !hasOwnHistoricalSeal) || !keeperPieceId) return null;
 
     /* Entering the light. The tier verb is the settled move; while migration
        041 has not reached the registry it answers 503, and keep→shine falls
@@ -832,6 +893,11 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
 
     return {
       dreams,
+      publishHistorical: async (dreamId: string) => {
+        const outcome = await publishHistoricalCollectorDream({ keeperPieceId, dreamId });
+        if (outcome.ok) refresh();
+        return outcome.ok;
+      },
       /* The yearly gate, pre-empted for the UI: outside the window the
          standing BODY settles. Unknown eligibility reads open — the server
          is the real gate, and `place` answers 'locked' when it refuses. */
@@ -1056,6 +1122,72 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     [identity, ordinalValue],
   );
 
+  const submitPassing = useCallback(async () => {
+    const recipientEmail = (typed[COPY.passing.readyField] || '').trim().toLowerCase();
+    if (!keeperPieceId || !recipientEmail) return;
+    if (!passingAttempt.current) passingAttempt.current = `passing-${crypto.randomUUID()}`;
+    try {
+      const outcome = await createCaretakerPassing({
+        keeperPieceId,
+        recipientEmail,
+        confirmedRecipientEmail: recipientEmail,
+        transferKind: passingKind,
+        idempotencyKey: passingAttempt.current,
+        ...((typed[COPY.passing.valueField] || '').trim() && passingValueMethod
+          ? {
+              declaredValueRaw: (typed[COPY.passing.valueField] || '').trim(),
+              declaredValueMethod: passingValueMethod,
+            }
+          : {}),
+      });
+      if (!outcome.ok) {
+        setStep({ kind: 'passing-result', state: failCode(outcome) === 'passing_expired' ? 'expired' : 'error' });
+        return;
+      }
+      setActivePassing(outcome.data.passing);
+      setStep({ kind: 'walk', key: 'passdone' });
+      refresh();
+    } catch {
+      setStep({ kind: 'passing-result', state: 'error' });
+    }
+  }, [keeperPieceId, typed, refresh, passingKind, passingValueMethod]);
+
+  const cancelPassing = useCallback(async () => {
+    if (!activePassing) return;
+    const outcome = await cancelCaretakerPassing(activePassing.id);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: 'error' });
+      return;
+    }
+    setActivePassing(null);
+    passingAttempt.current = null;
+    setStep({ kind: 'piece' });
+    refresh();
+  }, [activePassing, refresh]);
+
+  const acceptPassing = useCallback(async () => {
+    if (!passingToken) return;
+    const outcome = await acceptCaretakerPassing(passingToken);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: failCode(outcome) === 'passing_expired' ? 'expired' : 'error' });
+      return;
+    }
+    setActivePassing(outcome.data.passing);
+    refresh();
+    setStep({ kind: 'piece' });
+  }, [passingToken, refresh]);
+
+  const resendPassing = useCallback(async () => {
+    if (!activePassing) return;
+    const outcome = await resendCaretakerPassing(activePassing.id);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: 'error' });
+      return;
+    }
+    setActivePassing(outcome.data.passing);
+    refresh();
+  }, [activePassing, refresh]);
+
   const wiredScreen = useCallback(
     (key: keyof typeof WALK): Screen => {
       const base = WALK[key] as Screen;
@@ -1127,9 +1259,24 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           screen.note = removeArmed ? REMOVE_CONFIRM : COPY.people.personNote;
         }
       }
+      if (key === 'passdone' && activePassing?.status === 'pending') {
+        screen.rows = activePassing.deliveryStatus === 'failed'
+          ? [
+              ['Send the invitation again', 'The earlier delivery did not land.', '__resendPassing'],
+              ['Stop the passing', 'Nothing has moved yet.', '__cancelPassing'],
+            ]
+          : [['Stop the passing', 'Nothing has moved yet.', '__cancelPassing']];
+      }
+      if (key === 'passaccept') screen.to = '__acceptPassing';
+      if (key === 'passvalue' && screen.rows) {
+        const targets = [
+          '__passingPaid', '__passingPartTrade', '__passingTraded', '__passingGiven',
+        ];
+        screen.rows = screen.rows.map(([title, note], index) => [title, note, targets[index]]);
+      }
       return screen;
     },
-    [swap, familyLive, person, removeArmed, resendInviteNote],
+    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing],
   );
 
   /* ---------------- navigation ---------------- */
@@ -1218,6 +1365,36 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
 
+      if (from === 'passconfirm' && key === 'passdone') {
+        void submitPassing();
+        return;
+      }
+      if (key === 'passname') setPassingKind('gift');
+      if (key === 'passsell') setPassingKind('sale');
+      const passingMethods = {
+        __passingPaid: 'paid',
+        __passingPartTrade: 'part_trade_paid',
+        __passingTraded: 'traded',
+        __passingGiven: 'given',
+      } as const;
+      if (key in passingMethods) {
+        setPassingValueMethod(passingMethods[key as keyof typeof passingMethods]);
+        setStep({ kind: 'walk', key: 'passready' });
+        return;
+      }
+      if (key === '__cancelPassing') {
+        void cancelPassing();
+        return;
+      }
+      if (key === '__resendPassing') {
+        void resendPassing();
+        return;
+      }
+      if (key === '__acceptPassing') {
+        void acceptPassing();
+        return;
+      }
+
       /* the removal: the grave two-press confirm (the seal-confirm idiom).
          First press arms and the screen says what a second press does;
          the same row pressed again commits through api.ts. */
@@ -1262,11 +1439,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
       if (key === 'passfork') {
-        /* the honest passing (D4): the passing screens are demo surfaces
-           with nothing wired behind them, and walking a live caretaker into
-           a passing that cannot complete would be a lie. One quiet state
-           says the passing opens here soon, and the piece is untouched. */
-        setStep({ kind: 'state', key: 'notyet' });
+        if (senderPassing.status === 'ready' && senderPassing.data?.status === 'pending') {
+          setActivePassing(senderPassing.data);
+          setStep({ kind: 'walk', key: 'passdone' });
+        } else {
+          setStep({ kind: 'walk', key: 'passfork' });
+        }
         return;
       }
       if (key === '__home') {
@@ -1288,7 +1466,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       }
       if (key in WALK) setStep({ kind: 'walk', key: key as keyof typeof WALK });
     },
-    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, submitResendInvite, person, removeArmed, lamps, typed, refresh],
+    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, submitResendInvite, submitPassing, cancelPassing, acceptPassing, resendPassing, person, removeArmed, lamps, typed, refresh, senderPassing],
   );
 
   /* ---------------- the account bridge ---------------- */
@@ -1319,6 +1497,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         live={live}
         initialRoom={step.room ?? null}
         ground={groundInputs}
+        canOpenGarden={Boolean(keeperStatus?.authorHistory)}
         onBegin={() => setStep({ kind: 'code' })}
         onSignIn={() => setAuthOpen(true)}
         onWalk={go}
@@ -1380,7 +1559,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           screen={wiredScreen(step.key)}
           onGo={go}
           values={typed}
-          onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+          onType={(label, value) => {
+            if (label === COPY.passing.readyField && typed[label] !== value) {
+              passingAttempt.current = null;
+            }
+            setTyped(t => ({ ...t, [label]: value }));
+          }}
           lampsValue={lamps}
           onLamps={setLamps}
         />
@@ -1400,6 +1584,23 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     surface = (
       <WalkScreen
         screen={screen}
+        onGo={go}
+        values={typed}
+        onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+        lampsValue={lamps}
+        onLamps={setLamps}
+      />
+    );
+  } else if (step.kind === 'passing-result') {
+    const copy = {
+      accepted: ['The passing is complete', 'This piece now rests with its next caretaker.'],
+      cancelled: ['The passing was stopped', 'Nothing moved.'],
+      expired: ['The passing has expired', 'Nothing moved. Its caretaker can begin again.'],
+      error: ['The passing did not land', 'Nothing moved. Return to the piece and try again.'],
+    }[step.state];
+    surface = (
+      <WalkScreen
+        screen={{ head: ph(copy[0]), body: ph(copy[1]), link: COPY.threshold.writtenReturn, linkTo: '__home', light: 'f', caption: 'The passing · current state' }}
         onGo={go}
         values={typed}
         onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}

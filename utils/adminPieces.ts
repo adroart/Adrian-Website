@@ -115,6 +115,9 @@ export interface RecordRebuildResult {
   unchanged: number;
   failed: number;
   outcomes: RecordRebuildOutcome[];
+  cursor: string | null;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 /**
@@ -141,6 +144,30 @@ export async function requestRecordRebuild(
     throw new Error(data?.message || data?.error || `Rebuild request failed (${response.status})`);
   }
   return data as RecordRebuildResult;
+}
+
+/** Merge another bounded page, replacing matching codes when a failed piece is retried. */
+export function mergeRecordRebuildResults(
+  current: RecordRebuildResult | null,
+  page: RecordRebuildResult,
+): RecordRebuildResult {
+  const byCode = new Map<string, RecordRebuildOutcome>();
+  for (const outcome of current?.outcomes || []) {
+    if (outcome.publicCode) byCode.set(outcome.publicCode, outcome);
+  }
+  for (const outcome of page.outcomes) {
+    if (outcome.publicCode) byCode.set(outcome.publicCode, outcome);
+  }
+  const outcomes = [...byCode.values()];
+  return {
+    ...page,
+    ok: outcomes.every((outcome) => outcome.status !== 'failed'),
+    total: outcomes.length,
+    generated: outcomes.filter((outcome) => outcome.status === 'generated').length,
+    unchanged: outcomes.filter((outcome) => outcome.status === 'unchanged').length,
+    failed: outcomes.filter((outcome) => outcome.status === 'failed').length,
+    outcomes,
+  };
 }
 
 /** The Record line's display text: "Full", "Placeholder", or "None". */

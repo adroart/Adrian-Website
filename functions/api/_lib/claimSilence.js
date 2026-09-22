@@ -1,7 +1,7 @@
 /**
  * Thirty-day silence windows on contested claims (migration 038), evaluated
- * lazily. There is no cron: any later touch of a contested claim runs
- * evaluateSilence, which sends whichever reminders have come due, records
+ * by authenticated touches and the closed, manually runnable bounded service
+ * sweep. evaluateSilence sends whichever reminders have come due, records
  * them, and, once the deadline has lapsed after the reminders soaked, EXECUTES
  * the pass through the exact governed transfer path migration 024 installed
  * (intent + parties + 'transferred' lineage event + receipt gateway, the same
@@ -13,8 +13,8 @@
  * confirmation"): when someone claims a held piece, the registered caretaker
  * is emailed; logging in is the identity proof. Silence for thirty days, with
  * more than one reminder across it, passes the piece to the claimant, both
- * sides notified. The steward touching their own piece while a window is open
- * confirms they are alive and holding it, which withdraws the window. Only an
+ * sides notified. Ordinary account and piece activity never decides the
+ * claim. Only an
  * active refusal reaches Adrian (a claim_refusal_review maintenance event on
  * the maintenance desk). A piece is never orphaned.
  *
@@ -48,7 +48,9 @@ export const SILENCE_WINDOW_DAYS = 30;
 export const SILENCE_REMINDER_SCHEDULE = [
   { kind: 'day7', afterDays: 7 },
   { kind: 'day21', afterDays: 21 },
-  { kind: 'day29', afterDays: 29 },
+  // Migration 038 fixed this historical identifier. Current policy sends it
+  // after 28 full days while retaining `day29` in immutable records.
+  { kind: 'day29', afterDays: 28 },
 ];
 /** The last reminder must have soaked this long before a pass may execute. */
 export const SILENCE_PASS_SOAK_DAYS = 2;
@@ -102,7 +104,7 @@ function escapeHtml(value) {
  * message; false on any failure, including unconfigured infrastructure.
  * Plaintext codes never appear here; only piece titles/ids and prose.
  */
-async function sendRegistryEmail(env, { to, subject, html }) {
+async function sendRegistryEmail(env, { to, subject, html, idempotencyKey }) {
   if (!env?.RESEND_API_KEY || typeof to !== 'string' || !to.trim()) return false;
   const fromEmail = env.RESEND_FROM_EMAIL || 'noreply@adrianrasmussen.com';
   try {
@@ -111,6 +113,7 @@ async function sendRegistryEmail(env, { to, subject, html }) {
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
+        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: `Adrian Rasmussen Art <${fromEmail}>`,
@@ -123,6 +126,44 @@ async function sendRegistryEmail(env, { to, subject, html }) {
   } catch (error) {
     console.error('[claimSilence] email send failed:', error?.message);
     return false;
+  }
+}
+
+function deliveryKey(windowId, kind) {
+  return `claim-silence:${windowId}:${kind}`;
+}
+
+async function deliveryRecorded(db, windowId, kind) {
+  const row = await db.prepare(
+    'SELECT 1 AS sent FROM claim_silence_deliveries WHERE window_id = ?1 AND kind = ?2',
+  ).bind(windowId, kind).first();
+  return Boolean(row);
+}
+
+async function sendDurableDelivery(db, env, { windowId, kind, to, message, now }) {
+  try {
+    if (await deliveryRecorded(db, windowId, kind)) return { sent: true, replayed: true };
+  } catch (error) {
+    if (missingInfrastructure(error)) return { sent: false, unavailable: true };
+    throw error;
+  }
+  const idempotencyKey = deliveryKey(windowId, kind);
+  if (!await sendRegistryEmail(env, { to, ...message, idempotencyKey })) return { sent: false };
+  try {
+    const inserted = await db.prepare(
+      `INSERT INTO claim_silence_deliveries
+         (id, window_id, kind, provider_idempotency_key, sent_at)
+       SELECT ?1, ?2, ?3, ?4, ?5
+        WHERE NOT EXISTS (
+          SELECT 1 FROM claim_silence_deliveries WHERE window_id = ?2 AND kind = ?3
+        )`,
+    ).bind(`csd-${crypto.randomUUID()}`, windowId, kind, idempotencyKey, now).run();
+    return { sent: true, replayed: Number(inserted?.meta?.changes ?? 0) !== 1 };
+  } catch (error) {
+    if (/UNIQUE constraint failed/i.test(String(error?.message))) {
+      return { sent: true, replayed: true };
+    }
+    throw error;
   }
 }
 
@@ -164,6 +205,14 @@ async function stewardEmailFor(db, keeperUserId) {
   ).bind(keeperUserId).first();
   const email = typeof row?.email === 'string' ? row.email.trim() : '';
   return email || null;
+}
+
+export async function sendInitialSilenceNotice(db, env, { windowId, keeperUserId, pieceLabel }, now) {
+  const to = await stewardEmailFor(db, keeperUserId);
+  if (!to) return { sent: false };
+  return sendDurableDelivery(db, env, {
+    windowId, kind: 'initial_steward', to, message: reminderEmail(pieceLabel), now,
+  });
 }
 
 /**
@@ -285,7 +334,10 @@ async function sendDueReminders(db, env, { piece, window }, now) {
   let recorded = 0;
   for (const entry of due) {
     const message = reminderEmail(pieceLabel);
-    const sent = await sendRegistryEmail(env, { to: stewardEmail, ...message });
+    const sent = await sendRegistryEmail(env, {
+      to: stewardEmail, ...message,
+      idempotencyKey: deliveryKey(window.window_id, `reminder-${entry.kind}`),
+    });
     if (!sent) {
       // Fail closed: an unsent reminder is never recorded, and without the
       // recorded reminders the pass can never execute (migration 038 also
@@ -340,10 +392,9 @@ async function executeSilencePass(db, env, { piece, window }, now) {
   const keeperPieceId = piece.id;
   const targetUserId = window.requester_user_id;
   const idempotencyKey = `silence-pass:${window.window_id}`;
-  // Deterministic transfer time: the stored deadline. Every invocation of the
-  // pass for this window builds the identical maintenance event, so a raced
-  // second invocation resolves as an exact idempotent replay.
-  const transferAt = new Date(Date.parse(window.deadline_at)).toISOString();
+  // Custody starts when the governed receipt actually commits. The deadline
+  // authorizes the pass; it does not backdate ownership.
+  const transferAt = now;
   const transferKind = 'inheritance';
   const reason = `silence_pass: thirty days of silence after reminders passed stewardship to the claimant (claim ${window.claim_id}).`;
 
@@ -372,10 +423,7 @@ async function executeSilencePass(db, env, { piece, window }, now) {
     if (transferIntentId) {
       await syncTransferCollectorLetters({ ...env, DB: db }, { transferIntentId });
     }
-    // Deterministic generatedAt (the stored deadline, not now()): every
-    // invocation of finalize() for this window -- the original pass and any
-    // later replay converging on the same receipt -- builds the identical
-    // record, so a raced or retried pass never churns a second record file.
+    // Use the actual receipt time, never a backdated deadline.
     await refreshPieceRecord({ ...env, DB: db }, {
       keeperPieceId,
       trigger: 'transfer',
@@ -387,13 +435,19 @@ async function executeSilencePass(db, env, { piece, window }, now) {
     const claimantEmail = typeof window.requester_email === 'string'
       ? window.requester_email
       : target.email;
-    // Both sides notified. Best effort after the committed truth; a failed
-    // notification never rolls back a receipt.
+    // Both sides are durable, retryable deliveries after the committed truth.
+    // A failed notification never rolls back a receipt.
     if (stewardEmail) {
-      await sendRegistryEmail(env, { to: stewardEmail, ...passEmail(pieceLabel, 'steward') });
+      await sendDurableDelivery(db, env, {
+        windowId: window.window_id, kind: 'completion_steward', to: stewardEmail,
+        message: passEmail(pieceLabel, 'steward'), now,
+      });
     }
     if (claimantEmail) {
-      await sendRegistryEmail(env, { to: claimantEmail, ...passEmail(pieceLabel, 'claimant') });
+      await sendDurableDelivery(db, env, {
+        windowId: window.window_id, kind: 'completion_claimant', to: claimantEmail,
+        message: passEmail(pieceLabel, 'claimant'), now,
+      });
     }
   };
 
@@ -411,7 +465,9 @@ async function executeSilencePass(db, env, { piece, window }, now) {
     const transferIntentId = await intentByEvent(existingEvent.id);
     await finalize(transferIntentId);
     return {
-      status: 'passed', replayed: true, targetUserId, claimedAt: transferAt, transferIntentId,
+      status: 'passed', replayed: true, targetUserId,
+      claimedAt: existingEvent.created_at || piece.claimed_at || transferAt,
+      transferIntentId,
     };
   }
 
@@ -546,8 +602,6 @@ async function executeSilencePass(db, env, { piece, window }, now) {
  * Returns one of:
  *   { status: 'none' }         no piece or no active window
  *   { status: 'unavailable' }  migration 038 not applied; nothing evaluated
- *   { status: 'withdrawn' }    the current steward touched their piece: alive
- *                              and holding it, every active window withdrawn
  *   { status: 'pending' }      window(s) active; due reminders handled
  *   { status: 'passed', targetUserId, claimedAt, transferIntentId }
  *                              the deadline had lapsed after soaked reminders
@@ -568,25 +622,6 @@ export async function evaluateSilence(db, env, selector, now) {
   }
   if (windows.length === 0) return { status: 'none' };
 
-  // The steward's own touch is the confirmation path: they are alive and
-  // holding the piece, so every active window is withdrawn. The claims stay
-  // recorded (pending) for ordinary human resolution.
-  const touchUserId = typeof selector?.touchUserId === 'string' && selector.touchUserId
-    ? selector.touchUserId
-    : null;
-  if (touchUserId && touchUserId === piece.keeper_user_id
-    && piece.claimed_at && !piece.released_at) {
-    let withdrawn = 0;
-    for (const window of windows) {
-      const updated = await db.prepare(
-        `UPDATE claim_silence_windows SET status = 'withdrawn'
-          WHERE id = ?1 AND status IN ('open', 'reminded')`,
-      ).bind(window.window_id).run();
-      withdrawn += Number(updated?.meta?.changes ?? 0);
-    }
-    return { status: 'withdrawn', windows: withdrawn };
-  }
-
   let remindersSent = 0;
   for (const window of windows) {
     remindersSent += await sendDueReminders(db, env, { piece, window }, now);
@@ -601,6 +636,112 @@ export async function evaluateSilence(db, env, selector, now) {
     break;
   }
   return { status: 'pending', remindersSent };
+}
+
+async function retryCompletionDeliveries(db, env, windowId, now) {
+  const row = await db.prepare(
+    `SELECT window.id AS window_id, keeper.piece_id, keeper.edition_number,
+            claim.requester_email, prior.email AS steward_email,
+            claimant.email AS claimant_email
+       FROM claim_silence_windows window
+       JOIN artwork_claim_requests claim ON claim.id = window.claim_request_id
+       JOIN keeper_pieces keeper ON keeper.id = window.keeper_piece_id
+       LEFT JOIN registry_maintenance_events event
+         ON event.idempotency_key = 'silence-pass:' || window.id
+       LEFT JOIN artwork_transfer_intents intent ON intent.maintenance_event_id = event.id
+       LEFT JOIN user prior ON prior.id = intent.expected_from_user_id
+       LEFT JOIN user claimant ON claimant.id = intent.target_user_id
+      WHERE window.id = ?1 AND window.status = 'passed'`,
+  ).bind(windowId).first();
+  if (!row) return { checked: 0, sent: 0 };
+  const pieceLabel = `${row.piece_id} · ${row.edition_number}`;
+  let sent = 0;
+  if (row.steward_email) {
+    const result = await sendDurableDelivery(db, env, {
+      windowId, kind: 'completion_steward', to: row.steward_email,
+      message: passEmail(pieceLabel, 'steward'), now,
+    });
+    if (result.sent && !result.replayed) sent += 1;
+  }
+  const claimantEmail = row.requester_email || row.claimant_email;
+  if (claimantEmail) {
+    const result = await sendDurableDelivery(db, env, {
+      windowId, kind: 'completion_claimant', to: claimantEmail,
+      message: passEmail(pieceLabel, 'claimant'), now,
+    });
+    if (result.sent && !result.replayed) sent += 1;
+  }
+  return { checked: 1, sent };
+}
+
+async function retryInitialDelivery(db, env, windowId, now) {
+  const row = await db.prepare(
+    `SELECT keeper.keeper_user_id, keeper.piece_id, keeper.edition_number
+       FROM claim_silence_windows window
+       JOIN keeper_pieces keeper ON keeper.id = window.keeper_piece_id
+      WHERE window.id = ?1 AND window.status IN ('open', 'reminded')`,
+  ).bind(windowId).first();
+  if (!row) return { sent: false };
+  return sendInitialSilenceNotice(db, env, {
+    windowId, keeperUserId: row.keeper_user_id,
+    pieceLabel: `${row.piece_id} · ${row.edition_number}`,
+  }, now);
+}
+
+/**
+ * Bounded, cursor-based sweep for the existing closed service runner.
+ * @param {object} env
+ * @param {{now: string, cursor?: string, limit?: number}} options
+ */
+export async function runClaimSilenceSweep(env, { now, cursor = '', limit = 25 } = {}) {
+  if (!validIso(now)) throw new Error('invalid_silence_timestamp');
+  const boundedLimit = Math.max(1, Math.min(50, Number.isSafeInteger(limit) ? limit : 25));
+  let rows;
+  try {
+    rows = await env.DB.prepare(
+    `SELECT window.id, window.keeper_piece_id, window.status
+       FROM claim_silence_windows window
+      WHERE window.id > ?1
+        AND (window.status IN ('open', 'reminded') OR (
+          window.status = 'passed' AND (
+            NOT EXISTS (SELECT 1 FROM claim_silence_deliveries delivery
+              WHERE delivery.window_id = window.id AND delivery.kind = 'completion_steward')
+            OR NOT EXISTS (SELECT 1 FROM claim_silence_deliveries delivery
+              WHERE delivery.window_id = window.id AND delivery.kind = 'completion_claimant')
+          )
+        ))
+      ORDER BY window.id LIMIT ?2`,
+    ).bind(cursor, boundedLimit + 1).all();
+  } catch (error) {
+    if (missingInfrastructure(error)) {
+      return {
+        checked: 0, remindersSent: 0, passed: 0, completionSent: 0, nextCursor: null,
+        unavailable: true,
+      };
+    }
+    throw error;
+  }
+  const candidates = rows?.results ?? [];
+  const page = candidates.slice(0, boundedLimit);
+  let remindersSent = 0;
+  let passed = 0;
+  let completionSent = 0;
+  for (const row of page) {
+    if (row.status === 'passed') {
+      completionSent += (await retryCompletionDeliveries(env.DB, env, row.id, now)).sent;
+    } else {
+      await retryInitialDelivery(env.DB, env, row.id, now);
+      const result = await evaluateSilence(env.DB, env, {
+        keeperPieceId: row.keeper_piece_id,
+      }, now);
+      remindersSent += Number(result.remindersSent || 0);
+      if (result.status === 'passed') passed += 1;
+    }
+  }
+  return {
+    checked: page.length, remindersSent, passed, completionSent,
+    nextCursor: candidates.length > boundedLimit ? page.at(-1)?.id || null : null,
+  };
 }
 
 /**

@@ -70,6 +70,8 @@ export type GardenLive = {
      */
     heirsMayShare?: boolean,
   ) => Promise<GardenPlaceOutcome>;
+  /** Original writer's one-way publication of an exact archived seal. */
+  publishHistorical: (dreamId: string) => Promise<boolean>;
 };
 
 /**

@@ -1,14 +1,14 @@
 /**
- * Complete private registry recovery archive.
+ * Versioned private registry recovery archive.
  *
  * This is deliberately separate from registryLedger.ts. The public/offline
  * issuance ledger remains secret-free; this artifact is an encrypted snapshot
- * of every registry-owned table plus only the Better Auth rows needed to keep
+ * of the explicitly listed tables plus only the Better Auth rows needed to keep
  * current and historical steward associations recoverable.
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 9 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 10 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -160,9 +160,19 @@ export const REGISTRY_RECOVERY_V8_TABLES = [
   'piece_records',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+export const REGISTRY_RECOVERY_V9_TABLES = [
   ...REGISTRY_RECOVERY_V8_TABLES,
   'collector_dream_tier_changes',
+] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V9_TABLES,
+  'caretaker_passing_requests',
+  'claim_silence_windows',
+  'claim_silence_reminders',
+  'claim_silence_deliveries',
+  'collector_historical_dream_publications',
+  'collector_shine_removals',
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -410,6 +420,22 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
   piece_records: [
     'id', 'public_code', 'record_hash', 'r2_key', 'trigger_event', 'created_at',
   ],
+  caretaker_passing_requests: [
+    'id', 'keeper_piece_id', 'sender_user_id', 'recipient_email', 'token_hash',
+    'transfer_kind', 'declared_value_raw', 'declared_value_method', 'status', 'idempotency_key', 'transfer_intent_id',
+    'delivery_status', 'delivery_attempts', 'delivery_error', 'provider_idempotency_key',
+    'sender_notice_status', 'sender_notice_attempts', 'sender_notice_error',
+    'sender_notice_provider_idempotency_key', 'sender_notice_sent_at',
+    'created_at', 'expires_at', 'accepted_at', 'cancelled_at', 'updated_at',
+  ],
+  collector_shine_removals: ['id', 'content_id', 'keeper_piece_id', 'removed_reason', 'removed_by_user_id', 'idempotency_key', 'removed_at'],
+  collector_historical_dream_publications: ['id', 'dream_id', 'keeper_piece_id', 'author_user_id', 'idempotency_key', 'published_at'],
+  claim_silence_windows: [
+    'id', 'claim_request_id', 'keeper_piece_id', 'opened_at', 'deadline_at', 'status',
+    'passed_at', 'refused_at', 'refusal_note',
+  ],
+  claim_silence_reminders: ['id', 'window_id', 'kind', 'sent_at'],
+  claim_silence_deliveries: ['id', 'window_id', 'kind', 'provider_idempotency_key', 'sent_at'],
   collector_dream_tier_changes: [
     'id', 'dream_id', 'author_user_id', 'from_tier', 'to_tier', 'idempotency_key',
     'resulting_version', 'created_at',
@@ -419,13 +445,15 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
 export type PrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
   schemaVersion: typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+  /** Authenticated original format; upgrading never certifies missing privacy evidence. */
+  sourceSchemaVersion?: number;
   exportedAt: string;
   tables: Record<RegistryRecoveryTable, RecoveryRow[]>;
 };
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -453,7 +481,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -602,6 +630,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 6) return REGISTRY_RECOVERY_V6_TABLES;
   if (schemaVersion === 7) return REGISTRY_RECOVERY_V7_TABLES;
   if (schemaVersion === 8) return REGISTRY_RECOVERY_V8_TABLES;
+  if (schemaVersion === 9) return REGISTRY_RECOVERY_V9_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -672,11 +701,12 @@ function compareRecoveryRows(
 export function validatePrivateRecoveryPayload(
   payload: unknown,
 ): asserts payload is PrivateRecoveryPayload | LegacyPrivateRecoveryPayload {
-  if (!isPlainObject(payload) || !hasExactKeys(payload, ['kind', 'schemaVersion', 'exportedAt', 'tables'])) {
+  if (!isPlainObject(payload) || !hasExactKeys(payload, ['kind', 'schemaVersion', 'exportedAt', 'tables',
+    ...('sourceSchemaVersion' in payload ? ['sourceSchemaVersion'] : [])])) {
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, 6, 7, 8, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, 7, 8, 9, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -684,6 +714,10 @@ export function validatePrivateRecoveryPayload(
   if (!isPlainObject(payload.tables)
     || !hasExactKeys(payload.tables, tableNames)) {
     throw new Error('recovery_payload_tables');
+  }
+  if ('sourceSchemaVersion' in payload && (!Number.isSafeInteger(payload.sourceSchemaVersion)
+    || Number(payload.sourceSchemaVersion) < 1 || Number(payload.sourceSchemaVersion) > Number(payload.schemaVersion))) {
+    throw new Error('recovery_source_schema_invalid');
   }
   for (const table of tableNames) {
     const rows = payload.tables[table];
@@ -726,6 +760,7 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
   return {
     kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
     schemaVersion: PRIVATE_RECOVERY_SCHEMA_VERSION,
+    sourceSchemaVersion: payload.schemaVersion,
     exportedAt: payload.exportedAt,
     tables: {
       ...payload.tables,
@@ -831,6 +866,7 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         })),
         collector_dream_tier_changes: [],
       } : {}),
+      ...(payload.schemaVersion < 10 ? { caretaker_passing_requests: [], claim_silence_windows: [], claim_silence_reminders: [], claim_silence_deliveries: [], collector_historical_dream_publications: [], collector_shine_removals: [] } : {}),
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -851,7 +887,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, 6, 7, 8, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, 7, 8, 9, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -2011,6 +2047,33 @@ const CONTRIBUTOR_OPERATIONAL_TRIGGER_NAMES = [
  * SQL runner that continues after the first error. A final expected-count
  * trigger rolls back the whole transaction if any insert was skipped or failed.
  */
+
+const SILENCE_RESTORE_TRIGGER_SQL = [
+  `CREATE TRIGGER claim_silence_windows_insert_guard
+BEFORE INSERT ON claim_silence_windows
+BEGIN
+  SELECT RAISE(ABORT, 'silence windows are born open')
+   WHERE NEW.status <> 'open';
+  SELECT RAISE(ABORT, 'silence window requires a pending claim on the same piece')
+   WHERE NOT EXISTS (
+    SELECT 1 FROM artwork_claim_requests claim
+     WHERE claim.id = NEW.claim_request_id
+       AND claim.keeper_piece_id = NEW.keeper_piece_id
+       AND claim.status = 'pending'
+  );
+END;`,
+  `CREATE TRIGGER claim_silence_reminders_active_window_guard
+BEFORE INSERT ON claim_silence_reminders
+BEGIN
+  SELECT RAISE(ABORT, 'reminders require an active silence window')
+   WHERE NOT EXISTS (
+    SELECT 1 FROM claim_silence_windows window
+     WHERE window.id = NEW.window_id
+       AND window.status IN ('open', 'reminded')
+  );
+END;`,
+];
+
 function buildRegistryRestoreSqlInternal(
   sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
 ): string {
@@ -2047,6 +2110,9 @@ function buildRegistryRestoreSqlInternal(
           `NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'trigger' `
           + `AND name = ${sqlValue(trigger)} `
           + `AND sql = ${sqlValue(CONTRIBUTOR_OPERATIONAL_TRIGGER_SQL[index].slice(0, -1))})`),
+        ...SILENCE_RESTORE_TRIGGER_SQL.map((sql) =>
+          `NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'trigger' `
+          + `AND sql = ${sqlValue(sql.slice(0, -1))})`),
         '(SELECT COUNT(*) FROM artwork_contributor_invite_rate_limits) <> 0',
         '(SELECT COUNT(*) FROM artwork_contributor_invite_reservations) <> 0',
       ].join(' OR ')
@@ -2141,6 +2207,7 @@ function buildRegistryRestoreSqlInternal(
   // collector_dream_tier_changes_no_update / _no_delete never fire on
   // INSERT (mirrors the artwork_catalog_snapshots / piece_records note
   // below), so they stay untouched throughout.
+  insertTables(['collector_historical_dream_publications', 'collector_shine_removals']);
   insertTables(['collector_letters']);
   insertTables(['artist_reconnection_cases']);
   statements.push(...artworkRecordRestoreStatements(payload));
@@ -2162,6 +2229,13 @@ function buildRegistryRestoreSqlInternal(
   // piece_records address-pin trigger holds because every archived row was
   // written through it.
   insertTables(['artwork_catalog_snapshots', 'piece_records']);
+  // Restore request state only after the governed receipts are replayed. This
+  // avoids replaying invitation delivery or running the passing commit hook.
+  insertTables(['caretaker_passing_requests']);
+  statements.push('DROP TRIGGER claim_silence_windows_insert_guard;');
+  statements.push('DROP TRIGGER claim_silence_reminders_active_window_guard;');
+  insertTables(['claim_silence_windows', 'claim_silence_reminders', 'claim_silence_deliveries']);
+  statements.push(...SILENCE_RESTORE_TRIGGER_SQL);
   for (const trigger of CONTRIBUTOR_RESTORE_TRIGGER_NAMES) {
     statements.push(`DROP TRIGGER ${trigger};`);
   }
@@ -2188,6 +2262,20 @@ function buildRegistryRestoreSqlInternal(
   return `${statements.join('\n')}\n`;
 }
 
+/** Older formats omitted permanent removal marks. Never interpret that absence
+ * as an authenticated empty removal ledger when any public content may survive. */
+function requireRecoveryPrivacyEvidence(payload: PrivateRecoveryPayload): void {
+  if ((payload.sourceSchemaVersion ?? payload.schemaVersion) >= 10) return;
+  const formerlyPublic = payload.tables.collector_dreams.some(row =>
+    row.public_shared_at != null || row.visibility !== 'private' || row.tier === 'shine')
+    || payload.tables.collector_dream_mutations.some(row => row.action === 'share')
+    // Stored record bytes are external to this payload and may contain old
+    // public writing; their table references cannot prove safe empty content.
+    || payload.tables.piece_records.length > 0
+    || payload.tables.collector_historical_dream_publications.length > 0;
+  if (formerlyPublic) throw new Error('recovery_privacy_evidence_unavailable');
+}
+
 /**
  * Synchronous restore generation remains available for archives without media.
  * Archives that reference R2 objects must pass the asynchronous media preflight.
@@ -2196,6 +2284,7 @@ export function buildRegistryRestoreSql(
   sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
 ): string {
   const payload = upgradePrivateRecoveryPayload(sourcePayload);
+  requireRecoveryPrivacyEvidence(payload);
   if (payload.tables.artist_artwork_media.length) {
     throw new Error('registry_recovery_media_verification_required');
   }
@@ -2299,6 +2388,7 @@ export async function buildVerifiedRegistryRestoreSql(
   options: { mediaBucket?: RecoveryMediaBucket } = {},
 ): Promise<string> {
   const payload = upgradePrivateRecoveryPayload(sourcePayload);
+  requireRecoveryPrivacyEvidence(payload);
   await verifyRecoveryMediaObjects(payload, options.mediaBucket);
   return buildRegistryRestoreSqlInternal(payload);
 }

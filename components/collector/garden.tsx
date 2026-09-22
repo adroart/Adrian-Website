@@ -122,6 +122,10 @@ export const Garden: React.FC<{
         }}
         onClose={onClose}
         placed={live ? livePlaced(live) : undefined}
+        historicalSeals={live?.dreams.status === 'ready'
+          ? live.dreams.data?.history.filter(dream => dream.tier === 'seal' && Boolean(dream.body)) ?? []
+          : []}
+        onPublishHistorical={live?.publishHistorical}
       />
     );
   }
@@ -369,11 +373,26 @@ const GardenIndex: React.FC<{
   onClose?: () => void;
   /** wired: the real answers; absent, the shell's samples */
   placed?: (string | null)[];
+  historicalSeals?: Array<{ id: string; body: string }>;
+  onPublishHistorical?: (dreamId: string) => Promise<boolean>;
 }> = ({
   onBack,
   onPick,
   placed,
-}) => (
+  historicalSeals = [],
+  onPublishHistorical,
+}) => {
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const [publishFailed, setPublishFailed] = useState<string | null>(null);
+  const publish = async (dreamId: string) => {
+    if (!onPublishHistorical || publishing) return;
+    setPublishing(dreamId);
+    setPublishFailed(null);
+    const ok = await onPublishHistorical(dreamId).catch(() => false);
+    if (!ok) setPublishFailed(dreamId);
+    setPublishing(null);
+  };
+  return (
   <Ground light="a" pad="44px 30px 30px">
     <RoomHead title={COPY.garden.title} onBack={onBack} />
     <RoomBody top={20}>
@@ -434,9 +453,19 @@ const GardenIndex: React.FC<{
         <Plus />
         <span style={{ fontFamily: F.body, fontSize: 15, color: C.ink }}>{COPY.garden.own}</span>
       </div>
+      {historicalSeals.map(dream => (
+        <div key={dream.id} style={{ paddingTop: 22 }}>
+          <p style={{ fontFamily: F.body, fontSize: 14, lineHeight: 1.6, color: C.inkBody }}>{dream.body}</p>
+          <Brass onClick={() => { void publish(dream.id); }}>
+            {publishFailed === dream.id ? COPY.states.offlineRetry : COPY.garden.tierShineTitle}
+          </Brass>
+          {publishFailed === dream.id && <Note top={10}>{COPY.states.offlineBody}</Note>}
+        </div>
+      ))}
     </RoomBody>
   </Ground>
-);
+  );
+};
 
 /* ------------------------------------------------------------------ *
  * The three-tier control. Three quiet stacked choices, the drawn shape

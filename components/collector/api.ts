@@ -181,6 +181,66 @@ function livingLegacyDark(): boolean {
   return !LAUNCH_FLAGS.livingLegacy;
 }
 
+export interface CaretakerPassing {
+  id: string;
+  keeperPieceId: string;
+  pieceId: string;
+  publicCode: string;
+  title: string;
+  recipientEmail: string;
+  transferKind: 'sale' | 'gift';
+  status: 'pending' | 'accepted' | 'cancelled' | 'expired';
+  deliveryStatus: 'pending' | 'sent' | 'failed';
+  createdAt: string;
+  expiresAt: string;
+}
+
+export async function inspectCaretakerPassing(token: string): Promise<ApiOutcome<CaretakerPassing>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return unwrapField(
+    jsonRequest<{ ok: true; passing: CaretakerPassing }>(
+      `/api/keeper/passing?${new URLSearchParams({ token }).toString()}`,
+    ), 'passing',
+  );
+}
+
+export async function getCaretakerPassingForSender(keeperPieceId: string): Promise<ApiOutcome<CaretakerPassing | null>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return unwrapField(
+    jsonRequest<{ ok: true; passing: CaretakerPassing | null }>(
+      `/api/keeper/passing?${new URLSearchParams({ keeperPieceId }).toString()}`,
+    ), 'passing',
+  );
+}
+
+export async function createCaretakerPassing(input: {
+  keeperPieceId: string;
+  recipientEmail: string;
+  confirmedRecipientEmail: string;
+  transferKind: 'sale' | 'gift';
+  idempotencyKey: string;
+  declaredValueRaw?: string;
+  declaredValueMethod?: 'paid' | 'part_trade_paid' | 'traded' | 'given';
+}): Promise<ApiOutcome<{ ok: true; passing: CaretakerPassing; replayed: boolean }>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest('/api/keeper/passing', { method: 'POST', body: JSON.stringify({ action: 'create', ...input }) });
+}
+
+export async function cancelCaretakerPassing(passingId: string): Promise<ApiOutcome<{ ok: true; status: 'cancelled' }>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest('/api/keeper/passing', { method: 'POST', body: JSON.stringify({ action: 'cancel', passingId }) });
+}
+
+export async function resendCaretakerPassing(passingId: string): Promise<ApiOutcome<{ ok: true; passing: CaretakerPassing }>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest('/api/keeper/passing', { method: 'POST', body: JSON.stringify({ action: 'resend', passingId }) });
+}
+
+export async function acceptCaretakerPassing(token: string): Promise<ApiOutcome<{ ok: true; passing: CaretakerPassing; replayed: boolean }>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest('/api/keeper/passing', { method: 'POST', body: JSON.stringify({ action: 'accept', token }) });
+}
+
 // ============================================================================
 // Step 2 — Verify the identity (contract §4 step 2)
 // functions/api/registry/[publicCode].js — never gated, always live.
@@ -240,15 +300,27 @@ export interface CertificateContent {
 export async function getCertificate(
   artworkId: string,
   publicCode: string,
+  verifiedEdition: PublicPlateIdentity['edition'],
 ): Promise<ApiOutcome<CertificateContent>> {
   if (!publicCode) return { ok: false, status: 400, error: 'public_code_required' };
   const query = new URLSearchParams({ publicCode });
-  return unwrapField(
-    jsonRequest<{ ok: true; certificate: CertificateContent }>(
-      `/api/certificates/${encodeURIComponent(artworkId)}?${query.toString()}`,
-    ),
-    'certificate',
+  const response = await rawRequest(
+    `/api/certificates/${encodeURIComponent(artworkId)}?${query.toString()}`,
   );
+  if (!response.ok) return outcomeError(response.status, response.body);
+  const envelope = isRecord(response.body) ? response.body : null;
+  const certificate = envelope && isRecord(envelope.certificate) ? envelope.certificate : null;
+  if (!certificate || certificate.artworkId !== artworkId || certificate.publicCode !== publicCode) {
+    return { ok: false, status: 502, error: 'certificate_identity_mismatch' };
+  }
+  const edition: CertificateContent['edition'] = verifiedEdition.kind === 'unique'
+    ? { kind: 'unique' }
+    : { kind: 'numbered', number: verifiedEdition.number, size: verifiedEdition.size };
+  return {
+    ok: true,
+    status: response.status,
+    data: { ...(certificate as unknown as CertificateContent), artworkId, publicCode, edition },
+  };
 }
 
 // ============================================================================
@@ -499,6 +571,7 @@ export interface KeeperPieceStatus {
   byYou: boolean;
   contributor: boolean;
   keeperPieceId?: string;
+  authorHistory?: boolean;
   currentDisplayLocation?: string | null;
   stewardHistory?: PublicCreatorHistoryEntry[];
   pendingClaim?: KeeperPendingClaim;
@@ -931,6 +1004,8 @@ export interface CollectorDream {
    * words on a piece you no longer hold), the server sends `body` as null;
    * use TieredCollectorDream where that possibility must be typed. */
   sealed?: boolean;
+  /** True when the original writer deliberately published this archived seal. */
+  historicalPublication?: boolean;
 }
 
 /**
@@ -1082,6 +1157,21 @@ export async function setCollectorDreamTier(input: {
       keeperPieceId: input.keeperPieceId,
       tier: input.tier,
       idempotencyKey: dreamIdempotencyKey(input.idempotencyKey),
+    }),
+  });
+}
+
+export async function publishHistoricalCollectorDream(input: {
+  keeperPieceId: string;
+  dreamId: string;
+  idempotencyKey?: string;
+}): Promise<ApiOutcome<CollectorDreamState>> {
+  if (livingLegacyDark()) return { ok: false, status: 404, error: 'not_found' };
+  return jsonRequest<CollectorDreamState>('/api/collector/dreams', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'publish_historical', keeperPieceId: input.keeperPieceId,
+      dreamId: input.dreamId, idempotencyKey: dreamIdempotencyKey(input.idempotencyKey),
     }),
   });
 }

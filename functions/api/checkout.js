@@ -8,6 +8,7 @@
  * Environment variables (set in .dev.vars locally, Cloudflare Pages dashboard in prod):
  *   STRIPE_SECRET_KEY  — sk_live_... or sk_test_...
  */
+import { LAUNCH_FLAGS } from '../../launchFlags.ts';
 
 // Countries to which Adrian ships.
 // Add or remove codes as needed before going live.
@@ -87,6 +88,14 @@ export async function onRequestPost(context) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
   };
+
+  // The storefront's launch decision is also a server boundary. A direct
+  // POST cannot create a Stripe session while logistics keep the shop closed.
+  if (!LAUNCH_FLAGS.shopEnabled) {
+    return new Response(JSON.stringify({ error: 'shop_closed' }), {
+      status: 404, headers: corsHeaders,
+    });
+  }
 
   const clientIp = request.headers.get('cf-connecting-ip') ||
                    request.headers.get('x-forwarded-for') ||

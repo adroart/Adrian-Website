@@ -12,9 +12,20 @@ name: Collector letter anniversaries
 #
 # To bring it back: pass the runbook gates, set livingLegacy true, add the
 # service key secret and the enabling variable, then restore the schedule.
-# Until then workflow_dispatch is here so it can still be run by hand.
+# Until then workflow_dispatch is here so it can still be run by hand. Launch
+# also requires a restored schedule of at most twice daily.
 on:
   workflow_dispatch:
+    inputs:
+      claim_cursor:
+        description: Optional claim-silence cursor returned by the prior bounded page
+        required: false
+        type: string
+
+      passing_cursor:
+        description: Optional sender-notice cursor returned by the prior bounded page
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -30,8 +41,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Generate due collector letters
+        env:
+          CLAIM_CURSOR: ${{ inputs.claim_cursor }}
+          PASSING_CURSOR: ${{ inputs.passing_cursor }}
         run: |
           curl --silent --show-error --fail-with-body --retry 2 \
             --request POST \
             --header "X-Collector-Letters-Key: ${{ secrets.COLLECTOR_LETTERS_SERVICE_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data "$(node -e 'process.stdout.write(JSON.stringify({claimCursor: process.env.CLAIM_CURSOR || "", passingCursor: process.env.PASSING_CURSOR || ""}))')" \
             https://adrianrasmussen.com/api/collector/letters-runner

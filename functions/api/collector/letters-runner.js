@@ -1,5 +1,7 @@
 import { jsonResponse } from '../_lib/auth.js';
 import { runCollectorLetterEvents } from '../_lib/collectorLetters.js';
+import { retryCaretakerPassingSenderNotices } from '../_lib/caretakerPassing.js';
+import { runClaimSilenceSweep } from '../_lib/claimSilence.js';
 import { legacyEnabled, notFound } from '../_lib/keeper.js';
 
 function equalSecret(provided, expected) {
@@ -32,8 +34,17 @@ export async function onRequest({ request, env }) {
     return jsonResponse({ error: 'unauthorized' }, { status: 401 }, request, env);
   }
   try {
-    const run = await runCollectorLetterEvents(env, { now: new Date().toISOString() });
-    return jsonResponse({ ok: true, run }, { status: 200 }, request, env);
+    const now = new Date().toISOString();
+    let input = {};
+    try { input = await request.json(); } catch { /* empty manual request */ }
+    const cursor = typeof input?.claimCursor === 'string' ? input.claimCursor : '';
+    const passingCursor = typeof input?.passingCursor === 'string' ? input.passingCursor : '';
+    const [run, claimSilence, passingNotices] = await Promise.all([
+      runCollectorLetterEvents(env, { now }),
+      runClaimSilenceSweep(env, { now, cursor, limit: 25 }),
+      retryCaretakerPassingSenderNotices(env, { cursor: passingCursor, limit: 25 }),
+    ]);
+    return jsonResponse({ ok: true, run, claimSilence, passingNotices }, { status: 200 }, request, env);
   } catch {
     return jsonResponse(
       { ok: false, error: 'collector_letters_runner_failed' },

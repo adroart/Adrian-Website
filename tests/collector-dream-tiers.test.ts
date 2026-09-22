@@ -12,10 +12,11 @@ import {
   getYearlyRitualEligibility,
   setCollectorDreamSharing,
   setCollectorDreamTier,
+  publishHistoricalCollectorDream,
   updateCollectorDream,
 } from '../functions/api/_lib/collectorDreams.js';
 import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
-import { buildPieceRecord } from '../functions/api/_lib/pieceRecord.js';
+import { buildPieceRecord, gatherShines } from '../functions/api/_lib/pieceRecord.js';
 import { ensureCatalogSnapshot } from '../functions/api/_lib/catalogSnapshot.js';
 import { LAUNCH_FLAGS } from '../launchFlags.ts';
 
@@ -35,10 +36,10 @@ after(() => mock.reset());
 
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
 
-/** Every migration numbered 001 through 042 (collector_dream_tiers), applied in file order. */
+/** Every migration through the historical-publication gateway, in file order. */
 function migrationsThrough042() {
   return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 42)
+    .filter((name) => /^\d{3}_.*\.sql$/.test(name) && Number(name.slice(0, 3)) <= 49)
     .sort()
     .map((name) => readFileSync(path.join(MIGRATIONS_DIR, name), 'utf8'))
     .join('\n');
@@ -72,14 +73,14 @@ function database() {
         'Asia/Makassar', '{}');
     INSERT INTO keeper_pieces
       (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
-       claimed_at, registered_at)
+       claimed_at, registered_at, public_code, plate_status)
     VALUES
       ('kp-one', 'UL-100', 0, 'auth-adult', '${'a'.repeat(64)}',
-        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'),
+        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z', 'AR-7KQ9M2WX', 'active'),
       ('kp-next', 'UL-102', 0, 'auth-next', '${'b'.repeat(64)}',
-        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'),
+        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z', 'AR-8KQ9M2WX', 'active'),
       ('kp-quiet', 'UL-103', 0, 'auth-plain', '${'c'.repeat(64)}',
-        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z');
+        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z', 'AR-9KQ9M2WX', 'active');
   `);
   return db;
 }
@@ -178,6 +179,49 @@ async function plantKeepDream(env: object, userId: string, keeperPieceId: string
 }
 
 describe('collector dream tiers (migration 042)', () => {
+  it('lets only the original writer permanently publish the exact archived seal', async () => {
+    const db = database();
+    try {
+      const env = { DB: d1(db) };
+      await plantKeepDream(env, 'auth-adult', 'kp-one', { tier: 'seal', heirsMayShare: false });
+      const dreamId = String(db.prepare("SELECT id FROM collector_dreams WHERE keeper_piece_id='kp-one'").get()?.id);
+      canonicalTransfer(db);
+      const input = { keeperPieceId: 'kp-one', dreamId, idempotencyKey: 'historical-shine-1', now: '2026-08-20T00:00:00.000Z' };
+      db.prepare("UPDATE profiles SET birth_date='2012-01-15' WHERE user_id=1").run();
+      await assert.rejects(
+        publishHistoricalCollectorDream(env, { ...input, userId: 'auth-adult' }),
+        /minor_publicity_forbidden/,
+      );
+      db.prepare("UPDATE profiles SET birth_date='invalid' WHERE user_id=1").run();
+      await assert.rejects(
+        publishHistoricalCollectorDream(env, { ...input, userId: 'auth-adult' }),
+        /minor_publicity_forbidden/,
+      );
+      db.prepare("UPDATE profiles SET birth_date='1982-01-15' WHERE user_id=1").run();
+      const published = await publishHistoricalCollectorDream(env, { ...input, userId: 'auth-adult' });
+      assert.equal(published.history.find(dream => dream.id === dreamId)?.tier, 'shine');
+      await publishHistoricalCollectorDream(env, { ...input, userId: 'auth-adult' });
+      await assert.rejects(
+        publishHistoricalCollectorDream(env, { ...input, keeperPieceId: 'kp-next', userId: 'auth-adult' }),
+        /idempotency_conflict/,
+      );
+      assert.equal(db.prepare('SELECT COUNT(*) n FROM collector_historical_dream_publications').get()?.n, 1);
+      await assert.rejects(
+        publishHistoricalCollectorDream(env, { ...input, userId: 'auth-next', idempotencyKey: 'historical-shine-next' }),
+        /historical_publication_forbidden/,
+      );
+      await assert.rejects(
+        publishHistoricalCollectorDream(env, { ...input, userId: 'auth-outsider', idempotencyKey: 'historical-shine-out' }),
+        /historical_publication_forbidden/,
+      );
+      assert.throws(() => db.prepare('DELETE FROM collector_historical_dream_publications').run(), /permanent/);
+      const shines = await gatherShines(env, 'kp-one');
+      const body = db.prepare('SELECT body,tier FROM collector_dreams WHERE id=?').get(dreamId) as any;
+      assert.equal(body.tier, 'seal');
+      assert.equal(body.body, 'May this house stay warm.');
+      assert.deepEqual(shines.map(entry => entry.words), ['May this house stay warm.']);
+    } finally { db.close(); }
+  });
   it('plants keep by default and walks only the allowed transitions', async () => {
     const db = database();
     try {
