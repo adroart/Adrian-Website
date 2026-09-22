@@ -1334,6 +1334,9 @@ const latestPaid = (entries: CurrentKeeperPriceEntry[]): CurrentKeeperPriceEntry
 const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
   const { identity, certificate, ordinal, displayLocation, priceHistory } = live;
   const ready = certificate.status === 'ready' ? certificate.data : null;
+  const publicNotes = Array.isArray(ready?.publicLedger)
+    ? ready.publicLedger.filter(entry => entry && typeof entry.message === 'string' && entry.message.trim())
+    : [];
   const caretaker = priceHistory !== null;
   const paid =
     priceHistory && priceHistory.status === 'ready' ? latestPaid(priceHistory.data) : null;
@@ -1369,6 +1372,20 @@ const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
         {ready?.origin && <Ledger label="Origin" value={ready.origin} />}
         {ready?.techniques && ready.techniques.length > 0 && (
           <Ledger label="Technique" value={ready.techniques.join(', ')} />
+        )}
+        {publicNotes.length > 0 && (
+          <section aria-label="Creator notes" style={{ paddingTop: 18, paddingBottom: 8 }}>
+            <Eyebrow>From the studio</Eyebrow>
+            {publicNotes.map((entry, index) => (
+              <p key={entry.id ?? index} style={{
+                margin: '12px 0 0', fontFamily: F.body, fontSize: 15,
+                lineHeight: 1.72, color: C.inkBody, whiteSpace: 'pre-wrap',
+                overflowWrap: 'anywhere',
+              }}>
+                {entry.message}
+              </p>
+            ))}
+          </section>
         )}
         {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
         {caretaker && displayLocation && <Ledger label="Where it lives" value={displayLocation} />}
