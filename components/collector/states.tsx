@@ -74,6 +74,8 @@ type Props = {
   onPrimary?: () => void;
   onSecondary?: () => void;
   receipt?: [string, string][];
+  /** A server refusal uses its existing truthful wording, not a network claim. */
+  message?: string;
 };
 
 export const StateScreen: React.FC<Props> = ({
@@ -83,6 +85,7 @@ export const StateScreen: React.FC<Props> = ({
   onPrimary,
   onSecondary,
   receipt,
+  message,
 }) => {
   if (state === 'account') {
     return (
@@ -107,6 +110,7 @@ export const StateScreen: React.FC<Props> = ({
         onRetry={onPrimary ?? onBack}
         onLater={onSecondary ?? onBack}
         receipt={receipt}
+        message={message}
       />
     );
   }
@@ -413,7 +417,8 @@ const Offline: React.FC<{
   onRetry?: () => void;
   onLater?: () => void;
   receipt?: [string, string][];
-}> = ({ onBack, onRetry = onBack, onLater = onBack, receipt }) => {
+  message?: string;
+}> = ({ onBack, onRetry = onBack, onLater = onBack, receipt, message }) => {
   const rows: [string, string][] = receipt ?? [
     ['Your name', 'Mara Ellis'],
     ['Where it lives', 'Lisbon, Portugal'],
@@ -426,7 +431,7 @@ const Offline: React.FC<{
     <div style={{ position: 'relative', flex: 'none' }}>
       <Head size={34}>{COPY.states.offlineHead}</Head>
     </div>
-    <Body top={16}>{COPY.states.offlineBody}</Body>
+    <Body top={16}>{message ?? COPY.states.offlineBody}</Body>
 
     {rows.length > 0 && (
       <div

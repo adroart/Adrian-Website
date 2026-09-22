@@ -2,9 +2,40 @@
 
 The public `registry-ledger.jsonl` and the private recovery archive have
 different jobs. The public ledger is secret-free and may be copied to Google
-Drive. The private archive contains the complete registry, including private
+Drive. The private archive contains the versioned table manifest in
+`utils/registryRecoveryArchive.ts`, including private
 acquisition values, evidence, creator history, stewardship associations and
 encrypted Ownership Code envelopes. The private archive is never sent through the ledger's Google Drive sync.
+Schema 10 adds caretaker passing (including terminal state, private declarations and
+notification evidence), silence windows/reminders/deliveries, historical-author
+publication and permanent shine-removal marks. Restoring those marks prevents
+removed writing from resurfacing when a record is regenerated. Schema 11 adds the
+explicit `piece_records.legacy_sections` fact, preserving whether a permanent Piece
+Record was generated with legacy placeholder sections. Schema 1–10
+archives remain decryptable and inspectable, with their authenticated source schema
+retained. They cannot supply tables their manifests never included. SQL generation
+refuses `recovery_privacy_evidence_unavailable` when an older archive includes any
+current or historical public share, publication mutation, or opaque public-record
+reference. The refusal occurs before SQL is returned or a destination is changed.
+An authenticated export originally captured at schema 10 or later, containing the removal evidence, is the remedy;
+when it cannot be recovered, public restoration remains unresolved. A manually
+invented empty removal list is not an override. Safe older archives without any
+potentially republished content remain restorable.
+
+Upgrading or re-encrypting an older archive preserves its original authenticated
+source schema; wrapping schema-9 content in schema 10 or 11 cannot make missing
+removal evidence complete. Schema-10 Piece Record rows retain their six-column
+format and restore `legacy_sections` as migration 043's default, `0`. Native
+schema-11 archives preserve the recorded value, `0` or `1`.
+
+The archive does not include `piece_media`, `artist_messages`, R2 media bytes,
+book/poetry/music indexes, invoices or manual payment events, orders, payment-provider
+records, operational sessions, or a complete application backup. Registry media
+references that are archived still need their exact separately copied R2 bytes;
+verified-media restore refuses missing or mismatched copies. The archive key and
+versioned Ownership Code keys need separate custody. None of these dependencies
+is proved by a local synthetic rehearsal.
+
 It contains no orders or payment-provider records. Migration `022` preserves
 any old fulfillment source identifier only as an opaque `legacy:` reference,
 so registry recovery has no commerce-table or Stripe dependency.

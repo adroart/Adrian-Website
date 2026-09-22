@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../../data/mockData';
 import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection } from './AdminPage';
 
@@ -33,7 +34,17 @@ interface QueueResponse {
   ok: boolean;
   pending?: SaleQueueItem[];
   resolved?: SaleQueueItem[];
+  pagination?: { resolved?: { hasMore?: boolean; nextCursor?: string | null } };
   error?: string;
+}
+
+interface ConfirmationResult {
+  saleId: string;
+  pieceId: string;
+  editionNumber: number;
+  keeperPieceId: string | null;
+  registrationStatus: 'registered' | 'pending';
+  publicCode?: string;
 }
 
 function money(cents: number | null, currency: string | null): string {
@@ -48,17 +59,30 @@ function artworkTitle(pieceId: string | null): string | null {
   return artwork ? artwork.title.replace(/\s*-\s*\d+$/, '') : null;
 }
 
+const ConfirmationSummary: React.FC<{ result: ConfirmationResult }> = ({ result }) => (
+  result.registrationStatus === 'registered' ? (
+    <p>
+      Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+      {' '}Linked to canonical identity {result.publicCode}.
+    </p>
+  ) : (
+    <p>
+      Sale confirmed for <strong>{result.pieceId}</strong> · edition {result.editionNumber}.
+      {' '}No identity was created. <Link to="/admin/register">Complete canonical registration</Link> when the edition facts and backup evidence are ready.
+    </p>
+  )
+);
+
 const PendingRow: React.FC<{
   sale: SaleQueueItem;
-  onConfirmed: (saleId: string) => void;
+  onConfirmed: (result: ConfirmationResult) => void;
 }> = ({ sale, onConfirmed }) => {
   const [pieceId, setPieceId] = useState(sale.pieceId ?? sale.sku ?? '');
   const [editionNumber, setEditionNumber] = useState(
-    sale.editionNumber != null ? String(sale.editionNumber) : '0',
+    sale.editionNumber != null ? String(sale.editionNumber) : '',
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
 
   const confirm = useCallback(async () => {
     const trimmed = pieceId.trim();
@@ -67,7 +91,7 @@ const PendingRow: React.FC<{
       return;
     }
     const edition = Number(editionNumber);
-    if (!Number.isInteger(edition) || edition < 0) {
+    if (!editionNumber.trim() || !Number.isInteger(edition) || edition < 0) {
       setError('Edition must be a whole number, zero or more.');
       return;
     }
@@ -84,26 +108,13 @@ const PendingRow: React.FC<{
         setError(data.error ?? 'The confirm did not go through.');
         return;
       }
-      if (data.recoveryCode) setRecoveryCode(data.recoveryCode);
-      onConfirmed(sale.saleId);
+      onConfirmed(data as ConfirmationResult);
     } catch {
       setError('The confirm did not go through.');
     } finally {
       setBusy(false);
     }
   }, [pieceId, editionNumber, sale.saleId, onConfirmed]);
-
-  if (recoveryCode) {
-    return (
-      <li className="admin-atlas-sale-row admin-atlas-sale-row-done">
-        <p>
-          Confirmed. A new piece record was registered for <strong>{pieceId}</strong> — this
-          recovery code exists only here, once. Copy it and send it to the collector:
-        </p>
-        <code>{recoveryCode}</code>
-      </li>
-    );
-  }
 
   return (
     <li className="admin-atlas-sale-row">
@@ -125,7 +136,7 @@ const PendingRow: React.FC<{
           />
         </label>
         <label>
-          Edition
+          Edition (0 for a unique piece)
           <input
             value={editionNumber}
             onChange={(e) => setEditionNumber(e.target.value)}
@@ -141,22 +152,85 @@ const PendingRow: React.FC<{
   );
 };
 
-const ResolvedRow: React.FC<{ sale: SaleQueueItem }> = ({ sale }) => (
-  <li className="admin-atlas-sale-row admin-atlas-sale-row-resolved">
-    <div className="admin-atlas-sale-row-facts">
-      <p className="admin-atlas-sale-row-buyer">{sale.buyerEmail}</p>
-      <p className="admin-atlas-sale-row-muted">
-        {sale.status} &middot; {sale.pieceId ?? '—'}
-        {sale.editionNumber != null ? ` (edition ${sale.editionNumber})` : ''}
-      </p>
-    </div>
-  </li>
-);
+const ResolvedRow: React.FC<{ sale: SaleQueueItem }> = ({ sale }) => {
+  const canCheckRegistration = sale.status === 'confirmed'
+    && Boolean(sale.pieceId?.trim())
+    && Number.isSafeInteger(sale.editionNumber)
+    && (sale.editionNumber ?? -1) >= 0
+    && (sale.editionNumber ?? 10_000) <= 9999;
+  const [registration, setRegistration] = useState<
+    { state: 'idle' | 'checking' | 'error' } | { state: 'ready'; result: ConfirmationResult }
+  >({ state: canCheckRegistration ? 'checking' : 'idle' });
+
+  const checkRegistration = useCallback(async (signal?: AbortSignal) => {
+    if (!canCheckRegistration || !sale.pieceId || sale.editionNumber == null) return;
+    setRegistration({ state: 'checking' });
+    try {
+      const response = await fetch(`/api/admin/atlas-sales/${encodeURIComponent(sale.saleId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pieceId: sale.pieceId, editionNumber: sale.editionNumber }),
+        signal,
+      });
+      const data = await response.json();
+      const exactResult = response.ok && data.ok
+        && data.saleId === sale.saleId
+        && data.pieceId === sale.pieceId
+        && data.editionNumber === sale.editionNumber
+        && (data.registrationStatus === 'pending'
+          || (data.registrationStatus === 'registered' && typeof data.publicCode === 'string' && data.publicCode));
+      if (!exactResult) {
+        setRegistration({ state: 'error' });
+        return;
+      }
+      setRegistration({ state: 'ready', result: data as ConfirmationResult });
+    } catch (error) {
+      if ((error as { name?: string })?.name !== 'AbortError') setRegistration({ state: 'error' });
+    }
+  }, [canCheckRegistration, sale.editionNumber, sale.pieceId, sale.saleId]);
+
+  useEffect(() => {
+    if (!canCheckRegistration) {
+      setRegistration({ state: 'idle' });
+      return undefined;
+    }
+    const controller = new AbortController();
+    void checkRegistration(controller.signal);
+    return () => controller.abort();
+  }, [canCheckRegistration, checkRegistration]);
+
+  return (
+    <li className="admin-atlas-sale-row admin-atlas-sale-row-resolved">
+      <div className="admin-atlas-sale-row-facts">
+        <p className="admin-atlas-sale-row-buyer">{sale.buyerEmail}</p>
+        {registration.state === 'ready' ? (
+          <ConfirmationSummary result={registration.result} />
+        ) : (
+          <p className="admin-atlas-sale-row-muted">
+            {sale.status} &middot; {sale.pieceId ?? '—'}
+            {sale.editionNumber != null ? ` (edition ${sale.editionNumber})` : ''}
+            {registration.state === 'checking' && <> &middot; Checking canonical registration…</>}
+          </p>
+        )}
+        {registration.state === 'error' && (
+          <p className="admin-atlas-sale-row-error">
+            Canonical registration status could not be checked.{' '}
+            <button type="button" onClick={() => void checkRegistration()}>Try again</button>
+          </p>
+        )}
+      </div>
+    </li>
+  );
+};
 
 const AtlasPendingSales: React.FC = () => {
   const [pending, setPending] = useState<SaleQueueItem[] | null>(null);
   const [resolved, setResolved] = useState<SaleQueueItem[]>([]);
+  const [resolvedCursor, setResolvedCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmations, setConfirmations] = useState<ConfirmationResult[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -168,19 +242,53 @@ const AtlasPendingSales: React.FC = () => {
       }
       setPending(data.pending ?? []);
       setResolved(data.resolved ?? []);
+      setResolvedCursor(data.pagination?.resolved?.hasMore
+        ? data.pagination.resolved.nextCursor ?? null
+        : null);
+      setLoadMoreError(null);
       setError(null);
     } catch {
       setError('The pending sales queue did not load.');
     }
   }, []);
 
+  const loadMoreResolved = useCallback(async () => {
+    if (!resolvedCursor || loadingMore) return;
+    setLoadingMore(true);
+    setLoadMoreError(null);
+    try {
+      const params = new URLSearchParams({ cursor: resolvedCursor });
+      const response = await fetch(`/api/admin/atlas-sales?${params}`, { cache: 'no-store' });
+      const data: QueueResponse = await response.json();
+      if (!response.ok || !data.ok) {
+        setLoadMoreError('More resolved sales could not be loaded.');
+        return;
+      }
+      setResolved((current) => {
+        const seen = new Set(current.map((sale) => sale.saleId));
+        return [...current, ...(data.resolved ?? []).filter((sale) => !seen.has(sale.saleId))];
+      });
+      setResolvedCursor(data.pagination?.resolved?.hasMore
+        ? data.pagination.resolved.nextCursor ?? null
+        : null);
+    } catch {
+      setLoadMoreError('More resolved sales could not be loaded.');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, resolvedCursor]);
+
   useEffect(() => {
     void load();
   }, [load]);
 
   const handleConfirmed = useCallback(
-    (saleId: string) => {
-      setPending((current) => (current ?? []).filter((s) => s.saleId !== saleId));
+    (result: ConfirmationResult) => {
+      setConfirmations((current) => [
+        result,
+        ...current.filter((item) => item.saleId !== result.saleId),
+      ]);
+      setPending((current) => (current ?? []).filter((s) => s.saleId !== result.saleId));
       void load();
     },
     [load],
@@ -191,10 +299,19 @@ const AtlasPendingSales: React.FC = () => {
       <AdminPageHeader
         eyebrow="Atlas"
         title="Pending sales"
-        description="Sales that arrived from the checkout flow and are waiting to be confirmed into a piece record. Confirming registers the piece if it is not already registered, and hands you a one-time recovery code to send the collector."
+        description="Sales that arrived from checkout and are waiting to be matched to an artwork and edition. Confirmation links a complete registered identity when one exists. Otherwise the sale stays confirmed while canonical registration remains to be done."
       />
       {error && <AdminAlert tone="error">{error}</AdminAlert>}
       <AdminSection title="Waiting">
+        {confirmations.length > 0 && (
+          <ul className="admin-atlas-sale-list">
+            {confirmations.map((result) => (
+              <li key={result.saleId} className="admin-atlas-sale-row admin-atlas-sale-row-done">
+                <ConfirmationSummary result={result} />
+              </li>
+            ))}
+          </ul>
+        )}
         {pending === null ? (
           <p>Loading…</p>
         ) : pending.length === 0 ? (
@@ -214,9 +331,19 @@ const AtlasPendingSales: React.FC = () => {
         <AdminSection title="Recently resolved">
           <ul className="admin-atlas-sale-list">
             {resolved.map((sale) => (
-              <ResolvedRow key={sale.saleId} sale={sale} />
+              confirmations.some((result) => result.saleId === sale.saleId)
+                ? null
+                : <ResolvedRow key={sale.saleId} sale={sale} />
             ))}
           </ul>
+          {loadMoreError && (
+            <p className="admin-atlas-sale-row-error">{loadMoreError}</p>
+          )}
+          {resolvedCursor && (
+            <button type="button" onClick={() => void loadMoreResolved()} disabled={loadingMore}>
+              {loadingMore ? 'Loading…' : loadMoreError ? 'Try loading more again' : 'Load more'}
+            </button>
+          )}
         </AdminSection>
       )}
     </AdminPage>

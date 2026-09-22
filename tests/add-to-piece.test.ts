@@ -581,7 +581,7 @@ describe('the existing-owner path: register, then invite through the existing ma
         {
           keeperPieceId: identity.keeperPieceId,
           intendedRecipientEmail: 'holder@example.com',
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          expiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
           idempotencyKey: 'held-invite-1',
         },
       );

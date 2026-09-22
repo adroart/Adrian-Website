@@ -2,10 +2,12 @@
  * POST /api/admin/atlas-sales/:id — confirm one pending atlas sale.
  *
  * :id is the sale_id (Stripe checkout session id). Body: { pieceId,
- * editionNumber? }. Admin-only. Reject and edit are deliberately not built
+ * editionNumber }. Admin-only. Reject and edit are deliberately not built
  * here (task scope: confirm only) — a dismiss/edit surface is a separate
  * follow-up, same as the retired mandalacodes queue kept them as separate
- * endpoints.
+ * endpoints. The response reports registrationStatus "registered" only when
+ * an existing canonical identity was found. Otherwise it reports "pending";
+ * this endpoint never creates identity or recovery proof.
  */
 
 import { jsonResponse, requireAdmin, requireDb } from '../../_lib/admin.js';
@@ -51,7 +53,7 @@ export async function onRequest({ request, env, params }) {
   const editionNumber = body.editionNumber === undefined || body.editionNumber === null
     ? undefined
     : body.editionNumber;
-  if (editionNumber !== undefined && !Number.isSafeInteger(editionNumber)) {
+  if (!Number.isSafeInteger(editionNumber)) {
     return jsonResponse({ ok: false, error: 'invalid_edition_number' }, 400);
   }
 

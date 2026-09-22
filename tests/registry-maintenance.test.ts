@@ -3070,7 +3070,7 @@ describe('private maintenance APIs', () => {
     }
   });
 
-  it('atomically supersedes an active plate and exactly replays its generated replacement', async () => {
+  it('re-engraves an active plate under the same identity and exactly replays retries', async () => {
     const { database, env: sqliteEnv } = createSqliteD1();
     try {
       database.exec(registryMigrations);
@@ -3118,12 +3118,12 @@ describe('private maintenance APIs', () => {
         request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
         env, params: { id: 'kp-lifecycle' },
       });
-      assert.equal(response.status, 201);
+      assert.equal(response.status, 200);
       const payload = await response.json();
       assert.equal(payload.replayed, false);
       assert.match(payload.replacement.publicCode, /^AR-/);
       assert.match(payload.replacement.ownershipCode, /^[A-Z0-9-]+$/);
-      assert.notEqual(payload.replacement.publicCode, old.publicCode);
+      assert.equal(payload.replacement.publicCode, old.publicCode);
 
       const rows = database.prepare(
         `SELECT id, public_code, issuance_key, plate_status, supersedes_keeper_piece_id,
@@ -3131,13 +3131,13 @@ describe('private maintenance APIs', () => {
            FROM keeper_pieces ORDER BY id`,
       ).all();
       const oldRow = rows.find((row: any) => row.id === old.id) as any;
-      const newRow = rows.find((row: any) => row.id !== old.id) as any;
-      assert.equal(oldRow.plate_status, 'superseded');
-      assert.equal(oldRow.superseded_by_keeper_piece_id, newRow.id);
+      assert.equal(rows.length, 1);
+      assert.equal(oldRow.plate_status, 'active');
+      assert.equal(oldRow.superseded_by_keeper_piece_id, null);
       assert.equal(oldRow.physical_disposition, body.physicalDisposition);
-      assert.equal(newRow.plate_status, 'generated');
-      assert.equal(newRow.supersedes_keeper_piece_id, old.id);
-      assert.equal(oldRow.replaced_at, payload.replacement.generatedAt);
+      assert.equal(oldRow.public_code, old.publicCode);
+      assert.equal(oldRow.issuance_key, old.issuanceKey);
+      assert.ok(oldRow.replaced_at);
       const event = database.prepare(
         "SELECT before_json, after_json FROM registry_maintenance_events WHERE idempotency_key = 'api-replace-plate'",
       ).get();
@@ -3151,18 +3151,19 @@ describe('private maintenance APIs', () => {
       const replayPayload = await replay.json();
       assert.equal(replayPayload.replayed, true);
       assert.deepEqual(replayPayload.replacement, payload.replacement);
-      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 2);
-
-      database.prepare(
-        `UPDATE keeper_pieces SET plate_status = 'active', plate_activated_at = ?1
-          WHERE id = ?2`,
-      ).run('2026-07-30T02:00:00.000Z', newRow.id);
-      const lockedReplay = await action({
+      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 1);
+      assert.equal(database.prepare(
+        'SELECT count(*) AS count FROM artwork_lineage_events WHERE keeper_piece_id = ?1',
+      ).get(old.id).count, 2);
+      const concurrent = await Promise.all([1, 2].map(() => action({
         request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
         env, params: { id: 'kp-lifecycle' },
-      });
-      assert.equal(lockedReplay.status, 409);
-      assert.deepEqual(await lockedReplay.json(), { ok: false, error: 'plate_identity_locked' });
+      })));
+      assert.deepEqual(concurrent.map(result => result.status), [200, 200]);
+      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 1);
+      assert.equal(database.prepare(
+        "SELECT count(*) AS count FROM registry_maintenance_events WHERE idempotency_key = 'api-replace-plate'",
+      ).get().count, 1);
     } finally {
       maintenanceSession = null;
       database.close();

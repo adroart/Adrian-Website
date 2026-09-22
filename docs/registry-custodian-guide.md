@@ -91,6 +91,15 @@ The routine duties, honestly stated:
   pages, download a fresh encrypted archive and a fresh ledger, and refresh
   the held folder from level one.
 
+The admin page also has **Rebuild all records**. This is a manual repair tool,
+not a yearly task and not the annual record snapshot. It rebuilds at most 25
+permanent Piece Records at a time. Choose **Continue rebuild** until the page
+says the rebuild is complete. A failed piece remains named in the
+result; use **Retry failed records** after fixing the reported storage or data
+problem. Do not start the rebuild over to hide a partial page. The separate
+annual snapshot records a year in a piece's life and must not be replaced by
+this repair operation.
+
 That is all. The system was built so that running it costs little money and
 less attention.
 

@@ -96,6 +96,13 @@ async function handleGet(context, auth) {
      ) AS is_contributor`,
   ).bind(row.id, auth.userId).first();
   const contributor = !byYou && Number(contributorRow?.is_contributor) === 1;
+  const authoredRow = !byYou ? await env.DB.prepare(`
+    SELECT EXISTS (
+      SELECT 1 FROM collector_dreams
+       WHERE keeper_piece_id = ?1 AND author_user_id = ?2
+    ) AS has_history
+  `).bind(row.id, auth.userId).first() : null;
+  const authorHistory = !byYou && Number(authoredRow?.has_history) === 1;
   let stewardHistory = [];
   // Additive: an open silence window against the steward's own piece, if
   // any. Never affects a guest or non-steward response, and a missing
@@ -140,8 +147,9 @@ async function handleGet(context, auth) {
     byYou,
     contributor,
     // Display location is the steward's own data; only surface it to them.
+    ...((byYou || authorHistory) ? { keeperPieceId: row.id } : {}),
+    ...(authorHistory ? { authorHistory: true } : {}),
     ...(byYou ? {
-      keeperPieceId: row.id,
       currentDisplayLocation: row.current_display_location ?? null,
       stewardHistory,
     } : {}),

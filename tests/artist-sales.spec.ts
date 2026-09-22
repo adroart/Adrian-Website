@@ -459,7 +459,8 @@ test('records and reconnects through the complete private verified-sale journey'
   await page.getByRole('button', { name: 'Seal shared message' }).click();
   await unresolved.getByLabel('Artwork-specific sealed message').fill('A later note for this artwork.');
   await unresolved.getByRole('button', { name: 'Seal artwork message' }).click();
-  await expect(unresolved.getByText('A later note for this artwork.')).toBeVisible();
+  await expect(unresolved.getByRole('paragraph').filter({ hasText: /^A later note for this artwork\.$/ })).toBeVisible();
+  await expect(unresolved.getByLabel('Artwork-specific sealed message')).toHaveValue('');
 
   await page.getByRole('button', { name: 'Correct sale facts' }).click();
   await page.getByLabel('Correction reason').fill('Corrected from the paper receipt.');

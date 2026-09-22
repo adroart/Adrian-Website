@@ -1592,10 +1592,10 @@ test('reviews plate replacement and keeps its one-time secret package only in me
   const ownershipCode = 'AAAA-BBBB-CCCC-DDDD';
   const manifest = {
     schemaVersion: 1,
-    publicCode: 'AR-REPLACE1',
+    publicCode: 'AR-7KQ9M2WX',
     artworkId: 'UL-100',
     editionNumber: 0,
-    publicUrl: 'https://adrianrasmussen.com/r/AR-REPLACE1',
+    publicUrl: 'https://adrianrasmussen.com/r/AR-7KQ9M2WX',
     ownershipCode,
     frontSha256: 'a'.repeat(64),
     undersideSha256: 'b'.repeat(64),
@@ -1618,6 +1618,7 @@ test('reviews plate replacement and keeps its one-time secret package only in me
         ok: true,
         replayed: true,
         eventId: 'rme-replacement-ui',
+        record: { keeperPieceId: 'kp-local-maintenance', plateStatus: 'active', recordVersion: 2 },
         replacement: {
           ok: true,
           ...manifest,
@@ -1638,26 +1639,27 @@ test('reviews plate replacement and keeps its one-time secret package only in me
     });
   });
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
-  await page.getByRole('button', { name: 'Replace physical plate', exact: true }).click();
+  await page.getByRole('button', { name: 'Re-engrave damaged plate', exact: true }).click();
   await page.getByLabel('Physical disposition').fill(disposition);
   await page.getByRole('button', { name: 'Review plate repair' }).click();
-  await expect(page.getByRole('heading', { name: 'Review plate replacement' })).toBeVisible();
-  await expect(page.getByText(/old public identity becomes superseded forever/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Review same-number re-engraving' })).toBeVisible();
+  await expect(page.getByText(/same identity stays active/i)).toBeVisible();
   await page.getByLabel('Reason for this plate repair').fill(reason);
-  await page.getByRole('button', { name: 'Confirm replacement and mint new identity' }).click();
+  await page.getByRole('button', { name: 'Confirm same-number re-engraving' }).click();
 
   await expect(page.getByText(/Retry the unchanged request before editing, cancelling, searching, or leaving this record/i)).toBeVisible();
   await expect(page.getByLabel('Reason for this plate repair')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Add creator-history entry' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Confirm replacement and mint new identity' }).click();
+  await page.getByRole('button', { name: 'Confirm same-number re-engraving' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Same-number plate AR-7KQ9M2WX' })).toBeVisible();
   await expect(page.getByText(ownershipCode, { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Download AR-REPLACE1-front\.svg/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Download AR-7KQ9M2WX-front\.svg/ })).toBeVisible();
   const clear = page.getByRole('button', { name: 'Clear one-time package from this screen' });
   await expect(clear).toBeDisabled();
-  await page.getByLabel(/downloaded the front SVG/i).check();
+  await page.getByText('I downloaded the front SVG, private underside SVG, and private manifest, and secured the Ownership Code outside this browser.', { exact: true }).click();
+  await expect(page.getByLabel(/downloaded the front SVG/i)).toBeChecked();
   await expect(clear).toBeEnabled();
 
   expect(bodies).toHaveLength(2);
@@ -1679,7 +1681,7 @@ test('reviews plate replacement and keeps its one-time secret package only in me
   expect(JSON.stringify(privacy)).not.toContain(disposition);
 
   await clear.click();
-  await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Same-number plate AR-7KQ9M2WX' })).toHaveCount(0);
 });
 
 test('creates and removes public creator history through a reasoned private review', async ({ page }, testInfo) => {

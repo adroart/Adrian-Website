@@ -4,6 +4,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
+- [ ] **Complete the 22 September artist audit.** _(band: agent-runnable)_ Apply canonical issuance, permanent identity, collector and operational repairs behind existing launch gates, then verify and deliver coherent increments. → [Execution and evidence](todo/plans/audit-2026-09-22-execution.md)
+
 - [ ] Give "When Poetry Becomes Sound" a picture, if you want one _(band: you-required | effort: quick)_
   It is the only writing with no `image:` field, so its card renders as text alone. That now looks deliberate rather than broken (the frame is omitted, not left empty), so this is optional. Add one to `content/stories/when-poetry-becomes-sound.md` if the piece deserves a picture.
 

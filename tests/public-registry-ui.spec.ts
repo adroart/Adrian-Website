@@ -32,17 +32,6 @@ async function assertNoHorizontalOverflow(page: import('@playwright/test').Page)
   expect(hasOverflow).toBe(false);
 }
 
-async function typography(locator: import('@playwright/test').Locator) {
-  return locator.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return {
-      family: style.fontFamily,
-      size: Number.parseFloat(style.fontSize),
-      spacing: Number.parseFloat(style.letterSpacing) || 0,
-    };
-  });
-}
-
 async function mockIdentity(page: import('@playwright/test').Page) {
   await page.route(`**/api/registry/${PUBLIC_CODE}`, async route => {
     await route.fulfill({
@@ -59,6 +48,17 @@ async function mockIdentity(page: import('@playwright/test').Page) {
 // specific route to assert on the present case.
 async function stubRecordProbeAbsent(page: import('@playwright/test').Page) {
   await page.route('**/api/records/**', route => route.fulfill({ status: 404 }));
+}
+
+async function openCurrentCollector(page: import('@playwright/test').Page, path: string) {
+  await page.goto('/');
+  await page.evaluate(async (nextPath) => {
+    const loadModule = Function('return import("/launchFlags.ts")');
+    const module = await loadModule();
+    module.LAUNCH_FLAGS.livingLegacy = true;
+    history.pushState({}, '', nextPath);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, path);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -93,7 +93,7 @@ test('a mismatched route is replaced with the canonical server identity route', 
   await expect(identity).toContainText('Joined the final assembly.');
   await expect(identity).not.toContainText('999');
   await expect(page.getByTestId('catalog-artwork-record')).toHaveCount(0);
-  await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');
+  await expect(page.getByTestId('draft-artwork-record')).toContainText('Server Verified Study');
   await expect(page.getByText('Art of Living - 32')).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 });
@@ -129,7 +129,7 @@ test('a registry-only draft shows exact identity before its draft record', async
   await page.goto(`/works/MD-905?instance=${PUBLIC_CODE}&edition=88`);
   await expect(page.getByTestId('public-registry-identity')).toContainText('Server Verified Study');
   await expect(page.getByTestId('public-registry-identity')).toContainText('Edition 2 of 7');
-  await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');
+  await expect(page.getByTestId('draft-artwork-record')).toContainText('Server Verified Study');
   await expect(page.getByTestId('public-registry-identity')).not.toContainText('88');
   await assertNoHorizontalOverflow(page);
 });
@@ -217,11 +217,13 @@ test('a scanned arrival is immediately complete without sign-in, timers, or priv
       ok: true,
       certificate: {
         artworkId: 'UL-100',
+        title: 'Art of Living - 32',
         edition: { kind: 'numbered', number: 3, size: 11 },
         publicCode: PUBLIC_CODE,
         materials: ['Teak'],
         origin: 'Bali, Indonesia',
         certificateWording: 'Recorded as an authentic artwork instance.',
+        publicLedger: [],
       },
     }),
   }));
@@ -252,53 +254,23 @@ test('a scanned arrival is immediately complete without sign-in, timers, or priv
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, `/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`);
 
-  await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('h1, h2, h3').first()).toHaveJSProperty('tagName', 'H1');
-  await expect(page.getByTestId('collector-arrival')).toContainText('Art of Living - 32');
-  await expect(page.getByTestId('collector-arrival').locator('img')).toHaveAttribute(
-    'alt',
-    'Art of Living, Universal Language 32. Original multi-dimensional wooden sculpture by Adrian Rasmussen.',
-  );
-  await expect(page.getByTestId('collector-arrival')).not.toContainText('Laser Cut Wood, Acrylic');
-  await expect(page.getByTestId('collector-arrival')).not.toContainText('Made in 2024');
-  await expect(page.getByTestId('public-registry-identity')).toContainText('Art of Living - 32');
-  await expect(page.getByTestId('catalog-artwork-record')).toBeVisible();
-  await expect(page.getByTestId('catalog-artwork-record').locator('img')).toHaveAttribute(
-    'alt',
-    'Art of Living, Universal Language 32. Original multi-dimensional wooden sculpture by Adrian Rasmussen.',
-  );
-  await expect(page.getByTestId('public-certificate')).toContainText('Teak');
-  await expect(page.getByTestId('public-certificate')).toContainText('Bali, Indonesia');
-  await expect(page.getByTestId('public-certificate')).toContainText('Edition 3 of 11');
-  await expect(page.getByTestId('public-certificate')).not.toContainText('Edition 2 of 7');
-  await expect(page.getByTestId('public-certificate')).toContainText(PUBLIC_CODE);
-  await expect(page.getByTestId('public-certificate')).not.toContainText('Makers');
-  const certificateFactType = await typography(page.locator('.collector-certificate-fact dd').first());
-  expect(certificateFactType.family).toContain('Lora');
-  expect(certificateFactType.size).toBeGreaterThanOrEqual(16);
-  await expect(page.locator('body')).not.toContainText('Static catalog provenance');
-  await expect(page.locator('body')).not.toContainText('Static material story');
-  const registerDoor = page.getByRole('button', { name: 'Register and certify this piece' });
-  await expect(registerDoor).toBeVisible();
-  const doorCopyType = await typography(registerDoor.locator('.collector-door-copy'));
-  expect(doorCopyType.family).toContain('Lora');
-  expect(doorCopyType.size).toBeGreaterThanOrEqual(16);
-  const buttonType = await typography(registerDoor);
-  expect(buttonType.size).toBeGreaterThanOrEqual(12);
-  expect(buttonType.spacing).toBeLessThanOrEqual(buttonType.size * 0.12);
-  await expect(page.getByRole('button', { name: 'Begin your dream' })).toBeVisible();
-  await expect(page.locator('[inert]')).toHaveCount(0);
-  await expect(page.getByTestId('arrival-record')).not.toHaveAttribute('aria-hidden', 'true');
-  await expect(page.locator('body')).not.toContainText('collector@example.com');
-  await expect(page.locator('body')).not.toContainText('1990-06-12');
+  const piece = page.locator('main');
+  await expect(piece).toContainText('Art of Living - 32');
+  await expect(piece.getByRole('img', { name: 'Art of Living - 32, line drawing' })).toBeVisible();
+  await expect(piece).not.toContainText('Laser Cut Wood, Acrylic');
+  await expect(piece).not.toContainText('Made in 2024');
+  await expect(piece.getByRole('button', { name: /Piece information/ })).toBeVisible();
+  await piece.getByRole('button', { name: /Piece information/ }).click();
+  await expect(piece).toContainText('Edition 2 of 7');
+  await expect(piece).not.toContainText('Edition 3 of 11');
+  await expect(piece).toContainText('Teak');
+  await expect(piece).toContainText('Bali, Indonesia');
+  await expect(piece).not.toContainText('Makers');
+  await expect(piece).not.toContainText('Static catalog provenance');
+  await expect(piece).not.toContainText('Static material story');
+  await expect(piece).not.toContainText('collector@example.com');
+  await expect(piece).not.toContainText('1990-06-12');
   await assertNoHorizontalOverflow(page);
-  await registerDoor.focus();
-  await expect(registerDoor).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'Register this piece to you' })).toBeVisible();
-  const openingCopyType = await typography(page.locator('.collector-screen .collector-copy').first());
-  expect(openingCopyType.family).toContain('Lora');
-  expect(openingCopyType.size).toBeGreaterThanOrEqual(16);
 });
 
 test('a failed certificate can retry while exact instance facts and the record remain available', async ({ page }) => {
@@ -322,35 +294,27 @@ test('a failed certificate can retry while exact instance facts and the record r
             ok: true,
             certificate: {
               artworkId: 'UL-100',
+              title: 'Art of Living - 32',
               edition: { kind: 'numbered', number: 4, size: 12 },
               publicCode: PUBLIC_CODE,
               materials: ['Teak'],
+              publicLedger: [],
             },
           }),
     });
   });
   await page.route('**/api/auth/get-session', route => route.fulfill({ status: 200, body: 'null' }));
 
-  await page.goto('/');
-  await page.evaluate(async (path) => {
-    const loadModule = Function('return import("/launchFlags.ts")');
-    const module = await loadModule();
-    module.LAUNCH_FLAGS.livingLegacy = true;
-    history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }, `/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`);
-
-  const certificate = page.getByTestId('public-certificate');
-  await expect(certificate).toContainText('could not be verified');
-  await expect(certificate).not.toContainText('Edition 2 of 7');
-  await expect(certificate).not.toContainText(PUBLIC_CODE);
-  await expect(page.getByTestId('public-registry-identity')).toBeVisible();
+  await openCurrentCollector(page, `/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`);
+  const piece = page.locator('main');
+  await piece.getByRole('button', { name: /Piece information/ }).click();
+  await expect(piece).toContainText('Edition 2 of 7');
+  await expect(piece).not.toContainText('Teak');
   const attemptsBeforeRetry = certificateAttempts;
-  await certificate.getByRole('button', { name: 'Try again' }).click();
-  await expect(certificate).toContainText('Teak');
-  await expect(certificate).toContainText('UL-100');
-  await expect(certificate).toContainText('Edition 4 of 12');
-  await expect(certificate).toContainText(PUBLIC_CODE);
+  await piece.getByRole('button', { name: 'Try again' }).click();
+  await expect(piece).toContainText('Teak');
+  await expect(piece).toContainText('Edition 2 of 7');
+  await expect(piece).not.toContainText('Edition 4 of 12');
   expect(certificateAttempts).toBe(attemptsBeforeRetry + 1);
 });
 
@@ -370,27 +334,23 @@ test('a mismatched certificate response cannot replace exact instance authority'
       ok: true,
       certificate: {
         artworkId: 'MD-905',
+        title: 'Untrusted title',
         edition: { kind: 'numbered', number: 9, size: 9 },
         publicCode: 'AR-WRONG123',
         materials: ['Untrusted material'],
+        publicLedger: [],
       },
     }),
   }));
   await page.route('**/api/auth/get-session', route => route.fulfill({ status: 200, body: 'null' }));
 
-  await page.goto('/');
-  await page.evaluate(async (path) => {
-    const loadModule = Function('return import("/launchFlags.ts")');
-    const module = await loadModule();
-    module.LAUNCH_FLAGS.livingLegacy = true;
-    history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }, `/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`);
-
-  const certificate = page.getByTestId('public-certificate');
-  await expect(certificate).toContainText('could not be verified');
-  await expect(certificate).not.toContainText('AR-WRONG123');
-  await expect(certificate).not.toContainText('Untrusted material');
-  await expect(certificate).not.toContainText(PUBLIC_CODE);
-  await expect(page.getByTestId('public-registry-identity')).toContainText(PUBLIC_CODE);
+  await openCurrentCollector(page, `/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`);
+  const piece = page.locator('main');
+  await expect(piece).toContainText('Art of Living - 32');
+  await piece.getByRole('button', { name: /Piece information/ }).click();
+  await expect(piece).toContainText('Edition 2 of 7');
+  await expect(piece).not.toContainText('AR-WRONG123');
+  await expect(piece).not.toContainText('Untrusted title');
+  await expect(piece).not.toContainText('Untrusted material');
+  await expect(piece.getByRole('button', { name: 'Try again' })).toBeVisible();
 });

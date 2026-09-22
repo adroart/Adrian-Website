@@ -385,6 +385,10 @@ describe('registry Maintenance client contract', () => {
       };
       return new Response(JSON.stringify({
         ok: true,
+        record: {
+          keeperPieceId: 'kp-1', artworkId: 'UL-101', plateStatus: 'active',
+          physicalDisposition: 'Original plate destroyed and photographed.', recordVersion: 6,
+        },
         replacement: {
           ...manifest, frontSvg: '<svg>front</svg>', undersideSvg: '<svg>back</svg>',
           manifest, backupStatus: 'verified',
@@ -556,7 +560,7 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /selected\.stewardVersion/);
     assert.match(component, /Correct digital link/);
     assert.match(component, /Void generated plate/);
-    assert.match(component, /Replace physical plate/);
+    assert.match(component, /Re-engrave damaged plate/);
     assert.match(component, /If the engraving itself is wrong, never relink it/i);
     assert.match(component, /Clear one-time package from this screen/);
     assert.match(component, /projectPlateDownloads/);
