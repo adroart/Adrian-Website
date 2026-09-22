@@ -81,6 +81,7 @@ export const COPY = {
 
     /* a text link, not a row, because rows open in place and links travel. */
     siteLink: locked('Into the artist’s website'),
+    recordLink: ph('Open the permanent record'),
 
     /* the way in, by state. §6, "Arrival, dressed by relationship" */
     begin: locked('Begin'),

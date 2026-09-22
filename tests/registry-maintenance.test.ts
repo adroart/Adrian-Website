@@ -1891,6 +1891,7 @@ describe('private maintenance APIs', () => {
       })).status, 400);
       for (const removedFilter of [
         'stewardEmail=keeper%40example.com',
+        'holderName=Mira',
         'acquiredFrom=2026-07-01',
         'acquiredTo=2026-07-31',
         'hasAcquisition=true',
@@ -1930,8 +1931,33 @@ describe('private maintenance APIs', () => {
       ]);
       assert.doesNotMatch(
         JSON.stringify(listed.pieces),
-        /keeper@example\.com|acquisition|backupStatus|registeredAt|steward|recordVersion/i,
+        /keeper@example\.com|acquisition|backupStatus|registeredAt|steward|recordVersion|Mira/i,
       );
+
+      const holderSearch = await list({
+        request: adminRequest('/api/admin/maintenance', 'POST', { holderName: 'Mira' }),
+        env,
+      });
+      assert.equal(holderSearch.status, 200);
+      const byHolder = await holderSearch.json();
+      assert.equal(byHolder.pieces.length, 0, 'no Better Auth user row yet');
+
+      database.exec(`
+        INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+        VALUES ('keeper-1', 'Mira Collector', 'keeper@example.com', 1, 0, 0);
+      `);
+      const holderSearchMatched = await list({
+        request: adminRequest('/api/admin/maintenance', 'POST', { holderName: 'mira' }),
+        env,
+      });
+      assert.equal(holderSearchMatched.status, 200);
+      const matched = await holderSearchMatched.json();
+      assert.equal(matched.pieces.length, 1);
+      assert.equal(matched.pieces[0].id, 'kp-maint');
+      assert.deepEqual(Object.keys(matched.pieces[0]).sort(), [
+        'artworkId', 'editionNumber', 'id', 'plateStatus', 'publicCode', 'title',
+      ]);
+      assert.doesNotMatch(JSON.stringify(matched.pieces), /Mira|keeper@example\.com/i);
 
       const detailResponse = await detail({
         request: adminRequest('/api/admin/maintenance/kp-maint'), env, params: { id: 'kp-maint' },

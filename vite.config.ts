@@ -475,19 +475,46 @@ function mockApiPlugin(): Plugin {
         if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
         const url = new URL(req.url || '/', 'http://local.dev');
 
+        const maintenanceSearchMatches = (filters: Record<string, string | number | undefined>) => {
+          const summary = maintenanceSummary();
+          const holderName = typeof filters.holderName === 'string' ? filters.holderName.trim().toLowerCase() : '';
+          const stewardName = maintenancePiece.steward?.email?.split('@')[0]?.toLowerCase() ?? '';
+          return (
+            (!filters.publicCode || summary.publicCode.toLowerCase() === String(filters.publicCode).toLowerCase())
+            && (!filters.artworkId || summary.artworkId.toLowerCase() === String(filters.artworkId).toLowerCase())
+            && (!filters.title || summary.title.toLowerCase().includes(String(filters.title).toLowerCase()))
+            && (filters.editionNumber === undefined || summary.editionNumber === Number(filters.editionNumber))
+            && (!holderName || stewardName.includes(holderName))
+          );
+        };
+
         if (req.method === 'GET' && url.pathname === '/') {
           const allowedSearch = new Set(['publicCode', 'artworkId', 'title', 'editionNumber']);
           if ([...url.searchParams.keys()].some(key => !allowedSearch.has(key))) {
             return send(res, 400, { ok: false, error: 'unknown_filter' });
           }
-          const summary = maintenanceSummary();
-          const matches = (
-            (!url.searchParams.get('publicCode') || summary.publicCode.toLowerCase() === url.searchParams.get('publicCode')!.toLowerCase())
-            && (!url.searchParams.get('artworkId') || summary.artworkId.toLowerCase() === url.searchParams.get('artworkId')!.toLowerCase())
-            && (!url.searchParams.get('title') || summary.title.toLowerCase().includes(url.searchParams.get('title')!.toLowerCase()))
-            && (!url.searchParams.has('editionNumber') || summary.editionNumber === Number(url.searchParams.get('editionNumber')))
-          );
-          return send(res, 200, { ok: true, pieces: matches ? [summary] : [] });
+          const matches = maintenanceSearchMatches({
+            publicCode: url.searchParams.get('publicCode') ?? undefined,
+            artworkId: url.searchParams.get('artworkId') ?? undefined,
+            title: url.searchParams.get('title') ?? undefined,
+            editionNumber: url.searchParams.has('editionNumber')
+              ? Number(url.searchParams.get('editionNumber'))
+              : undefined,
+          });
+          return send(res, 200, { ok: true, pieces: matches ? [maintenanceSummary()] : [] });
+        }
+
+        if (req.method === 'POST' && url.pathname === '/') {
+          const body = await readBody(req);
+          const allowedSearch = new Set(['publicCode', 'artworkId', 'title', 'editionNumber', 'holderName']);
+          if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return send(res, 400, { ok: false, error: 'invalid_body' });
+          }
+          if (Object.keys(body).some(key => !allowedSearch.has(key))) {
+            return send(res, 400, { ok: false, error: 'unknown_filter' });
+          }
+          const matches = maintenanceSearchMatches(body as Record<string, string | number | undefined>);
+          return send(res, 200, { ok: true, pieces: matches ? [maintenanceSummary()] : [] });
         }
 
         const detailMatch = url.pathname.match(/^\/([^/]+)$/);

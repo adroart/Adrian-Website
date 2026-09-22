@@ -57,12 +57,13 @@ export const MAINTENANCE_CURRENCY_EXPONENTS: Readonly<Record<string, number>> = 
 
 export const MAINTENANCE_CURRENCY_CODES = Object.freeze(Object.keys(MAINTENANCE_CURRENCY_EXPONENTS));
 
-/** Only public fields are allowed to become query-string values. */
+/** Public fields may appear in GET query strings; holderName uses POST only. */
 export type MaintenanceSearchFilters = {
   publicCode?: string;
   artworkId?: string;
   title?: string;
   editionNumber?: number;
+  holderName?: string;
 };
 
 export type LegacyAcquisitionSalesContext = {
@@ -326,13 +327,43 @@ async function readMaintenanceJson<T>(response: Response): Promise<T> {
   return data as T;
 }
 
+function maintenanceSearchRequest(
+  filters: MaintenanceSearchFilters = {},
+): { path: string; init?: RequestInit } {
+  const holderName = filters.holderName?.trim();
+  if (holderName) {
+    const body: Record<string, string | number> = {};
+    const publicCode = filters.publicCode?.trim();
+    const artworkId = filters.artworkId?.trim();
+    const title = filters.title?.trim();
+    if (publicCode) body.publicCode = publicCode;
+    if (artworkId) body.artworkId = artworkId;
+    if (title) body.title = title;
+    if (Number.isSafeInteger(filters.editionNumber) && Number(filters.editionNumber) >= 0) {
+      body.editionNumber = Number(filters.editionNumber);
+    }
+    body.holderName = holderName;
+    return {
+      path: '/api/admin/maintenance',
+      init: {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    };
+  }
+  return { path: buildMaintenanceSearchPath(filters) };
+}
+
 export async function searchMaintenance(
   filters: MaintenanceSearchFilters = {},
   signal?: AbortSignal,
 ): Promise<MaintenanceListItem[]> {
-  const response = await fetch(buildMaintenanceSearchPath(filters), {
+  const { path, init } = maintenanceSearchRequest(filters);
+  const response = await fetch(path, {
     cache: 'no-store',
     signal,
+    ...init,
   });
   const data = await readMaintenanceJson<{ ok: true; pieces: MaintenanceListItem[] }>(response);
   return (data.pieces || []).map(piece => ({

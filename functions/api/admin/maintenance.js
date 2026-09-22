@@ -4,13 +4,21 @@ import { ARTWORK_ID_PATTERN } from '../_lib/artworkCatalog.js';
 import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 
 const MAX_RESULTS = 200;
-const FILTERS = new Set([
+const PUBLIC_FILTERS = new Set([
   'publicCode', 'artworkId', 'editionNumber', 'title',
 ]);
+const POST_FILTERS = new Set([...PUBLIC_FILTERS, 'holderName']);
 
 function textParam(params, name, max) {
   const value = params.get(name);
   if (value === null || value === '') return null;
+  const normalized = value.trim();
+  return normalized && normalized.length <= max ? normalized : false;
+}
+
+function textField(value, max) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'string') return false;
   const normalized = value.trim();
   return normalized && normalized.length <= max ? normalized : false;
 }
@@ -31,39 +39,56 @@ function serialize(row) {
   };
 }
 
-export async function onRequest({ request, env }) {
-  const unauthorized = await requireAdmin(request, env);
-  if (unauthorized) return unauthorized;
-  if (request.method !== 'GET') {
-    return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET' });
+function parseEditionNumber(rawEdition) {
+  if (rawEdition === null || rawEdition === undefined || rawEdition === '') return null;
+  const editionNumber = typeof rawEdition === 'number'
+    ? rawEdition
+    : /^\d+$/.test(String(rawEdition)) ? Number(rawEdition) : NaN;
+  if (!Number.isSafeInteger(editionNumber) || editionNumber < 0 || editionNumber > 9999) {
+    return false;
   }
-  const missingDb = requireDb(env);
-  if (missingDb) return missingDb;
+  return editionNumber;
+}
 
-  const params = new URL(request.url).searchParams;
-  if ([...params.keys()].some((key) => !FILTERS.has(key))) {
-    return jsonResponse({ ok: false, error: 'unknown_filter' }, 400);
+function rejectUnknownKeys(keys, allowed) {
+  return keys.some((key) => !allowed.has(key));
+}
+
+function buildSearchFilters(source, { allowHolderName }) {
+  const publicCode = textField(source.publicCode, 32);
+  const artworkId = textField(source.artworkId, 80);
+  const title = textField(source.title, 120);
+  const holderName = allowHolderName ? textField(source.holderName, 120) : null;
+  if ([publicCode, artworkId, title, holderName].includes(false)) {
+    return { error: 'invalid_filter' };
   }
-  const publicCode = textParam(params, 'publicCode', 32);
-  const artworkId = textParam(params, 'artworkId', 80);
-  const title = textParam(params, 'title', 120);
-  if ([publicCode, artworkId, title].includes(false)) {
-    return jsonResponse({ ok: false, error: 'invalid_filter' }, 400);
-  }
+  const editionNumber = parseEditionNumber(source.editionNumber);
+  if (editionNumber === false) return { error: 'invalid_edition_number' };
   if (publicCode && !isPublicRegistryCode(publicCode.toUpperCase())) {
-    return jsonResponse({ ok: false, error: 'invalid_public_code' }, 400);
+    return { error: 'invalid_public_code' };
   }
   if (artworkId && !ARTWORK_ID_PATTERN.test(artworkId.toUpperCase())) {
-    return jsonResponse({ ok: false, error: 'invalid_artwork_id' }, 400);
+    return { error: 'invalid_artwork_id' };
   }
-  let editionNumber = null;
-  if (params.has('editionNumber')) {
-    const rawEdition = params.get('editionNumber');
-    editionNumber = rawEdition !== null && /^\d+$/.test(rawEdition) ? Number(rawEdition) : NaN;
-    if (!Number.isSafeInteger(editionNumber) || editionNumber < 0 || editionNumber > 9999) {
-      return jsonResponse({ ok: false, error: 'invalid_edition_number' }, 400);
-    }
+  return {
+    filters: { publicCode, artworkId, title, editionNumber, holderName },
+  };
+}
+
+async function readJsonBody(request) {
+  try {
+    const body = await request.json();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
+    return body;
+  } catch {
+    return null;
   }
+}
+
+function searchPieces(env, filters) {
+  const {
+    publicCode, artworkId, title, editionNumber, holderName,
+  } = filters;
   const where = [];
   const values = [];
   const bind = (value) => {
@@ -86,17 +111,62 @@ export async function onRequest({ request, env }) {
       where.push(registryClause);
     }
   }
+  if (holderName) {
+    where.push(`kp.keeper_user_id IS NOT NULL`);
+    where.push(
+      `instr(lower(COALESCE(holder.name, '')), lower(${bind(holderName)})) > 0`,
+    );
+  }
+  const joinHolder = holderName
+    ? 'LEFT JOIN user holder ON holder.id = kp.keeper_user_id'
+    : '';
+  return env.DB.prepare(
+    `SELECT kp.id, kp.piece_id, kp.edition_number, kp.public_code,
+            kp.plate_status, ra.title AS registry_title
+       FROM keeper_pieces kp
+       LEFT JOIN registry_artworks ra ON ra.id = kp.piece_id
+       ${joinHolder}
+       ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+       ORDER BY kp.id
+       LIMIT ${MAX_RESULTS}`,
+  ).bind(...values);
+}
+
+export async function onRequest({ request, env }) {
+  const unauthorized = await requireAdmin(request, env);
+  if (unauthorized) return unauthorized;
+  const missingDb = requireDb(env);
+  if (missingDb) return missingDb;
+
+  let filtersResult;
+  if (request.method === 'GET') {
+    const params = new URL(request.url).searchParams;
+    if (rejectUnknownKeys([...params.keys()], PUBLIC_FILTERS)) {
+      return jsonResponse({ ok: false, error: 'unknown_filter' }, 400);
+    }
+    filtersResult = buildSearchFilters({
+      publicCode: params.get('publicCode'),
+      artworkId: params.get('artworkId'),
+      title: params.get('title'),
+      editionNumber: params.has('editionNumber') ? params.get('editionNumber') : null,
+    }, { allowHolderName: false });
+  } else if (request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return jsonResponse({ ok: false, error: 'invalid_body' }, 400);
+    if (rejectUnknownKeys(Object.keys(body), POST_FILTERS)) {
+      return jsonResponse({ ok: false, error: 'unknown_filter' }, 400);
+    }
+    filtersResult = buildSearchFilters(body, { allowHolderName: true });
+  } else {
+    return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET, POST' });
+  }
+
+  if ('error' in filtersResult) {
+    return jsonResponse({ ok: false, error: filtersResult.error }, 400);
+  }
+
   try {
-    const statement = env.DB.prepare(
-      `SELECT kp.id, kp.piece_id, kp.edition_number, kp.public_code,
-              kp.plate_status, ra.title AS registry_title
-         FROM keeper_pieces kp
-         LEFT JOIN registry_artworks ra ON ra.id = kp.piece_id
-         ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-         ORDER BY kp.id
-         LIMIT ${MAX_RESULTS}`,
-    ).bind(...values);
-    const { results } = await statement.all();
+    const { results } = await searchPieces(env, filtersResult.filters).all();
     return jsonResponse({ ok: true, pieces: (results || []).map(serialize) });
   } catch {
     return jsonResponse({ ok: false, error: 'maintenance_search_failed' }, 500);
