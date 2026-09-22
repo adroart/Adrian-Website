@@ -86,55 +86,25 @@ export async function onRequest(context) {
         `https://api.stripe.com/v1/checkout/sessions/${sessionId}/line_items?limit=100&expand[]=data.price.product`,
         { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } },
       );
-      if (liRes.ok) {
-        const lineItems = await liRes.json();
-        const orderRow = await env.DB
-          .prepare('SELECT id FROM orders WHERE stripe_session_id = ?1')
-          .bind(sessionId)
-          .first();
-        const orderId = orderRow?.id;
-        if (orderId) {
-          // Replace any existing items so retries stay consistent.
-          await env.DB.prepare('DELETE FROM order_items WHERE order_id = ?1').bind(orderId).run();
-          const stmts = [];
-          for (const li of lineItems.data ?? []) {
-            const productId =
-              (typeof li.price?.product === 'object' ? li.price.product?.metadata?.product_id : null) ||
-              (typeof li.price?.product === 'string' ? li.price.product : null) ||
-              li.price?.id ||
-              'unknown';
-            stmts.push(
-              env.DB
-                .prepare(
-                  `INSERT INTO order_items (order_id, product_id, description, quantity, amount_subtotal)
-                   VALUES (?1, ?2, ?3, ?4, ?5)`,
-                )
-                .bind(
-                  orderId,
-                  String(productId),
-                  li.description || '',
-                  li.quantity || 1,
-                  li.amount_subtotal ?? 0,
-                ),
-            );
-          }
-          if (stmts.length) await env.DB.batch(stmts);
-        }
+      if (!liRes.ok) throw new Error('stripe_line_items_fetch_failed');
+      const lineItems = await liRes.json();
+      if (!lineItems || !Array.isArray(lineItems.data) || lineItems.has_more === true) {
+        throw new Error('stripe_line_items_incomplete');
       }
+      await replaceOrderLineItems(env, sessionId, lineItems.data);
     } catch (err) {
       console.warn('[stripe/webhook] line items fetch failed:', err);
+      return new Response('line_item_enrichment_failed', { status: 503 });
     }
   }
 
   // Enqueue the living-legacy atlas sale bridge (M4): a direct D1 write
   // into atlas_sale_events, the same table the mandalacodes admin queue
-  // reads via the shared `DB` binding. Best-effort and non-fatal: it must
-  // never block or fail this order write, and a failed write here just
-  // means Adrian issues the steward by hand, exactly as before this chain
-  // existed.
+  // reads via the shared `DB` binding. A failed enqueue returns 503 so Stripe
+  // retries the idempotent order and queue writes.
   if (status === 'paid') {
     try {
-      await recordPendingAtlasSale(env, {
+      const queued = await recordPendingAtlasSale(env, {
         saleId: sessionId,
         buyerEmail: email,
         buyerName: s.customer_details?.name || undefined,
@@ -144,12 +114,46 @@ export async function onRequest(context) {
         // sku/pieceId/editionNumber left unset: Adrian picks the piece in the
         // admin queue (the webhook's word never decides which piece moves).
       });
+      if (!queued?.ok) return new Response('atlas_sale_enqueue_failed', { status: 503 });
     } catch (err) {
       console.warn('[stripe/webhook] atlas pending sale enqueue failed:', err);
+      return new Response('atlas_sale_enqueue_failed', { status: 503 });
     }
   }
 
   return new Response('ok', { status: 200 });
+}
+
+export async function replaceOrderLineItems(env, sessionId, lineItems) {
+  if (typeof env?.DB?.batch !== 'function') throw new Error('atomic_write_unavailable');
+  const orderRow = await env.DB.prepare(
+    'SELECT id FROM orders WHERE stripe_session_id = ?1',
+  ).bind(sessionId).first();
+  if (!orderRow?.id) throw new Error('order_not_found');
+  const statements = [
+    env.DB.prepare('DELETE FROM order_items WHERE order_id = ?1').bind(orderRow.id),
+  ];
+  for (const li of lineItems) {
+    if (!li || typeof li !== 'object') throw new Error('invalid_line_item');
+    const productId =
+      (typeof li.price?.product === 'object' ? li.price.product?.metadata?.product_id : null)
+      || (typeof li.price?.product === 'string' ? li.price.product : null)
+      || li.price?.id
+      || 'unknown';
+    statements.push(env.DB.prepare(
+      `INSERT INTO order_items (order_id, product_id, description, quantity, amount_subtotal)
+       VALUES (?1, ?2, ?3, ?4, ?5)`,
+    ).bind(
+      orderRow.id, String(productId), li.description || '', li.quantity || 1,
+      li.amount_subtotal ?? 0,
+    ));
+  }
+  const results = await env.DB.batch(statements);
+  if (!Array.isArray(results) || results.length !== statements.length
+    || results.some((result) => result?.success !== true)) {
+    throw new Error('line_item_replace_failed');
+  }
+  return { ok: true, count: lineItems.length };
 }
 
 export async function upsertCheckoutOrder(env, {

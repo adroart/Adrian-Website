@@ -9,24 +9,12 @@
  */
 
 import { jsonResponse, requireAdmin } from './_lib/admin.js';
+import { readR2JsonIndex, updateR2JsonIndex, withIndexErrors } from './_lib/r2JsonIndex.js';
 
 const KEY = 'book/index.json';
 
 async function readEntries(env) {
-    const obj = await env.MUSIC_BUCKET.get(KEY);
-    if (!obj) return [];
-    try {
-        const parsed = JSON.parse(await obj.text());
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
-
-async function writeEntries(env, entries) {
-    await env.MUSIC_BUCKET.put(KEY, JSON.stringify(entries, null, 2), {
-        httpMetadata: { contentType: 'application/json' },
-    });
+    return (await readR2JsonIndex(env.MUSIC_BUCKET, KEY)).entries;
 }
 
 const json = jsonResponse;
@@ -72,7 +60,7 @@ function sanitise(e) {
     return out;
 }
 
-export async function onRequestGet({ request, env }) {
+async function handleGet({ request, env }) {
     const entries = await readEntries(env);
     const id = new URL(request.url).searchParams.get('id');
     if (id) {
@@ -82,7 +70,7 @@ export async function onRequestGet({ request, env }) {
     return json({ ok: true, entries });
 }
 
-export async function onRequestPost({ request, env }) {
+async function handlePost({ request, env }) {
     const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
 
@@ -97,23 +85,26 @@ export async function onRequestPost({ request, env }) {
     if (!isValidEntry(entry)) return json({ ok: false, error: 'Invalid entry (id required)' }, 400);
 
     const incoming = sanitise(entry);
-    const entries = await readEntries(env);
-    const idx = entries.findIndex(e => e.id === incoming.id);
-    if (idx >= 0) entries[idx] = incoming;
-    else entries.push(incoming);
-
-    await writeEntries(env, entries);
+    await updateR2JsonIndex(env.MUSIC_BUCKET, KEY, (entries) => {
+        const idx = entries.findIndex(entry => entry.id === incoming.id);
+        if (idx >= 0) entries[idx] = incoming;
+        else entries.push(incoming);
+        return entries;
+    });
     return json({ ok: true, entry: incoming });
 }
 
-export async function onRequestDelete({ request, env }) {
+async function handleDelete({ request, env }) {
     const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
 
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return json({ ok: false, error: 'Missing id' }, 400);
 
-    const entries = await readEntries(env);
-    await writeEntries(env, entries.filter(e => e.id !== id));
+    await updateR2JsonIndex(env.MUSIC_BUCKET, KEY, entries => entries.filter(entry => entry.id !== id));
     return json({ ok: true });
 }
+
+export const onRequestGet = withIndexErrors(handleGet);
+export const onRequestPost = withIndexErrors(handlePost);
+export const onRequestDelete = withIndexErrors(handleDelete);

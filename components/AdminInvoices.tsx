@@ -135,6 +135,8 @@ const AdminInvoices: React.FC = () => {
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [presetSaving, setPresetSaving] = useState(false);
+  const [paymentBusyId, setPaymentBusyId] = useState<number | null>(null);
+  const paymentAttemptRef = useRef<Record<number, { key: string; paidCents: number }>>({});
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   const totalCents = useMemo(() => lineItemsTotal(draft.lineItems), [draft.lineItems]);
@@ -429,37 +431,59 @@ const AdminInvoices: React.FC = () => {
   }, [exactInvoiceLoading, exactInvoiceResult, linkedInvoiceId, loading, pageSelection.kind]);
 
   const markPaid = async (invoice: Invoice) => {
+    if (paymentBusyId === invoice.id) return;
     const paidSoFar = invoice.amountPaidCents || 0;
     const balance = invoice.totalCents - paidSoFar;
-    // Ask how much was paid now; default to the full remaining balance. Enter a
-    // smaller amount to record a partial payment (the rest stays as balance due).
-    const entered = window.prompt(
-      `Record a payment for ${invoice.clientName}.\n` +
-        `Total ${formatMoney(invoice.totalCents, invoice.currency)} · ` +
-        `already paid ${formatMoney(paidSoFar, invoice.currency)} · ` +
-        `balance ${formatMoney(balance, invoice.currency)}.\n\n` +
-        `Amount paid now (${invoice.currency}):`,
-      String((balance / 100).toFixed(2)),
-    );
-    if (entered === null) return;
-    const paidCents = Math.round(parseFloat(entered.replace(/[^0-9.]/g, '')) * 100);
-    if (!Number.isFinite(paidCents) || paidCents <= 0) return;
+    let attempt = paymentAttemptRef.current[invoice.id];
+    if (!attempt) {
+      const entered = window.prompt(
+        `Record a payment for ${invoice.clientName}.\n` +
+          `Total ${formatMoney(invoice.totalCents, invoice.currency)} · ` +
+          `already paid ${formatMoney(paidSoFar, invoice.currency)} · ` +
+          `balance ${formatMoney(balance, invoice.currency)}.\n\n` +
+          `Amount paid now (${invoice.currency}):`,
+        String((balance / 100).toFixed(2)),
+      );
+      if (entered === null) return;
+      const normalized = entered.trim().replace(/^[^0-9]*/, '');
+      if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+        setMessage({ type: 'err', text: 'Enter a valid payment amount with no more than two decimal places.' });
+        return;
+      }
+      const paidCents = Math.round(Number(normalized) * 100);
+      if (!Number.isSafeInteger(paidCents) || paidCents <= 0) return;
+      attempt = { key: crypto.randomUUID(), paidCents };
+      paymentAttemptRef.current[invoice.id] = attempt;
+    }
+    setPaymentBusyId(invoice.id);
     try {
-      const data = await fetch(`/api/admin/invoices/${invoice.id}/mark-paid`, {
+      const response = await fetch(`/api/admin/invoices/${invoice.id}/mark-paid`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paidCents }),
-      }).then(res => readJson<{ ok: boolean; invoice: Invoice }>(res));
+        body: JSON.stringify({ paidCents: attempt.paidCents, idempotencyKey: attempt.key }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        delete paymentAttemptRef.current[invoice.id];
+        throw new Error(body?.error || `request_failed_${response.status}`);
+      }
+      const data = await readJson<{ ok: boolean; invoice: Invoice }>(response);
+      delete paymentAttemptRef.current[invoice.id];
       setInvoices(prev => prev.map(inv => (inv.id === data.invoice.id ? data.invoice : inv)));
       const newBalance = data.invoice.totalCents - (data.invoice.amountPaidCents || 0);
       setMessage({
         type: 'ok',
         text: newBalance > 0
-          ? `Recorded ${formatMoney(paidCents, data.invoice.currency)}. Balance due ${formatMoney(newBalance, data.invoice.currency)}.`
+          ? `Recorded ${formatMoney(attempt.paidCents, data.invoice.currency)}. Balance due ${formatMoney(newBalance, data.invoice.currency)}.`
           : `Paid in full (${formatMoney(data.invoice.totalCents, data.invoice.currency)}).`,
       });
-    } catch {
-      setMessage({ type: 'err', text: 'Could not record payment.' });
+    } catch (error) {
+      const uncertain = Boolean(paymentAttemptRef.current[invoice.id]);
+      setMessage({ type: 'err', text: uncertain
+        ? 'The result is uncertain. Press Record payment again to retry the exact same payment safely.'
+        : niceError(error) });
+    } finally {
+      setPaymentBusyId(null);
     }
   };
 
@@ -989,9 +1013,10 @@ const AdminInvoices: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => markPaid(invoice)}
+                            disabled={paymentBusyId === invoice.id}
                             className="mt-2 border border-wood-300 bg-paper-50 px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 hover:border-green-600 hover:text-green-700"
                           >
-                            ✓ Record payment
+                            {paymentBusyId === invoice.id ? 'Recording…' : '✓ Record payment'}
                           </button>
                         )}
                       </div>
