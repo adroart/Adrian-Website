@@ -72,4 +72,5 @@
 # ============================================================
 # SPA catch-all (must be LAST)
 # ============================================================
+/media/* https://adrian-website-media.lightcodes.workers.dev/media/:splat 302
 /* /index.html 200
