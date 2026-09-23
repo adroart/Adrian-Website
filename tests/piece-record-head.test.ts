@@ -45,6 +45,29 @@ describe('HEAD /api/records/:publicCode', () => {
 
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('ETag'), `"${RECORD_HASH}"`);
+    assert.equal(response.headers.get('Cache-Control'), 'public, max-age=0, must-revalidate');
+    assert.equal(await response.text(), '');
+    assert.equal(storage.get.mock.callCount(), 0);
+  });
+
+  it('revalidates a matching ETag without touching storage', async () => {
+    const storage = untouchableStorage();
+    const env = {
+      DB: fakeDb({ record_hash: RECORD_HASH, r2_key: `records/${PUBLIC_CODE}/${RECORD_HASH}.html` }),
+      ARTWORK_REGISTRY_BACKUP: storage,
+    };
+
+    const response = await recordsRequest({
+      request: new Request(`https://example.com/api/records/${PUBLIC_CODE}`, {
+        method: 'HEAD', headers: { 'If-None-Match': `W/"${RECORD_HASH}"` },
+      }),
+      env,
+      params: { publicCode: PUBLIC_CODE },
+    });
+
+    assert.equal(response.status, 304);
+    assert.equal(response.headers.get('ETag'), `"${RECORD_HASH}"`);
+    assert.equal(response.headers.get('Cache-Control'), 'public, max-age=0, must-revalidate');
     assert.equal(await response.text(), '');
     assert.equal(storage.get.mock.callCount(), 0);
   });

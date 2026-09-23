@@ -115,12 +115,9 @@ export interface RecordRebuildResult {
   unchanged: number;
   failed: number;
   outcomes: RecordRebuildOutcome[];
-  /** Bulk rebuild only: true when the registry has more pieces past this
-   *  capped page. Absent (or false) for a single-piece rebuild. */
-  hasMore?: boolean;
-  /** Bulk rebuild only: the public code to resume from via { cursor }, or
-   *  null once the last page has been reached. */
-  nextCursor?: string | null;
+  cursor: string | null;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 /**
@@ -149,6 +146,30 @@ export async function requestRecordRebuild(
   return data as RecordRebuildResult;
 }
 
+/** Merge another bounded page, replacing matching codes when a failed piece is retried. */
+export function mergeRecordRebuildResults(
+  current: RecordRebuildResult | null,
+  page: RecordRebuildResult,
+): RecordRebuildResult {
+  const byCode = new Map<string, RecordRebuildOutcome>();
+  for (const outcome of current?.outcomes || []) {
+    if (outcome.publicCode) byCode.set(outcome.publicCode, outcome);
+  }
+  for (const outcome of page.outcomes) {
+    if (outcome.publicCode) byCode.set(outcome.publicCode, outcome);
+  }
+  const outcomes = [...byCode.values()];
+  return {
+    ...page,
+    ok: outcomes.every((outcome) => outcome.status !== 'failed'),
+    total: outcomes.length,
+    generated: outcomes.filter((outcome) => outcome.status === 'generated').length,
+    unchanged: outcomes.filter((outcome) => outcome.status === 'unchanged').length,
+    failed: outcomes.filter((outcome) => outcome.status === 'failed').length,
+    outcomes,
+  };
+}
+
 /** The Record line's display text: "Full", "Placeholder", or "None". */
 export function recordLabel(record: PieceRecordSummary | null): string {
   if (!record) return 'None';
@@ -167,33 +188,6 @@ export function recordHoverText(record: PieceRecordSummary | null): string {
       : 'This record carries its full lineage and shines sections.';
   }
   return 'This record was generated while the living record was not yet published, so its lineage and shines sections say so instead of showing them. A rebuild after that changes converts it to a full record.';
-}
-
-/**
- * Fold one more capped page of a bulk rebuild into the running total. Used
- * to page a large registry through /api/admin/records/rebuild's
- * { cursor } continuation without ever losing the running report: each
- * page's own outcomes are appended, never replaced, so a partial run (the
- * tab closed mid-way, say) still shows exactly what had already been
- * rebuilt rather than nothing at all.
- */
-export function mergeRecordRebuildResults(
-  accumulated: RecordRebuildResult | null,
-  page: RecordRebuildResult,
-): RecordRebuildResult {
-  if (!accumulated) return page;
-  return {
-    ok: accumulated.ok && page.ok,
-    generatedAt: page.generatedAt,
-    trigger: page.trigger,
-    total: accumulated.total + page.total,
-    generated: accumulated.generated + page.generated,
-    unchanged: accumulated.unchanged + page.unchanged,
-    failed: accumulated.failed + page.failed,
-    outcomes: [...accumulated.outcomes, ...page.outcomes],
-    hasMore: page.hasMore,
-    nextCursor: page.nextCursor,
-  };
 }
 
 /** One piece's rebuild outcome, in Adrian's plain register. */

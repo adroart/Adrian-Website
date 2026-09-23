@@ -252,6 +252,32 @@ const AdminPieces: React.FC = () => {
   const [recordsBusy, setRecordsBusy] = useState(false);
   const [recordsStatus, setRecordsStatus] = useState('');
   const [recordsFailed, setRecordsFailed] = useState(false);
+  const [recordsProgress, setRecordsProgress] = useState<RecordRebuildResult | null>(null);
+
+  const rebuildRecordPage = async (cursor: string | null, reset: boolean) => {
+    setRecordsBusy(true);
+    if (reset) {
+      setRecordsStatus('');
+      setRecordsFailed(false);
+      setRecordsProgress(null);
+    }
+    try {
+      const page = await requestRecordRebuild('/api/admin/records/rebuild', {
+        limit: 25,
+        ...(cursor ? { cursor } : {}),
+      });
+      const combined = mergeRecordRebuildResults(reset ? null : recordsProgress, page);
+      setRecordsProgress(combined);
+      setRecordsStatus(`${summarizeRecordRebuildAll(combined)}${page.hasMore ? ' More records remain; continue when ready.' : ' Rebuild complete.'}`);
+      setRecordsFailed(combined.failed > 0);
+      await loadPieces();
+    } catch (error) {
+      setRecordsStatus(registryErrorMessage(error, 'Could not rebuild the next record page. Progress is retained; try this page again.'));
+      setRecordsFailed(true);
+    } finally {
+      setRecordsBusy(false);
+    }
+  };
 
   const rebuildAllRecords = async () => {
     if (!registryUnlocked) {
@@ -259,41 +285,43 @@ const AdminPieces: React.FC = () => {
       return;
     }
     if (!window.confirm(
-      'Rebuild the permanent record for every registered piece? This writes two files per '
-      + 'piece. A large registry is paged in bounded batches rather than one request, so '
-      + 'the report is never lost partway through. Records that already match are left '
-      + 'unchanged.',
+      'Begin rebuilding permanent records in bounded pages of 25? Records that already '
+      + 'match are left unchanged, and progress and failures remain visible between pages.',
     )) return;
+    await rebuildRecordPage(null, true);
+  };
+
+  const continueRecordRebuild = async () => {
+    if (!recordsProgress?.hasMore || !recordsProgress.nextCursor) return;
+    await rebuildRecordPage(recordsProgress.nextCursor, false);
+  };
+
+  const retryFailedRecords = async () => {
+    if (!recordsProgress) return;
+    const failures = recordsProgress.outcomes.filter((outcome) => outcome.status === 'failed' && outcome.publicCode);
+    if (!failures.length) return;
     setRecordsBusy(true);
-    setRecordsStatus('');
-    setRecordsFailed(false);
-    try {
-      // Paged, not one request per registry: each call rebuilds one capped
-      // batch and returns hasMore/nextCursor so a registry of any size
-      // finishes as several small, boundable requests instead of one that
-      // could outrun the platform's request time limit and lose the whole
-      // summary. Every page's outcomes are folded into the running total as
-      // it goes, so the status line always reflects real progress even if
-      // the run is interrupted.
-      let accumulated: RecordRebuildResult | null = null;
-      let cursor: string | undefined;
-      do {
-        const page = await requestRecordRebuild(
-          '/api/admin/records/rebuild',
-          cursor ? { cursor } : undefined,
-        );
-        accumulated = mergeRecordRebuildResults(accumulated, page);
-        setRecordsStatus(summarizeRecordRebuildAll(accumulated));
-        setRecordsFailed(accumulated.failed > 0);
-        cursor = page.hasMore ? (page.nextCursor ?? undefined) : undefined;
-      } while (cursor);
-      await loadPieces();
-    } catch (error) {
-      setRecordsStatus(registryErrorMessage(error, 'Could not rebuild the registry’s records.'));
-      setRecordsFailed(true);
-    } finally {
-      setRecordsBusy(false);
+    let updated = recordsProgress;
+    for (const failure of failures) {
+      try {
+        const retried = await requestRecordRebuild('/api/admin/records/rebuild', { publicCode: failure.publicCode });
+        const merged = mergeRecordRebuildResults(updated, retried);
+        updated = { ...merged, cursor: recordsProgress.cursor, nextCursor: recordsProgress.nextCursor, hasMore: recordsProgress.hasMore };
+      } catch (error) {
+        const message = errorMessage(error, failure.error || 'retry_failed');
+        updated = {
+          ...updated,
+          outcomes: updated.outcomes.map((outcome) => outcome.publicCode === failure.publicCode
+            ? { ...outcome, status: 'failed', error: message } : outcome),
+        };
+      }
     }
+    updated = mergeRecordRebuildResults(null, updated);
+    setRecordsProgress(updated);
+    setRecordsStatus(`${summarizeRecordRebuildAll(updated)}${updated.hasMore ? ' More records remain; continue when ready.' : ' Rebuild complete.'}`);
+    setRecordsFailed(updated.failed > 0);
+    setRecordsBusy(false);
+    await loadPieces();
   };
 
   const runRowAction = async (
@@ -446,7 +474,9 @@ const AdminPieces: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()} disabled={!registryUnlocked} title="The offline master record. Online is a mirror you can rebuild from this file.">Download offline ledger</button>
                 <button type="button" className={quietButtonClass} onClick={() => void syncDrive()} disabled={!registryUnlocked} title="Send the offline master ledger to your Google Drive.">Sync to Google Drive</button>
-                <button type="button" className={quietButtonClass} onClick={() => void rebuildAllRecords()} disabled={!registryUnlocked || recordsBusy} title="Regenerate the permanent record for every registered piece. A server-side loop, two storage writes per piece; a large registry takes a while.">{recordsBusy ? 'Rebuilding records…' : 'Rebuild all records'}</button>
+                <button type="button" className={quietButtonClass} onClick={() => void rebuildAllRecords()} disabled={!registryUnlocked || recordsBusy} title="Begin a bounded permanent-record rebuild. Each request handles at most 25 pieces and keeps its progress visible.">{recordsBusy ? 'Rebuilding records…' : 'Rebuild all records'}</button>
+                {recordsProgress?.hasMore && recordsProgress.nextCursor && <button type="button" className={quietButtonClass} onClick={() => void continueRecordRebuild()} disabled={!registryUnlocked || recordsBusy}>Continue rebuild</button>}
+                {recordsProgress && recordsProgress.failed > 0 && <button type="button" className={quietButtonClass} onClick={() => void retryFailedRecords()} disabled={!registryUnlocked || recordsBusy}>Retry failed records</button>}
                 <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
               </div>
             </div>

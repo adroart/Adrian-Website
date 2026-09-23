@@ -13,7 +13,7 @@ import Breadcrumb, { type Crumb } from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
 import SaveToCollectionButton from './account/SaveToCollectionButton';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
+import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle, companionCardUrl, contextualCardReturn } from '../utils/universalLanguage';
 import { resolvePiece, isLegacyPieceParam, piecePath, pieceUrl } from '../utils/pieceSlug';
 
 // --- Helpers ---
@@ -165,7 +165,6 @@ const PiecePage: React.FC = () => {
     // one-tap return link that takes them straight back to where they were
     // reading, system param and all.
     const navState = location.state as { oracleOrigin?: string; preferredSize?: string; openConfigurator?: boolean } | null;
-    const oracleOrigin = navState?.oracleOrigin ?? null;
     const openConfigurator = navState?.openConfigurator === true;
 
     // Image gallery state
@@ -203,6 +202,8 @@ const PiecePage: React.FC = () => {
     // Accepts the canonical title slug (/creations/amphibian-dream) and the legacy
     // catalog id (/creations/SIG-100), so every link ever shared keeps resolving.
     const art = useMemo(() => resolvePiece(FULL_ARCHIVE, id), [id]);
+    const cardUrl = art ? companionCardUrl(art) : null;
+    const oracleOrigin = art ? contextualCardReturn(art, location.search, navState?.oracleOrigin) : null;
 
     // An id URL is a working URL, not the canonical one. Send it to the slug so the
     // address bar, the share sheet and the analytics all agree on one address per piece.
@@ -616,16 +617,15 @@ const PiecePage: React.FC = () => {
             {/* Return to oracle reading — shown only when the reader arrived
                 via a card's BuySheet. One tap takes them back to the same
                 card with their active system preserved (?system=...). */}
-            {oracleOrigin && (
+            {cardUrl && (
                 <div className="bg-paper-100 border-b border-wood-200/60">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 py-3 flex items-center justify-between gap-4">
-                        <Link
-                            to={oracleOrigin}
+                        <a
+                            href={oracleOrigin || cardUrl}
                             className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.22em] text-bronze-700 hover:text-bronze-800 transition-colors"
                         >
-                            <ArrowRight size={14} className="rotate-180" />
-                            Return to your oracle reading
-                        </Link>
+                            {oracleOrigin ? 'Return to your reading on Mandala Codes' : 'Explore this piece’s companion card on Mandala Codes'}
+                        </a>
                     </div>
                 </div>
             )}

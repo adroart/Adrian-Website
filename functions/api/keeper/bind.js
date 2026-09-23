@@ -53,12 +53,17 @@ import {
   hashRecoveryCode,
 } from '../_lib/keeper.js';
 import { openContestedClaim } from '../_lib/claimRequests.js';
-import { evaluateSilence, openSilenceWindow } from '../_lib/claimSilence.js';
+import {
+  evaluateSilence, openSilenceWindow, sendInitialSilenceNotice,
+} from '../_lib/claimSilence.js';
 import { claimEvidenceStatement } from '../_lib/lineage.js';
 import { prepareFirstKeeperBind } from '../_lib/keeperClaim.js';
 import { syncFirstBindCollectorLetters } from '../_lib/collectorLetters.js';
 import { rateLimit } from '../_lib/ratelimit.js';
 import { constantTimeEqual, writeOwnershipAudit } from '../_lib/admin.js';
+import {
+  currentNonCodeCustodyProof, elevateOwnershipCodeClaim,
+} from '../_lib/elevatedOwnershipClaim.js';
 
 // Wrong-code guessing on a registered piece is throttled per (authenticated
 // user, keeper piece) pair, matching the granularity of the contested-claim
@@ -144,7 +149,8 @@ export async function onRequest(context) {
                 plate_status, backup_status, backup_reference, backup_sha256,
                 ownership_code_key_version, registration_status,
                 identity_backup_status, identity_backup_reference,
-                identity_backup_sha256
+                identity_backup_sha256, current_display_location, steward_version,
+                lineage_event_count, lineage_head_hash
            FROM keeper_pieces
           WHERE public_code = ?1`,
       )
@@ -233,11 +239,39 @@ export async function onRequest(context) {
       );
     }
 
+    // The true Ownership Code outranks a current acquisition that is provably
+    // non-code based. Resolve this before the silence clock can pass or send
+    // another reminder. Exact holder + acquisition-time evidence prevents an
+    // old invitation or transfer from being used against later code custody.
+    if (existing.claimed_at && existing.keeper_user_id !== auth.userId
+      && existing.keeper_user_id && !existing.released_at
+      && await currentNonCodeCustodyProof(env.DB, existing)) {
+      const elevated = await elevateOwnershipCodeClaim(env, {
+        piece: existing,
+        claimant: { userId: auth.userId, verifiedEmail },
+        evidence: {
+          ipAddress: request.headers.get('CF-Connecting-IP'),
+          userAgent: request.headers.get('User-Agent'),
+        },
+        claimedAt: nowIso,
+      });
+      if (elevated.ok) {
+        return json({
+          ok: true,
+          elevated: true,
+          keeper: { pieceId, editionNumber, claimedAt: elevated.claimedAt },
+        });
+      }
+      if (elevated.error !== 'not_non_code_custody') {
+        return json({ ok: false, error: 'elevated_claim_retryable' }, 503);
+      }
+    }
+
     // Thirty-day passing, evaluated lazily (no cron): any authenticated touch
     // of a piece that carries a contested claim runs the silence engine
     // (functions/api/_lib/claimSilence.js). It sends due reminders, lets the
-    // registered steward's own touch withdraw the window (they are alive and
-    // holding it), and after the deadline EXECUTES the pass through the
+    // ordinary touches leave the decision open, and after the deadline it
+    // EXECUTES the pass through the
     // governed transfer path from migration 024. Fail closed both ways: an
     // error here never blocks nor forces a bind, and the pass itself never
     // runs without the recorded, soaked reminders.
@@ -310,11 +344,18 @@ export async function onRequest(context) {
       // deployed yet: the next touch after migration will open it.
       if ((claim.status === 'opened' || claim.status === 'duplicate') && claim.requestId) {
         try {
-          await openSilenceWindow(env.DB, {
+          const openedWindow = await openSilenceWindow(env.DB, {
             requestId: claim.requestId,
             keeperPieceId: existing.id,
             createdAt: nowIso,
           }, nowIso);
+          if (openedWindow.ok && openedWindow.windowId) {
+            await sendInitialSilenceNotice(env.DB, env, {
+              windowId: openedWindow.windowId,
+              keeperUserId: existing.keeper_user_id,
+              pieceLabel: `${pieceId} · ${editionNumber}`,
+            }, nowIso);
+          }
         } catch (windowError) {
           console.error('[keeper/bind] silence window open error:', windowError?.message);
         }

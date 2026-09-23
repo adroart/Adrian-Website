@@ -114,7 +114,9 @@ const WorksPage: React.FC = () => {
     }, [id, navigate, verifiedIdentity]);
 
     useMetaTags(
-        artwork
+        verifiedIdentity
+            ? { title: `${verifiedIdentity.title} · Adrian Rasmussen` }
+            : artwork
             ? { title: `${artwork.title} — Adrian Rasmussen`, description: artwork.description }
             : draft.status === 'found' && draft.artwork
                 ? { title: `${draft.artwork.title} — Adrian Rasmussen` }
@@ -140,13 +142,15 @@ const WorksPage: React.FC = () => {
     // this branch is unreachable and the current behavior below is unchanged.
     if (legacyOn && publicCode && verifiedIdentity) {
         return (
-            <Suspense fallback={null}>
-                <CollectorPieceArrival
-                    identity={verifiedIdentity}
-                    artwork={artwork ?? null}
-                    beginClaim={searchParams.get('claim') === '1'}
-                />
-            </Suspense>
+            <div data-testid="collector-page-inset" style={{ paddingTop: 'var(--nav-height)' }}>
+                <Suspense fallback={null}>
+                    <CollectorPieceArrival
+                        identity={verifiedIdentity}
+                        artwork={artwork ?? null}
+                        beginClaim={searchParams.get('claim') === '1'}
+                    />
+                </Suspense>
+            </div>
         );
     }
 
@@ -161,7 +165,12 @@ const WorksPage: React.FC = () => {
         } else if (draft.status === 'found' && draft.artwork) {
             record = (
                 <DraftArtworkRecord
-                    draft={draft.artwork}
+                    draft={verifiedIdentity ? {
+                        ...draft.artwork,
+                        title: verifiedIdentity.title,
+                        series: verifiedIdentity.series,
+                        edition: { kind: verifiedIdentity.edition.kind, size: verifiedIdentity.edition.size },
+                    } : draft.artwork}
                     identity={verifiedIdentity}
                     showPublicLineage={Boolean(showVerifiedPublicLineage)}
                     lineage={lineage}
@@ -175,7 +184,13 @@ const WorksPage: React.FC = () => {
     } else {
         record = (
             <CatalogArtworkRecord
-                artwork={artwork}
+                artwork={verifiedIdentity ? {
+                    ...artwork,
+                    title: verifiedIdentity.title,
+                    series: verifiedIdentity.series ?? artwork.series,
+                    editionSize: verifiedIdentity.edition.size ?? undefined,
+                    editionNumber: verifiedIdentity.edition.number ?? undefined,
+                } : artwork}
                 book={book}
                 identity={verifiedIdentity}
                 showPublicLineage={Boolean(showVerifiedPublicLineage)}
@@ -463,7 +478,7 @@ function CatalogArtworkRecord({
                         {/* Certificate label */}
                         {!identity && (
                             <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
-                                Certificate of Authenticity
+                                Artwork catalogue
                             </p>
                         )}
 

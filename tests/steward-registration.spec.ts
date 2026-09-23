@@ -106,17 +106,19 @@ test('scanned sign-in returns to the canonical public claim URL without the Owne
   });
 
   await openWithLivingLegacy(page, WORK_PATH);
-  await page.getByRole('button', { name: 'Register and certify this piece' }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Sign in to continue' }).click();
+  await page.getByRole('button', { name: 'Begin', exact: true }).click();
+  await page.getByRole('textbox', { name: 'The code' }).fill(OWNERSHIP_CODE.replaceAll('-', ''));
+  await page.getByRole('button', { name: 'Unlock' }).click();
+  await page.getByRole('button', { name: 'I already have one' }).click();
   const dialog = page.getByRole('dialog', { name: 'Sign in' });
   await dialog.getByLabel('Email').fill('requester@example.com');
   await dialog.getByLabel('Password').fill('correct horse battery staple');
   await dialog.getByRole('button', { name: 'Sign in', exact: true }).click();
 
-  await expect(page).toHaveURL(CLAIM_PATH);
-  expect(callbackURL).toBe(CLAIM_PATH);
+  await expect(page).toHaveURL(WORK_PATH);
+  expect(callbackURL).toBe(WORK_PATH);
   expect(page.url()).not.toContain(OWNERSHIP_CODE);
+  expect(page.url()).not.toContain(OWNERSHIP_CODE.replaceAll('-', ''));
 });
 
 test('a signed-in return with claim context automatically exposes registration', async ({ page }) => {
@@ -141,11 +143,12 @@ test('a signed-in return with claim context automatically exposes registration',
   }));
 
   await openWithLivingLegacy(page, CLAIM_PATH);
-  await expect(page.getByRole('form', { name: 'Register Registry Draft Study' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The code' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'The code' })).toBeVisible();
   await expect(page).toHaveURL(CLAIM_PATH);
 });
 
-test('a current keeper never sees registration doors or a claim-return proof form', async ({ page }) => {
+test('an explicit claim opens code, while an ordinary QR recognizes the current keeper without proof', async ({ page }) => {
   await mockWork(page);
   await page.route('**/api/auth/get-session', route => route.fulfill({
     status: 200,
@@ -214,18 +217,34 @@ test('a current keeper never sees registration doors or a claim-return proof for
   }));
 
   await openWithLivingLegacy(page, CLAIM_PATH);
-  const publicDream = page.getByRole('region', { name: 'A dream shared through this piece' });
-  await expect(publicDream).toBeVisible();
-  await expect(publicDream.getByText('Keep making room for wonder.')).toBeVisible();
-  await expect(page.getByText('You are the current steward')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The code' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'The code' })).toHaveValue('');
+
+  await openWithLivingLegacy(page, WORK_PATH);
+  await expect(page.locator('main').getByText('Keep making room for wonder.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Your account/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Register and certify this piece' })).toHaveCount(0);
   await expect(page.getByRole('form', { name: 'Register Registry Draft Study' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Tend this dream' })).toBeVisible();
-  await page.getByRole('button', { name: 'Yearly return' }).click();
-  await expect(page.getByRole('heading', { name: 'A quiet annual moment' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The code' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Yearly return' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: /Your account/ }).click();
   await page.getByRole('button', { name: 'Letters' }).click();
-  await expect(page.getByRole('heading', { name: 'Letters from this piece' })).toBeVisible();
+  await expect(page.getByText('The year turning')).toBeVisible();
+  await expect(page.getByText('10 August 2026')).toBeVisible();
   await expect(page.getByText('A year of keeping has gathered around this piece.')).toBeVisible();
+
+  await page.route('**/api/collector/ritual?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      eligible: true, birthdayYear: 2026,
+      actions: ['reinforce', 'plant-new', 'fulfilled'], currentDream: null,
+    }),
+  }));
+  await openWithLivingLegacy(page, WORK_PATH);
+  await page.getByRole('button', { name: 'placed this year · opens again near the birthday' }).click();
+  await expect(page.getByRole('heading', { name: 'The year turns' })).toBeVisible();
 });
 
 test('signing out clears private registration state before another account can use it', async ({ page }) => {

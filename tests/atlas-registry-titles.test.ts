@@ -16,6 +16,7 @@ import { describe, it } from 'node:test';
 
 import { onRequest as atlasRequest } from '../functions/api/atlas.js';
 import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import { ensureCatalogSnapshot } from '../functions/api/_lib/catalogSnapshot.js';
 
 const migration = (name: string) =>
   readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8');
@@ -125,6 +126,18 @@ async function lightFor(database: DatabaseSync) {
 }
 
 describe('a light carries the artwork name the registry holds', () => {
+  it('prefers the newest explicit snapshot while preserving historical snapshots', async () => {
+    const database = await databaseWithRegisteredArtwork(true);
+    try {
+      database.exec(migration('036_artwork_catalog_snapshots.sql'));
+      const env = { DB: d1(database) };
+      await ensureCatalogSnapshot(env, { id: 'UL-777', title: 'Original registered title', series: 'Universal Language', editionSize: 7 }, { source: 'admin', createdAt: '2026-08-01T00:00:00Z' });
+      await ensureCatalogSnapshot(env, { id: 'UL-777', title: 'Explicit corrected title', series: 'Universal Language', editionSize: 7 }, { source: 'admin', createdAt: '2026-08-02T00:00:00Z' });
+      const { light } = await lightFor(database);
+      assert.equal(light.title, 'Explicit corrected title');
+      assert.equal(database.prepare('SELECT count(*) AS n FROM artwork_catalog_snapshots').get()?.n, 2);
+    } finally { database.close(); }
+  });
   it('names and serieses an artwork the published archive does not carry', async () => {
     const database = await databaseWithRegisteredArtwork(true);
     try {

@@ -204,7 +204,7 @@ export const Room: React.FC<Props> = ({ room, onClose, onWalk, onOpenRoom, live 
 
   /* the garden brings its own ground: its first surface is the piece asking a
      single thing full screen, which has no room header to sit under */
-  if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} live={live?.garden ?? undefined} />;
+  if (room === 'garden') return <Garden onWalk={onWalk} onClose={onClose} live={live?.garden ?? undefined} liveEmpty={Boolean(live) && !live.garden} />;
 
   /* rooms that end in a list, rather than in something to close, carry their
      own way out and take no brass */
@@ -1334,6 +1334,9 @@ const latestPaid = (entries: CurrentKeeperPriceEntry[]): CurrentKeeperPriceEntry
 const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
   const { identity, certificate, ordinal, displayLocation, priceHistory } = live;
   const ready = certificate.status === 'ready' ? certificate.data : null;
+  const publicNotes = Array.isArray(ready?.publicLedger)
+    ? ready.publicLedger.filter(entry => entry && typeof entry.message === 'string' && entry.message.trim())
+    : [];
   const caretaker = priceHistory !== null;
   const paid =
     priceHistory && priceHistory.status === 'ready' ? latestPaid(priceHistory.data) : null;
@@ -1369,6 +1372,20 @@ const LiveInformationRoom: React.FC<{ live: PieceLive }> = ({ live }) => {
         {ready?.origin && <Ledger label="Origin" value={ready.origin} />}
         {ready?.techniques && ready.techniques.length > 0 && (
           <Ledger label="Technique" value={ready.techniques.join(', ')} />
+        )}
+        {publicNotes.length > 0 && (
+          <section aria-label="Creator notes" style={{ paddingTop: 18, paddingBottom: 8 }}>
+            <Eyebrow>From the studio</Eyebrow>
+            {publicNotes.map((entry, index) => (
+              <p key={entry.id ?? index} style={{
+                margin: '12px 0 0', fontFamily: F.body, fontSize: 15,
+                lineHeight: 1.72, color: C.inkBody, whiteSpace: 'pre-wrap',
+                overflowWrap: 'anywhere',
+              }}>
+                {entry.message}
+              </p>
+            ))}
+          </section>
         )}
         {ordinal !== null && <Ledger label="Registered" value={`Light ${ordinal}`} />}
         {caretaker && displayLocation && <Ledger label="Where it lives" value={displayLocation} />}
@@ -1560,21 +1577,33 @@ const LiveAccountRoom: React.FC<{
  * backend on lineage events; this room only reads.
  * ------------------------------------------------------------------ */
 
-const LettersRoom: React.FC<{ live?: PieceLive }> = ({ live }) => {
+export const LettersRoom: React.FC<{ live?: PieceLive }> = ({ live }) => {
   const letters = live?.letters ?? null;
   const rows = letters?.status === 'ready' ? letters.data : [];
   return (
     <RoomBody top={18}>
       {rows.map(letter => (
-        <Ledger
-          key={letter.id}
-          label={LETTER_KIND_WORD[letter.kind] ?? letter.kind}
-          value={new Date(letter.createdAt).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
-        />
+        <div key={letter.id} style={{ paddingBottom: 18 }}>
+          <Ledger
+            label={LETTER_KIND_WORD[letter.kind] ?? letter.kind}
+            value={new Date(letter.createdAt).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          />
+          <p style={{
+            margin: '10px 0 0',
+            fontFamily: F.body,
+            fontSize: 15,
+            lineHeight: 1.72,
+            color: C.inkBody,
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'anywhere',
+          }}>
+            {letter.body}
+          </p>
+        </div>
       ))}
       {letters?.status === 'failed' && (
         <div style={{ paddingTop: 6 }}>

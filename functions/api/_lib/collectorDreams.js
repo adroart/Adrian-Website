@@ -96,8 +96,9 @@ function dreamFromRow(row, viewer) {
   let body = row.body;
   if (viewer && tiered) {
     const own = row.author_user_id === viewer.viewerId;
+    const effectiveTier = row.historical_published_at ? 'shine' : row.tier;
     const readable = own
-      || row.tier === 'shine'
+      || effectiveTier === 'shine'
       || (row.tier === 'keep' && viewer.holds === true);
     if (!readable) body = null;
   }
@@ -116,9 +117,10 @@ function dreamFromRow(row, viewer) {
     archivedAt: row.archived_at ?? null,
   };
   if (tiered) {
-    projected.tier = row.tier;
+    projected.tier = row.historical_published_at ? 'shine' : row.tier;
     projected.heirsMayShare = Number(row.heirs_may_share) === 1;
-    projected.sealed = row.tier === 'seal';
+    projected.sealed = projected.tier === 'seal';
+    projected.historicalPublication = Boolean(row.historical_published_at);
   }
   return projected;
 }
@@ -271,17 +273,26 @@ export async function getCollectorDreamState(env, { userId, keeperPieceId }) {
   }
   const viewer = { viewerId: holderId, holds };
   let current = await currentDreamRow(db, pieceId);
-  const historyResult = await db.prepare(`
-    SELECT * FROM collector_dreams
-     WHERE keeper_piece_id = ?1 AND archived_at IS NOT NULL
-     ORDER BY created_at, id
-  `).bind(pieceId).all();
+  let historyResult;
+  try {
+    historyResult = await db.prepare(`
+      SELECT dream.*, publication.published_at AS historical_published_at
+        FROM collector_dreams dream
+        LEFT JOIN collector_historical_dream_publications publication ON publication.dream_id = dream.id
+       WHERE dream.keeper_piece_id = ?1 AND dream.archived_at IS NOT NULL
+       ORDER BY dream.created_at, dream.id
+    `).bind(pieceId).all();
+  } catch (error) {
+    if (!(error instanceof Error) || !/no such table/i.test(error.message)) throw error;
+    historyResult = await db.prepare(`SELECT * FROM collector_dreams
+      WHERE keeper_piece_id = ?1 AND archived_at IS NOT NULL ORDER BY created_at, id`).bind(pieceId).all();
+  }
   let historyRows = historyResult?.results ?? [];
   if (!holds) {
     // A past writer sees their own rows and what shines -- never the shape,
     // dates, or existence of another person's private writing.
     const visibleToPastWriter = (row) => row.author_user_id === holderId
-      || (rowHasTier(row) && row.tier === 'shine');
+      || (rowHasTier(row) && (row.tier === 'shine' || row.historical_published_at));
     historyRows = historyRows.filter(visibleToPastWriter);
     if (current && !visibleToPastWriter(current)) current = null;
   }
@@ -300,6 +311,46 @@ export async function getCollectorDreamState(env, { userId, keeperPieceId }) {
     history: historyRows.map((row) => dreamFromRow(row, viewer)),
     markers,
   };
+}
+
+export async function publishHistoricalCollectorDream(env, input) {
+  const db = requiredDatabase(env);
+  const { userId, keeperPieceId, idempotencyKey } = requiredMutationInput(input);
+  const historicalDreamId = requiredId(input?.dreamId, 'invalid_dream_id');
+  const replay = await db.prepare(`SELECT dream_id, keeper_piece_id FROM collector_historical_dream_publications
+    WHERE author_user_id = ?1 AND idempotency_key = ?2`).bind(userId, idempotencyKey).first();
+  if (replay) {
+    if (replay.dream_id !== historicalDreamId || replay.keeper_piece_id !== keeperPieceId) {
+      throw new Error('idempotency_conflict');
+    }
+    await refreshPieceRecord(env, { keeperPieceId, trigger: 'contribution', generatedAt: input.now,
+      includeLegacySections: legacyEnabled() });
+    return getCollectorDreamState(env, { userId, keeperPieceId });
+  }
+  const authoredSeal = await db.prepare(`SELECT 1 AS authorized FROM collector_dreams
+    WHERE id = ?1 AND keeper_piece_id = ?2 AND author_user_id = ?3
+      AND archived_at IS NOT NULL AND tier = 'seal'
+      AND visibility = 'private' AND public_shared_at IS NULL`)
+    .bind(historicalDreamId, keeperPieceId, userId).first();
+  if (!authoredSeal) throw new Error('historical_publication_forbidden');
+  await requireAdult(db, userId, input.now);
+  try {
+    await db.prepare(`INSERT INTO collector_historical_dream_publications
+      (id, dream_id, keeper_piece_id, author_user_id, idempotency_key, published_at)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6)`)
+      .bind(`hdp-${crypto.randomUUID()}`, historicalDreamId, keeperPieceId,
+        userId, idempotencyKey, input.now).run();
+  } catch {
+    const raced = await db.prepare(`SELECT dream_id, keeper_piece_id FROM collector_historical_dream_publications
+      WHERE author_user_id = ?1 AND idempotency_key = ?2`).bind(userId, idempotencyKey).first();
+    if (!raced) throw new Error('historical_publication_forbidden');
+    if (raced.dream_id !== historicalDreamId || raced.keeper_piece_id !== keeperPieceId) {
+      throw new Error('idempotency_conflict');
+    }
+  }
+  await refreshPieceRecord(env, { keeperPieceId, trigger: 'contribution', generatedAt: input.now,
+    includeLegacySections: legacyEnabled() });
+  return getCollectorDreamState(env, { userId, keeperPieceId });
 }
 
 export async function createCollectorDream(env, input) {

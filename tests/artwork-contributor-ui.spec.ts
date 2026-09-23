@@ -146,6 +146,7 @@ test('keeper manages one-time invitations and contributor access without keeper 
   let relationship: 'keeper' | 'contributor' | 'visitor' = 'keeper';
   let active = true;
   let pending = false;
+  const invitationBodies: Array<Record<string, string>> = [];
   const oneTimeToken = 'one-time-secret-held-only-in-this-open-page';
   await mockSignedAccount(page, () => account);
 
@@ -217,6 +218,7 @@ test('keeper manages one-time invitations and contributor access without keeper 
   await page.route('**/api/keeper/contributors', async route => {
     const body = route.request().postDataJSON() as Record<string, string>;
     if (body.action === 'invite') {
+      invitationBodies.push(body);
       pending = true;
       return route.fulfill({
         status: 201, contentType: 'application/json',
@@ -232,11 +234,19 @@ test('keeper manages one-time invitations and contributor access without keeper 
   });
 
   await enableLegacy(page, WORK_PATH);
-  await expect(page.getByRole('heading', { name: 'Artwork contributors' })).toBeVisible();
+  await page.getByRole('button', { name: 'The people you love' }).click();
   await expect(page.getByText('active@example.com')).toBeVisible();
-  await page.getByLabel('Verified account email').fill('pending@example.com');
-  await page.getByRole('button', { name: 'Create invitation' }).click();
-  await expect(page.getByText(oneTimeToken)).toBeVisible();
+  await page.getByRole('button', { name: 'Invite someone' }).click();
+  await page.getByLabel('their email').fill('pending@example.com');
+  await page.getByRole('button', { name: 'Send it' }).click();
+  await page.getByRole('button', { name: 'Return to the piece' }).click();
+  await page.getByRole('button', { name: 'The people you love' }).click();
+  await expect(page.getByText('pending@example.com')).toBeVisible();
+  await expect(page.getByText(oneTimeToken)).toHaveCount(0);
+  expect(invitationBodies).toHaveLength(1);
+  expect(invitationBodies[0]).toMatchObject({
+    action: 'invite', keeperPieceId: 'kp-one', intendedRecipientEmail: 'pending@example.com',
+  });
   if (process.env.CONTRIBUTOR_SCREENSHOTS) {
     await page.screenshot({
       path: `${process.env.CONTRIBUTOR_SCREENSHOTS}/keeper-${testInfo.project.name.replaceAll(' ', '-').toLowerCase()}.png`,
@@ -248,7 +258,7 @@ test('keeper manages one-time invitations and contributor access without keeper 
     await fetch('/__test/transfer-current-keeper');
     window.dispatchEvent(new Event('focus'));
   });
-  await expect(page.getByRole('heading', { name: 'Artwork contributors' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'The people you love' })).toHaveCount(0);
   await expect(page.getByText(oneTimeToken)).toHaveCount(0);
   await page.evaluate(async (path) => {
     await fetch('/__test/restore-current-keeper');
@@ -258,16 +268,17 @@ test('keeper manages one-time invitations and contributor access without keeper 
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, WORK_PATH);
-  await expect(page.getByRole('heading', { name: 'Artwork contributors' })).toBeVisible();
+  await page.getByRole('button', { name: 'The people you love' }).click();
+  await expect(page.getByText('active@example.com')).toBeVisible();
 
   await remountLegacyAfterReload(page, WORK_PATH);
-  await expect(page.getByRole('heading', { name: 'Artwork contributors' })).toBeVisible();
+  await page.getByRole('button', { name: 'The people you love' }).click();
   await expect(page.getByText(oneTimeToken)).toHaveCount(0);
   await expect(page.getByText('pending@example.com')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Revoke contributor access' }).click();
-  await expect(page.getByRole('button', { name: 'Confirm revoke' })).toBeFocused();
-  await page.getByRole('button', { name: 'Confirm revoke' }).click();
+  await page.getByRole('button', { name: /active@example\.com/ }).click();
+  await page.getByRole('button', { name: /Take her off the piece/ }).click();
+  await page.getByRole('button', { name: /Take her off the piece/ }).click();
   await expect(page.getByText('active@example.com')).toHaveCount(0);
 
   await page.evaluate(async () => {
@@ -276,9 +287,10 @@ test('keeper manages one-time invitations and contributor access without keeper 
     const module = await loadModule();
     module.authClient.$store.notify('$sessionSignal');
   });
-  await expect(page.getByText('You are a contributor to this artwork')).toBeVisible();
+  await expect(page.getByText('active@example.com')).toHaveCount(0);
+  await expect(page.getByText('pending@example.com')).toHaveCount(0);
   for (const privateControl of [
-    'Artwork contributors', 'Where it lives now', 'Tend this dream', 'Price history',
+    'The people you love', 'Where it lives now', 'Tend this dream', 'Price history',
   ]) await expect(page.getByText(privateControl, { exact: true })).toHaveCount(0);
 
   const accessibility = await new AxeBuilder({ page }).include('#main-content').analyze();
@@ -290,5 +302,5 @@ test('keeper manages one-time invitations and contributor access without keeper 
     await fetch('/__test/revoke-open-contributor');
     window.dispatchEvent(new Event('focus'));
   });
-  await expect(page.getByText('You are a contributor to this artwork')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'The people you love' })).toHaveCount(0);
 });

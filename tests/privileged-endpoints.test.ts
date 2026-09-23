@@ -68,9 +68,15 @@ function database() {
 
 function bucket() {
   let stored = '[]';
+  let version = 1;
   return {
-    async get() { return { text: async () => stored }; },
-    async put(_key: string, value: string) { stored = value; },
+    async get() { return { etag: String(version), text: async () => stored }; },
+    async put(_key: string, value: string, options?: { onlyIf?: { etagMatches?: string } }) {
+      if (options?.onlyIf?.etagMatches && options.onlyIf.etagMatches !== String(version)) return null;
+      stored = value;
+      version += 1;
+      return { etag: String(version) };
+    },
     async list() { return { objects: [] }; },
     async delete() {},
   };
@@ -107,7 +113,7 @@ const privilegedEndpoints: EndpointCase[] = [
     load: async () => (await import('../functions/api/admin/invoices/[id].js')).onRequest,
   },
   {
-    name: 'mark invoice paid', path: '/api/admin/invoices/1/mark-paid', method: 'POST', params: { id: '1' }, body: {}, allowedStatus: 404,
+    name: 'mark invoice paid', path: '/api/admin/invoices/1/mark-paid', method: 'POST', params: { id: '1' }, body: {}, allowedStatus: 400,
     load: async () => (await import('../functions/api/admin/invoices/[id]/mark-paid.js')).onRequestPost,
   },
   {

@@ -487,6 +487,8 @@ describe('records rebuild endpoint', () => {
     assert.equal(firstBody.total, 2);
     assert.equal(firstBody.generated, 2);
     assert.equal(firstBody.unchanged, 0);
+    assert.equal(firstBody.hasMore, false);
+    assert.equal(firstBody.nextCursor, null);
     assert.deepEqual(
       firstBody.outcomes.map((outcome: any) => [outcome.publicCode, outcome.status]),
       [[CODE_ONE, 'generated'], [CODE_TWO, 'generated']],
@@ -527,6 +529,32 @@ describe('records rebuild endpoint', () => {
     assert.equal(await recordCount(), 3);
   });
 
+  it('rebuilds bounded pages and resumes strictly after the returned cursor', async () => {
+    const { env } = await fixtureEnv();
+    const { onRequest } = await import('../functions/api/admin/records/rebuild.js');
+    signIn();
+    const cookie = await unlockedCookie(env);
+
+    const first = await onRequest({
+      request: request('/api/admin/records/rebuild', 'POST', { limit: 1 }, cookie), env,
+    });
+    const firstBody = await first.json();
+    assert.equal(firstBody.total, 1);
+    assert.equal(firstBody.hasMore, true);
+    assert.equal(firstBody.nextCursor, CODE_ONE);
+    assert.deepEqual(firstBody.outcomes.map((outcome: any) => outcome.publicCode), [CODE_ONE]);
+
+    const second = await onRequest({
+      request: request('/api/admin/records/rebuild', 'POST', { limit: 1, cursor: firstBody.nextCursor }, cookie), env,
+    });
+    const secondBody = await second.json();
+    assert.equal(secondBody.total, 1);
+    assert.equal(secondBody.cursor, CODE_ONE);
+    assert.equal(secondBody.hasMore, false);
+    assert.equal(secondBody.nextCursor, null);
+    assert.deepEqual(secondBody.outcomes.map((outcome: any) => outcome.publicCode), [CODE_TWO]);
+  });
+
   it('rejects malformed public codes and non-POST methods', async () => {
     const { env } = await fixtureEnv();
     const { onRequest } = await import('../functions/api/admin/records/rebuild.js');
@@ -539,6 +567,18 @@ describe('records rebuild endpoint', () => {
     });
     assert.equal(invalid.status, 400);
     assert.deepEqual(await invalid.json(), { ok: false, error: 'invalid_public_code' });
+
+    const invalidCursor = await onRequest({
+      request: request('/api/admin/records/rebuild', 'POST', { cursor: 'AR-bad', limit: 1 }, cookie), env,
+    });
+    assert.equal(invalidCursor.status, 400);
+    assert.deepEqual(await invalidCursor.json(), { ok: false, error: 'invalid_cursor' });
+
+    const invalidLimit = await onRequest({
+      request: request('/api/admin/records/rebuild', 'POST', { limit: 26 }, cookie), env,
+    });
+    assert.equal(invalidLimit.status, 400);
+    assert.deepEqual(await invalidLimit.json(), { ok: false, error: 'invalid_limit' });
 
     const method = await onRequest({
       request: request('/api/admin/records/rebuild', 'GET', undefined, cookie), env,

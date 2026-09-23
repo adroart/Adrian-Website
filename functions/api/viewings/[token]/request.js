@@ -22,6 +22,15 @@ function invoiceToken() {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function onRequestPost({ env, params, request }) {
   if (!env.DB) return jsonResponse({ ok: false, error: 'db_not_configured' }, 503);
 
@@ -100,13 +109,20 @@ export async function onRequestPost({ env, params, request }) {
   const primaryId = presetIds[0] ?? null;
   const snapshot = presets[0] || {};
 
-  await env.DB.prepare(
+  if (typeof env.DB.batch !== 'function') {
+    return jsonResponse({ ok: false, error: 'atomic_write_unavailable' }, 503);
+  }
+  const insertInvoice = env.DB.prepare(
     `INSERT INTO invoices
        (invoice_number, public_token, status, client_name, client_email, client_location,
         job_title, job_description, currency, line_items_json,
         payment_preset_id, payment_preset_ids_json, payment_snapshot_json, payment_options_json,
         offer_payment_choice)
-     VALUES (?1, ?2, 'draft', ?3, ?4, '', ?5, ?6, 'USD', ?7, ?8, ?9, ?10, ?11, 1)`,
+     SELECT ?1, ?2, 'draft', ?3, ?4, '', ?5, ?6, 'USD', ?7, ?8, ?9, ?10, ?11, 1
+      WHERE EXISTS (
+        SELECT 1 FROM viewings
+         WHERE id = ?12 AND invoice_token IS NULL AND status <> 'requested'
+      )`,
   )
     .bind(
       invoiceNumber,
@@ -120,14 +136,37 @@ export async function onRequestPost({ env, params, request }) {
       JSON.stringify(presetIds),
       JSON.stringify(snapshot),
       JSON.stringify(presets),
+      row.id,
     )
-    .run();
+  ;
 
-  await env.DB.prepare(
-    "UPDATE viewings SET status='requested', requested_at=unixepoch(), invoice_token=?2 WHERE id=?1",
+  const linkViewing = env.DB.prepare(
+    `UPDATE viewings SET status='requested', requested_at=unixepoch(), invoice_token=?2
+      WHERE id=?1 AND invoice_token IS NULL AND status <> 'requested'
+        AND EXISTS (SELECT 1 FROM invoices WHERE public_token = ?2)`,
   )
     .bind(row.id, newInvoiceToken)
-    .run();
+  ;
+  let results;
+  try {
+    results = await env.DB.batch([insertInvoice, linkViewing]);
+  } catch {
+    return jsonResponse({ ok: false, error: 'request_write_failed' }, 503);
+  }
+  const created = results?.[0]?.success === true && Number(results[0].meta?.changes) === 1
+    && results?.[1]?.success === true && Number(results[1].meta?.changes) === 1;
+  if (!created) {
+    const existing = await env.DB.prepare(
+      'SELECT status, invoice_token FROM viewings WHERE id = ?1',
+    ).bind(row.id).first();
+    if (existing?.invoice_token && existing.status === 'requested') {
+      return jsonResponse({
+        ok: true, alreadyRequested: true, invoiceAdminPath: '/admin/invoices',
+        invoiceToken: existing.invoice_token,
+      });
+    }
+    return jsonResponse({ ok: false, error: 'request_write_failed' }, 503);
+  }
 
   // Notify Adrian by email (reuses the same Resend setup as the contact form).
   // Non-blocking: a mail failure must not fail the buyer's request.
@@ -135,12 +174,13 @@ export async function onRequestPost({ env, params, request }) {
     const to = env.INQUIRY_TO_EMAIL || 'hello@adrianrasmussen.com';
     const from = env.RESEND_FROM_EMAIL || 'noreply@adrianrasmussen.com';
     const note = typeof body.message === 'string' ? body.message.slice(0, 1000) : '';
-    const list = chosen.map((p) => `<li>${p.name} · Universal Language No. ${p.code}</li>`).join('');
+    const safeRecipient = escapeHtml(row.recipient_name);
+    const list = chosen.map((p) => `<li>${escapeHtml(p.name)} · Universal Language No. ${escapeHtml(p.code)}</li>`).join('');
     const html = `
-      <h2>${row.recipient_name} requested ${chosen.length} piece${chosen.length === 1 ? '' : 's'}</h2>
-      <p>From the private viewing for <strong>${row.recipient_name}</strong>.</p>
+      <h2>${safeRecipient} requested ${chosen.length} piece${chosen.length === 1 ? '' : 's'}</h2>
+      <p>From the private viewing for <strong>${safeRecipient}</strong>.</p>
       <ul>${list}</ul>
-      ${note ? `<p><strong>Their note:</strong><br>${note.replace(/</g, '&lt;')}</p>` : ''}
+      ${note ? `<p><strong>Their note:</strong><br>${escapeHtml(note)}</p>` : ''}
       <p>A draft invoice was created and is waiting for you to price and send:<br>
       <a href="https://adrianrasmussen.com/admin/invoices">Open the draft invoice</a></p>`;
     try {
