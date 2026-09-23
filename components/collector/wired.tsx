@@ -53,6 +53,7 @@ import { Ground } from './ui';
 import { PiecePage, Relationship } from './PiecePage';
 import type { GroundInputs } from './PiecePage';
 import { CodePage, CodeSubmitOutcome } from './CodePage';
+import { InvitationPage } from './InvitationPage';
 import { WALK, WalkScreen, Screen, SHOW_LAMPS_DEFAULT } from './walk';
 import { VaultArrival } from './vaultArrival';
 import { StateScreen } from './states';
@@ -259,6 +260,7 @@ function placementRefusal(code: string | null): 'held' | 'unready' {
 type Step =
   | { kind: 'piece'; room?: RoomKey | null }
   | { kind: 'code'; initialCode?: string; initialWrong?: boolean }
+  | { kind: 'invitation' }
   | { kind: 'walk'; key: keyof typeof WALK }
   /**
    * The sealed artist message, met once right after the vault: "Something
@@ -298,6 +300,7 @@ export type WiredJourneyProps = {
 export const WiredJourney: React.FC<WiredJourneyProps> = props => {
   const account = useAccount();
   const pending = usePendingBind();
+  const [invitationIntent, setInvitationIntent] = useState(false);
   const confirmedOwner = useRef<string | null>(null);
   if (account.isLoaded) confirmedOwner.current = account.isSignedIn ? account.userId : null;
   const owner = confirmedOwner.current;
@@ -306,13 +309,23 @@ export const WiredJourney: React.FC<WiredJourneyProps> = props => {
     if (previousOwner.current && previousOwner.current !== owner) pending.settle();
     previousOwner.current = owner;
   }, [owner, pending]);
-  return <AccountJourney key={`${props.identity.publicCode}:${owner ?? 'anonymous'}`} {...props} />;
+  useEffect(() => {
+    if (owner && invitationIntent) setInvitationIntent(false);
+  }, [owner, invitationIntent]);
+  return <AccountJourney key={`${props.identity.publicCode}:${owner ?? 'anonymous'}`}
+    {...props} startInvitation={Boolean(owner && invitationIntent)}
+    onInvitationIntent={setInvitationIntent} />;
 };
 
-const AccountJourney: React.FC<WiredJourneyProps> = ({
+const AccountJourney: React.FC<WiredJourneyProps & {
+  startInvitation: boolean;
+  onInvitationIntent: (value: boolean) => void;
+}> = ({
   identity,
   story = null,
   beginClaim = false,
+  startInvitation,
+  onInvitationIntent,
 }) => {
   const publicCode = identity.publicCode;
   const mounted = useRef(true);
@@ -322,9 +335,10 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
   const signedIn = account.available && account.isLoaded && account.isSignedIn;
 
   const [step, setStep] = useState<Step>(
-    beginClaim ? { kind: 'code' } : { kind: 'piece' },
+    startInvitation ? { kind: 'invitation' } : beginClaim ? { kind: 'code' } : { kind: 'piece' },
   );
   const [authOpen, setAuthOpen] = useState(false);
+  const invitationSignInCompleted = useRef(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
   const lampsEdited = useRef(false);
@@ -1518,6 +1532,14 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
           pending.settle();
           setStep({ kind: 'piece' });
         }}
+        onInvitation={() => {
+          if (signedIn) setStep({ kind: 'invitation' });
+          else {
+            invitationSignInCompleted.current = false;
+            onInvitationIntent(true);
+            setAuthOpen(true);
+          }
+        }}
         onGift={() => go('gift')}
         onBack={() => {
           pending.settle();
@@ -1525,6 +1547,23 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
         }}
       />
     );
+  } else if (step.kind === 'invitation') {
+    surface = signedIn ? (
+      <InvitationPage identity={identity} onBack={() => setStep({ kind: 'piece' })}
+        onRedeemed={async () => {
+          try {
+            const outcome = await getKeeperMessage(publicCode);
+            if (!mounted.current) return;
+            if (outcome.ok && outcome.data) {
+              setGiftMessageBody(outcome.data.body);
+              giftPendingRef.current = true;
+            }
+          } catch { /* an absent gift never blocks the walk */ }
+          if (!mounted.current) return;
+          refresh();
+          setStep({ kind: 'walk', key: 'codetrue' });
+        }} />
+    ) : <Ground light="j"><div style={{ flex: 1 }} /></Ground>;
   } else if (step.kind === 'walk') {
     if (['who1', 'who2', 'shows'].includes(step.key)
       && (onboarding.status !== 'ready' || privacy.status !== 'ready')) {
@@ -1655,8 +1694,12 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       {surface}
       {authOpen && (
         <SignInModal
-          onClose={() => setAuthOpen(false)}
+          onClose={() => {
+            setAuthOpen(false);
+            if (!invitationSignInCompleted.current) onInvitationIntent(false);
+          }}
           onSignedIn={() => {
+            invitationSignInCompleted.current = true;
             setAuthOpen(false);
             refresh();
           }}
