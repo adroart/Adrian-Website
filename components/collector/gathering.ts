@@ -6,7 +6,7 @@ import {
 
 export type GatheringStage = 'read' | 'birth' | 'privacy';
 export type GatheringOutcome =
-  | { kind: 'saved' }
+  | { kind: 'saved'; sharingPending?: true }
   | { kind: 'cancelled' }
   | { kind: 'pending' | 'rejected' | 'network'; stage: GatheringStage; error?: string };
 
@@ -48,6 +48,7 @@ export async function persistCollectorGathering(input: {
     if (!privacy.ok || !privacy.data?.ring1 || !privacy.data?.ring2 || !privacy.data?.ring3 || !privacy.data?.ring4) {
       return { kind: 'rejected', stage, error: 'invalid_privacy_state' };
     }
+    const sharingPending = !input.birth && profile.data.status !== 'current';
     if (input.birth) {
       stage = 'birth';
       // Retrying a refused privacy write must not create another birth revision.
@@ -58,15 +59,18 @@ export async function persistCollectorGathering(input: {
         if (failed) return failed;
         if (!saved.ok || saved.data?.status !== 'current') return { kind: 'pending', stage };
       }
-    } else if (profile.data.status !== 'current' && (
-      Object.values(input.privacy.person).some(Boolean) || input.privacy.piece?.shareCity
-    )) {
-      return { kind: 'pending', stage: 'privacy', error: 'adult_profile_required' };
     }
     stage = 'privacy';
-    const saved = await updateCollectorPrivacy(input.privacy);
+    // Optional birth can be added later. Without eligibility, complete with
+    // closed sharing choices, using the server's private-city representation.
+    const choices = sharingPending ? {
+      person: { shareIntention: false, shareName: false, shareFace: false,
+        shareDerivedChart: false, shareBusiness: false, shareMission: false },
+      ...(input.privacy.piece ? { piece: { ...input.privacy.piece, shareCity: false, cityId: null } } : {}),
+    } : input.privacy;
+    const saved = await updateCollectorPrivacy(choices);
     if (!input.isCurrent()) return { kind: 'cancelled' };
-    return refusal(saved, stage) ?? { kind: 'saved' };
+    return refusal(saved, stage) ?? (sharingPending ? { kind: 'saved', sharingPending: true } : { kind: 'saved' });
   } catch (cause) {
     if (!input.isCurrent()) return { kind: 'cancelled' };
     return { kind: cause instanceof CollectorApiNetworkError ? 'network' : 'rejected', stage };

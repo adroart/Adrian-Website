@@ -183,3 +183,46 @@ test('a stale save completion after an auth switch cannot advance the new accoun
   await expect(page.getByText(/You are Light 47/)).toHaveCount(0);
   await expect(page.getByText('Registry Draft Study', { exact: true })).toBeVisible();
 });
+
+
+for (const useSkip of [false, true]) {
+  test(`optional birth explains its purpose and completes privately via ${useSkip ? 'Skip anyway' : 'empty fields'}`, async ({ page }, testInfo) => {
+    let isBound = false;
+    let birthPosts = 0;
+    const privacyBodies: any[] = [];
+    await mount(page, () => 'adult', () => isBound);
+    await page.route('**/api/keeper/bind', async route => { isBound = true; await json(route, { ok: true, keeper: { pieceId: 'MD-905', editionNumber: 1 } }); });
+    await page.route('**/api/collector/onboarding', route => {
+      if (route.request().method() !== 'GET') birthPosts += 1;
+      return json(route, { status: 'missing' });
+    });
+    await page.route('**/api/collector/privacy', route => {
+      if (route.request().method() === 'PUT') privacyBodies.push(route.request().postDataJSON());
+      return json(route, { ring1: { privateRecord: true }, ring2: { shareCity: false, cityId: null }, ring3: {}, ring4: {} });
+    });
+    await bindAndReachProfile(page, true);
+    await expect(page.getByText('Your birthday ties your piece to your astrology, and it lets the piece mark your day: once a year, near your birthday, it asks for a moment with you.', { exact: true })).toBeVisible();
+    await expect(page.getByText('A full reading needs all three. They are never shown to anyone; only what they produce can be, and only if you choose.', { exact: true })).toBeVisible();
+    await expect(page.getByText('The piece is not registered until this is placed.', { exact: false })).toHaveCount(0);
+    await page.screenshot({ path: testInfo.outputPath('birth-purpose.png'), fullPage: true });
+    if (useSkip) {
+      await page.getByLabel('Date', { exact: true }).fill('12/06/1990');
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await expect(page.getByText('What this is for', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Skip anyway' }).click();
+    } else {
+      await page.getByRole('button', { name: 'Continue' }).click();
+    }
+    await expect(page.getByText('Your links', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText(/You are Light 47/)).toBeVisible();
+    await expect(page.getByText('Birth details remain optional. Public choices stay closed until adulthood is confirmed.', { exact: true })).toBeVisible();
+    await expect(page.getByText(/now shines at city level/)).toHaveCount(0);
+    expect(birthPosts).toBe(0);
+    expect(privacyBodies).toEqual([{
+      person: { shareIntention: false, shareName: false, shareFace: false, shareDerivedChart: false, shareBusiness: false, shareMission: false },
+      piece: { keeperPieceId: 'kp-adult', shareCity: false, cityId: null },
+    }]);
+    await page.screenshot({ path: testInfo.outputPath('private-completion.png'), fullPage: true });
+  });
+}

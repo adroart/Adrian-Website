@@ -330,6 +330,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
   const lampsEdited = useRef(false);
   const gatheringInFlight = useRef(false);
   const [gatheringBusy, setGatheringBusy] = useState(false);
+  const [gatheringPrivate, setGatheringPrivate] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
 
@@ -1223,6 +1224,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
          required, so the first reachable gathering screen has nothing behind
          it to correct. §7, 2026-08-20: that screen is now lives, not born. */
       if (key === 'lives') screen.back = undefined;
+      if (key === 'light47' && gatheringPrivate) screen.body = PRIVACY_PENDING;
 
       /* the ritual's one-press answers become real actions: the demo rows
          walk straight to ritualfamily, the wired rows submit first. Matched
@@ -1295,7 +1297,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       }
       return screen;
     },
-    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing],
+    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing, gatheringPrivate],
   );
 
   /* ---------------- navigation ---------------- */
@@ -1308,6 +1310,11 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
       if (key !== '__personRemove' && removeArmed) setRemoveArmed(false);
 
       if (gatheringInFlight.current) return;
+      if (from === 'explain' && key === 'who2') {
+        setTyped(current => ({ ...current, [G.fieldDate]: '', [G.fieldTime]: '', [G.fieldPlace]: '' }));
+        setStep({ kind: 'walk', key: 'who2' });
+        return;
+      }
       if ((from === 'who2' || from === 'shows') && key === 'light47') {
         gatheringInFlight.current = true;
         setGatheringBusy(true);
@@ -1315,6 +1322,7 @@ const AccountJourney: React.FC<WiredJourneyProps> = ({
           .then(result => {
             if (!mounted.current || result.kind === 'cancelled') return;
             if (result.kind === 'saved') {
+              setGatheringPrivate(Boolean(result.sharingPending));
               refresh();
               setStep({ kind: 'walk', key: 'light47' });
               return;

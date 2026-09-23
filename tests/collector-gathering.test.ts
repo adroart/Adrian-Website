@@ -97,9 +97,30 @@ test('an account change during birth completion cannot issue another account pri
   assert.equal(calls.some(call => call.method === 'PUT'), false);
 });
 
-test('legitimately absent optional birth keeps unconfirmed public choices pending without inventing consent', async () => {
-  assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null }), { kind: 'pending', stage: 'privacy', error: 'adult_profile_required' });
-  assert.ok(calls.every(call => call.method === 'GET'));
+for (const status of ['missing', 'skipped']) {
+  test(`optional birth ${status} completes privately without opening requested public choices`, async () => {
+    profile = { status };
+    assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null,
+      privacy: { person, piece: { keeperPieceId: 'kp-test', shareCity: true, cityId: 'denpasar' } },
+    }), { kind: 'saved', sharingPending: true });
+    assert.deepEqual(calls.map(call => call.method), ['GET', 'GET', 'PUT']);
+    assert.deepEqual(calls.at(-1)?.body, {
+      person: { shareIntention: false, shareName: false, shareFace: false,
+        shareDerivedChart: false, shareBusiness: false, shareMission: false },
+      piece: { keeperPieceId: 'kp-test', shareCity: false, cityId: null },
+    });
+  });
+}
+
+test('private completion still requires an accepted save and permits an explicit retry', async () => {
+  const normal = handler;
+  handler = async (path, method, body) => method === 'PUT'
+    ? response({ error: 'unavailable' }, 503) : normal(path, method, body);
+  assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null }),
+    { kind: 'rejected', stage: 'privacy', error: 'unavailable' });
+  handler = normal;
+  assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null }), { kind: 'saved', sharingPending: true });
+  assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
 test('empty optional birth never erases an existing profile and closed choices can save without one', async () => {
@@ -108,7 +129,7 @@ test('empty optional birth never erases an existing profile and closed choices c
   assert.equal(calls.some(call => call.method === 'POST'), false);
   profile = { status: 'missing' }; calls = [];
   const closed = Object.fromEntries(Object.keys(person).map(key => [key, false])) as typeof person;
-  assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null, privacy: { person: closed } }), { kind: 'saved' });
+  assert.deepEqual(await persistCollectorGathering({ ...input(), birth: null, privacy: { person: closed } }), { kind: 'saved', sharingPending: true });
   assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
