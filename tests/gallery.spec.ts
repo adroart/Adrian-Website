@@ -19,6 +19,26 @@ test('the archive is paged, not dumped', async ({ page }) => {
     await expect(page.getByText(/Showing 96 of \d+/)).toBeVisible();
 });
 
+test('artwork stays visible when the image resize worker fails', async ({ page }) => {
+    await page.route(/\/media\/image\/32_x9qxas(?:\?|$)/, (route) => {
+        if (new URL(route.request().url()).searchParams.has('w')) {
+            return route.fulfill({ status: 503, body: 'Worker exceeded resource limits' });
+        }
+        return route.fulfill({
+            status: 200,
+            contentType: 'image/svg+xml',
+            body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="red"/></svg>',
+        });
+    });
+    await page.goto('/creations', { waitUntil: 'domcontentloaded' });
+
+    await page.getByRole('heading', { name: 'Art of Living' }).scrollIntoViewIfNeeded();
+    const firstArtwork = page.locator('.columns-2 img[alt^="Art of Living"]').first();
+    await expect(firstArtwork).toHaveJSProperty('complete', true);
+    await expect.poll(() => firstArtwork.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    await expect(firstArtwork).toHaveAttribute('src', /\/media\/image\/[^?]+$/);
+});
+
 test('sort is available without a category param', async ({ page }) => {
     // This is the regression that matters: sort used to render only under `filter`,
     // so the bare /creations URL had none.

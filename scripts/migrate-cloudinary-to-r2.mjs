@@ -149,4 +149,5 @@ for (let index = 0; index < list.length; index += 4) {
 }
 
 console.log(JSON.stringify({ bucket, collected: list.length, uploaded, skipped, failed }));
-if (failed) process.exitCode = 1;
+// A missing source is a missing R2 object after cutover, not a successful migration.
+if (failed || skipped) process.exitCode = 1;

@@ -46,7 +46,7 @@ export interface ArtImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageEle
     inactive?: boolean;
     /** Extra Tailwind classes to merge in (e.g. 'grayscale' for unavailable products) */
     className?: string;
-    /** Cloudinary Public ID. If provided, generates optimized src + srcSet automatically. */
+    /** Media public ID. If provided, generates optimized src + srcSet automatically. */
     publicId?: string;
 }
 
@@ -100,17 +100,18 @@ const ArtImage: React.FC<ArtImageProps> = ({
     // Gallery starts fully visible (no fade); fixed-container variants start hidden
     const [loaded, setLoaded] = useState(!hasFade);
     const [hasError, setHasError] = useState(false);
+    const [useOriginal, setUseOriginal] = useState(false);
 
-    // If publicId is provided, generate Cloudinary URLs with responsive srcSet
+    // If publicId is provided, generate media URLs with responsive srcSet.
     const resolvedSrc = publicId
-        ? img(publicId, { w: VARIANT_WIDTHS[variant][1] ?? 800 })
+        ? img(publicId, useOriginal ? {} : { w: VARIANT_WIDTHS[variant][1] ?? 800 })
         : rest.src;
-    const resolvedSrcSet = publicId
+    const resolvedSrcSet = publicId && !useOriginal
         ? srcset(publicId, VARIANT_WIDTHS[variant])
-        : rest.srcSet;
-    const resolvedSizes = publicId
+        : (useOriginal ? undefined : rest.srcSet);
+    const resolvedSizes = publicId && !useOriginal
         ? (rest.sizes ?? VARIANT_SIZES[variant])
-        : rest.sizes;
+        : (useOriginal ? undefined : rest.sizes);
 
     if (hasError) {
         return (
@@ -132,6 +133,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
 
     const imgEl = (
         <img
+            key={useOriginal ? 'original' : 'optimized'}
             {...rest}
             src={resolvedSrc}
             srcSet={resolvedSrcSet}
@@ -141,7 +143,13 @@ const ArtImage: React.FC<ArtImageProps> = ({
                 setLoaded(true);
                 externalOnLoad?.(e);
             }}
-            onError={() => setHasError(true)}
+            onError={() => {
+                // A cold Cloudflare resize can exceed the Worker's resource limit.
+                // The original R2 object is still available, so retry it before
+                // declaring the artwork unavailable for this page view.
+                if (publicId && !useOriginal) setUseOriginal(true);
+                else setHasError(true);
+            }}
             className={[
                 VARIANT_CLASSES[variant],
                 TRANSITION,
