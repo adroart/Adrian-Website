@@ -10,11 +10,28 @@
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { describe, it } from 'node:test';
+import { after, before, describe, it, mock } from 'node:test';
 
-import { listAtlasSales, onRequest as atlasSalesList } from '../functions/api/admin/atlas-sales.js';
-import { onRequest as atlasSalesConfirm } from '../functions/api/admin/atlas-sales/[id].js';
 import { confirmPendingAtlasSale } from '../functions/api/_lib/atlasSaleConfirm.js';
+
+let listAtlasSales: typeof import('../functions/api/admin/atlas-sales.js').listAtlasSales;
+let atlasSalesList: typeof import('../functions/api/admin/atlas-sales.js').onRequest;
+let atlasSalesConfirm: typeof import('../functions/api/admin/atlas-sales/[id].js').onRequest;
+
+before(async () => {
+  // The route must still run its real admin boundary. Stub only Better Auth's
+  // session lookup: its asynchronous adapter setup cannot use this test's
+  // SQLite-backed D1 lookalike and may reject after the 401 response.
+  mock.module('../lib/account/auth.server.js', {
+    namedExports: {
+      createAuth: () => ({ api: { getSession: async () => null } }),
+    },
+  });
+  ({ listAtlasSales, onRequest: atlasSalesList } = await import('../functions/api/admin/atlas-sales.js'));
+  ({ onRequest: atlasSalesConfirm } = await import('../functions/api/admin/atlas-sales/[id].js'));
+});
+
+after(() => mock.reset());
 
 const migrationsDir = new URL('../migrations/', import.meta.url);
 
