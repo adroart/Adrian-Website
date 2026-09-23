@@ -183,3 +183,42 @@ test('recipient refusal and replay never continue or reveal a recipient', async 
   expect(redeemCalls).toBe(3);
   await expect(page.getByText('different@example.test')).toHaveCount(0);
 });
+
+test('a redeemed invitation carries the artist message through sealed and written once', async ({ page }) => {
+  let isBound = false;
+  await mount(page, () => 'invited', () => isBound);
+  await page.route('**/api/invitations/inspect', route => json(route, {
+    ok: true, invitationId: 'inv-private', status: 'available', artwork: {
+      artworkId: 'MD-905', publicCode: CODE, title: 'Registry Draft Study',
+      edition: { kind: 'numbered', number: 1, size: 3 },
+    },
+  }));
+  await page.route('**/api/invitations/redeem', route => {
+    isBound = true;
+    return json(route, { ok: true, keeper: { pieceId: 'MD-905', editionNumber: 1, claimedAt: '2026-09-23' } });
+  });
+  let messageReads = 0;
+  await page.route('**/api/keeper/message?**', route => {
+    messageReads += 1;
+    return json(route, { message: {
+      body: 'A private note from Adrian for this piece.', sealedAt: '2026-09-22',
+      revealedAt: '2026-09-23', firstReveal: true,
+    } });
+  });
+  await enter(page);
+  await page.getByLabel('Invitation').fill('private-proof');
+  await page.getByRole('button', { name: 'Read invitation' }).click();
+  await page.getByRole('button', { name: 'Accept the invitation' }).click();
+  await expect(page.getByText('Something was left for you')).toBeVisible();
+  await expect(page.getByText('The code is true')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open them' }).click();
+  await expect(page.getByText('A private note from Adrian for this piece.')).toBeVisible();
+  await page.getByRole('button', { name: 'Return to the piece' }).click();
+  await expect(page.getByText('The code is true')).toBeVisible();
+  await page.getByRole('button', { name: 'Is this piece for someone else? Leave your message with it.' }).click();
+  await expect(page.getByText('For someone else')).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page.getByText('The code is true')).toBeVisible();
+  await expect(page.getByText('Something was left for you')).toHaveCount(0);
+  expect(messageReads).toBe(1);
+});

@@ -1561,7 +1561,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
           } catch { /* an absent gift never blocks the walk */ }
           if (!mounted.current) return;
           refresh();
-          setStep({ kind: 'walk', key: 'codetrue' });
+          go('codetrue');
         }} />
     ) : <Ground light="j"><div style={{ flex: 1 }} /></Ground>;
   } else if (step.kind === 'walk') {
