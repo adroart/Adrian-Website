@@ -13,7 +13,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.2
-          cache: npm
-      - run: npm ci
       - name: Check every live artwork thumbnail
-        run: node --import tsx scripts/check-live-artwork-media.ts
+        run: node scripts/check-live-artwork-media.mjs

@@ -3554,7 +3554,7 @@ export const STORIES: Story[] = [
         subtitle: 'From formless to form.',
         category: 'The Practice',
         date: 'Summer 2023',
-        image: '2023-09-29_IMG_4021_njgry2',
+        image: '2023-09-29_IMG_4021_njgry2-jpeg',
         excerpt: 'Creating is how I grow. My inner journey. A celebration of creation itself.',
         content: [
             "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment.",
@@ -3572,7 +3572,7 @@ export const STORIES: Story[] = [
         subtitle: 'Twenty years of culture.',
         category: 'The Path',
         date: 'Spring 2023',
-        image: 'copy_of_img_9273_gbrg5b_ac4d52',
+        image: 'copy_of_img_9273_gbrg5b_ac4d52-jpeg',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
             "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan. Learning the ways of different cultures.",

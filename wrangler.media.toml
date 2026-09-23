@@ -3,8 +3,8 @@ main = "workers/media.js"
 compatibility_date = "2024-09-23"
 workers_dev = true
 
-[images]
-binding = "IMAGES"
+[cache]
+enabled = true
 
 [[r2_buckets]]
 binding = "MEDIA_BUCKET"

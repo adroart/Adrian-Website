@@ -116,6 +116,13 @@ async function migrate(asset) {
     return;
   }
   const contentType = response.headers.get('content-type')?.split(';')[0] || 'application/octet-stream';
+  const supportedImage = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']);
+  if ((asset.key.startsWith('image/') && !supportedImage.has(contentType))
+      || (asset.key.startsWith('video/') && contentType !== 'video/mp4')) {
+    failed += 1;
+    console.error(`UNSUPPORTED ${contentType} ${asset.key}`);
+    return;
+  }
   const bytes = Buffer.from(await response.arrayBuffer());
   await writeFile(localPath, bytes);
 

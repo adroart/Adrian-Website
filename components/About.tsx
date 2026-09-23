@@ -196,7 +196,7 @@ const About: React.FC = () => {
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover object-center grayscale opacity-70"
           >
-            <source src="/media/video/1659598159715_vc8cqr.mp4" type="video/mp4" />
+            <source src="/media/video/1659598159715_vc8cqr-browser.mp4" type="video/mp4" />
           </video>
         </div>
 
