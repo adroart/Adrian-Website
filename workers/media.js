@@ -38,10 +38,14 @@ async function handle(request, env) {
   if (!key || key.includes('..') || key.startsWith('/')) return new Response('Not found', { status: 404 });
 
   const width = dimension(url.searchParams.get('w'));
-  const requestedHeight = dimension(url.searchParams.get('h'));
-  const height = width && requestedHeight && SIZE_PAIRS.has(`${width}x${requestedHeight}`) ? requestedHeight : undefined;
+  // Heights are checked against SIZE_PAIRS, not SIZES: 630 and 540 only exist
+  // as the height half of a pair, so SIZES alone dropped every 1200x630 card.
+  const requestedHeight = Number.parseInt(url.searchParams.get('h') ?? '', 10);
+  const height = width && SIZE_PAIRS.has(`${width}x${requestedHeight}`) ? requestedHeight : undefined;
   const crop = url.searchParams.get('crop');
-  const fit = crop === 'fit' ? 'contain' : crop === 'scale' ? 'scale-down' : 'cover';
+  // Cover needs both sides. With a width alone Image Resizing ignores it and
+  // warns, then scales down, so ask for that directly.
+  const fit = crop === 'fit' ? 'contain' : crop === 'scale' || !height ? 'scale-down' : 'cover';
   const gravityParam = url.searchParams.get('gravity');
   const gravity = gravityParam === 'face' || gravityParam === 'faces' ? 'face' : gravityParam === 'center' ? 'center' : 'auto';
   const qualityParam = Number.parseInt(url.searchParams.get('q') ?? '', 10);
