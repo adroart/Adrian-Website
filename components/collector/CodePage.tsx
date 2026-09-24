@@ -51,6 +51,7 @@ export type CodeSubmitOutcome =
 type Props = {
   onTrue: () => void;
   onNoCode?: () => void;
+  onInvitation?: () => void;
   onGift?: () => void;
   onBack?: () => void;
   /**
@@ -75,6 +76,7 @@ type Props = {
 export const CodePage: React.FC<Props> = ({
   onTrue,
   onNoCode,
+  onInvitation,
   onGift,
   onBack,
   onSubmit,
@@ -539,6 +541,7 @@ export const CodePage: React.FC<Props> = ({
         ) : (
           <>
             <TLink onClick={onNoCode}>{COPY.code.noCode}</TLink>
+            {onInvitation && <TLink onClick={onInvitation}>Invitation</TLink>}
             <TLink onClick={onGift ?? onBack}>{COPY.code.gift}</TLink>
           </>
         )}

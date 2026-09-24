@@ -9,6 +9,7 @@ import {
   getLineage,
   getRegistryIdentity,
   inspectFirstBindInvitation,
+  redeemFirstBindInvitation,
   isValidPublicCode,
 } from '../components/collector/api.ts';
 
@@ -89,6 +90,23 @@ describe('getRegistryIdentity', () => {
       throw new TypeError('network down');
     };
     await assert.rejects(() => getRegistryIdentity('AR-7K9QMX2P'), CollectorApiNetworkError);
+  });
+});
+
+describe('first-bind invitation proof transport', () => {
+  it('sends only fixed POST URLs with a token in each JSON body', async () => {
+    const token = 'private-invitation-proof';
+    respond = async input => jsonResponse(String(input).endsWith('/inspect')
+      ? { ok: true, invitationId: 'inv-1', status: 'available', artwork: { artworkId: 'MD-905', publicCode: 'AR-7K9QMX2P' } }
+      : { ok: true, keeper: { pieceId: 'MD-905', editionNumber: 1, claimedAt: '2026-09-23' } });
+    await inspectFirstBindInvitation(` ${token} `);
+    await redeemFirstBindInvitation(token);
+    assert.deepEqual(calls.map(call => String(call.input)), ['/api/invitations/inspect', '/api/invitations/redeem']);
+    for (const call of calls) {
+      assert.equal(call.init?.method, 'POST');
+      assert.deepEqual(JSON.parse(String(call.init?.body)), { token });
+      assert.equal(String(call.input).includes(token), false);
+    }
   });
 });
 
