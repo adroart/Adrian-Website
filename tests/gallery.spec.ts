@@ -82,6 +82,36 @@ test('the availability filter reads and behaves as a toggle', async ({ page }) =
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 });
 
+test('gallery controls stay inside the viewport while searching and filtering', async ({ page }, testInfo) => {
+    await page.goto('/creations', { waitUntil: 'domcontentloaded' });
+    const search = page.getByRole('searchbox', { name: 'Search pieces' });
+    const sort = page.getByRole('combobox', { name: 'Sort pieces' });
+    const available = page.getByRole('button', { name: /^Available(?: Only| \()/ });
+    await search.scrollIntoViewIfNeeded();
+
+    const expectControlsInsideViewport = async () => {
+        for (const control of [search, sort, available]) {
+            await expect(control).toBeVisible();
+            await expect(async () => {
+                const bounds = await control.boundingBox();
+                expect(bounds).not.toBeNull();
+                expect(bounds!.x).toBeGreaterThanOrEqual(0);
+                expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+            }).toPass({ timeout: 5000 });
+        }
+    };
+
+    await expectControlsInsideViewport();
+    await search.fill('communion');
+    await expectControlsInsideViewport();
+    await page.screenshot({ path: testInfo.outputPath('gallery-controls-search.png') });
+    await page.getByRole('button', { name: 'Clear search' }).first().click();
+    await available.click();
+    await expect(available).toHaveAttribute('aria-pressed', 'true');
+    await expectControlsInsideViewport();
+    await page.screenshot({ path: testInfo.outputPath('gallery-controls-filtered.png') });
+});
+
 test('every card in the grid is the same shape', async ({ page }) => {
     // Adrian spotted this by eye after a sweep that reported the page clean: the
     // sweep checked for breakage, not for raggedness. A one-line title and a
