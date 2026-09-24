@@ -509,7 +509,7 @@ const Creations: React.FC = () => {
                     </div>
 
                     {/* Right: controls */}
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-4 max-w-full">
                         {/* Search. Filtering by eye across 173 pieces was the only
                             option before this. */}
                         <div className="relative flex items-center">
@@ -534,14 +534,14 @@ const Creations: React.FC = () => {
                             )}
                         </div>
 
-                        <span className="text-wood-300" aria-hidden="true">|</span>
+                        <span className="hidden sm:inline text-wood-300" aria-hidden="true">|</span>
 
                         {/* Sort. This used to render only when a ?category= param was
                             present, so the bare /creations page — the way nearly everyone
                             arrives — offered no way to sort 173 pieces at all. */}
                         <SortDropdown value={sort} onChange={setSort} />
 
-                        <span className="text-wood-300" aria-hidden="true">|</span>
+                        <span className="hidden sm:inline text-wood-300" aria-hidden="true">|</span>
 
                         {/* Available-only toggle */}
                         <button
