@@ -15,6 +15,7 @@ type DbOptions = {
   plate?: Record<string, unknown> | null;
   artwork?: Record<string, unknown> | null;
   creatorHistory?: Record<string, unknown>[];
+  snapshot?: Record<string, unknown> | null;
   error?: Error;
 };
 
@@ -33,6 +34,7 @@ function registryDb(options: DbOptions = {}) {
           if (options.error) throw options.error;
           if (/FROM keeper_pieces/i.test(sql)) return options.plate ?? null;
           if (/FROM registry_artworks/i.test(sql)) return options.artwork ?? null;
+          if (/FROM artwork_catalog_snapshots/i.test(sql)) return options.snapshot ?? null;
           throw new Error(`Unexpected query: ${sql}`);
         },
         async all() {
@@ -66,6 +68,17 @@ async function lookup(options: DbOptions, publicCode = PUBLIC_CODE, method = 'GE
 }
 
 describe('public registry identity projection', () => {
+  it('uses the explicit snapshot title and edition without changing the catalog', async () => {
+    const { response } = await lookup({
+      plate: { id: 'kp-snapshot', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE, plate_status: 'active' },
+      artwork: { id: 'UL-100', title: 'Mutable draft', edition_size: 7 },
+      snapshot: { canonical_json: JSON.stringify({ id: 'UL-100', title: 'Registered sculpture title', series: 'Universal Language', edition: { kind: 'numbered', size: 9 } }) },
+    });
+    assert.equal(response.status, 200);
+    const { identity } = await response.json();
+    assert.equal(identity.title, 'Registered sculpture title');
+    assert.deepEqual(identity.edition, { kind: 'numbered', number: 2, size: 9, label: 'Edition 2 of 9' });
+  });
   it('accepts only canonical ambiguity-safe AR codes', () => {
     assert.equal(isPublicRegistryCode(PUBLIC_CODE), true);
     for (const value of ['AR-I0O1BAD!', 'AR-abcdefgh', 'AR-TOO-SHORT', ` ${PUBLIC_CODE}`, null]) {
@@ -390,9 +403,9 @@ describe('GET /api/registry/:publicCode', () => {
         creatorHistory: [],
       },
     });
-    assert.equal(calls.length, 3);
+    assert.equal(calls.length, 4);
     assert.deepEqual(calls.map((call) => call.values), [
-      [PUBLIC_CODE], ['UL-100'], ['kp-generated'],
+      [PUBLIC_CODE], ['UL-100'], ['kp-generated'], ['UL-100'],
     ]);
   });
 

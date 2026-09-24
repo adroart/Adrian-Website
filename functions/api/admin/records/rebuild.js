@@ -2,21 +2,11 @@
  * POST /api/admin/records/rebuild
  *
  * Regenerate the permanent Piece Record for one piece
- * ({ "publicCode": "AR-XXXXXXXX" }) or, when publicCode is omitted, for a
- * page of every piece with a public registry identity (ordered by public
- * code), via the deterministic generator in _lib/pieceRecord.js with
- * trigger_event 'on_demand'.
- *
- * Capped, not one request per registry: the bulk path used to walk every
- * piece in a single request, so a large enough registry could run past the
- * platform's request time limit mid-loop and lose the whole summary with
- * nothing written down about what had already been rebuilt. It now processes
- * at most RECORDS_REBUILD_BATCH_LIMIT pieces per call and reports
- * { hasMore, nextCursor } so the caller pages through the rest with
- * { "cursor": nextCursor } -- one small, boundable request at a time,
- * however large the registry grows. The cursor is a public_code, not an
- * offset, so a bulk rebuild in progress never skips or repeats a piece even
- * if the registry gains a new one between pages.
+ * ({ "publicCode": "AR-XXXXXXXX" }) or for one bounded, cursor-ordered page
+ * of pieces with public registry identities when publicCode is omitted, via
+ * the deterministic generator in _lib/pieceRecord.js with trigger_event
+ * 'on_demand'. The cursor is a public_code rather than an offset, so retries
+ * resume after the exact scanned page without skipping or repeating pieces.
  *
  * Idempotency: regeneration of unchanged content is a clean no-op. The
  * rebuilt record is compared with the newest stored record's canonical JSON
@@ -26,11 +16,7 @@
  * bytes ever be republished anyway (same generatedAt retried), the write
  * path is already safe: write-once content-addressed R2 (read back and
  * byte-compared) plus the UNIQUE(public_code, record_hash) guard on the
- * append-only piece_records insert absorb the conflict gracefully. Paging
- * itself is exactly as safe to repeat: each page is its own idempotent
- * rebuild of the pieces it covers, so retrying, restarting from the top, or
- * re-running the whole thing after it already finished changes nothing for
- * pieces that already match.
+ * append-only piece_records insert absorb the conflict gracefully.
  *
  * Per-piece outcomes are reported so a partial failure never hides:
  *   generated  — a new record file now exists under a new hash
@@ -49,13 +35,9 @@ import { isMissingTableError, migrationNotApplied, legacyEnabled } from '../../_
 import { refreshPieceRecord } from '../../_lib/pieceRecordRefresh.js';
 
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
-
-// How many pieces one bulk-rebuild request touches. Small enough that even
-// the slowest per-piece rebuild (a full lineage recompute plus a verified
-// R2 round trip) stays comfortably inside the platform's request time limit;
-// large enough that a registry of a few hundred pieces finishes in a small
-// number of pages rather than dozens.
 export const RECORDS_REBUILD_BATCH_LIMIT = 25;
+const DEFAULT_LIMIT = RECORDS_REBUILD_BATCH_LIMIT;
+const MAX_LIMIT = 25;
 
 // Thin wrapper: this endpoint always regenerates with trigger 'on_demand'
 // and reports every piece's outcome, never throwing per-piece (the shared
@@ -91,49 +73,54 @@ export async function onRequest({ request, env }) {
   if (requestedCode !== undefined && !PUBLIC_CODE_PATTERN.test(String(requestedCode || ''))) {
     return jsonResponse({ ok: false, error: 'invalid_public_code' }, 400);
   }
-  const cursor = body?.cursor;
-  if (cursor !== undefined && (typeof cursor !== 'string' || !cursor.trim())) {
+  const suppliedCursor = body?.cursor;
+  if (requestedCode !== undefined && suppliedCursor !== undefined) {
+    return jsonResponse({ ok: false, error: 'cursor_requires_bulk_rebuild' }, 400);
+  }
+  const cursor = suppliedCursor === undefined ? '' : String(suppliedCursor || '');
+  if (suppliedCursor !== undefined && !PUBLIC_CODE_PATTERN.test(cursor)) {
     return jsonResponse({ ok: false, error: 'invalid_cursor' }, 400);
   }
-  if (requestedCode !== undefined && cursor !== undefined) {
-    return jsonResponse({ ok: false, error: 'cursor_requires_bulk_rebuild' }, 400);
+  const requestedLimit = body?.limit === undefined ? DEFAULT_LIMIT : body.limit;
+  if (requestedCode === undefined && (!Number.isSafeInteger(requestedLimit)
+    || requestedLimit < 1 || requestedLimit > MAX_LIMIT)) {
+    return jsonResponse({ ok: false, error: 'invalid_limit' }, 400);
   }
 
   const generatedAt = new Date().toISOString();
   const includeLegacySections = legacyEnabled();
   try {
     let publicCodes;
+    let nextCursor = null;
     let hasMore = false;
     if (requestedCode !== undefined) {
       publicCodes = [String(requestedCode)];
     } else {
-      // One capped, cursor-ordered page of every piece with a public
-      // registry identity (registered or grandfathered before migration 025
-      // backfilled registration_status). Fetching one extra row is how
-      // hasMore is known without a separate COUNT query; it is trimmed back
-      // off before use below.
-      // The cursor value is bound twice, once per ordinal (?1 and ?2),
-      // rather than reusing one ordinal in both places: D1 accepts a
-      // repeated numbered parameter, but node:sqlite (this project's own
-      // test runner) raises "column index out of range" on one, so binding
-      // it under two ordinals keeps the same query portable to both.
+      // One stable page of pieces with public identities. The cursor is the
+      // last scanned public code, so retries resume after the exact page even
+      // when one of its record builds failed.
       const result = await env.DB.prepare(
         `SELECT public_code
            FROM keeper_pieces
           WHERE public_code IS NOT NULL
-            AND (?1 IS NULL OR public_code > ?2)
+            AND length(public_code) = 11
+            AND public_code GLOB 'AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789][ABCDEFGHJKLMNPQRSTUVWXYZ23456789]'
+            AND public_code > ?1
           ORDER BY public_code ASC
-          LIMIT ?3`,
-      ).bind(cursor ?? null, cursor ?? null, RECORDS_REBUILD_BATCH_LIMIT + 1).all();
+          LIMIT ?2`,
+      ).bind(cursor, requestedLimit + 1).all();
       const rows = Array.isArray(result) ? result : result?.results;
       if (!Array.isArray(rows)) {
         return jsonResponse({ ok: false, error: 'registry_unavailable' }, 503);
       }
-      const codes = rows
+      hasMore = rows.length > requestedLimit;
+      const pageRows = rows.slice(0, requestedLimit);
+      nextCursor = hasMore && pageRows.length
+        ? String(pageRows[pageRows.length - 1].public_code || '')
+        : null;
+      publicCodes = pageRows
         .map((row) => String(row.public_code || ''))
         .filter((code) => PUBLIC_CODE_PATTERN.test(code));
-      hasMore = codes.length > RECORDS_REBUILD_BATCH_LIMIT;
-      publicCodes = hasMore ? codes.slice(0, RECORDS_REBUILD_BATCH_LIMIT) : codes;
     }
 
     const outcomes = [];
@@ -141,7 +128,6 @@ export async function onRequest({ request, env }) {
       outcomes.push(await rebuildOne(env, publicCode, generatedAt, includeLegacySections));
     }
     const failed = outcomes.filter((outcome) => outcome.status === 'failed').length;
-    const nextCursor = hasMore ? publicCodes[publicCodes.length - 1] : null;
     return jsonResponse({
       ok: failed === 0,
       generatedAt,
@@ -151,10 +137,9 @@ export async function onRequest({ request, env }) {
       unchanged: outcomes.filter((outcome) => outcome.status === 'unchanged').length,
       failed,
       outcomes,
-      // Only meaningful for the bulk path; a single-piece rebuild is always
-      // its own complete, one-page result.
-      hasMore,
+      cursor: cursor || null,
       nextCursor,
+      hasMore,
     }, failed === 0 ? 200 : 207);
   } catch (error) {
     if (isMissingTableError(error) || /no such column/i.test(String(error?.message || ''))) {

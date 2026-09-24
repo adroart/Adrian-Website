@@ -276,8 +276,8 @@ async function gatherLineage(env, piece) {
  * that rule. The tier-less query below covers only the deploy window where
  * 041 has not been applied yet.
  */
-async function gatherShines(env, keeperPieceId) {
-  const shinesSql = (tierGuard) => `SELECT id, body, scope, public_shared_at
+export async function gatherShines(env, keeperPieceId) {
+  const shinesSql = (tierGuard) => `SELECT id, body, scope, public_shared_at, created_at
          FROM collector_dreams
         WHERE keeper_piece_id = ?1
           AND public_shared_at IS NOT NULL
@@ -286,8 +286,19 @@ async function gatherShines(env, keeperPieceId) {
   let rows = [];
   try {
     rows = await allRows(env, shinesSql("AND tier <> 'seal'"), keeperPieceId);
+    const historical = await allRows(env, `SELECT dream.id, dream.body, dream.scope,
+             publication.published_at AS public_shared_at, dream.created_at
+        FROM collector_historical_dream_publications publication
+        JOIN collector_dreams dream ON dream.id = publication.dream_id
+       WHERE publication.keeper_piece_id = ?1
+         AND dream.keeper_piece_id = publication.keeper_piece_id
+         AND dream.author_user_id = publication.author_user_id
+       ORDER BY publication.published_at, dream.created_at, dream.id`, keeperPieceId);
+    rows = [...rows, ...historical];
   } catch (error) {
-    if (error instanceof Error && /no such column:.*\btier\b/i.test(error.message)) {
+    if (error instanceof Error && /no such table:.*collector_historical_dream_publications/i.test(error.message)) {
+      rows = await allRows(env, shinesSql("AND tier <> 'seal'"), keeperPieceId);
+    } else if (error instanceof Error && /no such column:.*\btier\b/i.test(error.message)) {
       rows = await allRows(env, shinesSql(''), keeperPieceId);
     } else if (!isMissingTableError(error)) {
       throw error;
@@ -306,6 +317,9 @@ async function gatherShines(env, keeperPieceId) {
   }
   return rows
     .filter((row) => !removed.has(row.id))
+    .sort((left, right) => String(left.public_shared_at).localeCompare(String(right.public_shared_at))
+      || String(left.created_at).localeCompare(String(right.created_at))
+      || String(left.id).localeCompare(String(right.id)))
     .map((row) => ({
       words: String(row.body),
       scope: String(row.scope),

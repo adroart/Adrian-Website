@@ -43,7 +43,7 @@
  *                          outcome: "stays until it lands")
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAccount } from '../../lib/account/useAccount';
 import SignInModal from '../account/SignInModal';
 import { C } from './tokens';
@@ -61,6 +61,9 @@ import { PendingBindProvider, usePendingBind, normalizeTypedCode } from './pendi
 import type { FamilyLive, FamilyPerson, GardenLive, PieceLive, Quiet } from './live';
 import {
   bindKeeper,
+  acceptCaretakerPassing,
+  cancelCaretakerPassing,
+  createCaretakerPassing,
   completeYearlyRitual,
   createCollectorDream,
   getAtlasOrdinal,
@@ -69,22 +72,25 @@ import {
   getCollectorDreamState,
   getCollectorLetters,
   getCollectorOnboarding,
+  getCollectorPrivacy,
   getCurrentKeeperPriceHistory,
   getKeeperMessage,
   getKeeperPieceStatus,
+  getCaretakerPassingForSender,
   getLineage,
   getPublicDream,
   getRegistryIdentity,
+  inspectCaretakerPassing,
   getYearlyRitualEligibility,
   inviteKeeperContributor,
   listKeeperContributors,
   revokeKeeperContributor,
-  saveCollectorBirthProfile,
+  resendCaretakerPassing,
   setCollectorDreamTier,
+  publishHistoricalCollectorDream,
   setKeeperDisplayLocation,
   shareCollectorDream,
   updateCollectorDream,
-  updateCollectorPrivacy,
   CollectorApiNetworkError,
 } from './api';
 import type {
@@ -92,6 +98,8 @@ import type {
   CollectorDreamState,
   CollectorLetter,
   CollectorOnboardingState,
+  CollectorPrivacyState,
+  CollectorBirthInputs,
   CollectorRitualAction,
   CollectorRitualEligibility,
   CurrentKeeperPriceEntry,
@@ -100,11 +108,18 @@ import type {
   KeeperPieceStatus,
   LineageOutcome,
   PublicCollectorDream,
+  CaretakerPassing,
 } from './api';
 import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import { searchPlaces } from '../../lib/astrology/places';
 
+import { persistCollectorGathering, type GatheringOutcome } from './gathering';
+
 const G = COPY.gathering;
+const PRIVATE_READ_ERROR = 'Your private choices could not be opened right now. Please try again.';
+const BIRTH_SAVE_ERROR = 'Your birth details could not be saved right now. You can skip and add them later.';
+const PRIVACY_SAVE_ERROR = 'Your privacy choices could not be saved right now. Please try again.';
+const PRIVACY_PENDING = 'Birth details remain optional. Public choices stay closed until adulthood is confirmed.';
 
 /**
  * Strings no copy.ts key exists for yet. copy.ts is frozen this pass, so they
@@ -255,6 +270,7 @@ type Step =
    * as authored.
    */
   | { kind: 'gift-message'; stage: 'sealed' | 'written' }
+  | { kind: 'passing-result'; state: 'accepted' | 'cancelled' | 'expired' | 'error' }
   | {
       kind: 'state';
       /**
@@ -262,9 +278,10 @@ type Step =
        * demo surfaces but nothing behind them is wired, so the live door
        * says so instead of staging a passing that cannot happen.
        */
-      key: 'account' | 'verify' | 'plate' | 'offline' | 'notyet';
+      key: 'account' | 'verify' | 'plate' | 'offline';
       onRetry?: () => void;
       receipt?: [string, string][];
+      message?: string;
     };
 
 export type WiredJourneyProps = {
@@ -275,12 +292,31 @@ export type WiredJourneyProps = {
   beginClaim?: boolean;
 };
 
-export const WiredJourney: React.FC<WiredJourneyProps> = ({
+/** Account-owned rooms, drafts and async results must never survive an identity
+ * change. Keep the pending-code provider outside this boundary so the deliberate
+ * anonymous-to-sign-in bridge still works; discard it when leaving a known user. */
+export const WiredJourney: React.FC<WiredJourneyProps> = props => {
+  const account = useAccount();
+  const pending = usePendingBind();
+  const confirmedOwner = useRef<string | null>(null);
+  if (account.isLoaded) confirmedOwner.current = account.isSignedIn ? account.userId : null;
+  const owner = confirmedOwner.current;
+  const previousOwner = useRef(owner);
+  useLayoutEffect(() => {
+    if (previousOwner.current && previousOwner.current !== owner) pending.settle();
+    previousOwner.current = owner;
+  }, [owner, pending]);
+  return <AccountJourney key={`${props.identity.publicCode}:${owner ?? 'anonymous'}`} {...props} />;
+};
+
+const AccountJourney: React.FC<WiredJourneyProps> = ({
   identity,
   story = null,
   beginClaim = false,
 }) => {
   const publicCode = identity.publicCode;
+  const mounted = useRef(true);
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const account = useAccount();
   const pending = usePendingBind();
   const signedIn = account.available && account.isLoaded && account.isSignedIn;
@@ -291,7 +327,10 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const [authOpen, setAuthOpen] = useState(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
-  const [cityId, setCityId] = useState<string | null>(null);
+  const lampsEdited = useRef(false);
+  const gatheringInFlight = useRef(false);
+  const [gatheringBusy, setGatheringBusy] = useState(false);
+  const [gatheringPrivate, setGatheringPrivate] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = useCallback(() => setRefreshTick(t => t + 1), []);
 
@@ -310,6 +349,16 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
      'codetrue' is reached right after this bind, so a later visit to
      'codetrue' (e.g. back from 'fork') never re-triggers the detour. */
   const [giftMessageBody, setGiftMessageBody] = useState<string | null>(null);
+  const passingToken = useMemo(() => typeof window === 'undefined'
+    ? ''
+    : new URLSearchParams(window.location.search).get('passing') || '', []);
+  const [activePassing, setActivePassing] = useState<CaretakerPassing | null>(null);
+  const passingAttempt = useRef<string | null>(null);
+  const [passingKind, setPassingKind] = useState<'sale' | 'gift'>('sale');
+  const [passingValueMethod, setPassingValueMethod] = useState<
+    'paid' | 'part_trade_paid' | 'traded' | 'given' | null
+  >(null);
+  const [incomingPassingError, setIncomingPassingError] = useState<string | null>(null);
   const giftPendingRef = useRef(false);
 
   /* the vault arrival's own once-only guard: true the first time this
@@ -334,6 +383,46 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const isYours = Boolean(keeperStatus?.byYou);
   const keeperPieceId = keeperStatus?.keeperPieceId ?? null;
 
+  const incomingPassing = useQuiet<CaretakerPassing | null>(
+    Boolean(passingToken && signedIn),
+    async () => {
+      const outcome = await inspectCaretakerPassing(passingToken);
+      if (!outcome.ok) {
+        setIncomingPassingError(failCode(outcome) || 'passing_failed');
+        return null;
+      }
+      setIncomingPassingError(null);
+      return outcome.data;
+    },
+    [passingToken, account.userId, refreshTick],
+  );
+  const senderPassing = useQuiet<CaretakerPassing | null>(
+    Boolean(signedIn && keeperPieceId),
+    async () => {
+      const outcome = await getCaretakerPassingForSender(keeperPieceId || '');
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
+    },
+    [keeperPieceId, account.userId, refreshTick],
+  );
+
+  useEffect(() => {
+    if (!passingToken) return;
+    if (!signedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    if (incomingPassing.status === 'ready' && incomingPassing.data?.status === 'pending') {
+      setActivePassing(incomingPassing.data);
+      setStep({ kind: 'walk', key: 'passaccept' });
+    } else if (incomingPassing.status === 'ready' && incomingPassing.data) {
+      setStep({ kind: 'passing-result', state: incomingPassing.data.status === 'accepted'
+        ? 'accepted' : incomingPassing.data.status === 'cancelled' ? 'cancelled' : 'expired' });
+    } else if (incomingPassingError) {
+      setStep({ kind: 'passing-result', state: 'error' });
+    }
+  }, [passingToken, signedIn, incomingPassing, incomingPassingError]);
+
   const lineage = useQuiet<LineageOutcome>(
     true,
     () => getLineage(publicCode),
@@ -354,7 +443,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const certificate = useQuiet<CertificateContent | null>(
     true,
     async () => {
-      const outcome = await getCertificate(identity.artworkId, publicCode);
+      const outcome = await getCertificate(identity.artworkId, publicCode, identity.edition);
       if (outcome.ok) return outcome.data;
       if (outcome.status === 404) return null;
       throw outcome;
@@ -445,10 +534,28 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     signedIn && isYours,
     async () => {
       const outcome = await getCollectorOnboarding();
-      return outcome.ok ? outcome.data : null;
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
     },
     [account.userId, isYours],
   );
+  const privacy = useQuiet<CollectorPrivacyState>(
+    signedIn && isYours && Boolean(keeperPieceId),
+    async () => {
+      const outcome = await getCollectorPrivacy(keeperPieceId ?? undefined);
+      if (!outcome.ok) throw outcome;
+      return outcome.data;
+    },
+    [account.userId, keeperPieceId, isYours],
+  );
+  useEffect(() => {
+    if (privacy.status !== 'ready' || lampsEdited.current) return;
+    const saved = privacy.data;
+    if (!saved?.ring3 || !saved?.ring4) return;
+    setLamps([true, true, saved.ring4.shareName, saved.ring4.shareFace,
+      saved.ring3.shareDerivedChart, saved.ring4.shareBusiness, saved.ring4.shareMission]);
+  }, [privacy]);
+
   const birthMonthIndex = useMemo(() => {
     if (onboarding.status !== 'ready' || !onboarding.data) return null;
     const state = onboarding.data;
@@ -542,6 +649,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return { kind: 'handled' };
       }
 
+      if (!mounted.current) return { kind: 'handled' };
       if (outcome.kind === 'bound') {
         /* the sealed message, before the four: fetched now so it is ready
            the moment the vault carries through to 'codetrue'. Never blocks
@@ -558,6 +666,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         }
       }
 
+      if (!mounted.current) return { kind: 'handled' };
       switch (outcome.kind) {
         case 'bound':
           pending.settle();
@@ -634,79 +743,49 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
 
-  /* ---------------- the gathering submissions ----------------
-   * Failures never cost the person their words: everything typed stays in
-   * the `typed` record, network drops surface the offline receipt state, and
-   * server-rule rejections (no adult birth profile on file, an uncurated
-   * city) quietly keep the value client-side. */
-
-  const submitBorn = useCallback(async (): Promise<'landed' | 'kept' | 'dropped'> => {
-    const date = parseBirthDate(typed[G.fieldDate] ?? '');
-    const time = parseBirthTime(typed[G.fieldTime] ?? '');
-    const placeText = (typed[G.fieldPlace] ?? '').trim();
-    if (!date || !time || !placeText) return 'kept';
-    let place;
-    try {
-      [place] = await searchPlaces(placeText, 1);
-    } catch {
-      place = undefined;
-    }
-    if (!place) return 'kept';
-    try {
-      const outcome = await saveCollectorBirthProfile({ date, time, place });
-      return outcome.ok ? 'landed' : 'kept';
-    } catch (cause) {
-      if (cause instanceof CollectorApiNetworkError) return 'dropped';
-      return 'kept';
-    }
-  }, [typed]);
-
-  const resolveCity = useCallback(async (): Promise<void> => {
-    const cityText = (typed[G.fieldCity] ?? '').trim().toLowerCase();
-    if (!cityText) return;
-    try {
-      const outcome = await getCollectorCuratedCities();
-      if (!outcome.ok) return;
-      const hit = outcome.data.find(city => city.label.toLowerCase().includes(cityText));
-      setCityId(hit ? hit.id : null);
-    } catch {
-      /* uncurated for now; the light stays client-side until it can be placed */
-    }
-  }, [typed]);
-
-  /* the lamps, one per real privacy field, in SHOW_LAMPS wire order:
-     0 shareIntention · 1 shareCity (the piece ring) · 2 shareName ·
-     3 shareFace · 4 shareDerivedChart · 5 shareBusiness · 6 shareMission.
-     No links lamp exists because no links field exists. */
-  const submitShows = useCallback(
-    async (chosen: boolean[]): Promise<'landed' | 'kept' | 'dropped'> => {
-      let landed = false;
-      try {
-        if (keeperPieceId && cityId) {
-          const outcome = await updateCollectorPrivacy({
-            piece: { keeperPieceId, shareCity: Boolean(chosen[1]), cityId },
-          });
-          landed = landed || outcome.ok;
-        }
-        const personRings = await updateCollectorPrivacy({
-          person: {
-            shareIntention: Boolean(chosen[0]),
-            shareName: Boolean(chosen[2]),
-            shareFace: Boolean(chosen[3]),
-            shareDerivedChart: Boolean(chosen[4]),
-            shareBusiness: Boolean(chosen[5]),
-            shareMission: Boolean(chosen[6]),
-          },
-        });
-        landed = landed || personRings.ok;
-        return landed ? 'landed' : 'kept';
-      } catch (cause) {
-        if (cause instanceof CollectorApiNetworkError) return 'dropped';
-        return 'kept';
+  /* Gathering stays on its authored screen until every dependent save lands.
+   * The account boundary owns the draft and invalidates any old continuation. */
+  const submitGathering = useCallback(async (chosen: boolean[], withBirth: boolean): Promise<GatheringOutcome> => {
+    if (!keeperPieceId) return { kind: 'pending', stage: 'read' };
+    let birth: CollectorBirthInputs | null = null;
+    if (withBirth) {
+      const raw = [typed[G.fieldDate] ?? '', typed[G.fieldTime] ?? '', typed[G.fieldPlace] ?? ''];
+      if (raw.some(value => value.trim())) {
+        const date = parseBirthDate(raw[0]);
+        const time = parseBirthTime(raw[1]);
+        if (!date || !time || !raw[2].trim()) return { kind: 'rejected', stage: 'birth' };
+        try {
+          const [place] = await searchPlaces(raw[2].trim(), 1);
+          if (!mounted.current) return { kind: 'cancelled' };
+          if (!place) return { kind: 'rejected', stage: 'birth' };
+          birth = { date, time, place };
+        } catch { return { kind: 'network', stage: 'birth' }; }
       }
-    },
-    [keeperPieceId, cityId],
-  );
+    }
+    const cityText = (typed[G.fieldCity] ?? '').trim().toLowerCase();
+    let piece;
+    if (cityText) {
+      try {
+        const cities = await getCollectorCuratedCities();
+        if (!mounted.current) return { kind: 'cancelled' };
+        if (!cities.ok) return { kind: 'rejected', stage: 'privacy' };
+        const city = cities.data.find(item => item.label.toLowerCase().includes(cityText));
+        if (!city) return { kind: 'rejected', stage: 'privacy' };
+        piece = { keeperPieceId, shareCity: Boolean(chosen[1]), cityId: city.id };
+      } catch { return { kind: 'network', stage: 'privacy' }; }
+    }
+    return persistCollectorGathering({
+      keeperPieceId, birth, isCurrent: () => mounted.current,
+      privacy: {
+        ...(piece ? { piece } : {}),
+        person: {
+          shareIntention: Boolean(chosen[0]), shareName: Boolean(chosen[2]),
+          shareFace: Boolean(chosen[3]), shareDerivedChart: Boolean(chosen[4]),
+          shareBusiness: Boolean(chosen[5]), shareMission: Boolean(chosen[6]),
+        },
+      },
+    });
+  }, [typed, keeperPieceId]);
 
   /* the year's answer, whichever of the three it is. plant-new carries the
      field's words; reinforce and fulfilled carry nothing, exactly as the
@@ -812,7 +891,9 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
   const ritualEligibility = ritual.status === 'ready' ? ritual.data : null;
 
   const gardenLive: GardenLive | null = useMemo(() => {
-    if (!isYours || !keeperPieceId) return null;
+    const hasOwnHistoricalSeal = dreams.status === 'ready'
+      && Boolean(dreams.data?.history.some(entry => entry.tier === 'seal' && entry.body));
+    if ((!isYours && !hasOwnHistoricalSeal) || !keeperPieceId) return null;
 
     /* Entering the light. The tier verb is the settled move; while migration
        041 has not reached the registry it answers 503, and keep→shine falls
@@ -832,6 +913,11 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
 
     return {
       dreams,
+      publishHistorical: async (dreamId: string) => {
+        const outcome = await publishHistoricalCollectorDream({ keeperPieceId, dreamId });
+        if (outcome.ok) refresh();
+        return outcome.ok;
+      },
       /* The yearly gate, pre-empted for the UI: outside the window the
          standing BODY settles. Unknown eligibility reads open — the server
          is the real gate, and `place` answers 'locked' when it refuses. */
@@ -1056,6 +1142,72 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     [identity, ordinalValue],
   );
 
+  const submitPassing = useCallback(async () => {
+    const recipientEmail = (typed[COPY.passing.readyField] || '').trim().toLowerCase();
+    if (!keeperPieceId || !recipientEmail) return;
+    if (!passingAttempt.current) passingAttempt.current = `passing-${crypto.randomUUID()}`;
+    try {
+      const outcome = await createCaretakerPassing({
+        keeperPieceId,
+        recipientEmail,
+        confirmedRecipientEmail: recipientEmail,
+        transferKind: passingKind,
+        idempotencyKey: passingAttempt.current,
+        ...((typed[COPY.passing.valueField] || '').trim() && passingValueMethod
+          ? {
+              declaredValueRaw: (typed[COPY.passing.valueField] || '').trim(),
+              declaredValueMethod: passingValueMethod,
+            }
+          : {}),
+      });
+      if (!outcome.ok) {
+        setStep({ kind: 'passing-result', state: failCode(outcome) === 'passing_expired' ? 'expired' : 'error' });
+        return;
+      }
+      setActivePassing(outcome.data.passing);
+      setStep({ kind: 'walk', key: 'passdone' });
+      refresh();
+    } catch {
+      setStep({ kind: 'passing-result', state: 'error' });
+    }
+  }, [keeperPieceId, typed, refresh, passingKind, passingValueMethod]);
+
+  const cancelPassing = useCallback(async () => {
+    if (!activePassing) return;
+    const outcome = await cancelCaretakerPassing(activePassing.id);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: 'error' });
+      return;
+    }
+    setActivePassing(null);
+    passingAttempt.current = null;
+    setStep({ kind: 'piece' });
+    refresh();
+  }, [activePassing, refresh]);
+
+  const acceptPassing = useCallback(async () => {
+    if (!passingToken) return;
+    const outcome = await acceptCaretakerPassing(passingToken);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: failCode(outcome) === 'passing_expired' ? 'expired' : 'error' });
+      return;
+    }
+    setActivePassing(outcome.data.passing);
+    refresh();
+    setStep({ kind: 'piece' });
+  }, [passingToken, refresh]);
+
+  const resendPassing = useCallback(async () => {
+    if (!activePassing) return;
+    const outcome = await resendCaretakerPassing(activePassing.id);
+    if (!outcome.ok) {
+      setStep({ kind: 'passing-result', state: 'error' });
+      return;
+    }
+    setActivePassing(outcome.data.passing);
+    refresh();
+  }, [activePassing, refresh]);
+
   const wiredScreen = useCallback(
     (key: keyof typeof WALK): Screen => {
       const base = WALK[key] as Screen;
@@ -1072,6 +1224,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
          required, so the first reachable gathering screen has nothing behind
          it to correct. §7, 2026-08-20: that screen is now lives, not born. */
       if (key === 'lives') screen.back = undefined;
+      if (key === 'light47' && gatheringPrivate) screen.body = PRIVACY_PENDING;
 
       /* the ritual's one-press answers become real actions: the demo rows
          walk straight to ritualfamily, the wired rows submit first. Matched
@@ -1127,9 +1280,24 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
           screen.note = removeArmed ? REMOVE_CONFIRM : COPY.people.personNote;
         }
       }
+      if (key === 'passdone' && activePassing?.status === 'pending') {
+        screen.rows = activePassing.deliveryStatus === 'failed'
+          ? [
+              ['Send the invitation again', 'The earlier delivery did not land.', '__resendPassing'],
+              ['Stop the passing', 'Nothing has moved yet.', '__cancelPassing'],
+            ]
+          : [['Stop the passing', 'Nothing has moved yet.', '__cancelPassing']];
+      }
+      if (key === 'passaccept') screen.to = '__acceptPassing';
+      if (key === 'passvalue' && screen.rows) {
+        const targets = [
+          '__passingPaid', '__passingPartTrade', '__passingTraded', '__passingGiven',
+        ];
+        screen.rows = screen.rows.map(([title, note], index) => [title, note, targets[index]]);
+      }
       return screen;
     },
-    [swap, familyLive, person, removeArmed, resendInviteNote],
+    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing, gatheringPrivate],
   );
 
   /* ---------------- navigation ---------------- */
@@ -1141,57 +1309,38 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       /* the armed removal disarms the moment any other press happens */
       if (key !== '__personRemove' && removeArmed) setRemoveArmed(false);
 
-      /* side effects on leaving a gathering screen by its own brass.
-         §7 2026-08-20 then the artist's second walk: lives leads into
-         who1, and who2 (not who1) is the screen that now carries the
-         birth-fields and shows submissions on its way into light47 — the
-         gathering's final two screens, split from the one combined page. */
-      if (from === 'lives' && key === 'who1') void resolveCity();
-      if (from === 'shows' && key === 'light47') {
-        void submitShows(lamps).then(result => {
-          if (result === 'dropped') {
-            setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: (typed[G.fieldCity]
-                ? [[G.fieldCity, typed[G.fieldCity]]]
-                : []) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'shows' }),
-            });
-          }
-        });
+      if (gatheringInFlight.current) return;
+      if (from === 'explain' && key === 'who2') {
+        setTyped(current => ({ ...current, [G.fieldDate]: '', [G.fieldTime]: '', [G.fieldPlace]: '' }));
+        setStep({ kind: 'walk', key: 'who2' });
+        return;
       }
-      /* who2 → light47: fires both submissions the split gathering pages
-         now carry between them. shareIntention and shareCity go true
-         always (the piece's own facts are not optional, §7); the five
-         identity lamps come from who1's state, at indices 2..6 of the
-         shared lamps array. */
-      if (from === 'who2' && key === 'light47') {
-        void submitBorn().then(result => {
-          if (result === 'dropped') {
+      if ((from === 'who2' || from === 'shows') && key === 'light47') {
+        gatheringInFlight.current = true;
+        setGatheringBusy(true);
+        void submitGathering(from === 'who2' ? lamps.map((v, i) => i < 2 ? true : v) : lamps, from === 'who2')
+          .then(result => {
+            if (!mounted.current || result.kind === 'cancelled') return;
+            if (result.kind === 'saved') {
+              setGatheringPrivate(Boolean(result.sharingPending));
+              refresh();
+              setStep({ kind: 'walk', key: 'light47' });
+              return;
+            }
+            const returnTo = result.stage === 'birth' ? 'who1' : from;
             setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: [
-                [G.fieldDate, typed[G.fieldDate] ?? ''],
-                [G.fieldPlace, typed[G.fieldPlace] ?? ''],
-              ].filter(([, value]) => value) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
+              kind: 'state', key: 'offline', receipt: [],
+              message: result.kind === 'network' ? undefined
+                : result.stage === 'read' ? PRIVATE_READ_ERROR
+                  : result.kind === 'pending' && result.error === 'adult_profile_required' ? PRIVACY_PENDING
+                    : result.stage === 'birth' ? BIRTH_SAVE_ERROR : PRIVACY_SAVE_ERROR,
+              onRetry: () => setStep({ kind: 'walk', key: returnTo }),
             });
-          }
-        });
-        void submitShows(lamps.map((v, i) => (i < 2 ? true : v))).then(result => {
-          if (result === 'dropped') {
-            setStep({
-              kind: 'state',
-              key: 'offline',
-              receipt: (typed[G.fieldCity]
-                ? [[G.fieldCity, typed[G.fieldCity]]]
-                : []) as [string, string][],
-              onRetry: () => setStep({ kind: 'walk', key: 'who2' }),
-            });
-          }
-        });
+          }).finally(() => {
+            gatheringInFlight.current = false;
+            if (mounted.current) setGatheringBusy(false);
+          });
+        return;
       }
       /* the year's three answers. Planting anew submits the field's words on
          the way out of its own screen; the one-press answers submit here.
@@ -1215,6 +1364,36 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
          screen is reached only once the letter actually left */
       if (from === 'invite' && key === 'invitesent') {
         void submitInvite();
+        return;
+      }
+
+      if (from === 'passconfirm' && key === 'passdone') {
+        void submitPassing();
+        return;
+      }
+      if (key === 'passname') setPassingKind('gift');
+      if (key === 'passsell') setPassingKind('sale');
+      const passingMethods = {
+        __passingPaid: 'paid',
+        __passingPartTrade: 'part_trade_paid',
+        __passingTraded: 'traded',
+        __passingGiven: 'given',
+      } as const;
+      if (key in passingMethods) {
+        setPassingValueMethod(passingMethods[key as keyof typeof passingMethods]);
+        setStep({ kind: 'walk', key: 'passready' });
+        return;
+      }
+      if (key === '__cancelPassing') {
+        void cancelPassing();
+        return;
+      }
+      if (key === '__resendPassing') {
+        void resendPassing();
+        return;
+      }
+      if (key === '__acceptPassing') {
+        void acceptPassing();
         return;
       }
 
@@ -1262,11 +1441,12 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         return;
       }
       if (key === 'passfork') {
-        /* the honest passing (D4): the passing screens are demo surfaces
-           with nothing wired behind them, and walking a live caretaker into
-           a passing that cannot complete would be a lie. One quiet state
-           says the passing opens here soon, and the piece is untouched. */
-        setStep({ kind: 'state', key: 'notyet' });
+        if (senderPassing.status === 'ready' && senderPassing.data?.status === 'pending') {
+          setActivePassing(senderPassing.data);
+          setStep({ kind: 'walk', key: 'passdone' });
+        } else {
+          setStep({ kind: 'walk', key: 'passfork' });
+        }
         return;
       }
       if (key === '__home') {
@@ -1288,7 +1468,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       }
       if (key in WALK) setStep({ kind: 'walk', key: key as keyof typeof WALK });
     },
-    [step, submitBorn, resolveCity, submitShows, submitRitual, submitInvite, submitRemove, submitResendInvite, person, removeArmed, lamps, typed, refresh],
+    [step, submitGathering, submitRitual, submitInvite, submitRemove, submitResendInvite, submitPassing, cancelPassing, acceptPassing, resendPassing, person, removeArmed, lamps, typed, refresh, senderPassing],
   );
 
   /* ---------------- the account bridge ---------------- */
@@ -1319,6 +1499,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
         live={live}
         initialRoom={step.room ?? null}
         ground={groundInputs}
+        canOpenGarden={Boolean(keeperStatus?.authorHistory)}
         onBegin={() => setStep({ kind: 'code' })}
         onSignIn={() => setAuthOpen(true)}
         onWalk={go}
@@ -1345,7 +1526,19 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       />
     );
   } else if (step.kind === 'walk') {
-    if (step.key === 'light47' && ordinalValue === null) {
+    if (['who1', 'who2', 'shows'].includes(step.key)
+      && (onboarding.status !== 'ready' || privacy.status !== 'ready')) {
+      const failed = onboarding.status === 'failed' || privacy.status === 'failed';
+      surface = failed ? (
+        <StateScreen state="offline" message={PRIVATE_READ_ERROR} receipt={[]}
+          onPrimary={() => {
+            if (onboarding.status === 'failed') onboarding.retry();
+            if (privacy.status === 'failed') privacy.retry();
+          }}
+          onSecondary={() => setStep({ kind: 'piece' })}
+          onBack={() => setStep({ kind: 'piece' })} />
+      ) : <Ground light="i" wash><div style={{ flex: 1 }} /></Ground>;
+    } else if (step.key === 'light47' && ordinalValue === null) {
       /* ignition waits for the real ordinal: a quiet hold while the atlas
          answers, the quiet retry state if it cannot */
       if (ordinal.status === 'loading') {
@@ -1376,14 +1569,21 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
       surface = <VaultArrival play={play} onGo={go} screen={wiredScreen('codetrue')} />;
     } else {
       surface = (
+        <fieldset disabled={gatheringBusy} aria-busy={gatheringBusy} style={{ display: 'contents' }}>
         <WalkScreen
           screen={wiredScreen(step.key)}
           onGo={go}
           values={typed}
-          onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+          onType={(label, value) => {
+            if (label === COPY.passing.readyField && typed[label] !== value) {
+              passingAttempt.current = null;
+            }
+            setTyped(t => ({ ...t, [label]: value }));
+          }}
           lampsValue={lamps}
-          onLamps={setLamps}
+          onLamps={next => { lampsEdited.current = true; setLamps(next); }}
         />
+        </fieldset>
       );
     }
   } else if (step.kind === 'gift-message') {
@@ -1400,6 +1600,23 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
     surface = (
       <WalkScreen
         screen={screen}
+        onGo={go}
+        values={typed}
+        onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+        lampsValue={lamps}
+        onLamps={setLamps}
+      />
+    );
+  } else if (step.kind === 'passing-result') {
+    const copy = {
+      accepted: ['The passing is complete', 'This piece now rests with its next caretaker.'],
+      cancelled: ['The passing was stopped', 'Nothing moved.'],
+      expired: ['The passing has expired', 'Nothing moved. Its caretaker can begin again.'],
+      error: ['The passing did not land', 'Nothing moved. Return to the piece and try again.'],
+    }[step.state];
+    surface = (
+      <WalkScreen
+        screen={{ head: ph(copy[0]), body: ph(copy[1]), link: COPY.threshold.writtenReturn, linkTo: '__home', light: 'f', caption: 'The passing · current state' }}
         onGo={go}
         values={typed}
         onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
@@ -1428,6 +1645,7 @@ export const WiredJourney: React.FC<WiredJourneyProps> = ({
             : () => setStep({ kind: 'piece' })
         }
         receipt={step.receipt}
+        message={step.message}
       />
     );
   }

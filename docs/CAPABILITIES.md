@@ -16,7 +16,7 @@
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run preview` | `vite preview` |
 | `npm run generate:stories` | `tsx scripts/generate-stories.ts` |
-| `npm run generate:qr` | `tsx scripts/generate-ul-qr.ts` |
+| Artwork plate + QR generation | Use the authenticated Admin Plate Wizard, backed by `functions/api/admin/pieces/[id]/prepare.js` and `utils/artworkPlate.ts`; there is no supported bulk QR CLI. |
 | `npm run crop:oracle` | `tsx scripts/crop-oracle-images.ts` |
 | `npm run rename:oracle` | `tsx scripts/rename-oracle-images.ts` |
 | `npm run keystatic:dev` | `vite --port 5555` |

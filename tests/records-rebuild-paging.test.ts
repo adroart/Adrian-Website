@@ -91,6 +91,7 @@ function jsonResponse(body: unknown, status = 200, headers: Record<string, strin
 }
 
 let refreshCalls: string[] = [];
+let failedCodes = new Set<string>();
 
 before(() => {
   mock.module('../functions/api/_lib/admin.js', {
@@ -105,6 +106,9 @@ before(() => {
     namedExports: {
       refreshPieceRecord: async (_env: unknown, { publicCode }: { publicCode: string }) => {
         refreshCalls.push(publicCode);
+        if (failedCodes.has(publicCode)) {
+          return { publicCode, status: 'failed', error: 'record_store_failed' };
+        }
         return { publicCode, status: 'unchanged', recordHash: 'x'.repeat(64) };
       },
     },
@@ -187,6 +191,59 @@ describe('POST /api/admin/records/rebuild bulk paging', () => {
     // Every piece exactly once, in ascending public-code order, matching
     // what a single unpaged rebuild would have covered.
     assert.deepEqual(seen, Array.from({ length: total }, (_unused, index) => codeForIndex(index)));
+  });
+
+  it('honors a smaller bounded limit and keeps the scanned cursor stable across a failed-page retry', async () => {
+    refreshCalls = [];
+    failedCodes = new Set([codeForIndex(0)]);
+    const { onRequest } = await import('../functions/api/admin/records/rebuild.js');
+    const { env } = fixtureEnv(4);
+
+    const first = await onRequest({ request: rebuildRequest({ limit: 2 }), env });
+    const firstBody = await first.json();
+    assert.equal(first.status, 207);
+    assert.equal(firstBody.cursor, null);
+    assert.equal(firstBody.nextCursor, codeForIndex(1));
+    assert.equal(firstBody.hasMore, true);
+    assert.deepEqual(firstBody.outcomes.map((outcome: { status: string }) => outcome.status),
+      ['failed', 'unchanged']);
+
+    refreshCalls = [];
+    const retry = await onRequest({ request: rebuildRequest({ limit: 2 }), env });
+    const retryBody = await retry.json();
+    assert.equal(retry.status, 207);
+    assert.equal(retryBody.nextCursor, firstBody.nextCursor);
+    assert.deepEqual(refreshCalls, [codeForIndex(0), codeForIndex(1)]);
+    failedCodes = new Set();
+  });
+
+  it('excludes malformed legacy codes before the page boundary so every cursor can continue', async () => {
+    refreshCalls = [];
+    const { onRequest } = await import('../functions/api/admin/records/rebuild.js');
+    const { database, env } = fixtureEnv(3);
+    database.exec(`
+      INSERT INTO keeper_pieces
+        (id, piece_id, edition_number, recovery_code_hash, registered_at, public_code, plate_status)
+      VALUES
+        ('kp-invalid-boundary', 'UL-invalid', 0, '${'f'.repeat(64)}',
+         '2026-08-01T00:00:00.000Z', '${codeForIndex(0)}!', 'active');
+    `);
+
+    const first = await onRequest({ request: rebuildRequest({ limit: 1 }), env });
+    const firstBody = await first.json();
+    assert.equal(firstBody.nextCursor, codeForIndex(0));
+    assert.match(firstBody.nextCursor, /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/);
+
+    const second = await onRequest({
+      request: rebuildRequest({ limit: 1, cursor: firstBody.nextCursor }), env,
+    });
+    const secondBody = await second.json();
+    assert.equal(second.status, 200);
+    assert.equal(secondBody.cursor, codeForIndex(0));
+    assert.deepEqual(secondBody.outcomes.map((outcome: { publicCode: string }) => outcome.publicCode),
+      [codeForIndex(1)]);
+    assert.equal(secondBody.nextCursor, codeForIndex(1));
+    assert.equal(refreshCalls.includes(`${codeForIndex(0)}!`), false);
   });
 
   it('a registry smaller than one page reports hasMore false and nextCursor null, same as before paging existed', async () => {

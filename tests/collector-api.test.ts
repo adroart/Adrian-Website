@@ -8,6 +8,7 @@ import {
   bindKeeper,
   getLineage,
   getRegistryIdentity,
+  inspectFirstBindInvitation,
   isValidPublicCode,
 } from '../components/collector/api.ts';
 
@@ -183,5 +184,30 @@ describe('bindKeeper', () => {
     await bindKeeper({ publicCode: 'AR-7K9QMX2P', ownershipCode: 'AAAA-BBBB-CCCC-DDDD', note: '  ' });
     const sentBody = JSON.parse(String(calls[0].init?.body));
     assert.equal('note' in sentBody, false);
+  });
+});
+
+describe('inspectFirstBindInvitation', () => {
+  it('posts trimmed private proof to the fixed endpoint body and never places it in the URL', async () => {
+    const token = 'private-first-bind-proof';
+    respond = async () => jsonResponse({
+      ok: true,
+      invitationId: 'iv-one',
+      artwork: {
+        artworkId: 'UL-105', title: "Earth's Breath", publicCode: 'AR-7K9QMX2P',
+        edition: { kind: 'unique' },
+      },
+      status: 'available',
+    });
+
+    const outcome = await inspectFirstBindInvitation(`  ${token}  `);
+
+    assert.equal(outcome.ok, true);
+    assert.equal(String(calls[0].input), '/api/invitations/inspect');
+    assert.equal(String(calls[0].input).includes(token), false);
+    assert.equal(calls[0].init?.method, 'POST');
+    assert.deepEqual(JSON.parse(String(calls[0].init?.body)), { token });
+    assert.equal(calls[0].init?.credentials, 'same-origin');
+    assert.equal(calls[0].init?.cache, 'no-store');
   });
 });

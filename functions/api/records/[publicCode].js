@@ -16,13 +16,16 @@
  * HEAD performs the same D1 lookup as GET but never touches R2 storage. It
  * exists so a caller can probe whether a record exists (and offer a link
  * only when it does) without paying for, or waiting on, the storage read.
- * A row in piece_records never disappears once written (the table forbids
- * UPDATE and DELETE), so a 200 HEAD response can be cached long-term; a 404
- * cannot, because the record may still be generated later.
+ * The stable public-code URL always resolves the newest record row. A rebuild
+ * can therefore change its public projection (including a privacy removal),
+ * even though each R2 object and piece_records row is append-only. Clients
+ * must revalidate this stable URL before reusing it. Only a URL that names a
+ * particular content hash may be cached immutable.
  */
 
 // Copied exactly from functions/qr/[number].js, the canonical public-code shape.
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+const LATEST_RECORD_CACHE_CONTROL = 'public, max-age=0, must-revalidate';
 
 function json(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
@@ -43,6 +46,31 @@ function empty(status, extraHeaders = {}) {
       ...extraHeaders,
     },
   });
+}
+
+function etagFor(recordHash) {
+  return `"${recordHash}"`;
+}
+
+/**
+ * Conditional GET/HEAD uses weak comparison for If-None-Match as required
+ * for GET and HEAD. Supporting comma-separated validators also lets a client
+ * revalidate after it has seen more than one version of a stable URL.
+ */
+function matchesIfNoneMatch(request, etag) {
+  const condition = request.headers.get('If-None-Match');
+  if (!condition) return false;
+  return condition.split(',').some((candidate) => {
+    const normalized = candidate.trim().replace(/^W\//i, '');
+    return normalized === '*' || normalized === etag;
+  });
+}
+
+function latestRecordHeaders(recordHash) {
+  return {
+    'Cache-Control': LATEST_RECORD_CACHE_CONTROL,
+    ETag: etagFor(recordHash),
+  };
 }
 
 export async function onRequest({ request, env, params }) {
@@ -76,15 +104,16 @@ export async function onRequest({ request, env, params }) {
   }
   if (!row) return isHead ? empty(404) : json({ ok: false, error: 'not_found' }, 404);
 
+  const headers = latestRecordHeaders(row.record_hash);
+  if (matchesIfNoneMatch(request, headers.ETag)) {
+    return new Response(null, { status: 304, headers });
+  }
+
   if (isHead) {
     // Deliberately never reads R2: the whole point of HEAD is a cheap probe.
     return new Response(null, {
       status: 200,
-      headers: {
-        // Presence is permanent once a row exists, so this can cache long.
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        ETag: `"${row.record_hash}"`,
-      },
+      headers,
     });
   }
 
@@ -103,9 +132,7 @@ export async function onRequest({ request, env, params }) {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      // The file is content-addressed by its own hash; identical bytes forever.
-      'Cache-Control': 'public, max-age=31536000, immutable',
-      ETag: `"${row.record_hash}"`,
+      ...headers,
     },
   });
 }

@@ -1,4 +1,5 @@
 import { findStaticArtwork } from '../_lib/artworkCatalog.js';
+import { latestCatalogSnapshot } from '../_lib/catalogSnapshot.js';
 import {
   isPublicRegistryCode,
   projectPublicPlateIdentity,
@@ -165,7 +166,19 @@ export async function onRequest({ request, env, params }) {
   }
 
   try {
-    const metadata = resolveMetadata(plate, overlay);
+    const snapshot = await latestCatalogSnapshot(env, plate.piece_id);
+    const frozen = snapshot?.metadata;
+    if (frozen && (frozen.id !== plate.piece_id || typeof frozen.title !== 'string'
+      || !frozen.title.trim())) throw new Error('invalid catalog snapshot');
+    // The newest explicit snapshot is the descriptive authority for registered
+    // artwork. Older content-addressed records retain their original snapshot.
+    const metadata = frozen ? {
+      title: frozen.title,
+      series: frozen.series ?? null,
+      editionKind: frozen.edition?.kind ?? (plate.edition_number === 0 ? 'unique' : 'numbered'),
+      editionSize: frozen.edition?.size ?? null,
+      publicProvenance: findStaticArtwork(plate.piece_id)?.provenance ?? [],
+    } : resolveMetadata(plate, overlay);
     const discloseSuccessor = plate.plate_status === 'superseded'
       && env.ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE === 'disclosed'
       && isPublicRegistryCode(plate.current_public_code);

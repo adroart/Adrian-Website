@@ -7,25 +7,12 @@
  */
 
 import { jsonResponse, requireAdmin } from './_lib/admin.js';
+import { readR2JsonIndex, updateR2JsonIndex, withIndexErrors } from './_lib/r2JsonIndex.js';
 
 const KEY = 'poems/index.json';
 
 async function readPoems(env) {
-    const obj = await env.MUSIC_BUCKET.get(KEY);
-    if (!obj) return [];
-    try {
-        const text = await obj.text();
-        const parsed = JSON.parse(text);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
-
-async function writePoems(env, poems) {
-    await env.MUSIC_BUCKET.put(KEY, JSON.stringify(poems, null, 2), {
-        httpMetadata: { contentType: 'application/json' },
-    });
+    return (await readR2JsonIndex(env.MUSIC_BUCKET, KEY)).entries;
 }
 
 const json = jsonResponse;
@@ -39,12 +26,12 @@ function isValidPoem(p) {
     return true;
 }
 
-export async function onRequestGet({ env }) {
+async function handleGet({ env }) {
     const poems = await readPoems(env);
     return json({ ok: true, poems });
 }
 
-export async function onRequestPost({ request, env }) {
+async function handlePost({ request, env }) {
     const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
 
@@ -64,24 +51,26 @@ export async function onRequestPost({ request, env }) {
         releaseDate: poem.releaseDate || new Date().toISOString().slice(0, 10),
     };
 
-    const poems = await readPoems(env);
-    const idx = poems.findIndex(p => p.slug === incoming.slug);
-    if (idx >= 0) poems[idx] = incoming;
-    else poems.unshift(incoming);
-
-    await writePoems(env, poems);
+    await updateR2JsonIndex(env.MUSIC_BUCKET, KEY, (entries) => {
+        const idx = entries.findIndex(entry => entry.slug === incoming.slug);
+        if (idx >= 0) entries[idx] = incoming;
+        else entries.unshift(incoming);
+        return entries;
+    });
     return json({ ok: true, poem: incoming });
 }
 
-export async function onRequestDelete({ request, env }) {
+async function handleDelete({ request, env }) {
     const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
 
     const slug = new URL(request.url).searchParams.get('slug');
     if (!slug) return json({ ok: false, error: 'Missing slug' }, 400);
 
-    const poems = await readPoems(env);
-    const next = poems.filter(p => p.slug !== slug);
-    await writePoems(env, next);
+    await updateR2JsonIndex(env.MUSIC_BUCKET, KEY, entries => entries.filter(entry => entry.slug !== slug));
     return json({ ok: true });
 }
+
+export const onRequestGet = withIndexErrors(handleGet);
+export const onRequestPost = withIndexErrors(handlePost);
+export const onRequestDelete = withIndexErrors(handleDelete);

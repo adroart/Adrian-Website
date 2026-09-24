@@ -2670,7 +2670,7 @@ function makeKeeperDb() {
     // Public-code lookup: the row itself is the only source of artwork and
     // edition identity. Bind deliberately sees released rows as well.
     if (
-      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256, ownership_code_key_version, registration_status, identity_backup_status, identity_backup_reference, identity_backup_sha256 FROM keeper_pieces WHERE public_code = \?1$/i.test(
+      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256, ownership_code_key_version, registration_status, identity_backup_status, identity_backup_reference, identity_backup_sha256, current_display_location, steward_version, lineage_event_count, lineage_head_hash FROM keeper_pieces WHERE public_code = \?1$/i.test(
         s,
       )
     ) {
@@ -3148,6 +3148,9 @@ describe('steward status and display location by public identity', () => {
             if (/FROM artwork_contributor_current_access/i.test(normalized)) {
               return { is_contributor: 0 };
             }
+            if (/FROM collector_dreams/i.test(normalized) && /AS has_history/i.test(normalized)) {
+              return { has_history: 0 };
+            }
             throw new Error(`unexpected status first: ${normalized}`);
           },
           async run() { throw new Error(`unexpected status run: ${normalized}`); },
@@ -3207,6 +3210,9 @@ describe('steward status and display location by public identity', () => {
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
             if (/FROM artwork_contributor_current_access/i.test(normalized)) {
               return { is_contributor: 0 };
+            }
+            if (/FROM collector_dreams/i.test(normalized) && /AS has_history/i.test(normalized)) {
+              return { has_history: 0 };
             }
             if (/FROM claim_silence_windows/i.test(normalized)) {
               // the additive pendingClaim lookup: no open claim against this

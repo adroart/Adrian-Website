@@ -231,10 +231,10 @@ const GIFT_FIELD_HINT = ph('Write what you wish for them');
    its body) rather than re-registering the same words as fresh
    placeholders — the same locked strings, now carried by two screens
    instead of one. */
-/* the birthday privacy line, beneath the birth fields */
-const WHO_BIRTHDAY_NOTE = ph(
-  'Private, always. Never shown, never sold. It quietly feeds the Oracle and the Dream.',
-);
+/* Reuse the approved explanation beside the fields, so the purpose of the
+   ask is visible before anyone enters private details. */
+const WHO_BIRTHDAY_PURPOSE =
+  'Your birthday ties your piece to your astrology, and it lets the piece mark your day: once a year, near your birthday, it asks for a moment with you.';
 /* the links section's map-light toggle: an honest unwired placeholder. No
    shareLinks field exists on the wire, so the choice stores client-side only
    until one does. */
@@ -479,12 +479,11 @@ export const WALK = {
     body: G.explainBody,
     sheet: true,
     pill: G.explainAdd,
-    /* the artist's second walk splits the gathering's final page back into
-       two screens; both doors of the sheet lead back to who1, the screen
-       that still asks for the birthday this sheet explains */
+    /* Add returns to the fields; skip advances without retaining a partial
+       birth draft. The live journey handles that explicit action. */
     to: 'who1',
     link: G.explainSkip,
-    linkTo: 'who1',
+    linkTo: 'who2',
     light: 'k',
     caption: 'The explainer · one sheet, two doors',
   },
@@ -493,21 +492,20 @@ export const WALK = {
      be 2 pages and title only 1 line not 2." who1 carries born's old
      content (birth fields, the why door, the five identity lamps); who2
      carries links' old content (the site field, the tiles, the map-light
-     lamp). The chain: sign → lives → who1 → who2 → light47. required stays
-     true on both because the pair sits in the required path; the personal
-     fields inside them stay optional (skippable by simply staying empty —
-     no skip link, no gate). */
+     lamp). The chain: sign → lives → who1 → who2 → light47. Birth details
+     are optional: continue empty or use the explainer's explicit skip. */
   who1: {
     head: G.bornHead,
     body: G.bornBody,
     eyebrow: G.eyebrow,
     who: 1,
     back: 'lives',
+    link: G.skip,
+    linkTo: 'explain',
     pill: G.continue,
     to: 'who2',
-    required: true,
     light: 'p',
-    caption: 'Required · who you are, one line head, first of two',
+    caption: 'Optional birth details · who you are, first of two',
   },
 
   who2: {
@@ -1222,6 +1220,7 @@ export const WalkScreen: React.FC<Props> = ({
                 gap: 24,
               }}
             >
+              <Note>{WHO_BIRTHDAY_PURPOSE}</Note>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
                 <div style={{ display: 'flex', gap: 16 }}>
                   <Field
@@ -1246,9 +1245,7 @@ export const WalkScreen: React.FC<Props> = ({
                 />
               </div>
 
-              {/* the birthday annotation: private, always, quietly feeding
-                  the Oracle and the Dream. Flagged for Adrian. */}
-              <Note>{WHO_BIRTHDAY_NOTE}</Note>
+              <Note>{G.bornNote}</Note>
 
               {/* the why door, the same sheet the skip on the leftover
                   born screen opened */}

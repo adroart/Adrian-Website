@@ -61,6 +61,8 @@ const migrationsThroughLetters = [
   '028_collector_privacy.sql', '029_collector_dreams.sql',
   '030_collector_field.sql', '031_collector_letters.sql',
   '035_city_floor_removal.sql',
+  '038_transfer_silence.sql', '046_caretaker_passing.sql',
+  '047_claim_silence_delivery.sql',
 ].map(readMigration).join('\n');
 
 function d1(database: DatabaseSync) {
@@ -236,7 +238,7 @@ function seedTransfer(db: DatabaseSync, details: {
 }
 
 describe('collector letters', () => {
-  it('applies every migration through 031 plus 035 on real SQLite', () => {
+  it('applies the collector-letter and runner dependency migrations on real SQLite', () => {
     const db = database();
     try {
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);

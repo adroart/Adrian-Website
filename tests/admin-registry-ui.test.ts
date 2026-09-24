@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { before, describe, it, mock } from 'node:test';
 
-import { summarizeRecordRebuildAll, type RecordRebuildResult } from '../utils/adminPieces.ts';
+import { mergeRecordRebuildResults, summarizeRecordRebuildAll, type RecordRebuildResult } from '../utils/adminPieces.ts';
 
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -408,6 +408,7 @@ describe('POST /api/admin/records/rebuild 207 partial outcomes render honestly',
         { publicCode: 'AR-AAAAAAA1', status: 'generated', recordHash: 'x'.repeat(64) },
         { publicCode: 'AR-FAILEDONE', status: 'failed', error: 'lineage_integrity_error' },
       ],
+      cursor: null, nextCursor: 'AR-FAILEDONE', hasMore: true,
     };
     const summary = summarizeRecordRebuildAll(result);
     assert.match(summary, /^12 records: 3 rebuilt, 8 unchanged, 1 failed\./);
@@ -425,6 +426,7 @@ describe('POST /api/admin/records/rebuild 207 partial outcomes render honestly',
       unchanged: 3,
       failed: 0,
       outcomes: [],
+      cursor: null, nextCursor: null, hasMore: false,
     };
     assert.equal(summarizeRecordRebuildAll(result), '4 records: 1 rebuilt, 3 unchanged.');
   });
@@ -435,6 +437,40 @@ describe('POST /api/admin/records/rebuild 207 partial outcomes render honestly',
     assert.match(pieces, /requestRecordRebuild/);
     assert.match(pieces, /window\.confirm/);
     assert.match(pieces, /Rebuild all records/);
+    assert.match(pieces, /Continue rebuild/);
+    assert.match(pieces, /Retry failed records/);
+    assert.match(pieces, /limit: 25/);
     assert.match(pieces, /disabled=\{!registryUnlocked \|\| recordsBusy\}/);
+  });
+
+  it('keeps failures across pages and replaces only the piece that is retried', () => {
+    const first: RecordRebuildResult = {
+      ok: false, generatedAt: '2026-08-14T00:00:00.000Z', trigger: 'on_demand',
+      total: 2, generated: 1, unchanged: 0, failed: 1,
+      outcomes: [
+        { publicCode: 'AR-AAAAAAA1', status: 'generated' },
+        { publicCode: 'AR-BBBBBBB2', status: 'failed', error: 'storage_failed' },
+      ],
+      cursor: null, nextCursor: 'AR-BBBBBBB2', hasMore: true,
+    };
+    const second: RecordRebuildResult = {
+      ok: true, generatedAt: '2026-08-14T00:01:00.000Z', trigger: 'on_demand',
+      total: 1, generated: 0, unchanged: 1, failed: 0,
+      outcomes: [{ publicCode: 'AR-CCCCCCC3', status: 'unchanged' }],
+      cursor: 'AR-BBBBBBB2', nextCursor: null, hasMore: false,
+    };
+    const accumulated = mergeRecordRebuildResults(first, second);
+    assert.equal(accumulated.total, 3);
+    assert.equal(accumulated.failed, 1);
+    assert.match(summarizeRecordRebuildAll(accumulated), /AR-BBBBBBB2/);
+
+    const retry: RecordRebuildResult = {
+      ...second, outcomes: [{ publicCode: 'AR-BBBBBBB2', status: 'generated' }],
+      generated: 1, unchanged: 0,
+    };
+    const repaired = mergeRecordRebuildResults(accumulated, retry);
+    assert.equal(repaired.total, 3);
+    assert.equal(repaired.failed, 0);
+    assert.equal(repaired.generated, 2);
   });
 });

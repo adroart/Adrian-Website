@@ -14,7 +14,8 @@ function plainRows(result) {
 }
 
 const REFERENCED_AUTH_USER_IDS_SQL = `
-  SELECT keeper_user_id AS id FROM keeper_pieces WHERE keeper_user_id IS NOT NULL
+  SELECT sender_user_id AS id FROM caretaker_passing_requests
+  UNION SELECT keeper_user_id AS id FROM keeper_pieces WHERE keeper_user_id IS NOT NULL
   UNION SELECT author_user_id FROM keeper_intentions WHERE author_user_id IS NOT NULL
   UNION SELECT actor_user_id FROM artwork_claim_evidence WHERE actor_user_id IS NOT NULL
   UNION SELECT requester_user_id FROM artwork_claim_requests WHERE requester_user_id IS NOT NULL

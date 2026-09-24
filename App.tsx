@@ -122,7 +122,7 @@ const SiteShell: React.FC = () => {
   const isViewing = location.pathname.startsWith('/viewing/');
   // The collector journey is its own dark room: no site nav, no footer, no
   // generative background. It is drawn for a phone and reviewed at 390 wide.
-  const isCollector = location.pathname.startsWith('/collector');
+  const isCollector = import.meta.env.DEV && location.pathname.startsWith('/collector');
   const isChromeless = isInvoice || isViewing || isCollector;
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
@@ -210,7 +210,7 @@ const SiteShell: React.FC = () => {
             {/* The collector journey, as a look-and-navigation shell. Nothing
                 is wired to the registry: this is where the design is reviewed
                 before it is folded into /works/:code. */}
-            <Route path="/collector" element={<CollectorShell />} />
+            <Route path="/collector" element={import.meta.env.DEV ? <CollectorShell /> : <NotFound />} />
             <Route path="/qr" element={<QRIndex />} />
             <Route path="/viewing/:token" element={<Viewing />} />
             <Route path="/atlas" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasPage />} />

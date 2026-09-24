@@ -145,7 +145,7 @@ const EVENT_SNAPSHOT_FIELDS = {
   plate_replaced: new Set([
     'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
     'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'replacedAt',
-    'recordVersion',
+    'physicalDisposition', 'recordVersion',
   ]),
   metadata_corrected: new Set([
     'keeperPieceId', 'artworkId', 'pieceId', 'editionNumber', 'title', 'metadata',

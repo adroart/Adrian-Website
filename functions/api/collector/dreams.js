@@ -7,6 +7,7 @@ import {
   getCollectorDreamState,
   setCollectorDreamSharing,
   setCollectorDreamTier,
+  publishHistoricalCollectorDream,
   updateCollectorDream,
 } from '../_lib/collectorDreams.js';
 
@@ -40,6 +41,10 @@ const ACTION_FIELDS = Object.freeze({
     required: new Set(['action', 'keeperPieceId', 'kind', 'body', 'idempotencyKey']),
     optional: new Set(),
   },
+  publish_historical: {
+    required: new Set(['action', 'keeperPieceId', 'dreamId', 'idempotencyKey']),
+    optional: new Set(),
+  },
 });
 
 function exactBody(body, fields) {
@@ -50,6 +55,7 @@ function exactBody(body, fields) {
 }
 
 function errorStatus(code) {
+  if (code === 'historical_publication_forbidden') return 403;
   if (code === 'piece_not_held' || code === 'current_dream_missing') return 404;
   if (code === 'current_dream_exists' || code === 'version_conflict'
     || code === 'idempotency_conflict' || code === 'outside_birthday_window'
@@ -110,6 +116,8 @@ export async function onRequest({ request, env }) {
       });
     } else if (body.action === 'tier') {
       state = await setCollectorDreamTier(env, { ...base, tier: body.tier });
+    } else if (body.action === 'publish_historical') {
+      state = await publishHistoricalCollectorDream(env, { ...base, dreamId: body.dreamId });
     } else if (body.action === 'update') {
       state = await updateCollectorDream(env, {
         ...base, body: body.body, scope: body.scope,

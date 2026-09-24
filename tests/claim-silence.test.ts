@@ -19,6 +19,7 @@ import {
   evaluateSilence,
   openSilenceWindow,
   refuseSilencePass,
+  runClaimSilenceSweep,
 } from '../functions/api/_lib/claimSilence.js';
 import { openContestedClaim } from '../functions/api/_lib/claimRequests.js';
 import { hashRecoveryCode } from '../functions/api/_lib/keeper.js';
@@ -44,11 +45,13 @@ const { onRequest: bindKeeper } = await import('../functions/api/keeper/bind.js'
 
 // ── email capture: the house mechanism is a fetch to api.resend.com ─────────
 const sentEmails: Array<{ to: string[]; subject: string; html: string }> = [];
-const emailBehavior = { ok: true };
+const emailBehavior = { ok: true, failuresRemaining: 0 };
 const originalFetch = globalThis.fetch;
 globalThis.fetch = (async (input: any, init?: any) => {
   if (String(input).includes('api.resend.com')) {
-    if (!emailBehavior.ok) return new Response('{"error":"down"}', { status: 502 });
+    if (!emailBehavior.ok || emailBehavior.failuresRemaining-- > 0) {
+      return new Response('{"error":"down"}', { status: 502 });
+    }
     sentEmails.push(JSON.parse(init?.body ?? '{}'));
     return new Response('{"id":"email"}', { status: 200 });
   }
@@ -86,6 +89,7 @@ const migrationsThroughSilence = [
   '034_artwork_contributor_invite_rate_limit.sql',
   '036_artwork_catalog_snapshots.sql', '037_piece_records.sql',
   '038_transfer_silence.sql',
+  '047_claim_silence_delivery.sql',
 ].map(readMigration).join('\n');
 
 const OWNERSHIP_CODE = 'K7QM-9XTR-2PHV-N4WB';
@@ -94,7 +98,7 @@ const OPENED = '2026-08-01T00:00:00.000Z';
 const DEADLINE = '2026-08-31T00:00:00.000Z';
 const DAY7 = '2026-08-08T12:00:00.000Z';
 const DAY21 = '2026-08-22T12:00:00.000Z';
-const DAY29 = '2026-08-30T06:00:00.000Z';
+const DAY28 = '2026-08-29T06:00:00.000Z';
 const DAY31 = '2026-09-01T12:00:00.000Z';
 
 function d1(database: DatabaseSync) {
@@ -164,6 +168,7 @@ async function fixture() {
   };
   sentEmails.length = 0;
   emailBehavior.ok = true;
+  emailBehavior.failuresRemaining = 0;
   return { database, db, env };
 }
 
@@ -248,6 +253,11 @@ describe('thirty-day passing via lazy silence windows', () => {
       ).get() as any;
       assert.equal(piece.keeper_user_id, 'user-steward');
       assert.equal(piece.steward_version, 0);
+      assert.equal(sentEmails.length, 1);
+      assert.deepEqual(sentEmails[0].to, ['steward@example.com']);
+      assert.equal(fx.database.prepare(
+        "SELECT COUNT(*) AS count FROM claim_silence_deliveries WHERE kind = 'initial_steward'",
+      ).get()?.count, 1);
     } finally {
       CURRENT_AUTH = null;
       LAUNCH_FLAGS.livingLegacy = wasOn;
@@ -277,9 +287,10 @@ describe('thirty-day passing via lazy silence windows', () => {
       assert.match(sentEmails[0].subject, /UL-100/);
       assert.equal(windowRow(fx, windowId).status, 'reminded');
 
-      // Day 21 and day 29 touches send their reminders.
+      // Day 21 and day 28 touches send their reminders. The final immutable
+      // database kind remains day29 for compatibility with migration 038.
       assert.deepEqual(await touch(DAY21), { status: 'pending', remindersSent: 1 });
-      assert.deepEqual(await touch(DAY29), { status: 'pending', remindersSent: 1 });
+      assert.deepEqual(await touch(DAY28), { status: 'pending', remindersSent: 1 });
       const reminders = fx.database.prepare(
         'SELECT kind, sent_at FROM claim_silence_reminders WHERE window_id = ? ORDER BY sent_at',
       ).all(windowId) as any[];
@@ -293,21 +304,36 @@ describe('thirty-day passing via lazy silence windows', () => {
     }
   });
 
-  it('withdraws the window when the registered steward touches their own piece', async () => {
+  it('runs a bounded cursor page independently of collector activity', async () => {
+    const fx = await fixture();
+    try {
+      await contest(fx);
+      const page = await runClaimSilenceSweep(fx.env, { now: DAY7, limit: 1 });
+      assert.deepEqual(page, {
+        checked: 1, remindersSent: 1, passed: 0, completionSent: 0, nextCursor: null,
+      });
+      assert.equal(fx.database.prepare(
+        'SELECT COUNT(*) AS count FROM claim_silence_reminders',
+      ).get()?.count, 1);
+    } finally {
+      fx.database.close();
+    }
+  });
+
+  it('does not treat an ordinary registered-steward touch as refusal', async () => {
     const fx = await fixture();
     try {
       const { claimId, windowId } = await contest(fx);
       const result = await evaluateSilence(fx.db, fx.env, {
         keeperPieceId: 'kp-silence', touchUserId: 'user-steward',
       }, DAY7);
-      assert.deepEqual(result, { status: 'withdrawn', windows: 1 });
-      assert.equal(windowRow(fx, windowId).status, 'withdrawn');
+      assert.deepEqual(result, { status: 'pending', remindersSent: 1 });
+      assert.equal(windowRow(fx, windowId).status, 'reminded');
       // The claim stays recorded for ordinary human resolution.
       assert.equal(fx.database.prepare(
         'SELECT status FROM artwork_claim_requests WHERE id = ?',
       ).get(claimId)?.status, 'pending');
-      // The steward touch never emails anyone.
-      assert.equal(sentEmails.length, 0);
+      assert.equal(sentEmails.length, 1);
     } finally {
       fx.database.close();
     }
@@ -370,15 +396,16 @@ describe('thirty-day passing via lazy silence windows', () => {
     try {
       await touch(DAY7);
       await touch(DAY21);
-      await touch(DAY29);
+      await touch(DAY28);
       sentEmails.length = 0;
+      emailBehavior.failuresRemaining = 1;
 
       const passed = await touch(DAY31) as {
         status: string; targetUserId?: string; claimedAt?: string;
       };
       assert.equal(passed.status, 'passed');
       assert.equal(passed.targetUserId, 'user-claimant');
-      assert.equal(passed.claimedAt, DEADLINE);
+      assert.equal(passed.claimedAt, DAY31);
 
       // The governed receipt exists and the 024 trigger moved the steward.
       const receipt = fx.database.prepare(`
@@ -395,7 +422,7 @@ describe('thirty-day passing via lazy silence windows', () => {
         "SELECT * FROM keeper_pieces WHERE id = 'kp-silence'",
       ).get() as any;
       assert.equal(piece.keeper_user_id, 'user-claimant');
-      assert.equal(piece.claimed_at, DEADLINE);
+      assert.equal(piece.claimed_at, DAY31);
       assert.equal(piece.steward_version, 1);
       assert.equal(piece.last_transfer_id, receipt.intent_id);
 
@@ -418,14 +445,21 @@ describe('thirty-day passing via lazy silence windows', () => {
       assert.match(maintenance.reason, /silence_pass/);
       assert.equal(maintenance.administrator_user_id, SILENCE_PASS_ACTOR.userId);
 
-      // Window passed, claim resolved, both sides notified.
+      // Window passed and claim resolved even though the first completion
+      // delivery failed after commit. The runner retries only that side.
       assert.equal(windowRow(fx, windowId).status, 'passed');
       assert.equal(fx.database.prepare(
         'SELECT status FROM artwork_claim_requests WHERE id = ?',
       ).get(claimId)?.status, 'approved');
+      assert.deepEqual(sentEmails.map((mail) => mail.to[0]), ['claimant@example.com']);
+      const deliveryRetry = await runClaimSilenceSweep(fx.env, { now: DAY31, limit: 25 });
+      assert.equal(deliveryRetry.completionSent, 1);
       const recipients = sentEmails.map((mail) => mail.to[0]).sort();
       assert.deepEqual(recipients, ['claimant@example.com', 'steward@example.com']);
       for (const mail of sentEmails) assert.match(mail.subject, /passing is complete/);
+      assert.equal(fx.database.prepare(
+        "SELECT COUNT(*) AS count FROM claim_silence_deliveries WHERE kind LIKE 'completion_%'",
+      ).get()?.count, 2);
 
       // A subsequent bind by the new steward is the normal bound outcome.
       const wasOn = LAUNCH_FLAGS.livingLegacy;
@@ -439,7 +473,7 @@ describe('thirty-day passing via lazy silence windows', () => {
         assert.equal(response.status, 200);
         assert.deepEqual(await response.json(), {
           ok: true,
-          keeper: { pieceId: 'UL-100', editionNumber: 1, claimedAt: DEADLINE },
+          keeper: { pieceId: 'UL-100', editionNumber: 1, claimedAt: DAY31 },
         });
       } finally {
         CURRENT_AUTH = null;
@@ -524,7 +558,7 @@ describe('thirty-day passing via lazy silence windows', () => {
       windowId, DAY7, windowId, DAY21);
       assert.throws(
         () => exec(`UPDATE claim_silence_windows
-                       SET status = 'passed', passed_at = ? WHERE id = ?`, DAY29, windowId),
+                       SET status = 'passed', passed_at = ? WHERE id = ?`, DAY28, windowId),
         /deadline to have lapsed/,
       );
       // Identity is immutable while the window is active.
@@ -555,7 +589,7 @@ describe('thirty-day passing via lazy silence windows', () => {
       // Reminders cannot land on a terminal window.
       assert.throws(
         () => exec(`INSERT INTO claim_silence_reminders (id, window_id, kind, sent_at)
-                    VALUES ('csr-late', ?, 'day29', ?)`, windowId, DAY29),
+                    VALUES ('csr-late', ?, 'day29', ?)`, windowId, DAY28),
         /active silence window/,
       );
     } finally {
@@ -572,7 +606,7 @@ describe('thirty-day passing via lazy silence windows', () => {
       }, now);
       await touch(DAY7);
       await touch(DAY21);
-      await touch(DAY29);
+      await touch(DAY28);
 
       const [first, second] = await Promise.all([touch(DAY31), touch(DAY31)]);
       assert.equal(first.status, 'passed');

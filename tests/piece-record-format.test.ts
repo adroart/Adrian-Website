@@ -444,7 +444,7 @@ describe('piece record format', () => {
     );
   });
 
-  it('GET /api/records/:publicCode serves the newest record immutably', async () => {
+  it('GET /api/records/:publicCode serves the newest record with revalidation', async () => {
     const { env } = await fixtureEnv();
     const published = await publishPieceRecord(env, { ...BUILD_OPTIONS });
 
@@ -457,7 +457,7 @@ describe('piece record format', () => {
     assert.equal(response.headers.get('Content-Type'), 'text/html; charset=utf-8');
     assert.equal(
       response.headers.get('Cache-Control'),
-      'public, max-age=31536000, immutable',
+      'public, max-age=0, must-revalidate',
     );
     assert.equal(response.headers.get('ETag'), `"${published.recordHash}"`);
     assert.equal(await response.text(), published.html);
