@@ -201,7 +201,7 @@ export const WritingArticle: React.FC = () => {
 
     const storyUrl = `https://adrianrasmussen.com/writings/${story.slug}`;
     const storyImageUrl = story.image
-        ? `https://adrianrasmussen.com${img(story.image, { w: 1200, h: 630 })}`
+        ? `https://adrianrasmussen.com${img(story.image, { w: 1200, h: 630, format: 'jpg' })}`
         : undefined;
 
     useMetaTags({

@@ -84,7 +84,7 @@ const PoetryTrack: React.FC = () => {
             ? `A poem by Adrian Rasmussen, with an accompanying song.`
             : 'Poetry by Adrian Rasmussen.',
         image: track?.coverImage
-            ? `https://adrianrasmussen.com${img(track.coverImage, { w: 1200, h: 630 })}`
+            ? `https://adrianrasmussen.com${img(track.coverImage, { w: 1200, h: 630, format: 'jpg' })}`
             : undefined,
     });
 

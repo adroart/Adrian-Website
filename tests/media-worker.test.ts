@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import worker from '../workers/media.js';
+import { img } from '../utils/media';
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
@@ -39,4 +40,31 @@ test('a height outside the allowed pairs is dropped', async () => {
   const options = await imageOptionsFor('w=1200&h=631');
   assert.equal(options?.height, undefined);
   assert.equal(options?.fit, 'scale-down');
+});
+
+test('the format comes from the URL, never from Accept', async () => {
+  let options: Record<string, unknown> | undefined;
+  globalThis.fetch = (async (_url: unknown, init?: { cf?: { image?: Record<string, unknown> } }) => {
+    options = init?.cf?.image;
+    return new Response('img');
+  }) as typeof fetch;
+  const formatFor = async (query: string, accept: string) => {
+    await worker.fetch(
+      new Request(`https://adrianrasmussen.com/media/image/18_kznsph?${query}`, { headers: { Accept: accept } }),
+      {},
+    );
+    return options?.format;
+  };
+  assert.equal(await formatFor('w=600', 'image/avif,image/webp,*/*'), 'webp');
+  assert.equal(await formatFor('w=600', '*/*'), 'webp');
+  assert.equal(await formatFor('w=1200&h=630&format=jpg', 'image/avif'), 'jpeg');
+});
+
+test('every sized URL names its format so the cache key says what it holds', () => {
+  assert.equal(img('18_kznsph', { w: 600 }), '/media/image/18_kznsph?w=600&format=webp');
+  assert.equal(
+    img('18_kznsph', { w: 1200, h: 630, format: 'jpg' }),
+    '/media/image/18_kznsph?w=1200&h=630&format=jpg',
+  );
+  assert.equal(img('18_kznsph'), '/media/image/18_kznsph');
 });

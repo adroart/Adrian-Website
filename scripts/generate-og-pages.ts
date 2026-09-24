@@ -166,7 +166,7 @@ for (let num = 1; num <= 64; num++) {
 
   const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
   const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
-  const image       = `${SITE_URL}/media/image/${imageId}?w=400&h=400&gravity=center`;
+  const image       = `${SITE_URL}/media/image/${imageId}?w=400&h=400&gravity=center&format=jpg`;
   const url         = `${SITE_URL}/oracle/universal-language/${num}`;
 
   let html = template;

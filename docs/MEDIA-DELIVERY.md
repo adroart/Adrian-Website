@@ -31,7 +31,9 @@ Cloudinary description in `IMAGE-WORKFLOW-PLAN.md`, which is history now.
   `1200x630` for social cards). Other heights are dropped.
 - Width only: `fit: scale-down` (never upscales). Width and height: `cover`,
   unless `crop=fit` (`contain`) or `crop=scale` (`scale-down`).
-- Format follows `format=` if given, otherwise the `Accept` header.
+- Format comes from `format=` only (`webp` by default, `jpg`, `png`), never
+  from `Accept`. `img()` writes it into every sized URL; social cards and
+  Stripe product images use `jpg`, which every crawler reads.
 
 To add a size, add it to `SIZES` or `SIZE_PAIRS` and redeploy the Worker.
 
@@ -62,9 +64,12 @@ Check which version is live with
 - `.github/workflows/live-artwork-media.yml` runs
   `scripts/check-live-artwork-media.mjs` against the live site.
 
-## Known gap
+## Why the format is in the URL
 
-The edge cache key is the URL only, so the first format served for a URL
-(AVIF, WebP or JPEG, chosen from `Accept`) is what every later client gets.
-Measured 2026-09-24: `Accept: image/jpeg` on a `w=1200&h=630` card returned
-`image/avif` from cache.
+The edge cache in front of the Worker keys on the URL only. Until 2026-09-24
+the Worker picked the format from `Accept`, so the first client decided the
+format for everyone for a year. Measured that day: a `w=600` artwork served
+a 306 KB source PNG to browsers (a `*/*` client got there first), and a
+`w=1200&h=630` card served AVIF to a client asking for JPEG. Adding
+`format=` to every URL fixed the key and gave every image a fresh cache entry.
+Old URLs without `format=` may still hold those stale copies until they expire.

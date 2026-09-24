@@ -142,7 +142,7 @@ const SubcategoryPage: React.FC = () => {
     }, [subcategory]);
 
     const ogImage = config?.image
-        ? `https://adrianrasmussen.com${img(config.image, { w: 1200, h: 630 })}`
+        ? `https://adrianrasmussen.com${img(config.image, { w: 1200, h: 630, format: 'jpg' })}`
         : undefined;
     useMetaTags({ title: config?.title, description: config?.description, image: ogImage });
 

@@ -221,7 +221,7 @@ const PiecePage: React.FC = () => {
     );
 
     // Dynamic meta tags for sharing
-    const ogImage = art ? `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 630 })}` : undefined;
+    const ogImage = art ? `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 630, format: 'jpg' })}` : undefined;
     const isUL = art?.series === 'Universal Language';
     useMetaTags({
         title: art ? (isUL ? ulMetaTitle(art) : art.title) : undefined,
@@ -530,7 +530,7 @@ const PiecePage: React.FC = () => {
         name: art.title,
         description: isUL ? ulMetaDescription(art) : art.description,
         url: pieceUrl(art),
-        image: `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 1200 })}`,
+        image: `https://adrianrasmussen.com${cldImg(art.coverImage, { w: 1200, h: 1200, format: 'jpg' })}`,
         creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
         ...(art.year && { dateCreated: art.year }),
         ...(art.material && { artMedium: art.material }),
