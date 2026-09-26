@@ -12,7 +12,7 @@ if (widths.some((width) => !Number.isInteger(width) || width < 1)) {
 }
 
 const urls = ids.flatMap((id) => widths.map((width) =>
-  new URL(`/media/image/${id.split('/').map(encodeURIComponent).join('/')}?w=${width}`, origin),
+  new URL(`/media/image/${id.split('/').map(encodeURIComponent).join('/')}?w=${width}&format=webp`, origin),
 ));
 const failures = [];
 let next = 0;
