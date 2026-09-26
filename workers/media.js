@@ -13,14 +13,14 @@ function dimension(value) {
   return SIZES.includes(requested) ? requested : undefined;
 }
 
-function outputFormat(request, value) {
-  if (value === 'png') return 'image/png';
-  if (value === 'jpg') return 'image/jpeg';
-  if (value === 'webp') return 'image/webp';
-  const accept = request.headers.get('Accept') ?? '';
-  if (accept.includes('image/avif')) return 'image/avif';
-  if (accept.includes('image/webp')) return 'image/webp';
-  return 'image/jpeg';
+// The format comes from the URL only, never from Accept: the edge cache keys on
+// the URL, so negotiating let the first client decide the format for everyone
+// (a crawler's */* request cached source PNGs; an AVIF answer reached JPEG-only
+// clients). Social cards ask for format=jpg.
+function outputFormat(value) {
+  if (value === 'png') return 'png';
+  if (value === 'jpg') return 'jpeg';
+  return 'webp';
 }
 
 async function handle(request, env) {
@@ -38,15 +38,19 @@ async function handle(request, env) {
   if (!key || key.includes('..') || key.startsWith('/')) return new Response('Not found', { status: 404 });
 
   const width = dimension(url.searchParams.get('w'));
-  const requestedHeight = dimension(url.searchParams.get('h'));
-  const height = width && requestedHeight && SIZE_PAIRS.has(`${width}x${requestedHeight}`) ? requestedHeight : undefined;
+  // Heights are checked against SIZE_PAIRS, not SIZES: 630 and 540 only exist
+  // as the height half of a pair, so SIZES alone dropped every 1200x630 card.
+  const requestedHeight = Number.parseInt(url.searchParams.get('h') ?? '', 10);
+  const height = width && SIZE_PAIRS.has(`${width}x${requestedHeight}`) ? requestedHeight : undefined;
   const crop = url.searchParams.get('crop');
-  const fit = crop === 'fit' ? 'contain' : crop === 'scale' ? 'scale-down' : 'cover';
+  // Cover needs both sides. With a width alone Image Resizing ignores it and
+  // warns, then scales down, so ask for that directly.
+  const fit = crop === 'fit' ? 'contain' : crop === 'scale' || !height ? 'scale-down' : 'cover';
   const gravityParam = url.searchParams.get('gravity');
   const gravity = gravityParam === 'face' || gravityParam === 'faces' ? 'face' : gravityParam === 'center' ? 'center' : 'auto';
   const qualityParam = Number.parseInt(url.searchParams.get('q') ?? '', 10);
   const quality = [60, 75, 82, 90].includes(qualityParam) ? qualityParam : 82;
-  const format = outputFormat(request, url.searchParams.get('format'));
+  const format = outputFormat(url.searchParams.get('format'));
   const needsTransform = Boolean(width || height || url.searchParams.has('format'));
 
   let response;
@@ -54,12 +58,9 @@ async function handle(request, env) {
     // URL-based Image Resizing runs outside this Free-plan Worker's CPU budget.
     // The source request has no query, so it takes the raw R2 branch below.
     const rawUrl = new URL(url.pathname, RAW_MEDIA_ORIGIN);
-    const imageOptions = { width, height, fit, gravity, quality };
-    if (format !== 'image/jpeg') imageOptions.format = format.slice('image/'.length);
-    response = await fetch(rawUrl, {
-      headers: { Accept: request.headers.get('Accept') ?? 'image/jpeg' },
-      cf: { image: imageOptions },
-    });
+    // Always name the format: leaving it out keeps the source's (often PNG).
+    const imageOptions = { width, height, fit, gravity, quality, format };
+    response = await fetch(rawUrl, { cf: { image: imageOptions } });
     if (!response.ok) return response;
   } else {
     const object = await env.MEDIA_BUCKET.get(key);

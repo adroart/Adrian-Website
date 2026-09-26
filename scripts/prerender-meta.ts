@@ -28,9 +28,9 @@ const DIST = join(process.cwd(), 'dist');
 const SITE = 'https://adrianrasmussen.com';
 /** 1200x630 social card crop. */
 const media = (publicId: string, query: string) => `${SITE}/media/image/${publicId.split('/').map(encodeURIComponent).join('/')}?${query}`;
-const og = (publicId: string) => media(publicId, 'w=1200&h=630');
+const og = (publicId: string) => media(publicId, 'w=1200&h=630&format=jpg');
 /** Square crop — Pinterest and WhatsApp both prefer it for a single object. */
-const ogSquare = (publicId: string) => media(publicId, 'w=1200&h=1200');
+const ogSquare = (publicId: string) => media(publicId, 'w=1200&h=1200&format=jpg');
 
 const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

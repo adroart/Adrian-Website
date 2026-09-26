@@ -1,5 +1,12 @@
 # Image Workflow Plan: Adrian Rasmussen Art Website
 
+> **Superseded 2026-09-24. Do not follow the delivery parts of this plan.**
+> Images are no longer served from res.cloudinary.com and `utils/cloudinary.ts`
+> does not exist. Originals live in the R2 bucket `adrian-website-media` and are
+> served and resized at `/media/image/<id>` by the media Worker
+> (`workers/media.js`). The real mechanism is in [MEDIA-DELIVERY.md](MEDIA-DELIVERY.md).
+> The naming scheme and metadata sections below still describe the public IDs in use.
+
 > This document is a complete, self-contained plan for replacing all placeholder
 > images on adrianrasmussen.com with real artwork photography, served through
 > Cloudinary. It is written so that any AI agent (or human) can pick it up and

@@ -145,7 +145,7 @@ for (const [n, item] of items.entries()) {
         const product = await stripe('products', {
             name: item.label,
             description: (item.artwork.description || detail || item.artwork.title).slice(0, 500),
-            'images[0]': `${MEDIA_ORIGIN}/${item.artwork.coverImage.split('/').map(encodeURIComponent).join('/')}?w=1200`,
+            'images[0]': `${MEDIA_ORIGIN}/${item.artwork.coverImage.split('/').map(encodeURIComponent).join('/')}?w=1200&format=jpg`,
             'metadata[artworkId]': item.artwork.id,
             'metadata[syncKey]': syncKey,
             ...(item.size && { 'metadata[size]': item.size }),

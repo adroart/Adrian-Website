@@ -6,7 +6,8 @@ export interface ImgOptions {
   crop?: 'fill' | 'fit' | 'scale' | 'thumb';
   quality?: number | 'auto';
   gravity?: 'auto' | 'center' | 'face' | 'faces';
-  format?: 'auto' | 'webp' | 'png' | 'jpg';
+  /** Defaults to webp. Social cards use jpg, which every crawler reads. */
+  format?: 'webp' | 'png' | 'jpg';
 }
 
 export function img(publicId: string, opts: ImgOptions = {}): string {
@@ -17,7 +18,9 @@ export function img(publicId: string, opts: ImgOptions = {}): string {
   if (opts.crop) params.set('crop', opts.crop);
   if (opts.quality !== undefined) params.set('q', String(opts.quality));
   if (opts.gravity) params.set('gravity', opts.gravity);
-  if (opts.format && opts.format !== 'auto') params.set('format', opts.format);
+  // The format is always in a sized URL: the media Worker's edge cache keys on
+  // the URL alone, so the URL has to say what it returns. See docs/MEDIA-DELIVERY.md.
+  if (params.toString() || opts.format) params.set('format', opts.format ?? 'webp');
   const query = params.toString();
   return `${MEDIA_BASE}/${path}${query ? `?${query}` : ''}`;
 }

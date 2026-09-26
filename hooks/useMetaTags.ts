@@ -5,7 +5,7 @@ import { img } from '../utils/media';
 const DEFAULT_TITLE = 'Adrian Rasmussen | Bringing the Formless into Form';
 const DEFAULT_DESCRIPTION =
   'Multidimensional art, sacred geometry sculptures, and immersive installations by Adrian Rasmussen.';
-const DEFAULT_IMAGE = `${SITE.origin}${img('adrian-website/placeholders/hero-wide-1', { w: 1200, h: 630 })}`;
+const DEFAULT_IMAGE = `${SITE.origin}${img('adrian-website/placeholders/hero-wide-1', { w: 1200, h: 630, format: 'jpg' })}`;
 
 interface MetaTagOptions {
   title?: string;

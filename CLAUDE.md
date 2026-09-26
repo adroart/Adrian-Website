@@ -32,6 +32,7 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist. It showca
 - **QR index (private registry)** → `components/QRIndex.tsx` at `/qr`
 - **QR redirect function** → `functions/qr/[number].js` (Cloudflare Function, permanent infrastructure)
 - **Artwork / product data** → `data/mockData.ts`
+- **Images (`/media/image/*`)** → `docs/MEDIA-DELIVERY.md`. Originals are in R2 (`adrian-website-media`), served and resized by the media Worker `workers/media.js` (`wrangler.media.toml`, zone route `adrianrasmussen.com/media/*`, deployed by hand, not by merging). URLs come from `utils/media.ts`. Not Cloudinary: `docs/IMAGE-WORKFLOW-PLAN.md` is a superseded plan.
 - **Accounts and registry data** → `functions/api/`, `migrations/`, and the shared D1 database
 - **Registry source-chain import** → `utils/atlasSourceImport.ts` and `scripts/import-atlas-source.ts`
 - **Public Atlas projection** → `functions/api/atlas.js` at `/api/atlas`
