@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Invoice, InvoiceLineItem, InvoicePaymentOption } from './invoices/invoiceTypes';
+import { img } from '../utils/media';
 import { WISE_REFERRAL_URL, buildPaymentSchedule, formatMoney, inferPaymentTermMode, isWiseMethod, methodLabel } from './invoices/invoiceUtils';
 
 async function readInvoice(token: string): Promise<Invoice> {
@@ -57,6 +58,26 @@ const PublicInvoice: React.FC = () => {
   // the stored totals unchanged (no behaviour change for normal invoices).
   // Buyer's payment choice (only when the invoice offers it): pay in full or 2.
   const [planChoice, setPlanChoice] = useState<'single' | 'two_part'>('single');
+
+  // Consecutive line items sharing a section render under one heading with
+  // their own subtotal. Invoices without sections form one unlabelled group.
+  const lineGroups = useMemo(() => {
+    const groups: { section: string; image: string; caption: string; items: { item: InvoiceLineItem; index: number }[] }[] = [];
+    (invoice?.lineItems || []).forEach((item, index) => {
+      const section = item.section?.trim() || '';
+      let group = groups[groups.length - 1];
+      if (!group || group.section !== section) {
+        group = { section, image: '', caption: '', items: [] };
+        groups.push(group);
+      }
+      group.items.push({ item, index });
+      if (!group.image && item.sectionImage) {
+        group.image = item.sectionImage;
+        group.caption = item.sectionImageCaption || '';
+      }
+    });
+    return groups;
+  }, [invoice]);
 
   const hasVariants = !!invoice?.lineItems.some((i) => i.variants && i.variants.length > 0);
   const liveSubtotal = invoice
@@ -230,44 +251,80 @@ const PublicInvoice: React.FC = () => {
             <span className="text-right">Amount</span>
           </div>
           <div>
-            {invoice.lineItems.map((item, index) => (
-              <div key={`${item.description}-${index}`} className="grid grid-cols-[1fr_90px] gap-4 border-b border-wood-100 py-2">
-                <div>
-                  <p className="font-sans text-sm text-wood-900">{item.description}</p>
-                  {item.terms && <p className="font-sans text-xs text-wood-600">{item.terms}</p>}
-                  {item.variants && item.variants.length > 0 && (
-                    <div className="no-print mt-2 flex flex-wrap gap-2">
-                      {item.variants.map((v, vi) => {
-                        const active = (variantChoice[index] ?? 0) === vi;
-                        return (
-                          <button
-                            key={v.label}
-                            type="button"
-                            onClick={() => setVariantChoice((prev) => ({ ...prev, [index]: vi }))}
-                            className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
-                              active
-                                ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
-                                : 'border-wood-300 text-wood-600 hover:border-bronze-500'
-                            }`}
-                          >
-                            {v.label} · {formatMoney(v.amountCents, invoice.currency)}
-                          </button>
-                        );
-                      })}
+            {lineGroups.map((group, groupIndex) => (
+              <div
+                key={`${group.section}-${groupIndex}`}
+                className={group.section ? `invoice-section mt-4 border border-wood-200 px-4 pb-2 pt-4 ${groupIndex === 0 ? 'bg-paper-100' : 'bg-paper-50'}` : ''}
+              >
+                {group.section && (
+                  <div className="flex items-start gap-4 border-b border-wood-200 pb-3">
+                    {group.image && (
+                      <img
+                        src={img(group.image, { w: 400, h: 400 })}
+                        alt={group.caption || group.section}
+                        width={400}
+                        height={400}
+                        loading="lazy"
+                        className="h-24 w-24 shrink-0 bg-wood-900 object-cover sm:h-32 sm:w-32"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">
+                        {group.section}
+                      </p>
+                      {group.caption && (
+                        <p className="mt-1 font-serif text-lg leading-snug text-wood-900">{group.caption}</p>
+                      )}
                     </div>
-                  )}
-                  {item.variants && item.variants.length > 0 && (
-                    <p className="print-only hidden font-sans text-xs text-wood-600">
-                      Size: {(item.variants[variantChoice[index] ?? 0] || item.variants[0]).label}
+                  </div>
+                )}
+                {group.items.map(({ item, index }) => (
+                  <div key={`${item.description}-${index}`} className="grid grid-cols-[1fr_90px] gap-4 border-b border-wood-100 py-2">
+                    <div>
+                      <p className="font-sans text-sm text-wood-900">{item.description}</p>
+                      {item.terms && <p className="font-sans text-xs text-wood-600">{item.terms}</p>}
+                      {item.variants && item.variants.length > 0 && (
+                        <div className="no-print mt-2 flex flex-wrap gap-2">
+                          {item.variants.map((v, vi) => {
+                            const active = (variantChoice[index] ?? 0) === vi;
+                            return (
+                              <button
+                                key={v.label}
+                                type="button"
+                                onClick={() => setVariantChoice((prev) => ({ ...prev, [index]: vi }))}
+                                className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
+                                  active
+                                    ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
+                                    : 'border-wood-300 text-wood-600 hover:border-bronze-500'
+                                }`}
+                              >
+                                {v.label} · {formatMoney(v.amountCents, invoice.currency)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {item.variants && item.variants.length > 0 && (
+                        <p className="print-only hidden font-sans text-xs text-wood-600">
+                          {(item.variants[variantChoice[index] ?? 0] || item.variants[0]).label}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-right font-sans text-sm text-wood-900">
+                      {formatMoney(lineAmount(item, index), invoice.currency)}
                     </p>
-                  )}
-                </div>
-                <p className="text-right font-sans text-sm text-wood-900">
-                  {formatMoney(lineAmount(item, index), invoice.currency)}
-                </p>
+                  </div>
+                ))}
+                {group.section && (
+                  <div className="flex items-center justify-between pb-1 pt-3 font-sans text-sm font-semibold text-wood-900">
+                    <span>{group.section} subtotal</span>
+                    <span>{formatMoney(group.items.reduce((sum, { item, index }) => sum + lineAmount(item, index), 0), invoice.currency)}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
+
           <div className="ml-auto mt-3 w-full max-w-xs space-y-1.5">
             <div className="flex items-center justify-between font-sans text-sm text-wood-700">
               <span>Subtotal</span>

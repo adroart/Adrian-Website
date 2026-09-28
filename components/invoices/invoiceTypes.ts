@@ -27,6 +27,15 @@ export interface InvoiceLineItem {
   terms: string;
   amountCents: number;
   /**
+   * Optional group heading (e.g. "Already paid", "Upgrade"). Consecutive items
+   * with the same section render under one heading with their own subtotal.
+   */
+  section?: string;
+  /** Media id of a picture shown at the head of this item's section. */
+  sectionImage?: string;
+  /** One line under the section picture, e.g. what the picture shows. */
+  sectionImageCaption?: string;
+  /**
    * Optional buyer-selectable options (sizes). When present, the public invoice
    * shows a selector and the chosen variant's price drives the live total. The
    * stored amountCents is the default (first variant) for variant-less rendering

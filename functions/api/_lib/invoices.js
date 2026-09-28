@@ -114,10 +114,18 @@ function normalizeLineItems(items) {
         .slice(0, 6);
       const base = {
         description: cleanString(item.description, 300),
-        terms: cleanString(item.terms, 120),
+        terms: cleanString(item.terms, 400),
         // A variant line's base amount defaults to the first variant's price.
         amountCents: variants.length ? variants[0].amountCents : cleanCents(item.amountCents),
       };
+      const section = cleanString(item.section, 80);
+      if (section) base.section = section;
+      const sectionImage = cleanString(item.sectionImage, 200);
+      if (section && /^[a-z0-9][a-z0-9/_-]*$/i.test(sectionImage)) {
+        base.sectionImage = sectionImage;
+        const caption = cleanString(item.sectionImageCaption, 200);
+        if (caption) base.sectionImageCaption = caption;
+      }
       return variants.length ? { ...base, variants } : base;
     })
     .filter(item => item.description && item.amountCents > 0)
