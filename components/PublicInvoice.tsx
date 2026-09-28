@@ -43,6 +43,14 @@ const PublicInvoice: React.FC = () => {
 
   // Buyer-selected variant (size) per line item index. Defaults to variant 0.
   const [variantChoice, setVariantChoice] = useState<Record<number, number>>({});
+  // Counts option clicks so the changed totals can replay a short highlight.
+  const [choiceChanges, setChoiceChanges] = useState(0);
+  const chooseVariant = (index: number, variantIndex: number) => {
+    if ((variantChoice[index] ?? 0) === variantIndex) return;
+    setVariantChoice((prev) => ({ ...prev, [index]: variantIndex }));
+    setChoiceChanges((n) => n + 1);
+  };
+  const flashClass = choiceChanges > 0 ? 'invoice-flash' : '';
 
   // The effective amount for a line: the chosen variant's price, else its base.
   const lineAmount = (item: InvoiceLineItem, index: number): number => {
@@ -156,6 +164,17 @@ const PublicInvoice: React.FC = () => {
   return (
     <section className="invoice-light min-h-screen bg-paper-100 px-4 py-8 print:bg-white print:p-0">
       <style>{`
+        .invoice-flash { animation: invoice-flash 1.4s ease-out; }
+        @keyframes invoice-flash {
+          0%, 30% { background-color: var(--color-bronze-100); box-shadow: 0 0 0 4px var(--color-bronze-100); }
+          100% { background-color: transparent; box-shadow: 0 0 0 4px transparent; }
+        }
+        .invoice-flash-dark { animation: invoice-flash-dark 1.4s ease-out; }
+        @keyframes invoice-flash-dark {
+          0%, 30% { background-color: var(--color-bronze-700); box-shadow: 0 0 0 4px var(--color-bronze-700); }
+          100% { background-color: transparent; box-shadow: 0 0 0 4px transparent; }
+        }
+        @media (prefers-reduced-motion: reduce) { .invoice-flash, .invoice-flash-dark { animation: none; } }
         .invoice-a4 {
           width: min(100%, 210mm);
           min-height: 297mm;
@@ -284,35 +303,59 @@ const PublicInvoice: React.FC = () => {
                       <p className="font-sans text-sm text-wood-900">{item.description}</p>
                       {item.terms && <p className="font-sans text-xs text-wood-600">{item.terms}</p>}
                       {item.variants && item.variants.length > 0 && (
-                        <div className="no-print mt-2 flex flex-wrap gap-2">
-                          {item.variants.map((v, vi) => {
-                            const active = (variantChoice[index] ?? 0) === vi;
-                            return (
-                              <button
-                                key={v.label}
-                                type="button"
-                                onClick={() => setVariantChoice((prev) => ({ ...prev, [index]: vi }))}
-                                className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
-                                  active
-                                    ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
-                                    : 'border-wood-300 text-wood-600 hover:border-bronze-500'
-                                }`}
-                              >
-                                {v.label} · {formatMoney(v.amountCents, invoice.currency)}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {item.variants && item.variants.length > 0 && (
                         <p className="print-only hidden font-sans text-xs text-wood-600">
                           {(item.variants[variantChoice[index] ?? 0] || item.variants[0]).label}
                         </p>
                       )}
                     </div>
                     <p className="text-right font-sans text-sm text-wood-900">
-                      {formatMoney(lineAmount(item, index), invoice.currency)}
+                      <span
+                        key={`${index}-${variantChoice[index] ?? 'default'}`}
+                        className={variantChoice[index] !== undefined ? 'invoice-flash' : ''}
+                      >
+                        {formatMoney(lineAmount(item, index), invoice.currency)}
+                      </span>
                     </p>
+                    {item.variants && item.variants.length > 0 && (
+                      <div role="radiogroup" aria-label={item.description} className="no-print col-span-2 -mt-1">
+                        <p className="mb-2 font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">
+                          Choose one · required
+                        </p>
+                        <div className="grid gap-2">
+                          {item.variants.map((v, vi) => {
+                            const active = (variantChoice[index] ?? 0) === vi;
+                            const difference = v.amountCents - lineAmount(item, index);
+                            return (
+                              <button
+                                key={v.label}
+                                type="button"
+                                role="radio"
+                                aria-checked={active}
+                                onClick={() => chooseVariant(index, vi)}
+                                className={`grid cursor-pointer grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border px-3 py-2.5 sm:grid-cols-[4.5rem_1fr_auto] text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze-600 ${
+                                  active
+                                    ? 'border-wood-900 bg-wood-900 text-paper-50'
+                                    : 'border-wood-300 bg-paper-50 text-wood-800 hover:border-bronze-600 hover:bg-bronze-50'
+                                }`}
+                              >
+                                <span className={`col-span-2 font-label text-[10px] uppercase tracking-[0.12em] font-semibold sm:col-span-1 ${active ? 'text-paper-50' : 'text-bronze-700'}`}>
+                                  {active ? 'Selected' : 'Select'}
+                                </span>
+                                <span className="font-sans text-sm leading-snug">{v.label}</span>
+                                <span className="text-right font-sans text-sm leading-snug">
+                                  {formatMoney(v.amountCents, invoice.currency)}
+                                  {!active && difference !== 0 && (
+                                    <span className="block text-xs text-wood-600">
+                                      {difference > 0 ? '+' : '-'}{formatMoney(Math.abs(difference), invoice.currency)} to total
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {group.section && (
@@ -336,7 +379,7 @@ const PublicInvoice: React.FC = () => {
             </div>
             <div className="flex items-center justify-between border-t border-wood-900 pt-2 font-serif text-2xl text-wood-900">
               <span>Total</span>
-              <span>{formatMoney(displayTotal, invoice.currency)}</span>
+              <span key={`total-${choiceChanges}`} className={flashClass}>{formatMoney(displayTotal, invoice.currency)}</span>
             </div>
             {(invoice.amountPaidCents || 0) > 0 && (
               <>
@@ -347,8 +390,11 @@ const PublicInvoice: React.FC = () => {
                 {displayTotal - (invoice.amountPaidCents || 0) > 0 && (
                   <div className="flex items-center justify-between border-t border-wood-900 pt-2 font-serif text-2xl text-bronze-700">
                     <span>Balance due</span>
-                    <span>{formatMoney(displayTotal - (invoice.amountPaidCents || 0), invoice.currency)}</span>
+                    <span key={`balance-${choiceChanges}`} className={flashClass}>{formatMoney(displayTotal - (invoice.amountPaidCents || 0), invoice.currency)}</span>
                   </div>
+                )}
+                {hasVariants && (
+                  <p className="no-print pt-1 text-right font-sans text-xs text-wood-600">Updates with the options you choose above.</p>
                 )}
               </>
             )}
@@ -398,7 +444,9 @@ const PublicInvoice: React.FC = () => {
 
           <div className="border border-wood-900 bg-wood-900 p-3 text-paper-50 sm:mt-7">
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-paper-200 font-semibold">Due today</p>
-            <p className="font-serif text-3xl leading-tight">{formatMoney(displayDueToday, invoice.currency)}</p>
+            <p className="font-serif text-3xl leading-tight">
+              <span key={`due-${choiceChanges}`} className={choiceChanges > 0 ? 'invoice-flash-dark' : ''}>{formatMoney(displayDueToday, invoice.currency)}</span>
+            </p>
             {currentStep && (
               <p className="mt-1 font-sans text-sm leading-snug text-paper-200">
                 Current step: {currentStep.label}
