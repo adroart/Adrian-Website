@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet data-dc-atomics>
+        <meta name="design_doc_mode" content="canvas">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Karla:wght@400;500&display=swap" rel="stylesheet">
+        <style>
+          a{color:#ab9266}a:hover{color:#736046}
+          .frame{position:absolute;width:672px}
+          .lbl{position:absolute;top:-44px;left:0;right:0;font:500 15px/1 Karla,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8a857c;white-space:nowrap;cursor:grab}
+          .card{position:relative;width:672px;height:960px;overflow:hidden;background:#262321;background-size:cover;background-position:center;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+          .inner{position:absolute;inset:88px 72px;display:flex;flex-direction:column;align-items:center;text-align:center}
+          .grow{flex:1}
+          .scrim{position:absolute;inset:0;pointer-events:none}
+          .h{font:500 50px/1.1 'Cormorant Garamond',Georgia,serif;letter-spacing:.005em}
+          .rule{width:68px;height:2px;margin:22px auto}
+          .p{font:400 21px/1.5 Lora,Georgia,serif;text-wrap:pretty}
+          .qrtile{padding:22px;display:flex}
+          .qr{width:230px;height:230px}
+          .qr svg{width:100%;height:100%;display:block}
+          .url{font:600 32px/1.15 'Cormorant Garamond',Georgia,serif;letter-spacing:.01em;margin-top:14px}
+          .sub{font:400 15px/1.3 Karla,Helvetica,sans-serif;letter-spacing:.18em;text-transform:uppercase;margin-top:8px}
+
+          /* fronts */
+          .front1{background:#262321}
+          .sq{position:absolute;left:52px;right:52px;top:50%;transform:translateY(-56%);aspect-ratio:1/1;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+          .sq img{width:100%;height:100%;object-fit:cover;display:block}
+          .cap{position:absolute;left:0;right:0;bottom:78px;text-align:center;font:italic 400 24px/1 'Cormorant Garamond',Georgia,serif;color:#d5c1a0}
+          .bleed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+
+          /* A · deep wood */
+          .wood{background:#262321;color:#ebe8e1}
+          .wood .rule{background:#ab9266}
+          .wood .p{color:#e0d8cc}
+          .wood .soft{color:#c4aa7c}
+          .wood .qrtile{background:#f5f4f0;border-radius:4px}
+          .wood .url{color:#f5f4f0}
+          .wood .sub{color:#ab9266}
+
+          /* B · parchment */
+          .parch{background-color:#e6d9c3;color:#262321}
+          .parch .scrim{background:linear-gradient(180deg,rgba(230,217,195,.55),rgba(230,217,195,.92) 22%,rgba(230,217,195,.92) 78%,rgba(230,217,195,.55));mix-blend-mode:normal}
+          .parch .rule{background:#725d3d}
+          .parch .p{color:#3d3226}
+          .parch .soft{color:#725d3d}
+          .parch .qrtile{background:#f5f4f0;border-radius:4px;box-shadow:0 2px 10px rgba(61,50,38,.18)}
+          .parch .url{color:#262321}
+          .parch .sub{color:#6f6a62}
+          .parch .inner{z-index:1}
+
+          /* C · art bleed */
+          .bleedc{}
+
+          .card.artc{color:#f5f4f0}
+          .card.artc .scrim{background:radial-gradient(ellipse at 50% 50%,rgba(23,19,16,.72),rgba(23,19,16,.9))}
+          .card.artc .inner{z-index:1}
+          .card.artc .rule{background:#d5c1a0}
+          .card.artc .p{color:#ebe8e1}
+          .card.artc .soft{color:#d5c1a0}
+          .card.artc .qrtile{background:#f5f4f0;border-radius:4px}
+          .card.artc .url{color:#faf6f0}
+          .card.artc .sub{color:#c4aa7c}
+        </style>
+      </helmet>
+      
+  
+  <div class="frame" style="left:80px;top:120px" data-screen-label="Card 1 · front · Sol Star, square card on the portrait blank">
+    <div class="lbl" data-drags-parent="1">Card 1 · front · Sol Star, square card on the portrait blank</div>
+    
+    <div class="card front1"><div class="sq"><img src="https://res.cloudinary.com/dobbosnda/image/upload/w_1400,q_auto:best,f_jpg/adrian-website/print/reflection-cards/sol-star-11-card-front" alt=""></div><div class="cap">Sol Star · Eleven</div></div>
+  </div>
+  
+  <div class="frame" style="left:80px;top:1180px" data-screen-label="Card 2 · front · illuminated piece, full bleed">
+    <div class="lbl" data-drags-parent="1">Card 2 · front · illuminated piece, full bleed</div>
+    
+    <div class="card"><img class="bleed" src="https://res.cloudinary.com/dobbosnda/image/upload/w_1400,q_auto:best,f_jpg/adrian-website/print/reflection-cards/illuminated-piece-front" alt=""></div>
+  </div>
+
+  <div class="frame" style="left:808px;top:120px" data-screen-label="A · Deep wood · card 1 back">
+    <div class="lbl" data-drags-parent="1">A · Deep wood · card 1 back</div>
+    
+  <div class="card wood " >
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">There are 64 more.</div>
+      <div class="rule"></div>
+      <div class="p">These cards come from a deck of 64 mandalas, a comprehensive oracle drawing the old systems and the new into one.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m1 0h2m2 0h6m1 0h7M0 1.5h1m5 0h1m1 0h2m1 0h1m2 0h2m2 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m4 0h1m1 0h3m3 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m2 0h1m4 0h3m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m2 0h2m5 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h3m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m2 0h3m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h1m2 0h2m2 0h2m3 0h1m2 0h2m1 0h7m3 0h1M2 10.5h2m2 0h1m1 0h5m1 0h2m10 0h2M1 11.5h2m1 0h1m2 0h1m2 0h1m2 0h3m2 0h1m2 0h2m1 0h1m3 0h1M2 12.5h5m1 0h1m3 0h1m4 0h1m2 0h1m4 0h2M1 13.5h1m3 0h1m2 0h4m1 0h1m5 0h1m2 0h1m3 0h3M3 14.5h1m2 0h1m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M2 15.5h4m1 0h3m3 0h1m1 0h1m4 0h3m1 0h1m2 0h1M0 16.5h3m1 0h4m3 0h1m4 0h1m1 0h1m2 0h1m2 0h2m1 0h1M5 17.5h1m7 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m5 0h1m1 0h4m3 0h2m3 0h2m2 0h1m1 0h1M3 19.5h3m2 0h3m6 0h2m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m4 0h2m3 0h1m2 0h7M8 21.5h1m4 0h2m2 0h2m1 0h1m3 0h5M0 22.5h7m1 0h2m3 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h2m5 0h1m2 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m3 0h2m2 0h1m2 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h4m1 0h3m1 0h3m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h1m9 0h3m1 0h3m1 0h1M0 28.5h7m1 0h2m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">Ask a question. Turn a card.<br>Read what it holds.</div>
+      <div class="url">mandalacodes.com</div>
+      <div class="sub">Free · no account needed</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+  <div class="frame" style="left:808px;top:1180px" data-screen-label="A · Deep wood · card 2 back">
+    <div class="lbl" data-drags-parent="1">A · Deep wood · card 2 back</div>
+    
+  <div class="card wood " >
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">I made these.</div>
+      <div class="rule"></div>
+      <div class="p">Mandalas, laser-cut wooden sculptures, illuminated pieces for homes and retreat spaces.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m2 0h1m3 0h5m1 0h7M0 1.5h1m5 0h1m1 0h3m7 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h2m2 0h1m1 0h2m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m4 0h4m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m1 0h6m2 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h1m1 0h1m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m3 0h2m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h6m2 0h1m1 0h3m3 0h1m1 0h7m3 0h1M0 10.5h3m2 0h2m2 0h1m2 0h1m1 0h1m1 0h1m9 0h2M0 11.5h1m3 0h1m2 0h1m1 0h2m1 0h5m1 0h1m2 0h2m1 0h1m3 0h1M0 12.5h1m3 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h1m2 0h1m4 0h2M1 13.5h1m1 0h1m4 0h1m2 0h3m1 0h2m2 0h1m2 0h1m3 0h3M1 14.5h1m1 0h1m1 0h2m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M0 15.5h1m2 0h1m1 0h1m1 0h4m2 0h1m1 0h2m3 0h3m1 0h1m2 0h1M0 16.5h1m2 0h2m1 0h1m1 0h4m3 0h2m1 0h1m2 0h1m2 0h2m1 0h1M1 17.5h5m2 0h1m4 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m4 0h2m1 0h5m2 0h1m4 0h2m2 0h1m1 0h1M2 19.5h1m4 0h3m1 0h1m3 0h4m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m5 0h1m2 0h2m2 0h7M8 21.5h2m1 0h1m1 0h2m1 0h3m1 0h1m3 0h5M0 22.5h7m1 0h4m1 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h5m5 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m2 0h1m2 0h1m1 0h2m1 0h2m1 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h3m1 0h5m1 0h2m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m2 0h3m1 0h4m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h5m5 0h3m1 0h3m1 0h1M0 28.5h7m1 0h4m4 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">The work, and the writing behind it.</div>
+      <div class="url">adrianrasmussen.com</div>
+      <div class="sub">IG · technicianofthesacred</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+  <div class="frame" style="left:1536px;top:120px" data-screen-label="B · Parchment · card 1 back">
+    <div class="lbl" data-drags-parent="1">B · Parchment · card 1 back</div>
+    
+  <div class="card parch " style="background-image:url('https://res.cloudinary.com/dobbosnda/image/upload/w_900,e_grayscale,q_auto,f_jpg/adrian-website/creations/universal-language/sol-star-11')">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">There are 64 more.</div>
+      <div class="rule"></div>
+      <div class="p">These cards come from a deck of 64 mandalas, a comprehensive oracle drawing the old systems and the new into one.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m1 0h2m2 0h6m1 0h7M0 1.5h1m5 0h1m1 0h2m1 0h1m2 0h2m2 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m4 0h1m1 0h3m3 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m2 0h1m4 0h3m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m2 0h2m5 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h3m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m2 0h3m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h1m2 0h2m2 0h2m3 0h1m2 0h2m1 0h7m3 0h1M2 10.5h2m2 0h1m1 0h5m1 0h2m10 0h2M1 11.5h2m1 0h1m2 0h1m2 0h1m2 0h3m2 0h1m2 0h2m1 0h1m3 0h1M2 12.5h5m1 0h1m3 0h1m4 0h1m2 0h1m4 0h2M1 13.5h1m3 0h1m2 0h4m1 0h1m5 0h1m2 0h1m3 0h3M3 14.5h1m2 0h1m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M2 15.5h4m1 0h3m3 0h1m1 0h1m4 0h3m1 0h1m2 0h1M0 16.5h3m1 0h4m3 0h1m4 0h1m1 0h1m2 0h1m2 0h2m1 0h1M5 17.5h1m7 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m5 0h1m1 0h4m3 0h2m3 0h2m2 0h1m1 0h1M3 19.5h3m2 0h3m6 0h2m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m4 0h2m3 0h1m2 0h7M8 21.5h1m4 0h2m2 0h2m1 0h1m3 0h5M0 22.5h7m1 0h2m3 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h2m5 0h1m2 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m3 0h2m2 0h1m2 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h4m1 0h3m1 0h3m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h1m9 0h3m1 0h3m1 0h1M0 28.5h7m1 0h2m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">Ask a question. Turn a card.<br>Read what it holds.</div>
+      <div class="url">mandalacodes.com</div>
+      <div class="sub">Free · no account needed</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+  <div class="frame" style="left:1536px;top:1180px" data-screen-label="B · Parchment · card 2 back">
+    <div class="lbl" data-drags-parent="1">B · Parchment · card 2 back</div>
+    
+  <div class="card parch " style="background-image:url('https://res.cloudinary.com/dobbosnda/image/upload/w_900,e_grayscale,q_auto,f_jpg/adrian-website/creations/universal-language/sol-star-11')">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">I made these.</div>
+      <div class="rule"></div>
+      <div class="p">Mandalas, laser-cut wooden sculptures, illuminated pieces for homes and retreat spaces.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m2 0h1m3 0h5m1 0h7M0 1.5h1m5 0h1m1 0h3m7 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h2m2 0h1m1 0h2m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m4 0h4m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m1 0h6m2 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h1m1 0h1m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m3 0h2m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h6m2 0h1m1 0h3m3 0h1m1 0h7m3 0h1M0 10.5h3m2 0h2m2 0h1m2 0h1m1 0h1m1 0h1m9 0h2M0 11.5h1m3 0h1m2 0h1m1 0h2m1 0h5m1 0h1m2 0h2m1 0h1m3 0h1M0 12.5h1m3 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h1m2 0h1m4 0h2M1 13.5h1m1 0h1m4 0h1m2 0h3m1 0h2m2 0h1m2 0h1m3 0h3M1 14.5h1m1 0h1m1 0h2m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M0 15.5h1m2 0h1m1 0h1m1 0h4m2 0h1m1 0h2m3 0h3m1 0h1m2 0h1M0 16.5h1m2 0h2m1 0h1m1 0h4m3 0h2m1 0h1m2 0h1m2 0h2m1 0h1M1 17.5h5m2 0h1m4 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m4 0h2m1 0h5m2 0h1m4 0h2m2 0h1m1 0h1M2 19.5h1m4 0h3m1 0h1m3 0h4m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m5 0h1m2 0h2m2 0h7M8 21.5h2m1 0h1m1 0h2m1 0h3m1 0h1m3 0h5M0 22.5h7m1 0h4m1 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h5m5 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m2 0h1m2 0h1m1 0h2m1 0h2m1 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h3m1 0h5m1 0h2m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m2 0h3m1 0h4m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h5m5 0h3m1 0h3m1 0h1M0 28.5h7m1 0h4m4 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">The work, and the writing behind it.</div>
+      <div class="url">adrianrasmussen.com</div>
+      <div class="sub">IG · technicianofthesacred</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+  <div class="frame" style="left:2264px;top:120px" data-screen-label="C · Art bleed · card 1 back">
+    <div class="lbl" data-drags-parent="1">C · Art bleed · card 1 back</div>
+    
+  <div class="card artc " style="background-image:url('https://res.cloudinary.com/dobbosnda/image/upload/w_900,e_blur:600,e_brightness:-45,q_auto,f_jpg/adrian-website/creations/universal-language/sol-star-11')">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">There are 64 more.</div>
+      <div class="rule"></div>
+      <div class="p">These cards come from a deck of 64 mandalas, a comprehensive oracle drawing the old systems and the new into one.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m1 0h2m2 0h6m1 0h7M0 1.5h1m5 0h1m1 0h2m1 0h1m2 0h2m2 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m4 0h1m1 0h3m3 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m2 0h1m4 0h3m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m2 0h2m5 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h3m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m2 0h3m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h1m2 0h2m2 0h2m3 0h1m2 0h2m1 0h7m3 0h1M2 10.5h2m2 0h1m1 0h5m1 0h2m10 0h2M1 11.5h2m1 0h1m2 0h1m2 0h1m2 0h3m2 0h1m2 0h2m1 0h1m3 0h1M2 12.5h5m1 0h1m3 0h1m4 0h1m2 0h1m4 0h2M1 13.5h1m3 0h1m2 0h4m1 0h1m5 0h1m2 0h1m3 0h3M3 14.5h1m2 0h1m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M2 15.5h4m1 0h3m3 0h1m1 0h1m4 0h3m1 0h1m2 0h1M0 16.5h3m1 0h4m3 0h1m4 0h1m1 0h1m2 0h1m2 0h2m1 0h1M5 17.5h1m7 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m5 0h1m1 0h4m3 0h2m3 0h2m2 0h1m1 0h1M3 19.5h3m2 0h3m6 0h2m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m4 0h2m3 0h1m2 0h7M8 21.5h1m4 0h2m2 0h2m1 0h1m3 0h5M0 22.5h7m1 0h2m3 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h2m5 0h1m2 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m3 0h2m2 0h1m2 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h4m1 0h3m1 0h3m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h1m9 0h3m1 0h3m1 0h1M0 28.5h7m1 0h2m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">Ask a question. Turn a card.<br>Read what it holds.</div>
+      <div class="url">mandalacodes.com</div>
+      <div class="sub">Free · no account needed</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+  <div class="frame" style="left:2264px;top:1180px" data-screen-label="C · Art bleed · card 2 back">
+    <div class="lbl" data-drags-parent="1">C · Art bleed · card 2 back</div>
+    
+  <div class="card artc " style="background-image:url('https://res.cloudinary.com/dobbosnda/image/upload/w_900,e_blur:600,e_brightness:-45,q_auto,f_jpg/adrian-website/print/reflection-cards/illuminated-piece-front')">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="grow"></div>
+      <div class="h">I made these.</div>
+      <div class="rule"></div>
+      <div class="p">Mandalas, laser-cut wooden sculptures, illuminated pieces for homes and retreat spaces.</div>
+      <div class="grow"></div>
+      <div class="qrtile"><div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#262321" d="M0 0.5h7m1 0h2m2 0h1m3 0h5m1 0h7M0 1.5h1m5 0h1m1 0h3m7 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h2m2 0h1m1 0h2m2 0h2m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h3m4 0h4m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m1 0h6m2 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m3 0h1m1 0h1m1 0h1m2 0h4m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m3 0h2m2 0h1m1 0h2M0 8.5h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h5m1 0h1m2 0h1m1 0h2M0 9.5h6m2 0h1m1 0h3m3 0h1m1 0h7m3 0h1M0 10.5h3m2 0h2m2 0h1m2 0h1m1 0h1m1 0h1m9 0h2M0 11.5h1m3 0h1m2 0h1m1 0h2m1 0h5m1 0h1m2 0h2m1 0h1m3 0h1M0 12.5h1m3 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h1m2 0h1m4 0h2M1 13.5h1m1 0h1m4 0h1m2 0h3m1 0h2m2 0h1m2 0h1m3 0h3M1 14.5h1m1 0h1m1 0h2m1 0h1m1 0h1m3 0h1m2 0h5m2 0h1m1 0h3M0 15.5h1m2 0h1m1 0h1m1 0h4m2 0h1m1 0h2m3 0h3m1 0h1m2 0h1M0 16.5h1m2 0h2m1 0h1m1 0h4m3 0h2m1 0h1m2 0h1m2 0h2m1 0h1M1 17.5h5m2 0h1m4 0h1m1 0h3m2 0h2m1 0h1m1 0h3M0 18.5h1m4 0h2m1 0h5m2 0h1m4 0h2m2 0h1m1 0h1M2 19.5h1m4 0h3m1 0h1m3 0h4m3 0h1m3 0h1M1 20.5h1m1 0h2m1 0h2m5 0h1m2 0h2m2 0h7M8 21.5h2m1 0h1m1 0h2m1 0h3m1 0h1m3 0h5M0 22.5h7m1 0h4m1 0h1m2 0h1m1 0h3m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h5m5 0h1m1 0h1m3 0h2m1 0h2M0 24.5h1m1 0h3m1 0h1m2 0h1m2 0h1m1 0h2m1 0h2m1 0h5m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h3m1 0h5m1 0h2m1 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h2m2 0h3m1 0h4m3 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m2 0h5m5 0h3m1 0h3m1 0h1M0 28.5h7m1 0h4m4 0h1m1 0h4m1 0h1m3 0h1"/></svg>
+</div></div>
+      <div class="grow"></div>
+      <div class="p soft">The work, and the writing behind it.</div>
+      <div class="url">adrianrasmussen.com</div>
+      <div class="sub">IG · technicianofthesacred</div>
+      <div class="grow"></div>
+    </div>
+  </div>
+  </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{}'
+    >
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>
