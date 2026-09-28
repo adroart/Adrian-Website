@@ -774,6 +774,10 @@ const AdminInvoices: React.FC = () => {
                     const hasVariants = !!(item.variants && item.variants.length > 0);
                     return (
                     <div key={index} className="border border-wood-100 bg-paper-50 p-4">
+                      <label className="mb-3 block max-w-xs">
+                        <span className={labelClass}>Section</span>
+                        <input className={inputClass} value={item.section || ''} onChange={e => updateLineItem(index, { section: e.target.value })} placeholder="Optional, e.g. Upgrade" />
+                      </label>
                       <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_150px_auto]">
                         <label>
                           <span className={labelClass}>Description</span>
