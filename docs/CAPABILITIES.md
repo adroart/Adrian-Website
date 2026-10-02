@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npx tsx scripts/gen-capabilities-portable.ts`. It reads the code, so it cannot drift.
-> Generated 2026-09-07T04:34:57.590Z.
+> Generated 2026-09-28T10:30:07.222Z.
 
-**At a glance:** 22 commands · migration head `045_succession_custody_dates.sql`.
+**At a glance:** 21 commands · migration head `049_historical_dream_publications.sql`.
 
 ## Commands (how to use it)
 
@@ -16,12 +16,11 @@
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run preview` | `vite preview` |
 | `npm run generate:stories` | `tsx scripts/generate-stories.ts` |
-| Artwork plate + QR generation | Use the authenticated Admin Plate Wizard, backed by `functions/api/admin/pieces/[id]/prepare.js` and `utils/artworkPlate.ts`; there is no supported bulk QR CLI. |
 | `npm run crop:oracle` | `tsx scripts/crop-oracle-images.ts` |
 | `npm run rename:oracle` | `tsx scripts/rename-oracle-images.ts` |
 | `npm run keystatic:dev` | `vite --port 5555` |
 | `npm run test` | `npm run test:unit && npm run test:e2e` |
-| `npm run test:unit` | `npx tsx --test --experimental-test-module-mocks tests/*.test.ts tests/*.test.mjs` |
+| `npm run test:unit` | `npx tsx --test --experimental-test-module-mocks tests/*.test.ts tests/*.test.tsx tests/*.test.mjs` |
 | `npm run test:e2e` | `npx playwright test` |
 | `npm run test:mobile` | `npx playwright test --project='Mobile Chrome' --reporter=list` |
 | `npm run test:ui` | `playwright test --ui` |
@@ -35,7 +34,7 @@
 
 ## Migrations
 
-Head: `045_succession_custody_dates.sql` · 52 total.
+Head: `049_historical_dream_publications.sql` · 56 total.
 
 ---
 
