@@ -102,3 +102,10 @@ test('the actual generated Pages router receives the guarded binding and deferre
     const { createHash } = await import('node:crypto'); assert.equal(manifest.workerSha256, createHash('sha256').update(readFileSync(join(root, 'dist/_worker.js/index.js'))).digest('hex')); assert.equal(manifest.project, project);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('Cloudflare and CI runtime pins agree with the application engine', () => {
+  const engine = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).engines.node;
+  assert.equal(readFileSync(new URL('../.node-version', import.meta.url), 'utf8').trim(), engine);
+  assert.equal(readFileSync(new URL('../.nvmrc', import.meta.url), 'utf8').trim(), engine);
+  assert.ok(Number(engine.split('.')[0]) >= 22, 'the guarded worker builder requires Node 22');
+});
