@@ -26,3 +26,9 @@ binding = "DB"
 database_name = "adrian-website"
 database_id = "d0e93f04-203c-4dbd-945a-e14a9a364dd5"
 migrations_dir = "migrations"
+
+# Account-wide allowance ledger, stored outside D1 itself.
+[[durable_objects.bindings]]
+name = "SHARED_ALLOWANCE"
+class_name = "AllowanceGovernor"
+script_name = "i64os-quota-guard"
