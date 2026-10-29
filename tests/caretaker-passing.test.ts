@@ -160,6 +160,7 @@ describe('recipient-verified caretaker passing', () => {
       }) as typeof fetch;
       const resent = await resendCaretakerPassing(fx.env, {
         passingId: created.passing.id, senderUserId: 'sender',
+        now: '2026-09-22T01:00:00.000Z',
       });
       assert.equal(resent.passing.deliveryStatus, 'sent');
       assert.deepEqual(providerKeys, [`caretaker-passing:${created.passing.id}`]);
