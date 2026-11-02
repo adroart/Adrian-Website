@@ -20,10 +20,10 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist. It showca
 - Stripe Checkout Sessions (payment links currently placeholders)
 
 ## Entry points
-- `src/main.tsx` — app bootstrap
-- `src/App.tsx` — route definitions (static routes BEFORE `:id` catch-alls — order matters)
+- `index.tsx` — app bootstrap (repo root)
+- `App.tsx` (repo root) — route definitions (static routes BEFORE `:id` catch-alls — order matters)
 - `data/mockData.ts`: primary compiled artwork, writing, and product catalog
-- `src/types.ts` — TypeScript type definitions
+- `types.ts` (repo root) — TypeScript type definitions
 
 ## Where to look for…
 - **Collector journey — the settled flow (READ BEFORE BUILDING ANY OF IT)** → `todo/plans/collector-screen-wording.md` is the master record: every screen's locked wording in Adrian's voice, the privacy model, the passing mechanic, the rules. Its two companions render the flow visually: `todo/plans/collector-flow-preview.html` (every screen as a phone card) and `todo/plans/collector-flow-chart.html` (the whole journey with branches). Open all three before touching registration, the piece page, unlock, transfer, or onboarding. The wording is locked; do not paraphrase it.
@@ -78,11 +78,11 @@ remains discoverable; oracle framing belongs on mandalacodes, not here.
 - Never use "oracle" in SEO for art-series pages (`/creations/multidimensional-art/*`). The oracle framing belongs on mandalacodes.com, not here.
 - UL meta descriptions should mention that the companion oracle deck lives at mandalacodes.com (one creator, two SEO surfaces)
 - UL alt text: `[Piece Name], Universal Language [Number]. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`
-- UL Cloudinary filename: `universal-language-[number]-[piece-name-slug]`
+- UL image filename: `universal-language-[number]-[piece-name-slug]`
 - UL pieces are multi-dimensional wooden sculptures — use that term in marketing
 
 ## Deploy
-Push to `main` → Cloudflare Pages auto-deploys. Remaining work lives in `TODO.md` at the project root (the old `todo/` folder was retired 2026-05-29).
+Push to `main` → Cloudflare Pages auto-deploys. Remaining work lives in `TODO.md` at the project root.
 
 ## TODO format
-`TODO.md` items follow the workspace convention: `- [ ] **Bold lead.** _(band: agent-runnable | you-required | routine)_ One descriptive sentence.` with an optional link/detail line underneath pointing to the full plan doc, PR, or referenced files. Group items under `## Soon` / `## Pre-launch` / `## Future` / `## Operational notes`. The band hint tells the i64os Temple page which lane to render the item in.
+`TODO.md` follows the workspace TODO convention: one plain sentence with `_(band: …)_ _(effort: …)_`; big items link a plan in `todo/plans/<slug>.md`. The old **Bold lead.** format is retired.

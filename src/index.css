@@ -3,8 +3,9 @@
  *   - font-display / font-serif (Cormorant Garamond): titles + display text
  *     ONLY at >= 20px. Cormorant is a display serif; its thin strokes
  *     disappear at body sizes.
- *   - font-sans (Lora): ALL body, descriptions, captions, meta < 20px.
- *     Lora is a body-grade serif with screen-tuned strokes.
+ *   - font-body (Lora): ALL body, descriptions, captions, meta < 20px.
+ *     Lora is a body-grade serif with screen-tuned strokes. (Avoid the
+ *     misleading font-sans slot name; it only resolves to Lora for legacy classes.)
  *   - font-label (Karla): uppercase eyebrows / row labels only.
  * Italic Cormorant under 20px is forbidden — fails legibility on dark bg.
  *
