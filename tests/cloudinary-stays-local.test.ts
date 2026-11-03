@@ -17,9 +17,10 @@ describe('Playwright specs stay off production media', () => {
     assert.deepEqual(offenders, []);
   });
 
-  it('the fixture answers /media itself', () => {
-    const source = readFileSync(new URL('fixtures.ts', dir), 'utf8');
-    assert.ok(source.includes('\\/media\\/'));
-    assert.ok(source.includes('route.fulfill'));
+  it('the fixture hands /media to the shared stub, which answers it', () => {
+    const fixture = readFileSync(new URL('fixtures.ts', dir), 'utf8');
+    assert.ok(fixture.includes('stubMeteredMedia(context, /\\/media\\//)'));
+    const stub = readFileSync(new URL('shared/media-stub.ts', dir), 'utf8');
+    assert.ok(stub.includes('route.fulfill'));
   });
 });
