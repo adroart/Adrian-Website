@@ -6,8 +6,9 @@
 # trade for the repository that now holds the collector registry, where an
 # untested change reaches ownership records.
 #
-# The Playwright suite is deliberately not run here. It needs a built site and
-# browsers; this lane guards the pure logic underneath (registry, lineage,
+# The full Playwright suite is deliberately not run here. browser-smoke.yml
+# runs a bounded production-build lane on relevant PRs. This lane guards the
+# pure logic underneath (registry, lineage,
 # recovery proofs, collector privacy, the atlas projection), which is where a
 # silent break would do the most damage.
 name: test
