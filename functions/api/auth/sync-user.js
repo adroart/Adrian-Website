@@ -42,10 +42,11 @@ export async function onRequest(context) {
     await relinkOrdersByEmail(env.DB, user.id, email);
   }
 
-  // Ensure a Stripe customer is associated. Skip if Stripe isn't
+  // Email lookup can attach an existing customer, so only a verified mailbox
+  // owner may link it. Skip if Stripe isn't
   // configured yet — this endpoint should still succeed so the rest of
   // the account flow works.
-  if (env.STRIPE_SECRET_KEY && user && !user.stripe_customer_id) {
+  if (auth.user?.emailVerified === true && env.STRIPE_SECRET_KEY && user && !user.stripe_customer_id) {
     try {
       const stripeCustomerId = await ensureStripeCustomer(env, {
         email,

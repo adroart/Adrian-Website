@@ -47,26 +47,33 @@ export async function onRequest(context) {
 
   const sessionId = s.id;
   const piId = s.payment_intent ?? null;
-  const email = (s.customer_details?.email || s.customer_email || '').toLowerCase();
+  const email = (s.customer_details?.email || s.customer_email || '').trim().toLowerCase();
   const status = s.payment_status === 'paid' ? 'paid' : (s.payment_status || 'pending');
   const amountTotal = s.amount_total ?? 0;
   // Store currency uppercase to stay consistent with invoices/atlas tables.
   const currency = (s.currency || 'usd').toUpperCase();
 
-  // Look up the user by stripe_customer_id first, then fall back to email
-  // matching. user_id stays null for guest checkouts; later /api/orders/claim
-  // or the account sync path will attach them.
+  // Bridge emails and legacy customer links do not prove mailbox ownership.
+  // Resolve them only through the current verified Better Auth identity.
+  // Unmatched purchases stay guest orders, claimable after verification.
   let userId = null;
   if (s.customer) {
     const u = await env.DB
-      .prepare('SELECT id FROM users WHERE stripe_customer_id = ?1')
-      .bind(s.customer)
+      .prepare(`SELECT bridge.id FROM users AS bridge
+        JOIN user AS identity ON identity.id = bridge.auth_user_id
+        WHERE bridge.stripe_customer_id = ?1 AND identity.emailVerified = 1
+          AND lower(trim(identity.email)) = ?2
+          AND lower(trim(identity.email)) = lower(trim(bridge.email))`)
+      .bind(s.customer, email)
       .first();
     if (u) userId = u.id;
   }
   if (!userId && email) {
     const u = await env.DB
-      .prepare('SELECT id FROM users WHERE lower(email) = ?1')
+      .prepare(`SELECT bridge.id FROM users AS bridge
+        JOIN user AS identity ON identity.id = bridge.auth_user_id
+        WHERE lower(trim(identity.email)) = ?1 AND identity.emailVerified = 1
+          AND lower(trim(identity.email)) = lower(trim(bridge.email))`)
       .bind(email)
       .first();
     if (u) userId = u.id;
