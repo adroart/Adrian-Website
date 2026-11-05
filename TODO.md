@@ -70,7 +70,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Pre-launch
 
-- [ ] **Rerun the broad browser smoke gate with network access.** _(band: routine)_ The Phase 3 desktop and mobile journeys pass, but ten existing site-wide smoke checks logged `net::ERR_INTERNET_DISCONNECTED` for external resources. Rerun them in an online browser environment before rollout.
+- [x] **Bounded production browser CI.** _(band: agent-runnable)_ Four gallery, inquiry, permanent-QR and launch-gate journeys run at desktop and phone widths against one owned production preview, with external traffic blocked and media supplied locally. Eight integrated browser checks passed in [PR #154](https://github.com/adroart/Adrian-Website/pull/154), carrying source #149; deployed at `708da518` and retained in verified live #156 (`0fb16f18`, 2026-11-05). This proves the bounded build lane, not checkout activation or physical collector acceptance.
+- [ ] **Rerun the broader browser smoke gate with network access.** _(band: routine)_ The earlier ten site-wide checks affected by `net::ERR_INTERNET_DISCONNECTED` remain distinct from the completed bounded production CI lane above. Their online rerun, Safari/Firefox coverage and full accessibility acceptance are not established by its eight checks.
 
 ### Adrian-only: blocks launch
 
@@ -95,10 +96,11 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   The defaults are plan estimates; no real art-pricing data was available to calibrate. Load real pieces, set Settings to match your intuition, save pieces to Reference with their actual prices, and recenter. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
 - [ ] **Pricing tool: flip the explorer on** — make the public Pricing Explorer live once the model reads true _(you · quick)_
   Set `LAUNCH_FLAGS.pricingExplorer` to `true`. It lives on the Multidimensional Art page. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
-### Adrian-only: backend security pass (waiting on you to verify before it goes live)
+### Adrian-only: remaining backend security review
 
-- [ ] **Backend security hardening** — review, verify, and merge the open security pass, and rotate the live Stripe key _(you · deep)_
-  A 47-file hardening of sign-in, abuse limits, and payment handling is built and waiting in an open request, but it was only syntax-checked, never run, and it touches live payments — so it can't go live unverified. Rotate the live Stripe key regardless (a key was exposed). Then build it, smoke-test sign-in + checkout + a payment notification, and merge or discard. The request also carries a few stray local cache files to drop before merge. Done when the Stripe key is rotated, the pass is verified working, and it's merged or dropped. → Request: open PR #124 on Adrian-Website (`claude/optimistic-albattani-0cou9s`)
+- [ ] **Backend security hardening** — reconcile the remaining original security-pass scope and verify live Stripe key rotation _(you · deep)_
+  Historical scope: the 47-file sign-in, abuse-limit and payment pass in PR #124 (`claude/optimistic-albattani-0cou9s`) was recorded as syntax-checked only, with stray cache files to remove and an exposed Stripe key to rotate. Its current disposition and key-rotation proof are not established by this reconciliation.
+  **Delivered 2026-11-05:** [PR #152](https://github.com/adroart/Adrian-Website/pull/152) integrated the Better Auth takeover fix (#150) and authoritative verified-email Stripe customer/order guards (#151), with 43 synthetic handler/account/payment-route checks, typecheck and frontend/Functions builds. It was independently proven live at `e3af7d2a` and remains in live #156 (`0fb16f18`). This closes those bounded source repairs, not the entire historical pass. Historical customer/order ownership was not rewritten; its evidence-led review, actual cross-domain/provider acceptance and any still-unverified key rotation remain open. The shop stays OFF.
 
 ### Adrian-only: the art-sale → atlas sale bridge (corrected 2026-09-08 — the shared-secret step below is stale, do not do it)
 
@@ -113,8 +115,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ### Claude-side: code bugs to fix before shop launch
 
-- [ ] **Configurator bugs** — fix the piece configurator before the shop launches (three bugs) _(agent · deep)_
-  The size/finish configurator has three known bugs that would break the buy flow. Done when all three are fixed and the configurator round-trips into the cart correctly. → Plan: [configurator-fixes.md](todo/plans/configurator-fixes.md)
+- [ ] **Configurator bugs** — resolve the remaining wizard duplication, extracted edition guard and step-scroll behavior before shop launch _(agent · deep)_
+  Supported size/add-on cart serialization is delivered separately below. The extracted `PieceConfigurator` is not mounted in current source; its edition guard in source PR #153 remains future work, not a live purchase bypass or an integrated fix. Wizard consolidation and phone step-transition acceptance remain open; synthetic cart/guard checks do not close this broader item. There is no selectable finish field to restore. → Plan: [configurator-fixes.md](todo/plans/configurator-fixes.md)
 
 ### Claude-side: needs Adrian's content before it can ship
 
@@ -201,8 +203,10 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - [ ] **Save button** — surface the Save-to-Collection button on artwork pages and Store cards _(agent · moderate)_
   The collections feature exists but the save button isn't shown where users browse. Done when the button appears on piece pages and Store cards for signed-in users.
-- [ ] **Configurator sync** — thread configurator state through the cart sync if configured options ship in the cart _(agent · moderate)_
-  This keeps a piece's chosen size and finish attached to it through the synced cart. Done when configured options persist in the cart across devices.
+- [x] **Configurator sync implementation** — preserve supported size and add-on choices through account-cart serialization and hydration _(agent · moderate)_
+  Source [PR #155](https://github.com/adroart/Adrian-Website/pull/155) shipped through [PR #156](https://github.com/adroart/Adrian-Website/pull/156), verified live at `0fb16f18` on 2026-11-05. Existing configurator JSON carries canonical artwork, size and add-on keys; hydration rebuilds current catalog display prices and Stripe references without trusting saved prices. Nine synthetic cart/API/SQLite/checkout-OFF checks and actual desktop/phone CartProvider restoration qualified the implementation. No finish selector was invented. Live checkout remains unperformed; the shop stays OFF.
+- [ ] **Accept configured cart on real signed-in devices** — verify the original cross-device persistence outcome _(agent · moderate)_
+  With the same authorized account signed in on two real devices, confirm supported size/add-on choices and quantity save through the server account cart and restore on the other device and after reload. Synthetic API/SQLite and local CartProvider checks do not complete this acceptance. Keep the shop OFF; a live checkout or payment is neither required nor activated by this check.
 - [ ] **Cities index** — expand the cities index from a fresh GeoNames extract _(agent · quick)_
   The birth-location city picker uses a limited city list, and a fresh extract widens coverage. Done when the cities index is regenerated from current GeoNames data.
 
@@ -266,8 +270,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   This is the post-purchase and inventory machinery a real shop needs as volume grows. Done when the four named capabilities are live.
 - [ ] **Deeper SEO meta** — add per-artwork share images, more structured data, and per-category meta descriptions _(agent · moderate)_
   Richer metadata improves search and social sharing. Done when artworks and categories carry the deeper metadata.
-- [ ] **Quality infra** — add end-to-end tests, error monitoring, and heat mapping _(agent · deep)_
-  This catches regressions and reveals how visitors actually use the site. Done when e2e tests run in CI and monitoring/heatmaps report live.
+- [ ] **Quality infra** — finish the remaining error monitoring and heat-mapping scope _(agent · deep)_
+  The bounded production-build browser CI portion shipped in #154 and is retained in live #156; see its completed Pre-launch row. Monitoring and heatmaps reporting live are not established, so this mixed item stays open. The bounded lane does not replace the broader browser/accessibility acceptance above.
 - [ ] **Headless CMS** — migrate content to a headless CMS when the data file becomes unmaintainable _(agent · deep)_
   `mockData.ts` won't scale forever, and a CMS lets non-devs edit content. Done when content is served from a CMS and the data file is retired.
 - [ ] **Cloudflare Images** — migrate images to Cloudflare Images if outgrowing the Cloudinary free tier _(agent · moderate)_
