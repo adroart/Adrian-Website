@@ -23,7 +23,17 @@ import { stubMeteredMedia } from './shared/media-stub.ts';
 export * from '@playwright/test';
 
 export const test = base.extend({
-  context: async ({ context }, use) => {
+  context: async ({ context }, use, testInfo) => {
+    if (testInfo.config.metadata.localOnly) {
+      const origin = new URL(String(testInfo.project.use.baseURL)).origin;
+      // Installed before the shared media stub, so even absolute media URLs
+      // get the local image/video response. Other external traffic is blocked.
+      await context.route('**/*', route =>
+        new URL(route.request().url()).origin === origin
+          ? route.fallback()
+          : route.abort('blockedbyclient'),
+      );
+    }
     await stubMeteredMedia(context, /\/media\//);
     await use(context);
   },

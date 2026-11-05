@@ -1,0 +1,66 @@
+name: browser smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/browser-smoke.yml'
+      - 'playwright*.ts'
+      - 'tests/production.smoke.ts'
+      - 'tests/purchase-inquiry.spec.ts'
+      - 'tests/fixtures.ts'
+      - 'tests/shared/**'
+      - 'components/**'
+      - 'contexts/**'
+      - 'hooks/**'
+      - 'lib/**'
+      - 'utils/**'
+      - 'data/**'
+      - 'src/**'
+      - 'public/**'
+      - 'functions/**'
+      - 'App.tsx'
+      - 'index.tsx'
+      - 'index.html'
+      - '*.css'
+      - 'types.ts'
+      - 'launchFlags.ts'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'scripts/prerender-meta.ts'
+      - 'scripts/generate-stories.ts'
+      - 'scripts/build-pages-allowance.mjs'
+      - 'package*.json'
+      - '.nvmrc'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    # Playwright 1.59.1 supports 24.04; ubuntu-latest can select unsupported 26.04.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Builds once, then runs four journeys at desktop and mobile widths.
+      # Shared fixtures answer media locally. No provider or production data.
+      - run: npx playwright test --config=playwright.smoke.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-smoke-failure
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
