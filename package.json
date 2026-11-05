@@ -38,7 +38,7 @@
     "@keystatic/core": "^0.5.50",
     "@stripe/stripe-js": "^8.7.0",
     "astronomy-engine": "^2.1.19",
-    "better-auth": "^1.6.18",
+    "better-auth": "^1.6.22",
     "lucide-react": "^0.344.0",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
