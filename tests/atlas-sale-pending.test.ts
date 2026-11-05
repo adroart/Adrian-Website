@@ -24,7 +24,7 @@ import { recordPendingAtlasSale } from '../functions/api/_lib/atlasSale.js';
 const migration = (name: string) =>
   readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8');
 
-const schema = ['001_init.sql', '003_atlas_legacy.sql', '005_atlas_legacy.sql']
+const schema = ['001_init.sql', '003_atlas_legacy.sql', '005_atlas_legacy.sql', '006_better_auth.sql']
   .map(migration)
   .join('\n');
 
@@ -61,6 +61,7 @@ function freshDatabase() {
   const database = new DatabaseSync(':memory:');
   database.exec('PRAGMA foreign_keys = ON;');
   database.exec(schema);
+  database.exec('ALTER TABLE users ADD COLUMN auth_user_id TEXT;');
   return database;
 }
 
