@@ -196,6 +196,23 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
         addToCart(cartProduct);
     };
 
+    if (art.editionSize && (art.editionSold ?? 0) >= art.editionSize) {
+        return (
+            <div className="space-y-4">
+                <div className="w-full py-4 border border-wood-200 text-avail-sold font-label text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center">
+                    Edition closed
+                </div>
+                <Link
+                    to="/inquire"
+                    state={{ piece: art.title, pieceId: art.id }}
+                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                >
+                    Commission a similar piece <ArrowRight size={14} />
+                </Link>
+            </div>
+        );
+    }
+
     if (variants.length === 0) return null;
 
     return (
