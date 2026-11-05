@@ -219,3 +219,63 @@ describe('cross-site login handoff', () => {
     assert.equal(new URL(devRes.headers.get('Location')!).origin, 'http://localhost:2222');
   });
 });
+
+
+// GHSA-qq9h-g4jm-xgf3: proving mailbox ownership must remove access planted
+// before that proof, even when password registration does not require email verification.
+it('revokes the planted password and session when the mailbox owner signs in with an OTP', async () => {
+  const db = freshDb();
+  try {
+    const env = baseEnv(db);
+    const auth = createAuth(env);
+    const email = 'otp-security@example.com';
+    const password = 'test-only-planted-password-123';
+    const request = (path: string, body: unknown) => new Request(`${env.BETTER_AUTH_URL}/api/auth/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const planted = await auth.handler(request('sign-up/email', { name: 'Unverified', email, password }));
+    assert.equal(planted.status, 200);
+    const oldCookie = planted.headers.getSetCookie().map(c => c.split(';')[0]).join('; ');
+    assert.ok(oldCookie);
+    const ownerCookie = await signIn(env, email);
+    assert.ok(ownerCookie);
+    const passwordAttempt = await auth.handler(request('sign-in/email', { email, password }));
+    assert.notEqual(passwordAttempt.status, 200);
+    const oldSession = await auth.handler(new Request(`${env.BETTER_AUTH_URL}/api/auth/get-session`, {
+      headers: { cookie: oldCookie },
+    }));
+    assert.equal(await oldSession.json(), null);
+  } finally {
+    db.close();
+  }
+});
+
+
+it('preserves a previously verified owner password across OTP sign-in', async () => {
+  const db = freshDb();
+  try {
+    const env = baseEnv(db);
+    const auth = createAuth(env);
+    const email = 'verified-owner@example.com';
+    const password = 'test-only-existing-owner-password-123';
+    const request = (path: string, body: unknown) => new Request(`${env.BETTER_AUTH_URL}/api/auth/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const signup = await auth.handler(request('sign-up/email', { name: 'Verified owner', email, password }));
+    assert.equal(signup.status, 200);
+    // Model an existing verified owner, rather than the unverified account
+    // used by the attack above. Production handlers and options stay unchanged.
+    db.prepare('UPDATE user SET emailVerified = 1 WHERE email = ?').run(email);
+    const before = await auth.handler(request('sign-in/email', { email, password }));
+    assert.equal(before.status, 200);
+    await signIn(env, email);
+    const after = await auth.handler(request('sign-in/email', { email, password }));
+    assert.equal(after.status, 200);
+  } finally {
+    db.close();
+  }
+});
