@@ -1,6 +1,6 @@
 # Fix the piece configurator before the shop launches
 
-Three code bugs in the buy-a-piece wizard. None are visible today (the shop is off and requests route to the inquiry page), but all three block the shop launch.
+Remaining wizard work before shop launch. The shop stays off and requests route to the inquiry page. Cart serialization for supported size/add-on choices shipped separately through [PR #156](https://github.com/adroart/Adrian-Website/pull/156), verified live at `0fb16f18` on 2026-11-05; this does not complete the three items below or signed-in cross-device acceptance. There is no selectable finish field in the current wizard.
 
 ## 1. Remove the duplicated wizard between PiecePage and PieceConfigurator
 
@@ -10,7 +10,7 @@ Blocker to handle: `PiecePage`'s sticky mobile bottom bar reads the live total a
 
 ## 2. Add the edition-closed gate to PieceConfigurator
 
-When the shop turns on, a sold-out edition can still be bought through the inline buy wizard, because the extracted `PieceConfigurator` skips the gate that `PiecePage` has. Mirror the sold-out check (`editionSize && (editionSold ?? 0) >= editionSize`) at the top of `PieceConfigurator`.
+The extracted `PieceConfigurator` skips the gate that the mounted `PiecePage` already has, but current source does not import or mount that extracted component. This is a latent source defect, not a demonstrated live purchase bypass. [Source PR #153](https://github.com/adroart/Adrian-Website/pull/153) mirrors the existing sold-out check (`editionSize && (editionSold ?? 0) >= editionSize`) and has synthetic desktop/phone guard checks; it remains unintegrated future work and is excluded from live #156. Preserve the mounted page's existing guard when deciding whether to adopt the extraction.
 
 ## 3. Auto-scroll when the wizard advances from step 1 to step 2
 
