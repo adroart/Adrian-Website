@@ -42,6 +42,8 @@ function d1(database: DatabaseSync, failInsert = false) {
 function database() {
   const db = new DatabaseSync(':memory:');
   db.exec(schema);
+  db.exec(readFileSync(new URL('../migrations/006_better_auth.sql', import.meta.url), 'utf8'));
+  db.exec('ALTER TABLE users ADD COLUMN auth_user_id TEXT;');
   db.prepare(`INSERT INTO orders
     (id, stripe_session_id, email, status, amount_total, currency)
     VALUES (1, 'cs_retry', 'buyer@example.com', 'paid', 1000, 'USD')`).run();

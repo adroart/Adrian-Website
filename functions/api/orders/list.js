@@ -18,6 +18,11 @@ export async function onRequest(context) {
 
   const auth = await requireUser(request, env);
   if (auth instanceof Response) return auth;
+  // Old bridge rows may already hold an email-based association. Do not
+  // expose those orders before the current session proves mailbox ownership.
+  if (auth.user?.emailVerified !== true) {
+    return jsonResponse({ error: 'verified_email_required' }, { status: 403 }, request, env);
+  }
 
   if (!env.DB) return jsonResponse([], { status: 200 }, request, env);
 

@@ -173,9 +173,11 @@ export async function onRequestPost(context) {
       const { verifyRequest } = await import('./_lib/auth.js');
       const { getUserByAuthId } = await import('./_lib/db.js');
       const auth = await verifyRequest(request, env);
-      if (auth) {
+      if (auth?.user?.emailVerified === true) {
         const user = await getUserByAuthId(env.DB, auth.userId);
-        if (user?.stripe_customer_id) stripeCustomerId = user.stripe_customer_id;
+        if (user?.stripe_customer_id && user.email?.trim().toLowerCase() === auth.email?.trim().toLowerCase()) {
+          stripeCustomerId = user.stripe_customer_id;
+        }
       }
     } catch {
       // Authed-checkout is a best-effort enhancement; never block guests.
