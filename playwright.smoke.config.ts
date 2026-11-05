@@ -1,9 +1,13 @@
 import { defineConfig } from '@playwright/test';
 import base from './playwright.config';
 
+// defineConfig appends webServer definitions. Remove the development server so
+// this lane starts and uses only the production preview it owns.
+const { webServer: _developmentServer, ...shared } = base;
+
 // Deliberately separate from the development suite: no flag mutation, no Vite
 // source imports in the browser, and never reuse a potentially stale dev server.
-export default defineConfig(base, {
+export default defineConfig(shared, {
   testMatch: ['production.smoke.ts', 'purchase-inquiry.spec.ts'],
   fullyParallel: false,
   workers: 1,
