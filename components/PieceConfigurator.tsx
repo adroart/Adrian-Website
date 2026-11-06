@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Artwork, SizeVariant, Product } from '../types';
 import { MADE_TO_ORDER_ADD_ONS } from '../data/mockData';
@@ -74,6 +74,11 @@ export interface PieceConfiguratorProps {
  */
 const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize }) => {
     const { addToCart } = useCart();
+    const reviewRef = useRef<HTMLDivElement>(null);
+    const advanceToReview = () => {
+        setConfigStep(2);
+        requestAnimationFrame(() => reviewRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+    };
 
     const variants = useMemo(() => art.sizeVariants ?? art.madeToOrderSizes ?? [], [art]);
 
@@ -100,7 +105,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
     // Step skip: one size or pre-supplied size means there's no choice to make.
     useEffect(() => {
-        if (variants.length <= 1 || initialSize) {
+        if (variants.length <= 1 || variants.some(v => v.size === initialSize)) {
             setConfigStep(2);
         } else {
             setConfigStep(1);
@@ -152,7 +157,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
     const selectedIsInStock = selectedSizeData?.availability === 'IN_STOCK';
 
     const handleAddToCartVariant = () => {
-        if (!selectedSizeData) return;
+        if (!LAUNCH_FLAGS.shopEnabled || (art.editionSize && (art.editionSold ?? 0) >= art.editionSize) || !selectedSizeData) return;
         const isInStock = selectedSizeData.availability === 'IN_STOCK';
         const sizeDisplay = selectedSize.replace('"', ' inch');
         const addOnNames = [
@@ -196,10 +201,27 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
         addToCart(cartProduct);
     };
 
+    if (art.editionSize && (art.editionSold ?? 0) >= art.editionSize) {
+        return (
+            <div className="space-y-4">
+                <div className="w-full py-4 border border-wood-200 text-avail-sold font-label text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center">
+                    Edition closed
+                </div>
+                <Link
+                    to="/inquire"
+                    state={{ piece: art.title, pieceId: art.id }}
+                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                >
+                    Commission a similar piece <ArrowRight size={14} />
+                </Link>
+            </div>
+        );
+    }
+
     if (variants.length === 0) return null;
 
     return (
-        <div className="space-y-0">
+        <div className="space-y-0" data-testid="piece-configurator">
             {/* Step indicator — only shown when there's a real size choice */}
             {variants.length > 1 && (
                 <div className="flex items-center gap-3 mb-6">
@@ -207,7 +229,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                         type="button"
                         onClick={() => setConfigStep(1)}
                         className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors ${
-                            configStep === 1 ? 'text-wood-900' : 'text-wood-500 hover:text-wood-700'
+                            configStep === 1 ? 'text-wood-900' : 'text-wood-700 hover:text-wood-700'
                         }`}
                     >
                         <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
@@ -218,16 +240,16 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                     <span className="flex-1 h-px bg-wood-200" aria-hidden="true" />
                     <button
                         type="button"
-                        onClick={() => setConfigStep(2)}
+                        onClick={advanceToReview}
                         disabled={!selectedSize}
                         className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                            configStep === 2 ? 'text-wood-900' : 'text-wood-500 hover:text-wood-700'
+                            configStep === 2 ? 'text-wood-900' : 'text-wood-700 hover:text-wood-700'
                         }`}
                     >
                         <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
                             configStep === 2 ? 'bg-wood-900 text-paper-50' : 'bg-wood-200 text-wood-700'
                         }`}>2</span>
-                        {hasAnyAddOn ? 'Options & buy' : 'Review & buy'}
+                        {hasAnyAddOn ? 'Options' : 'Review'}
                     </button>
                 </div>
             )}
@@ -235,7 +257,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
             {/* Step 1: size */}
             {configStep === 1 && variants.length > 1 && (
                 <div className="mb-2">
-                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                         Select your size
                     </p>
                     <div className="space-y-2">
@@ -264,7 +286,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                                             }`}>
                                                 {isInStock
                                                     ? `In stock${sizeOption.editionNumber ? ` · #${sizeOption.editionNumber}` : ''}`
-                                                    : 'Made to order · 1 to 3 weeks'}
+                                                    : 'Made to order'}
                                             </span>
                                         </div>
                                     </div>
@@ -286,7 +308,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
                     <button
                         type="button"
-                        onClick={() => setConfigStep(2)}
+                        onClick={advanceToReview}
                         disabled={!selectedSize}
                         className="w-full min-h-[52px] py-4 mt-6 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
@@ -297,7 +319,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
             {/* Step 2: options + total + buy */}
             {configStep === 2 && (
-                <>
+                <div ref={reviewRef} data-testid="configuration-review" className="scroll-mt-24">
                     {selectedSizeData && variants.length > 1 && (
                         <button
                             type="button"
@@ -305,10 +327,10 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                             className="w-full flex items-center justify-between px-4 py-3 mb-6 border border-wood-200 hover:border-wood-400 transition-colors text-left group"
                         >
                             <div>
-                                <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold block">Size</span>
+                                <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-700 font-semibold block">Size</span>
                                 <span className="font-sans text-base text-wood-900">{selectedSizeData.size}</span>
                             </div>
-                            <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-500 font-semibold">
+                            <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
                                 Change
                             </span>
                         </button>
@@ -316,7 +338,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
                     {hasAnyAddOn && (
                         <div className="mb-6">
-                            <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                            <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                                 Add to your piece
                             </p>
                             <div className="space-y-6">
@@ -385,7 +407,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
                     <div className="border-t border-wood-200 pt-6 pb-6">
                         <div className="flex items-end justify-between mb-3">
-                            <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
+                            <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">Total</span>
                             <span className="font-serif text-3xl text-wood-900 font-medium">
                                 {formatPrice(mtoTotal)}
                             </span>
@@ -394,12 +416,10 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                             {selectedIsInStock ? (
                                 <>
                                     <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-ready rounded-sm mr-1">In stock</span>
-                                    {' · '}Ships in 2 to 3 weeks
                                 </>
                             ) : (
                                 <>
                                     <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-order rounded-sm mr-1">Made to order</span>
-                                    {' · '}1 to 3 weeks
                                 </>
                             )}
                         </div>
@@ -441,17 +461,17 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                     )}
 
                     <p className="text-center font-sans text-[13px] text-wood-600 mt-4 leading-[1.55] max-w-[40ch] mx-auto">
-                        Shipping handled separately based on destination. You'll receive shipping details and a separate invoice within 48 hours of purchase.
+                        Shipping and lead time will be confirmed for your piece and destination before purchase.
                     </p>
 
                     <Link
                         to="/inquire"
                         state={{ piece: art.title, pieceId: art.id }}
-                        className="block text-center font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mt-4 transition-colors"
+                        className="block text-center font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-4 transition-colors"
                     >
                         Or commission a similar piece
                     </Link>
-                </>
+                </div>
             )}
         </div>
     );
