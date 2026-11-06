@@ -1,17 +1,17 @@
-# Fix the piece configurator before the shop launches
+# Piece configurator adoption — completed 6 November 2026
 
-Remaining wizard work before shop launch. The shop stays off and requests route to the inquiry page. Cart serialization for supported size/add-on choices shipped separately through [PR #156](https://github.com/adroart/Adrian-Website/pull/156), verified live at `0fb16f18` on 2026-11-05; this does not complete the three items below or signed-in cross-device acceptance. There is no selectable finish field in the current wizard.
+[PR #158](https://github.com/adroart/Adrian-Website/pull/158), reviewed head `6b7b940a9e112227ad0cdd0c76930a5649170403`, is verified live through merge `34ffd2b1c29aca480bc13ce688d075fb505729c6`, deployment `850b8580-b476-4456-99ac-4526e6b52c08`. Immutable and public-site bytes, exact release marker and protected account-route revision agree.
 
-## 1. Remove the duplicated wizard between PiecePage and PieceConfigurator
+## One wizard
 
-There are two copies of the same wizard state, pricing math, helpers, and buy handler. Any pricing change means editing both. Fix: delete the wizard JSX and state from `PiecePage` and render `<PieceConfigurator art={art} initialSize={preferredSize} />` instead.
+PiecePage now mounts `PieceConfigurator`. Removed its duplicate variant selection, add-on state, pricing and cart handler. The mobile variant bar shows the catalog starting price and opens View options; selected configuration stays with the wizard and reaches the inquiry. Supported cart serialization shipped separately through #156.
 
-Blocker to handle: `PiecePage`'s sticky mobile bottom bar reads the live total and selected size from local state. Either lift state up (the configurator becomes controlled and `PiecePage` owns state), or simplify the sticky bar to "From $X · View options" plus a scroll-to-purchase.
+## Edition guard
 
-## 2. Add the edition-closed gate to PieceConfigurator
+Adopted the saved #153 extracted-component guard while retaining the page's closed-edition path. An edition at or above its size offers a similar-piece inquiry rather than configuration. This closes the previous unmounted-source residual; it does not assert a historical live bypass.
 
-The extracted `PieceConfigurator` skips the gate that the mounted `PiecePage` already has, but current source does not import or mount that extracted component. This is a latent source defect, not a demonstrated live purchase bypass. [Source PR #153](https://github.com/adroart/Adrian-Website/pull/153) mirrors the existing sold-out check (`editionSize && (editionSold ?? 0) >= editionSize`) and has synthetic desktop/phone guard checks; it remains unintegrated future work and is excluded from live #156. Preserve the mounted page's existing guard when deciding whether to adopt the extraction.
+## Phone review navigation
 
-## 3. Auto-scroll when the wizard advances from step 1 to step 2
+Explicit Continue/review actions scroll the new review section into view and respect reduced motion. A supplied initial size skips selection only when it exists in the catalog. Desktop and phone journeys verify selected58cm+crystals, catalog total$1,141 and the same configuration on the inquiry form. Existing failed-send retry remains intact.
 
-On short phones, "Continue to options" leaves the new step below the fold, in both the buy sheet and `PiecePage`. Fix: when the step becomes 2, scroll the step-2 container (or nearest scrollable ancestor) into view smoothly.
+The candidate passed1,349 unit checks, typecheck/build and10 production-build browser journeys. Checkout and Living Legacy remain off. Fixed shipping/lead-time promises were removed; actual logistics and publication remain owner decisions. There is no selectable finish field and no new claim of signed-in cross-device purchase, live payment, physical delivery or collector ownership acceptance.
