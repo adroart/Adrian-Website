@@ -8,7 +8,7 @@ const { webServer: _developmentServer, ...shared } = base;
 // Deliberately separate from the development suite: no flag mutation, no Vite
 // source imports in the browser, and never reuse a potentially stale dev server.
 export default defineConfig(shared, {
-  testMatch: ['production.smoke.ts', 'purchase-inquiry.spec.ts'],
+  testMatch: ['production.smoke.ts', 'purchase-inquiry.spec.ts', 'configurator-integration.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: 0,
