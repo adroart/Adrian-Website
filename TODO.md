@@ -115,8 +115,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ### Claude-side: code bugs to fix before shop launch
 
-- [ ] **Configurator bugs** — resolve the remaining wizard duplication, extracted edition guard and step-scroll behavior before shop launch _(agent · deep)_
-  Supported size/add-on cart serialization is delivered separately below. The extracted `PieceConfigurator` is not mounted in current source; its edition guard in source PR #153 remains future work, not a live purchase bypass or an integrated fix. Wizard consolidation and phone step-transition acceptance remain open; synthetic cart/guard checks do not close this broader item. There is no selectable finish field to restore. → Plan: [configurator-fixes.md](todo/plans/configurator-fixes.md)
+- [x] **Configurator adoption** — one inquiry-only wizard, edition guard and phone review-step navigation _(agent · deep)_
+  [PR #158](https://github.com/adroart/Adrian-Website/pull/158) is verified live at `34ffd2b1` on 2026-11-06. PiecePage mounts the saved extracted configurator with the #153 edition-closed guard; the mobile bar opens View options, and explicit review steps scroll into view. Actual desktop/phone production-build journeys carry size/add-ons/price into the inquiry and preserve failed-send retry. Checkout stays off; shipping/lead time require actual piece/destination confirmation. Cart serialization remains separately delivered through #156. No selectable finish field or signed-in cross-device purchase acceptance is implied. → Closure: [configurator-fixes.md](todo/plans/configurator-fixes.md)
 
 ### Claude-side: needs Adrian's content before it can ship
 
