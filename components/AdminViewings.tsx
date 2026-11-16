@@ -47,7 +47,6 @@ const SPHERE_LABELS: Record<SphereKey, string> = {
 const inputClass =
   'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
-const ENGINE_BASE_DEFAULT = 'https://mandalacodes.com';
 
 /** A single editable card on the chart board. */
 const BoardCard: React.FC<{
@@ -160,7 +159,6 @@ const AdminViewings: React.FC = () => {
   const [chart, setChart] = useState<Record<SphereKey, GateLine>>(
     () => Object.fromEntries(SPHERE_KEYS.map((k) => [k, { gate: 0, line: 1 }])) as Record<SphereKey, GateLine>,
   );
-  const [engineBase, setEngineBase] = useState(ENGINE_BASE_DEFAULT);
 
   // Board state
   const [pieces, setPieces] = useState<ViewingPiece[]>([]);
@@ -331,7 +329,7 @@ const AdminViewings: React.FC = () => {
                 SPHERE_KEYS.filter((k) => chart[k].gate > 0).map((k) => [k, chart[k]]),
               ),
             };
-      const result = await fetchChart(engineBase, body);
+      const result = await fetchChart(body);
       const next = result.spheres.map(sphereToPiece);
       setPieces(next);
       setSphereByCode(Object.fromEntries(result.spheres.map((s) => [s.gate, s.sphere])));
@@ -515,7 +513,6 @@ const AdminViewings: React.FC = () => {
               <button type="button" onClick={compute} disabled={loading} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors">
                 {loading ? 'Computing…' : 'Compute the chart'}
               </button>
-              <input value={engineBase} onChange={(e) => setEngineBase(e.target.value)} className={`${inputClass} max-w-xs text-xs`} title="Recommendation engine base URL" />
               {error && <span className="font-sans text-sm text-red-700">{error}</span>}
             </div>
           </div>

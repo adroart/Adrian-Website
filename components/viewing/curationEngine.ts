@@ -57,24 +57,18 @@ export const SPHERE_KEYS = [
 export type SphereKey = (typeof SPHERE_KEYS)[number];
 
 /**
- * Call the recommendation engine. Returns the spheres (meaning only) or throws.
- * baseUrl lets the desk hit production Mandala Codes or a local dev instance.
+ * Call the same-origin admin relay. Returns the spheres (meaning only) or throws.
  */
 export async function fetchChart(
-  baseUrl: string,
   body: { clientName?: string; profile?: Record<string, GateLine>; utcBirth?: string },
-  token?: string,
 ): Promise<EngineResult> {
-  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/oracle/recommendation`, {
+  const res = await fetch('/api/admin/viewings/recommendation', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || `engine error ${res.status}`);
+  if (!res.ok) throw new Error(data?.error || `Recommendation unavailable (${res.status}).`);
   const spheres: EngineSphere[] = (data.pieces || []).map((p: any) => ({
     gate: p.gate,
     sphere: p.sphere,
