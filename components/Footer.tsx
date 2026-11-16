@@ -166,7 +166,7 @@ const Footer: React.FC = () => {
                         <div className="mt-6 flex items-center gap-2.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse-slow"></span>
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold text-wood-200">
-                                Currently, taking commissions for Spring 2026
+                                For commissions and collaborations, get in touch.
                             </span>
                         </div>
                     </div>
