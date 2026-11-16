@@ -9,6 +9,10 @@ last_reviewed: 2026-08-28
 
 # Adrian Rasmussen Art Website — personal portfolio + shop
 
+## Handoffs (standing rule, global)
+
+**Never give Adrian a zip file for a handoff.** A handoff is plain files saved on GitHub, given to him as links he can open. No archive as the handoff, and none as a "second copy" either. (Adrian, 2026-11-16.)
+
 ## What this is
 Personal art website for Adrian Rasmussen, a multidisciplinary artist. It showcases creations, writings, a shop, commission inquiries, customer accounts, and the canonical artwork registry. Catalog content is compiled from local data. Cloudflare Pages Functions, D1, and R2 provide the backend.
 
