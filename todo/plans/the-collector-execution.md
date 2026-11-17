@@ -479,3 +479,10 @@ stage.
 branch before the Phase 3.1 contributor-access work landed; this unified branch now carries both.
 The contributor-access acceptance (2026-08-11 entry) and the admin workspace integration are merged
 into one line of history. Integration of the master-defined surfaces continues from here.
+
+**2026-11-17: desktop Story preview.** Adrian approved a centered 520 px reading column
+when opening The story from a piece in the full desktop preview. Typecheck passed. Chromium
+confirmed the centered column and full background at 1180 and 1440 px. Before-and-after checks
+also confirmed the phone Story, desktop review card, piece screen, History, Dreams, and Piece
+information retained their existing layout. The next review can use the local preview. The
+public preview still needs an authorized publication to show this change.

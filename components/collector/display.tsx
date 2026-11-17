@@ -105,6 +105,11 @@ export const CollectorDisplay: React.FC = () => (
         --cc-pad-desk: 1;
       }
 
+      /* Story opened from the piece keeps the piece's outer frame. */
+      .collector-frame[data-frame="full"] [data-room="story"] {
+        --cc-measure: ${DESK_MEASURE}px;
+      }
+
       /* The piece page, at the size it was drawn. Applies in BOTH frames:
          in the card the frame itself becomes 1280 by 1020; in full the
          ground fills the screen and the content caps at the drawn width. */

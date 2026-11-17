@@ -199,7 +199,7 @@ export const PiecePage: React.FC<Props> = ({
      and closing returns to the page. Nothing navigates. */
   if (room) {
     return (
-      <div className={roomFromOrbit ? 'collector-room-enter' : undefined} style={{ position: 'absolute', inset: 0 }}>
+      <div data-room={room} className={roomFromOrbit ? 'collector-room-enter' : undefined} style={{ position: 'absolute', inset: 0 }}>
         <Room room={room} onClose={closeRoom} onWalk={onWalk} onOpenRoom={setRoom} live={live} />
       </div>
     );
