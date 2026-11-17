@@ -3,12 +3,14 @@ import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { LAUNCH_FLAGS } from '../launchFlags';
 import { img as cldImg } from '../utils/media';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
+import ArtImage from './ArtImage';
+import { hasWhitePhotoBackdrop } from './gallery/galleryContent';
 import PieceConfigurator from './PieceConfigurator';
 import Breadcrumb, { type Crumb } from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
@@ -87,42 +89,6 @@ function useRecentlyViewed(currentId: string): string[] {
     }, [currentId]);
 }
 
-// More from this series - compact tile grid
-const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({ art, seriesLink }) => {
-    if (!art.series) return null;
-    const seriesPieces = FULL_ARCHIVE.filter(a => a.id !== art.id && a.series === art.series).slice(0, 3);
-    if (seriesPieces.length === 0) return null;
-    return (
-        <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 md:mt-32">
-            <div className="border-t border-wood-200 pt-12 mb-10">
-                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">
-                    More from this series
-                </span>
-            </div>
-            <div className="columns-2 md:columns-3 gap-4 md:gap-6 card-stagger">
-                {seriesPieces.map(piece => (
-                    <GalleryTileCard
-                        key={piece.id}
-                        art={piece}
-                        showDetails
-                        subtitleOverride={piece.series ?? piece.category}
-                    />
-                ))}
-            </div>
-            {seriesLink && (
-                <div className="mt-10 text-center">
-                    <Link
-                        to={seriesLink}
-                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border-b border-bronze-300 pb-1 transition-colors"
-                    >
-                        View all {art.series} <ArrowRight size={12} />
-                    </Link>
-                </div>
-            )}
-        </div>
-    );
-};
-
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -148,9 +114,6 @@ const PiecePage: React.FC = () => {
     // Lightbox state
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
-
-    // Series description collapsible
-    const [seriesDescExpanded, setSeriesDescExpanded] = useState(false);
 
     // Sticky bottom bar visibility: hide when purchase section is in view
     const purchaseRef = useRef<HTMLDivElement>(null);
@@ -192,7 +155,6 @@ const PiecePage: React.FC = () => {
         setActiveImageIndex(0);
         setRtsAdded(false);
         setLightboxOpen(false);
-        setSeriesDescExpanded(false);
     }, [id]);
 
     // Resolve variants: prefer sizeVariants, fall back to legacy madeToOrderSizes
@@ -252,7 +214,17 @@ const PiecePage: React.FC = () => {
             );
             related.push(...fromCategory);
         }
-        return related.slice(0, 8);
+        if (art.series === 'Universal Language') {
+            const number = ulCardNumber(art.coverImage);
+            if (number !== null) {
+                related.sort((left, right) => {
+                    const leftDistance = Math.abs((ulCardNumber(left.coverImage) ?? Infinity) - number);
+                    const rightDistance = Math.abs((ulCardNumber(right.coverImage) ?? Infinity) - number);
+                    return leftDistance - rightDistance;
+                });
+            }
+        }
+        return related.slice(0, 4);
     }, [art]);
 
     const seriesData = useMemo(() => {
@@ -424,7 +396,7 @@ const PiecePage: React.FC = () => {
     ].filter(Boolean) as { label: string; value: string }[];
 
     return (
-        <section className="bg-paper-50 min-h-screen pt-[101px] md:pt-[66px] pb-24 md:pb-32 animate-fade-in">
+        <section className="public-gallery gallery-piece-page min-h-screen">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(artworkSchema) }}
@@ -437,52 +409,41 @@ const PiecePage: React.FC = () => {
             {/* Return to oracle reading — shown only when the reader arrived
                 via a card's BuySheet. One tap takes them back to the same
                 card with their active system preserved (?system=...). */}
-            {cardUrl && (
-                <div className="bg-paper-100 border-b border-wood-200/60">
+            {cardUrl && oracleOrigin && (
+                <div className="bg-paper-100 border-b border-wood-200/60 mb-3">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 py-3 flex items-center justify-between gap-4">
                         <a
-                            href={oracleOrigin || cardUrl}
+                            href={oracleOrigin}
                             className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.22em] text-bronze-700 hover:text-bronze-800 transition-colors"
                         >
-                            {oracleOrigin ? 'Return to your reading on Mandala Codes' : 'Explore this piece’s companion card on Mandala Codes'}
+                            Return to your reading on Mandala Codes
                         </a>
                     </div>
                 </div>
             )}
 
-            {/* Breadcrumb - Mobile: simplified (← Category), Desktop: full path */}
-            {/* Mobile breadcrumb */}
-            <div className="md:hidden max-w-7xl mx-auto px-6 py-5 border-b border-wood-100">
-                <button
-                    onClick={() => {
-                        if (window.history.length <= 1) {
-                            navigate(
-                                isMultidimensional
-                                    ? (seriesLink ?? '/creations/multidimensional-art')
-                                    : (art.category ? `/creations?category=${encodeURIComponent(art.category)}` : '/creations')
-                            );
-                        } else {
-                            navigate(-1);
-                        }
-                    }}
-                    className="min-h-[44px] inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold hover:text-wood-900 transition-colors"
-                >
-                    <ArrowRight size={14} className="rotate-180" />
-                    {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
-                </button>
+            <div className="gallery-width">
+                <Breadcrumb className="gallery-crumb" crumbs={breadcrumbCrumbs} />
             </div>
 
-            {/* Desktop breadcrumb - full path */}
-            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6">
-                <Breadcrumb crumbs={breadcrumbCrumbs} />
-            </div>
+            <div className="gallery-width gallery-piece">
+                <header className="gallery-piece-heading">
+                    {art.series && (
+                        <Link
+                            to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
+                            className="gallery-piece-series"
+                        >
+                            {art.series}{isUL && ulCardNumber(art.coverImage) !== null && ` · No. ${ulCardNumber(art.coverImage)}`}
+                        </Link>
+                    )}
+                    <h1 className="gallery-title" aria-label={art.title}>{isUL ? art.title.replace(/\s*-\s*\d+$/, '') : art.title}</h1>
+                </header>
 
-            {/* Main Content */}
-            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 lg:gap-16">
-                {/* Images */}
-                <div className="space-y-4">
-                    <div
-                        className="relative w-full bg-wood-100 overflow-hidden cursor-zoom-in"
+                <div className="gallery-piece-photographs">
+                    <button
+                        type="button"
+                        className={`gallery-mat gallery-piece-stage block w-full cursor-zoom-in${hasWhitePhotoBackdrop(allImages[activeImageIndex]) ? " gallery-mat-white-backdrop" : ""}`}
+                        aria-label="Enlarge artwork photograph"
                         onClick={() => {
                             setLightboxIndex(activeImageIndex);
                             setLightboxOpen(true);
@@ -499,15 +460,18 @@ const PiecePage: React.FC = () => {
                             }
                         }}
                     >
-                        <img
-                            src={cldImg(allImages[activeImageIndex], { w: 1800 })}
-                            className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
+                        <ArtImage
+                            key={allImages[activeImageIndex]}
+                            publicId={allImages[activeImageIndex]}
+                            variant="gallery"
+                            sizes="(max-width: 767px) 100vw, 58vw"
+                            className="pointer-events-none"
                             alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
-                    </div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 text-center">
-                        <span className="md:hidden">Tap image to enlarge</span>
-                        <span className="hidden md:inline">Click the image to view it full size</span>
+                    </button>
+                    <p className="gallery-caption gallery-note">
+                        <span>{allImages.length > 1 ? `View ${activeImageIndex + 1} of ${allImages.length}` : 'Artwork photograph'}</span>
+                        <span>Enlarge image</span>
                     </p>
 
                     {allImages.length > 1 && (
@@ -519,7 +483,7 @@ const PiecePage: React.FC = () => {
                                     aria-label={`View image ${i + 1}`}
                                     className={`rounded-full transition-all duration-300 ${
                                         i === activeImageIndex
-                                            ? 'w-5 h-2.5 bg-bronze-500'
+                                            ? 'w-5 h-2.5 bg-bronze-600'
                                             : 'w-2.5 h-2.5 bg-wood-300 hover:bg-wood-500'
                                     }`}
                                 />
@@ -528,7 +492,7 @@ const PiecePage: React.FC = () => {
                     )}
 
                     {allImages.length > 1 && (
-                        <div className="hidden lg:grid grid-cols-5 gap-2">
+                        <div className="hidden lg:grid grid-cols-5 gap-2 mt-3">
                             {allImages.map((img, i) => (
                                 <button
                                     key={i}
@@ -542,7 +506,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     <img
                                         src={cldImg(img, { w: 150, h: 150 })}
-                                        className="w-full aspect-square object-cover"
+                                        className="w-full aspect-square object-contain"
                                         alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : `${art.title} view ${i + 1}`}
                                     />
                                 </button>
@@ -551,63 +515,26 @@ const PiecePage: React.FC = () => {
                     )}
                 </div>
 
-                {/* Details */}
-                <div className="lg:pt-8 lg:sticky lg:top-28 lg:self-start">
-                    <div className="mb-6 md:mb-8">
-                        {art.series && (seriesLink || seriesSlug) && (
-                            <Link
-                                to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
-                                className="flex items-center gap-2 text-bronze-600 font-label text-xs uppercase tracking-[0.2em] font-semibold mb-5 hover:underline py-1"
-                            >
-                                {art.series} Series <ArrowUpRight size={12} />
-                            </Link>
-                        )}
-                        <div className="flex items-start justify-between gap-3 mb-6">
-                            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-wood-900 leading-[1.1] font-medium">
-                                {art.title}
-                            </h1>
-                            <div className="shrink-0 mt-1 flex flex-col items-end gap-2">
-                                <button
-                                    onClick={handleShare}
-                                    className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
-                                    aria-label="Share this piece"
-                                >
-                                    {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
-                                </button>
-                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" variant="inline" />
-                            </div>
-                        </div>
-
-                        {/* Mobile: stacked labeled metadata rows */}
-                        <div className="md:hidden bg-wood-50/40 border border-wood-100 p-4 space-y-3">
-                            {metadataRows.map(row => (
-                                <div key={row.label} className="flex items-baseline gap-3">
-                                    <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-600 font-semibold shrink-0">{row.label}</span>
-                                    <span className="flex-1 border-b border-dotted border-wood-200 translate-y-[-3px]"></span>
-                                    <span className="font-sans text-base text-wood-700 text-right shrink-0">{row.value}</span>
-                                </div>
-                            ))}
-                            {editionText && !hasVariants && (
-                                <div className="pt-1.5 mt-1 border-t border-wood-100">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">{editionText}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Desktop: segmented metadata bar */}
-                        <div className="hidden md:block">
-                            <div className="flex items-center divide-x divide-wood-200 bg-wood-50/60 border border-wood-100 py-3">
-                                {metadataRows.map((row, i) => (
-                                    <div key={row.label} className={`px-5 ${i === 0 ? 'pl-5' : ''}`}>
-                                        <span className="block font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 font-semibold mb-0.5">{row.label}</span>
-                                        <span className="block font-sans text-base text-wood-800">{row.value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            {editionText && !hasVariants && (
-                                <p className="font-sans text-base text-bronze-600 mt-3">{editionText}</p>
-                            )}
-                        </div>
+                <div className="gallery-piece-details">
+                    <dl className="gallery-piece-facts">
+                        {metadataRows.map(row => (
+                            <React.Fragment key={row.label}>
+                                <dt>{row.label}</dt><dd>{row.value}</dd>
+                            </React.Fragment>
+                        ))}
+                    </dl>
+                    {editionText && !hasVariants && (
+                        <p className="gallery-note mt-2">{editionText}</p>
+                    )}
+                    <div className="gallery-piece-tools">
+                        <button
+                            onClick={handleShare}
+                            className="gallery-action"
+                            aria-label="Share this piece"
+                        >
+                            {copied ? 'Copied' : 'Share'}
+                        </button>
+                        <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" variant="inline" />
                     </div>
 
                     <div className="mb-8">
@@ -616,26 +543,8 @@ const PiecePage: React.FC = () => {
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                         </div>
 
-                        {art.seriesDescription && (
-                            <div className="mt-6 border-t border-wood-100 pt-4">
-                                <button
-                                    onClick={() => setSeriesDescExpanded(v => !v)}
-                                    className="flex items-center justify-between w-full text-left group py-2 -my-2"
-                                    aria-expanded={seriesDescExpanded}
-                                >
-                                    <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
-                                        About the {art.series ?? 'Series'}
-                                    </span>
-                                    <span className="font-label text-[11px] text-wood-600 font-semibold transition-all duration-200">
-                                        {seriesDescExpanded ? 'Less' : 'More'}
-                                    </span>
-                                </button>
-                                {seriesDescExpanded && (
-                                    <div className="mt-4 font-sans text-wood-600 leading-[1.8] text-base max-w-[62ch] animate-fade-in">
-                                        <p>{art.seriesDescription}</p>
-                                    </div>
-                                )}
-                            </div>
+                        {art.seriesDescription && seriesLink && (
+                            <Link to={seriesLink} className="gallery-action mt-2">About {art.series ?? 'the series'}</Link>
                         )}
                     </div>
 
@@ -707,6 +616,7 @@ const PiecePage: React.FC = () => {
                                     state={{
                                         piece: art.title,
                                         pieceId: art.id,
+
                                         mode: 'purchase',
                                         price: art.price != null ? formatPrice(art.price) : '',
                                         availability: 'Ready to ship',
@@ -739,6 +649,7 @@ const PiecePage: React.FC = () => {
                                     state={{
                                         piece: art.title,
                                         pieceId: art.id,
+
                                         mode: 'purchase',
                                         price: art.price != null ? `From ${formatPrice(art.price)}` : '',
                                         availability: 'Made to order',
@@ -789,6 +700,12 @@ const PiecePage: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    {cardUrl && !oracleOrigin && (
+                        <a href={cardUrl} className="gallery-action">
+                            Explore this piece’s companion card on Mandala Codes
+                        </a>
+                    )}
 
                     {/* Category label */}
                     <div className="mt-8 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
@@ -854,6 +771,7 @@ const PiecePage: React.FC = () => {
                             state={{
                                 piece: art.title,
                                 pieceId: art.id,
+
                                 mode: 'purchase',
                                 price: art.price != null ? formatPrice(art.price) : '',
                                 availability: art.availability === 'READY_TO_SHIP' ? 'Ready to ship' : 'Made to order',
@@ -866,9 +784,6 @@ const PiecePage: React.FC = () => {
                 </div>
             )}
 
-            {/* More from this series - compact tile grid, series pieces only */}
-            <MoreFromSeries art={art} seriesLink={seriesLink} />
-
             {/* Recently Viewed */}
             {recentPieces.length > 0 && (
                 <div className="max-w-7xl mx-auto px-6 md:px-12 mt-16 md:mt-24">
@@ -877,7 +792,7 @@ const PiecePage: React.FC = () => {
                             Recently Viewed
                         </span>
                     </div>
-                    <div className="columns-2 md:columns-4 gap-4 md:gap-6 card-stagger">
+                    <div className="gallery-grid">
                         {recentPieces.map(piece => (
                             <GalleryTileCard key={piece.id} art={piece} showDetails subtitleOverride={piece.series ?? piece.category} />
                         ))}
@@ -911,46 +826,9 @@ const PiecePage: React.FC = () => {
                                 : 'You may also be drawn to these pieces'}
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-10 card-stagger">
-                        {relatedPieces.map((related) => (
-                            <Link
-                                key={related.id}
-                                to={piecePath(related)}
-                                className="group"
-                            >
-                                <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">
-                                    <img
-                                        src={cldImg(related.coverImage, { w: 600 })}
-                                        alt={`${related.title} by Adrian Rasmussen`}
-                                        loading="lazy"
-                                        className={`w-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 ${related.availability === 'SOLD' ? 'opacity-60' : ''}`}
-                                    />
-                                    {related.availability === 'SOLD' && (
-                                        <div className="absolute inset-0 bg-paper-50/20 pointer-events-none" />
-                                    )}
-                                </div>
-                                <div className="mt-3 md:mt-4">
-                                    <h4 className="font-sans text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
-                                        {related.title}
-                                    </h4>
-                                    {!art.series && (
-                                        <p className="font-label text-[11px] md:text-[12px] uppercase tracking-[0.1em] text-wood-600 font-semibold mt-1.5 leading-none">
-                                            {related.category}
-                                        </p>
-                                    )}
-                                    <span className={`inline-block mt-2 px-2 py-0.5 font-label text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold rounded-sm ${
-                                        related.availability === 'SOLD'
-                                            ? 'bg-wood-100 text-avail-sold'
-                                            : related.availability === 'READY_TO_SHIP'
-                                            ? 'bg-wood-100 text-avail-ready'
-                                            : 'bg-wood-100 text-avail-order'
-                                    }`}>
-                                        {related.availability === 'SOLD' && 'Sold'}
-                                        {related.availability === 'READY_TO_SHIP' && 'Ready to ship'}
-                                        {related.availability === 'MADE_TO_ORDER' && 'Made to order'}
-                                    </span>
-                                </div>
-                            </Link>
+                    <div className="gallery-grid">
+                        {relatedPieces.map(related => (
+                            <GalleryTileCard key={related.id} art={related} showDetails />
                         ))}
                     </div>
 
@@ -981,7 +859,7 @@ const PiecePage: React.FC = () => {
             {/* Image Lightbox */}
             {lightboxOpen && (
                 <VisualLightbox
-                    images={allImages.map(i => cldImg(i, { w: 1800 }))}
+                    images={allImages.map(id => cldImg(id, hasWhitePhotoBackdrop(id) ? {} : { w: 1800 }))}
                     initialIndex={lightboxIndex}
                     onClose={() => setLightboxOpen(false)}
                 />

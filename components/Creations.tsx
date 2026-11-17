@@ -1,15 +1,16 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, ArrowRight, X } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
+import VisualLightbox from './VisualLightbox';
 import { img } from '../utils/media';
 import BackToTop from './shared/BackToTop';
 import { Artwork, Collection } from '../types';
-import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS, JEWELRY_GALLERY } from '../data/mockData';
+import { FULL_ARCHIVE, COLLECTIONS, JEWELRY_GALLERY } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
-import { formatPrice } from '../utils/formatPrice';
-import { LAUNCH_FLAGS } from '../launchFlags';
+import { GalleryPhoto, SeriesEntrances } from './gallery/GalleryDisplay';
+import { artworkById, artworkSeries } from './gallery/galleryContent';
 import { piecePath } from '../utils/pieceSlug';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -88,89 +89,6 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-/**
- * One tile in the hero category grid.
- * Renders as <Link> when a route exists, or as <button> for inline filters.
- * Fully keyboard-accessible in both cases.
- */
-const CreationCategoryCard: React.FC<{
-    label: string;
-    desc: string;
-    onClick: () => void;
-    link?: string;
-    image: string;
-    video?: string;
-}> = ({ label, desc, onClick, link, image, video }) => {
-    const inner = (
-        <>
-            {/* Image or video */}
-            <div className="overflow-hidden aspect-square bg-wood-100">
-                {video ? (
-                    <video
-                        src={video}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover scale-[1.15]"
-                    />
-                ) : (
-                    <ArtImage
-                        publicId={image}
-                        variant="tile"
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        width={800}
-                        height={800}
-                    />
-                )}
-            </div>
-
-            {/* Title - snug under the photo */}
-            <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
-                <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
-                    {label}
-                </h2>
-                {/* Two lines, and the room for both reserved so the four tiles stay
-                    level. Clamped to one, "Wearable pieces and talismans" lost half
-                    of itself on a phone: it needs 46px and was given 23. */}
-                <p className="font-sans text-sm text-wood-700 font-light mt-1 leading-relaxed line-clamp-2 min-h-[2.9em]
-                              sm:opacity-70 sm:group-hover:opacity-100
-                              transition-opacity duration-500 ease-out">
-                    {desc}
-                </p>
-            </div>
-        </>
-    );
-
-    if (link) {
-        return (
-            <Link
-                to={link}
-                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 touch-active"
-                aria-label={`Explore ${label}: ${desc}`}
-            >
-                {inner}
-            </Link>
-        );
-    }
-
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 touch-active"
-            aria-label={`Browse ${label}: ${desc}`}
-        >
-            {inner}
-        </button>
-    );
-};
-
-/**
- * A collection card - uses <button> for proper semantics and keyboard access.
- */
 const CollectionCard: React.FC<{
     collection: Collection;
     pieces: Artwork[];
@@ -248,73 +166,6 @@ const SortDropdown: React.FC<{
     </div>
 );
 
-// ─── Available Now Section ────────────────────────────────────────────────────
-
-const AvailableNowSection: React.FC = () => {
-    const readyToShip = useMemo(
-        () => FULL_ARCHIVE.filter(a => a.availability === 'READY_TO_SHIP').slice(0, 6),
-        []
-    );
-
-    if (readyToShip.length === 0) return null;
-
-    return (
-        <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
-            <div className="border-t border-wood-200 pt-14">
-                <div className="flex justify-between items-end mb-8">
-                    <div>
-                        <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Ready to Ship</span>
-                        <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">Available Now</h2>
-                        <p className="font-sans text-base text-wood-700 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
-                    </div>
-                    {LAUNCH_FLAGS.shopEnabled && (
-                        <Link
-                            to="/shop"
-                            className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2"
-                        >
-                            See all in the shop <ArrowRight size={14} />
-                        </Link>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {readyToShip.map(piece => (
-                        <Link key={piece.id} to={piecePath(piece)} className="group">
-                            <div className="overflow-hidden aspect-square mb-3">
-                                <ArtImage
-                                    publicId={piece.coverImage}
-                                    alt={piece.title}
-                                    variant="tile"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <p className="font-sans text-sm text-wood-800 font-medium group-hover:text-bronze-600 transition-colors leading-snug">{piece.title}</p>
-                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 mt-1">{piece.series || piece.category}</p>
-                            {/* These six are the finished pieces a visitor can have now.
-                                Showing everything except the price made the most
-                                purchase-ready row on the site the least informative. */}
-                            {piece.price != null && (
-                                <p className="font-sans text-sm text-wood-900 font-medium mt-1">{formatPrice(piece.price)}</p>
-                            )}
-                        </Link>
-                    ))}
-                </div>
-
-                {LAUNCH_FLAGS.shopEnabled && (
-                    <div className="mt-8 text-center md:hidden">
-                        <Link
-                            to="/shop"
-                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold"
-                        >
-                            See all in the shop →
-                        </Link>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const Creations: React.FC = () => {
@@ -322,13 +173,34 @@ const Creations: React.FC = () => {
 
     // Category is stored in the URL as ?category=Jewelry so it's shareable + bookmarkable
     const filter = searchParams.get('category');
-    const [showAvailableOnly, setShowAvailableOnly] = useState(false);
+    const showAvailableOnly = searchParams.get('available') === '1';
+    const archiveOnly = searchParams.get('view') === 'archive' || showAvailableOnly;
+    const isCuratedEntry = !filter && !archiveOnly;
+    const galleryLead = artworkById('UL-100');
+    const setShowAvailableOnly = (value: boolean) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (value) {
+                next.set('view', 'archive');
+                next.set('available', '1');
+            } else {
+                next.delete('available');
+            }
+            return next;
+        });
+    };
+    const toggleAvailable = () => {
+        setShowAvailableOnly(!showAvailableOnly);
+        if (isCuratedEntry) window.scrollTo(0, 0);
+    };
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
     const [sort, setSort] = useState<SortOption>('default');
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const [query, setQuery] = useState('');
 
     // Jewelry gallery lightbox
+    const [failedJewelryImages, setFailedJewelryImages] = useState<string[]>([]);
+    const [loadedJewelryImages, setLoadedJewelryImages] = useState<string[]>([]);
     const [jewelryLightbox, setJewelryLightbox] = useState<{ images: string[]; index: number } | null>(null);
 
     const gridRef = useRef<HTMLDivElement>(null);
@@ -395,6 +267,10 @@ const Creations: React.FC = () => {
             data = data.filter(a => matchesQuery(haystacks.get(a.id) ?? '', query));
         }
 
+        if (filter === 'Objects' && sort === 'default') {
+            const lead = data.find(art => art.id === 'OBJ-010');
+            if (lead) return [lead, ...data.filter(art => art.id !== lead.id)];
+        }
         return sortArchive(data, sort);
     }, [filter, activeCollection, showAvailableOnly, sort, query, haystacks, categoryCollections, collectionPiecesMap]);
 
@@ -426,56 +302,104 @@ const Creations: React.FC = () => {
         return data.filter(a => a.availability === 'READY_TO_SHIP').length;
     }, [filter, activeCollection, categoryCollections, collectionPiecesMap]);
 
-    return (
-        <section className="bg-paper-50 min-h-screen pt-24 pb-32">
-
-            {/* ── 5.1 Hero Category Grid ─────────────────────────────────── */}
-            {!filter && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
-                    {/* Hero header */}
-                    <div className="mb-12 border-b border-wood-200 pb-10">
-                        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 mb-8 font-medium tracking-tight">
-                            Creations
-                        </h1>
-                        <p className="font-serif text-2xl md:text-3xl text-wood-800 max-w-4xl font-medium leading-snug mb-4">
-                            I create across many forms.
-                        </p>
-                        <p className="font-sans text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
-                            Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
-                        </p>
-                        <p className="font-sans text-base text-wood-700 max-w-[68ch] font-light leading-[1.7] mt-3">
-                            These are not decoration. They are portals. A place to sit with. To find your center.
-                            To feel an opening. Find what calls to you.
-                        </p>
-                    </div>
-
-                    {/* Category grid */}
-                    <div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 card-stagger"
-                        role="list"
-                        aria-label="Art categories"
-                    >
-                        {CREATION_CATEGORIES.filter(cat => !(cat as { hidden?: boolean }).hidden).map((cat, idx) => (
-                            <div key={cat.id} role="listitem">
-                                <CreationCategoryCard
-                                    label={cat.label}
-                                    desc={cat.desc}
-                                    image={(cat as { image: string }).image}
-                                    video={(cat as { video?: string }).video}
-                                    link={(cat as { link?: string }).link}
-                                    onClick={() => handleCategoryChange(cat.label)}
+    const renderJewelryGroup = (title: string, photographs: string[]) => {
+        const visible = photographs.filter(id => !failedJewelryImages.includes(id));
+        return (
+            <section className="gallery-band">
+                <div className="gallery-band-heading"><h2 className="gallery-subtitle">{title}</h2></div>
+                {visible.length ? (
+                    <div className="gallery-grid">
+                        {visible.map(id => (
+                            <button
+                                key={id}
+                                type="button"
+                                className="gallery-mat cursor-zoom-in"
+                                aria-label={`Enlarge ${title.toLowerCase()} photograph ${photographs.indexOf(id) + 1}`}
+                                disabled={!loadedJewelryImages.includes(id)}
+                                onClick={() => {
+                                    const images = photographs.filter(image => loadedJewelryImages.includes(image));
+                                    setJewelryLightbox({ images, index: images.indexOf(id) });
+                                }}
+                            >
+                                <img
+                                    src={img(id, { w: 600 })}
+                                    alt=""
+                                    loading="lazy"
+                                    decoding="async"
+                                    onLoad={() => setLoadedJewelryImages(prev => prev.includes(id) ? prev : [...prev, id])}
+                                    onError={event => {
+                                        const image = event.currentTarget;
+                                        if (image.dataset.original) {
+                                            setFailedJewelryImages(prev => prev.includes(id) ? prev : [...prev, id]);
+                                        } else {
+                                            image.dataset.original = 'true';
+                                            image.src = img(id);
+                                        }
+                                    }}
                                 />
-                            </div>
+                            </button>
                         ))}
                     </div>
+                ) : (
+                    <p className="gallery-note">Ask the studio to see more photographs.</p>
+                )}
+            </section>
+        );
+    };
+
+    return (
+        <section className="public-gallery min-h-screen">
+            {isCuratedEntry && (
+                <div className="gallery-width">
+                    <section className="gallery-hero" aria-labelledby="creations-title">
+                        <div>
+                            <h1 id="creations-title" className="gallery-title">Creations</h1>
+                            <p className="gallery-intro">Layered wood, light, and objects for everyday ritual.</p>
+                            <div className="gallery-actions">
+                                <Link className="gallery-action gallery-action-primary" to={artworkSeries[0].path}>
+                                    Explore Universal Language
+                                </Link>
+                                <Link className="gallery-action" to="/creations?view=archive"
+                                    onClick={() => window.scrollTo(0, 0)}>Browse all work</Link>
+                            </div>
+                        </div>
+                        {galleryLead && (
+                            <figure>
+                                <Link className="block" to={piecePath(galleryLead)}>
+                                    <GalleryPhoto art={galleryLead} eager />
+                                </Link>
+                                <figcaption className="gallery-caption">
+                                    <span>Art of Living</span><span>Universal Language · No. 32</span>
+                                </figcaption>
+                            </figure>
+                        )}
+                    </section>
+                    <section className="gallery-band" aria-labelledby="gallery-bodies-title">
+                        <div className="gallery-band-heading">
+                            <h2 id="gallery-bodies-title" className="gallery-subtitle">Bodies of work</h2>
+                            <Link className="gallery-action" to="/creations/multidimensional-art">
+                                All sculpture series
+                            </Link>
+                        </div>
+                        <SeriesEntrances omitUniversal />
+                    </section>
+                    <nav className="gallery-band gallery-actions" aria-label="Other ways to explore">
+                        <Link className="gallery-action" to="/creations?view=archive&available=1"
+                            onClick={() => window.scrollTo(0, 0)}>Available now</Link>
+                        <Link className="gallery-action" to="/creations/illuminated-works">Illuminated Works</Link>
+                        <Link className="gallery-action" to="/creations?category=Objects"
+                            onClick={() => window.scrollTo(0, 0)}>Objects</Link>
+                        <Link className="gallery-action" to="/creations?category=Jewelry"
+                            onClick={() => window.scrollTo(0, 0)}>Jewelry</Link>
+                        <Link className="gallery-action" to="/oracle">Companion oracle cards</Link>
+                    </nav>
                 </div>
             )}
 
-            {/* ── Available Now ─────────────────────────────────────────── */}
-            {!filter && <AvailableNowSection />}
+            {filter && <h1 className="gallery-width gallery-title">{filter}</h1>}
 
-            {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[var(--nav-height)] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
+            {/* ── Filter / Breadcrumb Bar ────────────────────────── */}
+            <div className={`gallery-width bg-paper-50 py-3 border-b border-wood-200 mb-4 ${isCuratedEntry ? "gallery-band" : ""}`}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
 
                     {/* Left: title / breadcrumb */}
@@ -504,12 +428,12 @@ const Creations: React.FC = () => {
                                 )}
                             </>
                         ) : (
-                            <h2 className="font-serif text-2xl text-wood-900 font-medium">Creations</h2>
+                            isCuratedEntry ? <h2 className="gallery-subtitle">Browse all work</h2> : <h1 className="gallery-title">{showAvailableOnly ? "Available now" : "Browse all work"}</h1>
                         )}
                     </div>
 
                     {/* Right: controls */}
-                    <div className="flex flex-wrap items-center gap-4 max-w-full">
+                    {filter !== 'Jewelry' && <div className="gallery-filters max-w-full">
                         {/* Search. Filtering by eye across 173 pieces was the only
                             option before this. */}
                         <div className="relative flex items-center">
@@ -546,7 +470,7 @@ const Creations: React.FC = () => {
                         {/* Available-only toggle */}
                         <button
                             type="button"
-                            onClick={() => setShowAvailableOnly(v => !v)}
+                            onClick={toggleAvailable}
                             aria-pressed={showAvailableOnly}
                             className={`font-label text-xs uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
                                 showAvailableOnly
@@ -558,13 +482,13 @@ const Creations: React.FC = () => {
                                 ? `Available (${availableCount})`
                                 : `Available Only`}
                         </button>
-                    </div>
+                    </div>}
                 </div>
             </div>
 
             {/* ── Collection Cards ───────────────────────────────────────── */}
             {showCollectionCards && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-14 animate-fade-in">
+                <div className="gallery-width mb-6">
                     <div
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
                         role="group"
@@ -601,7 +525,7 @@ const Creations: React.FC = () => {
 
             {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-8">
+                <div className="gallery-width mb-6">
                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
@@ -614,74 +538,22 @@ const Creations: React.FC = () => {
             )}
 
             {/* ── Main Masonry Grid ──────────────────────────────────────── */}
-            <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
+            <div className="gallery-width" ref={gridRef}>
 
                 {/* Jewelry: photo gallery instead of piece cards */}
                 {filter === 'Jewelry' ? (
                     <>
-                        {/* Inquire intro */}
-                        <div className="max-w-3xl mb-14">
-                            <p className="font-serif text-xl text-wood-600 font-light leading-[1.7]">
-                                Each piece is one of a kind, crafted with Ye Ming Zhu and precious materials. Browse the gallery and <Link to="/inquire" className="text-bronze-600 hover:text-bronze-800 underline underline-offset-2 transition-colors">reach out</Link> to learn more about what is available or to commission something personal.
-                            </p>
-                        </div>
-
-                        {/* Pendants & Jewelry */}
-                        <div className="mb-16">
-                            <div className="border-t border-wood-200 pt-10 mb-8">
-                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Pendants and Jewelry</h2>
-                                <p className="font-sans text-lg text-wood-700 font-light">Necklaces, pendants, and wearable pieces</p>
-                            </div>
-                            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
-                                {JEWELRY_GALLERY.jewelry.map((id, i) => (
-                                    <button
-                                        key={id}
-                                        onClick={() => setJewelryLightbox({ images: JEWELRY_GALLERY.jewelry, index: i })}
-                                        className="block w-full mb-3 md:mb-4 overflow-hidden group cursor-pointer break-inside-avoid"
-                                    >
-                                        <img src={img(id, { w: 600 })} alt="" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Rings */}
-                        <div className="mb-16">
-                            <div className="border-t border-wood-200 pt-10 mb-8">
-                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Rings</h2>
-                                <p className="font-sans text-lg text-wood-700 font-light">Ye Ming Zhu rings, each unique</p>
-                            </div>
-                            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
-                                {JEWELRY_GALLERY.rings.map((id, i) => (
-                                    <button
-                                        key={id}
-                                        onClick={() => setJewelryLightbox({ images: JEWELRY_GALLERY.rings, index: i })}
-                                        className="block w-full mb-3 md:mb-4 overflow-hidden group cursor-pointer break-inside-avoid"
-                                    >
-                                        <img src={img(id, { w: 600 })} alt="" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Inquire CTA */}
-                        <div className="max-w-3xl mx-auto text-center pt-4 pb-8">
-                            <div className="border-t border-wood-200 pt-14">
-                                <p className="font-serif text-2xl text-wood-800 font-light leading-[1.5] mb-8">
-                                    Interested in a piece you see here?
-                                </p>
-                                <Link
-                                    to="/inquire"
-                                    className="inline-flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-all duration-300"
-                                >
-                                    Inquire <ArrowRight size={14} />
-                                </Link>
-                            </div>
-                        </div>
+                        <p className="gallery-intro">
+                            Each piece is one of a kind, crafted with Ye Ming Zhu and precious materials.
+                        </p>
+                        <Link to="/inquire" className="gallery-action">Inquire about jewelry</Link>
+                        {renderJewelryGroup('Pendants and jewelry', JEWELRY_GALLERY.jewelry)}
+                        {renderJewelryGroup('Rings', JEWELRY_GALLERY.rings)}
                     </>
                 ) : displayedPieces.length > 0 ? (
                     <>
-                        <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
+                        {filter === 'Objects' && <h2 className="gallery-subtitle mb-3">Lotus Stands</h2>}
+                        <div className="gallery-grid columns-2">
                             {displayedPieces.map(art => (
                                 <GalleryTileCard key={art.id} art={art} />
                             ))}
@@ -764,36 +636,13 @@ const Creations: React.FC = () => {
             {/* Floating back-to-top button */}
             <BackToTop />
 
-            {/* Jewelry lightbox */}
             {jewelryLightbox && (
-                <div className="fixed inset-0 z-[100] bg-stone-950/95 flex items-center justify-center" onClick={() => setJewelryLightbox(null)}>
-                    <button onClick={() => setJewelryLightbox(null)} className="absolute top-6 right-6 text-paper-300 hover:text-paper-50 transition-colors z-10">
-                        <X size={28} />
-                    </button>
-                    <button
-                        onClick={e => { e.stopPropagation(); setJewelryLightbox(prev => prev && ({ ...prev, index: (prev.index - 1 + prev.images.length) % prev.images.length })); }}
-                        className="absolute left-4 md:left-8 text-paper-300 hover:text-paper-50 transition-colors text-4xl font-light z-10"
-                    >
-                        ‹
-                    </button>
-                    <img
-                        src={img(jewelryLightbox.images[jewelryLightbox.index], { w: 1400 })}
-                        alt=""
-                        className="max-h-[85vh] max-w-[90vw] object-contain"
-                        onClick={e => e.stopPropagation()}
-                    />
-                    <button
-                        onClick={e => { e.stopPropagation(); setJewelryLightbox(prev => prev && ({ ...prev, index: (prev.index + 1) % prev.images.length })); }}
-                        className="absolute right-4 md:right-8 text-paper-300 hover:text-paper-50 transition-colors text-4xl font-light z-10"
-                    >
-                        ›
-                    </button>
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 font-label text-xs text-paper-400 tracking-[0.2em] uppercase">
-                        {jewelryLightbox.index + 1} / {jewelryLightbox.images.length}
-                    </div>
-                </div>
+                <VisualLightbox
+                    images={jewelryLightbox.images.map(id => img(id))}
+                    initialIndex={jewelryLightbox.index}
+                    onClose={() => setJewelryLightbox(null)}
+                />
             )}
-
         </section>
     );
 };

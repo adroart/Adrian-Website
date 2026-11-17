@@ -1,151 +1,76 @@
-
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
-import { ArrowRight } from 'lucide-react';
+import Breadcrumb from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
-import { img } from '../utils/media';
+import { illuminatedFilm } from './gallery/galleryContent';
+import './gallery/publicGallery.css';
 
-// --- Main component ---
+const illuminatedPieces = FULL_ARCHIVE.filter(art => art.illuminated);
 
-const IlluminatedWorks: React.FC = () => {
-    const illuminatedPieces = useMemo(
-        () => FULL_ARCHIVE.filter(a => a.illuminated).slice(0, 5),
-        []
-    );
-
-    return (
-        <article className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
-
-            {/* Breadcrumb */}
-            <div className="max-w-4xl mx-auto px-6 mb-6 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
-                <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
-                <span className="text-wood-300">/</span>
-                <span className="text-wood-900">Illuminated Works</span>
-            </div>
-
-            {/* Hero video */}
-            <div className="relative overflow-hidden mb-0 dark-preserve bg-stone-950 max-w-4xl mx-auto">
-                <video
-                    src="/media/video/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full block"
-                    style={{ margin: '-8% 0' }}
-                />
-            </div>
-
-            {/* Section 1: What illumination is */}
-            <div className="max-w-4xl mx-auto px-6 py-24">
-                <h1 className="font-label text-xs uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
-                    Illuminated Works
-                </h1>
-                <p className="font-serif text-2xl md:text-3xl text-wood-800 font-light leading-[1.4] mb-8">
-                    There is a version of every piece that you only discover after dark.
-                </p>
-                <div className="space-y-6 font-sans text-lg text-wood-600 font-light leading-[1.7] max-w-2xl">
-                    <p>
-                        Light does something to layered wood that no other medium quite achieves. It travels through the depths. It finds the edges. It makes visible what was always there, waiting for the right conditions to reveal itself.
+const IlluminatedWorks: React.FC = () => (
+    <article className="public-gallery min-h-screen">
+        <div className="gallery-width">
+            <Breadcrumb className="gallery-crumb" crumbs={[
+                { label: 'Creations', to: '/creations' },
+                { label: 'Illuminated Works' },
+            ]} />
+            <div className="gallery-hero gallery-hero-film">
+                <div>
+                    <h1 className="gallery-title">Illuminated Works</h1>
+                    <p className="gallery-intro">
+                        Light travels through the depths of layered wood. It finds the edges and reveals the piece in a different way after dark.
                     </p>
-                    <p>
-                        This is not decoration. It is a second life within the same form.
-                    </p>
-                </div>
-                {/* TODO: Add 2-3 sentences in your own voice about what illuminated work means to you,
-                    or what you have witnessed it do in a space. This is where the page gets human. */}
-            </div>
-
-            {/* Section 2: Two expressions of light */}
-            <div className="max-w-[1800px] mx-auto px-6 pb-24">
-                <div className="border-t border-wood-200 pt-16 mb-12">
-                    <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Two expressions of light</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 dark-preserve">
-                    {/* Basic Illumination */}
-                    <div className="bg-wood-900 p-10 md:p-16">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 dark:text-paper-100 font-semibold block mb-6">Basic Illumination</span>
-                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Light, included.</h3>
-                        <p className="font-sans text-lg text-paper-300 dark:text-paper-100 font-light leading-[1.7] mb-6">
-                            Standard LED strips with preset modes. The piece glows. It shifts between colors. It does what LEDs do out of the box.
-                        </p>
-                        <p className="font-sans text-base text-paper-400 font-light leading-[1.7]">
-                            Included with any illuminated piece. Functional, beautiful, ready to go.
-                        </p>
-                    </div>
-                    {/* Curated Light */}
-                    <div className="bg-stone-900 p-10 md:p-16">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 dark:text-paper-100 font-semibold block mb-6">Curated Light</span>
-                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmed by hand. Felt in the room.</h3>
-                        <p className="font-sans text-lg text-paper-300 dark:text-paper-100 font-light leading-[1.7] mb-6">
-                            I personally program every transition, every color palette, every mood. Smooth fades. Ambient rhythms. Light that breathes with the piece instead of competing with it.
-                        </p>
-                        <p className="font-sans text-base text-paper-400 font-light leading-[1.7]">
-                            An upgrade for those who want the light to feel as intentional as the art itself.
-                        </p>
+                    <div className="gallery-actions">
+                        <Link to="/inquire" className="gallery-action gallery-action-primary">Ask about illumination</Link>
                     </div>
                 </div>
+                <figure className="gallery-film">
+                    <video
+                        src={illuminatedFilm.src}
+                        poster={illuminatedFilm.poster}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        aria-label="Layered wood sculpture changing color under programmed light"
+                    />
+                    <figcaption>A layered wood sculpture in programmed light.</figcaption>
+                </figure>
             </div>
 
-            {/* Section 3: What living with it is like */}
-            <div className="max-w-4xl mx-auto px-6 pb-24">
-                <div className="border-t border-wood-200 pt-16">
-                    <p className="font-serif text-xl text-wood-600 font-light leading-loose max-w-2xl">
-                        Pause for a moment. Imagine your space after dark, with one illuminated piece on the wall. Consider what changes in the room. Not just visually, but in atmosphere. This is the question worth sitting with before choosing.
-                    </p>
+            <section className="gallery-band" aria-labelledby="illumination-options">
+                <div className="gallery-band-heading">
+                    <h2 id="illumination-options" className="gallery-subtitle">Two expressions of light</h2>
                 </div>
-            </div>
+                <div className="gallery-lighting-options">
+                    <div>
+                        <h3 className="font-display text-3xl">Basic Illumination</h3>
+                        <p className="gallery-intro">Standard LED strips with preset modes. The piece glows and shifts between colors.</p>
+                    </div>
+                    <div>
+                        <h3 className="font-display text-3xl">Curated Light</h3>
+                        <p className="gallery-intro">Color, transitions, and rhythms programmed by hand for the piece and the room.</p>
+                    </div>
+                </div>
+            </section>
 
-            {/* Section 4: Gallery entry point */}
             {illuminatedPieces.length > 0 && (
-                <div className="max-w-[1800px] mx-auto px-6 pb-24">
-                    <div className="border-t border-wood-200 pt-16 mb-12">
-                        <h2 className="font-serif text-3xl text-wood-900 font-medium">From the collection</h2>
-                    </div>
-                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 mb-12">
-                        {illuminatedPieces.map(art => (
-                            <GalleryTileCard key={art.id} art={art} />
-                        ))}
-                    </div>
-                    <div className="text-center">
-                        <Link
-                            to="/creations/multidimensional-art"
-                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
-                        >
-                            Browse all multidimensional works <ArrowRight size={14} />
-                        </Link>
-                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-3">
-                            Filter by Illuminated to see the full collection
-                        </p>
-                    </div>
-                </div>
+                <section className="gallery-band">
+                    <div className="gallery-band-heading"><h2 className="gallery-subtitle">From the collection</h2></div>
+                    <div className="gallery-grid">{illuminatedPieces.map(art => <GalleryTileCard key={art.id} art={art} />)}</div>
+                </section>
             )}
 
-            {/* Section 5: Commission pathway */}
-            <div className="bg-wood-100 border-t border-wood-200">
-                <div className="max-w-4xl mx-auto px-6 py-24 text-center">
-                    <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-8">
-                        Begin with a conversation
-                    </h2>
-                    <div className="space-y-4 font-sans text-lg text-wood-600 font-light leading-[1.7] max-w-xl mx-auto mb-12">
-                        <p>
-                            Illumination can be added to most multidimensional pieces. Whether you have a piece in mind or are beginning from conversation, this is where we start.
-                        </p>
-                        <p>
-                            Whether through an in-person viewing or a virtual conversation, I am here to guide you toward the right piece for your space.
-                        </p>
-                    </div>
-                    <Link
-                        to="/inquire"
-                        className="inline-flex items-center gap-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold px-8 py-4 hover:bg-bronze-600 transition-colors"
-                    >
-                        Begin a conversation <ArrowRight size={16} />
-                    </Link>
+            <section className="gallery-band">
+                <h2 className="gallery-subtitle">Begin with a conversation</h2>
+                <p className="gallery-intro">If you have a piece in mind, get in touch to explore the light and the space it will live in.</p>
+                <div className="gallery-actions">
+                    <Link to="/inquire" className="gallery-action">Inquire</Link>
+                    <Link to="/creations/multidimensional-art" className="gallery-action">Browse multidimensional art</Link>
                 </div>
-            </div>
-        </article>
-    );
-};
+            </section>
+        </div>
+    </article>
+);
 
 export default IlluminatedWorks;
