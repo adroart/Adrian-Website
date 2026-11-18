@@ -19,7 +19,7 @@ const NotFound: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                     <Link
                         to="/"
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+                        className="btn btn-primary"
                     >
                         Go Home <ArrowRight size={14} />
                     </Link>

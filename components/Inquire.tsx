@@ -392,7 +392,7 @@ const Inquire: React.FC = () => {
     <button
       type="submit"
       disabled={sendStatus === 'SENDING'}
-      className="inline-flex items-center gap-3 px-10 py-3.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] font-semibold hover:bg-bronze-600 transition-all duration-300 disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
+      className="btn btn-primary"
     >
       {sendStatus === 'SENDING' ? (
         <span className="animate-pulse">Sending...</span>

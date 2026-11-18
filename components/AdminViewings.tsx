@@ -45,7 +45,7 @@ const SPHERE_LABELS: Record<SphereKey, string> = {
 };
 
 const inputClass =
-  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'input placeholder:text-wood-400';
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 
 /** A single editable card on the chart board. */
@@ -407,7 +407,7 @@ const AdminViewings: React.FC = () => {
             </p>
             <div className="flex items-center justify-between mb-8">
               <h1 className="font-display text-3xl text-wood-900">Viewings</h1>
-              <button type="button" onClick={openNew} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 transition-colors">
+              <button type="button" onClick={openNew} className="btn btn-outline">
                 + New viewing
               </button>
             </div>
@@ -510,7 +510,7 @@ const AdminViewings: React.FC = () => {
             )}
 
             <div className="mt-4 flex items-center gap-4 flex-wrap">
-              <button type="button" onClick={compute} disabled={loading} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors">
+              <button type="button" onClick={compute} disabled={loading} className="btn btn-outline">
                 {loading ? 'Computing…' : 'Compute the chart'}
               </button>
               {error && <span className="font-sans text-sm text-red-700">{error}</span>}
@@ -557,10 +557,10 @@ const AdminViewings: React.FC = () => {
 
               {/* Deliver */}
               <div className="mt-6 border border-wood-200 bg-paper-50 p-5 flex items-center gap-4 flex-wrap">
-                <button type="button" onClick={() => save('draft')} disabled={saving} className="font-label text-[11px] uppercase tracking-[0.16em] text-wood-700 border border-wood-300 px-5 py-2.5 hover:bg-paper-100 disabled:opacity-50 transition-colors">
+                <button type="button" onClick={() => save('draft')} disabled={saving} className="btn btn-outline">
                   {saving ? 'Saving…' : viewingId ? 'Save changes' : 'Save draft'}
                 </button>
-                <button type="button" onClick={() => save('sent')} disabled={saving} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors">
+                <button type="button" onClick={() => save('sent')} disabled={saving} className="btn btn-primary">
                   Send · copy link
                 </button>
                 {savedNote && <span className="font-sans text-sm text-wood-700">{savedNote}</span>}

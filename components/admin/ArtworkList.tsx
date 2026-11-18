@@ -27,18 +27,14 @@ type SearchDraft = {
 
 const EMPTY_DRAFT: SearchDraft = { publicCode: '', artworkId: '', title: '', editionNumber: '' };
 
-const tabButtonClass = (active: boolean) => [
-  'border-b-2 px-1 pb-3 font-sans text-sm font-semibold uppercase tracking-wide transition-colors',
-  active
-    ? 'border-bronze-600 text-wood-900'
-    : 'border-transparent text-wood-500 hover:text-wood-800',
-].join(' ');
+// Buttons come from src/master.css. Do not rebuild them from utilities.
+const tabButtonClass = (active: boolean) => (active ? 'tab is-active' : 'tab');
 
 const linkClass = 'font-sans text-base font-semibold text-bronze-700 underline decoration-bronze-300 underline-offset-4 hover:text-bronze-900';
 const inputClass = 'w-full rounded border border-wood-300 bg-paper-50 px-3 py-2 font-sans text-base text-wood-900';
 const labelClass = 'block font-sans text-sm font-semibold text-wood-700';
-const primaryButtonClass = 'rounded bg-bronze-700 px-4 py-2 font-sans text-sm font-semibold text-paper-50 hover:bg-bronze-800 disabled:cursor-not-allowed disabled:opacity-50';
-const quietButtonClass = 'font-sans text-sm font-semibold text-wood-600 underline decoration-wood-300 underline-offset-4 hover:text-wood-900';
+const primaryButtonClass = 'btn btn-primary';
+const quietButtonClass = 'btn btn-ghost';
 
 function messageFor(error: unknown, fallback: string): string {
   if (error instanceof MaintenanceRequestError) {

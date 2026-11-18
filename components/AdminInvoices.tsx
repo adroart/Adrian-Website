@@ -57,7 +57,7 @@ const EMPTY_PRESET = {
   isActive: true,
 };
 
-const inputClass = 'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+const inputClass = 'input placeholder:text-wood-400';
 const textareaClass = `${inputClass} min-h-[96px] resize-y leading-relaxed`;
 const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const PAYMENT_METHOD_ORDER: Record<string, number> = { wise: 1, crypto: 2, bank: 3 };
@@ -1003,7 +1003,7 @@ const AdminInvoices: React.FC = () => {
                           editingId === invoice.id ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'
                         }`}
                       >
-                        <button type="button" onClick={() => editInvoice(invoice)} className="w-full text-left hover:opacity-80">
+                        <button type="button" onClick={() => editInvoice(invoice)} className="studio-sales-row w-full hover:opacity-80">
                           <span className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
                             {invoice.invoiceNumber} · {invoice.status}
                           </span>

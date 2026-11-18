@@ -239,7 +239,7 @@ const AdminFileUpload: React.FC = () => {
               <button
                 onClick={handleUpload}
                 disabled={!file || !filename || uploading}
-                className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+                className="btn btn-primary btn-block"
               >
                 {uploading ? 'Uploading...' : 'Upload'}
               </button>

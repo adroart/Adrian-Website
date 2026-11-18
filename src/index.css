@@ -28,35 +28,12 @@
  * See: git log — "accessibility: contrast + typography pass"
  * ─────────────────────────────────────────────────────────────────────────── */
 @import "tailwindcss";
+/* Every colour, size, space, radius, shadow and button comes from here. */
+@import "./master.css";
 @custom-variant dark (&:where(.dark, .dark *));
 @source "../";
 @source "../components";
 
-/* ─── Art Image Design Tokens ─────────────────────────────────────────────── */
-/* These mirror the constants in components/ArtImage.tsx.
-   Defined here for reference and for any non-component CSS that needs them. */
-:root {
-  --art-hover-scale: 1.03;
-  --art-transition-duration: 700ms;
-  --art-transition-easing: ease-out;
-  /* Updated dynamically by Navigation.tsx based on scroll state */
-  --nav-height: 56px;
-
-  /* ─── Type scale ─────────────────────────────────────────────────────────
-   * Semantic sizes paired with their intended font role.
-   * Use these in new components instead of arbitrary text-[14px] values.
-   * Marketing/hero headings can fluid-size via clamp() inline; app UI
-   * (oracle reader, shop, piece pages) should hold to this fixed scale. */
-  --text-eyebrow:  0.6875rem; /* 11px — Karla uppercase labels       */
-  --text-caption:  0.8125rem; /* 13px — Lora — fine print only       */
-  --text-meta:     0.875rem;  /* 14px — Lora — secondary info, dates */
-  --text-small:    0.9375rem; /* 15px — Lora — secondary body        */
-  --text-body:     1rem;      /* 16px — Lora — default body          */
-  --text-lead:     1.0625rem; /* 17px — Lora — intro / lyrics        */
-  --text-subhead:  1.375rem;  /* 22px — Cormorant — small titles     */
-  --text-heading:  1.75rem;   /* 28px — Cormorant — page headings    */
-  --text-display:  clamp(2.5rem, 6vw, 4.5rem); /* 40-72px — hero    */
-}
 
 /* ─── Global Typography Foundations ───────────────────────────────────────── */
 
@@ -76,8 +53,8 @@ html {
 
 /* #5 Custom selection color — warm palette instead of jarring blue */
 ::selection {
-  background-color: #c4aa7c40;
-  color: #262321;
+  background-color: rgb(196 170 124 / 25%);
+  color: var(--color-wood-900);
 }
 .dark ::selection {
   background-color: #c4aa7c50;
@@ -109,13 +86,13 @@ h1, h2, h3, h4, h5, h6 {
  * disagrees now wins, which is what those classes were written expecting. */
 @layer base {
   blockquote {
-    border-left: 2px solid #c4aa7c;
+    border-left: 2px solid var(--color-bronze-400);
     padding-left: 1.5rem;
     margin-left: 0;
     margin-right: 0;
   }
   .dark blockquote {
-    border-left-color: #d4b88a;
+    border-left-color: var(--color-bronze-400);
   }
 }
 
@@ -127,17 +104,17 @@ h1, h2, h3, h4, h5, h6 {
 
 /* #36 Consistent placeholder styling */
 ::placeholder {
-  color: #7a746b;
+  color: var(--color-stone-500);
   opacity: 1;
 }
 /* #12 Pull-quote base styling */
 .pull-quote {
   position: relative;
   padding-left: 1.5rem;
-  border-left: 2px solid #c4aa7c80;
+  border-left: 2px solid rgb(196 170 124 / 50%);
 }
 .dark .pull-quote {
-  border-left-color: #d4b88a80;
+  border-left-color: rgb(var(--admin-accent-rgb) / 50%);
 }
 
 /* #30 Article prose refinements */
@@ -188,94 +165,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @theme {
-  /* Font families — three roles, named for the role they play.
-   *
-   * Reach for these three and nothing else:
-   *   --font-display  Cormorant Garamond   titles, headings, the brand name
-   *   --font-body     Lora                 running text
-   *   --font-label    Karla                uppercase eyebrows, meta, data
-   *
-   * The --font-sans / --font-mono names below are Tailwind's built-in slots and are
-   * kept only so existing `font-sans` / `font-mono` classes keep rendering. Do NOT
-   * reach for them in new code: --font-sans resolves to Lora, which is a serif, and
-   * --font-mono resolves to Karla, which is a sans and not monospaced. Those two
-   * names have been actively misleading every reader of this file. For real
-   * monospace (tabular data, code) use --font-tabular.
-   */
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-body: "Lora", Georgia, serif;
-  --font-label: "Karla", "Helvetica Neue", Arial, sans-serif;
-  --font-tabular: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Tailwind slot aliases — see the warning above. */
-  --font-serif: var(--font-display);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-label);
-
-  /* Colors: taupe */
-  --color-taupe: #453d39;
-  --color-taupe-light: #594e48;
-
-  /* Colors: cream */
-  --color-cream: #f2efe9;
-  --color-cream-dark: #e6e2d8;
-
-  /* Colors: warm-gold */
-  --color-warm-gold: #b0966b;
-  --color-warm-gold-hover: #9e8459;
-
-  /* Colors: paper */
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-
-  /* Colors: wood */
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-
-  /* Colors: stone */
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #8a857c;
-  --color-stone-500: #6f6a62;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-
-  /* Colors: availability states */
-  --color-avail-ready: #1A1A1A;
-  --color-avail-order: #666666;
-  --color-avail-sold: #7a6a5e;
-
-  /* Colors: bronze */
-  --color-bronze-50: #faf6f0;
-  --color-bronze-100: #f0e8d8;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  /* Darkened from #8a744e (2026-09-01). text-bronze-600 is the site's eyebrow and
-     meta colour, 152 usages, and at #8a744e it measured 3.66:1 to 4.48:1 on the
-     light grounds it is used on, under the 4.5:1 it needs. #725d3d measures 4.54:1 on the darkest of them (paper-200)
-     and keeps the bronze character. The .dark block remaps this token, so this
-     value only ever applies on light grounds. */
-  --color-bronze-600: #725d3d;
-  --color-bronze-700: #6d5a3c;
-  --color-bronze-900: #453825;
-
+  /* Fonts and colours live in src/master.css. Only animations stay here. */
   /* Animations */
   --animate-spin-slow: spin 20s linear infinite;
   --animate-spin-reverse-slow: spinReverse 25s linear infinite;
@@ -318,164 +208,7 @@ h1, h2, h3, h4, h5, h6 {
   --animate-hero-bounce: heroBounce 2.5s ease-in-out infinite;
 }
 
-/* ─── Dark Mode: CSS Variable Remapping ─────────────────────────────────── */
-/* Overrides color tokens so all Tailwind utilities adapt automatically.
-   Intentionally dark sections use .dark-preserve to keep original colors. */
-
-.dark {
-  color-scheme: dark;
-
-  /* Paper: light surfaces → warm darks (wider spread for separation) */
-  --color-paper-50: #171310;
-  --color-paper-100: #1f1a15;
-  --color-paper-200: #29231c;
-  --color-paper-300: #362f26;
-
-  /* Wood: dark → light  (low end = dark surfaces, high end = light text) */
-  --color-wood-50: #181614;
-  --color-wood-100: #1f1d1a;
-  --color-wood-200: #3a3630;
-  --color-wood-300: #504a42;
-  --color-wood-400: #c4beb4;
-  --color-wood-500: #d4cec4;
-  --color-wood-600: #ddd8cf;
-  --color-wood-700: #d0cabe;
-  --color-wood-800: #dedad0;
-  --color-wood-900: #ede9e2;
-
-  /* Stone: inverted gray scale */
-  --color-stone-50: #141210;
-  --color-stone-100: #1c1a17;
-  --color-stone-200: #2e2b26;
-  --color-stone-300: #4a453e;
-  --color-stone-400: #b0aaa0;
-  --color-stone-500: #c0bab0;
-  --color-stone-600: #ccc5bc;
-  --color-stone-700: #d4cec4;
-  --color-stone-800: #dfdbd3;
-  --color-stone-900: #ece8e1;
-  --color-stone-950: #f2efe9;
-
-  /* Cream → warm darks */
-  --color-cream: #1a1816;
-  --color-cream-dark: #222018;
-
-  /* Taupe → light taupe */
-  --color-taupe: #c5beb8;
-  --color-taupe-light: #b0a89f;
-
-  /* Warm gold: brighten for dark backgrounds */
-  --color-warm-gold: #c8a878;
-  --color-warm-gold-hover: #b89868;
-
-  /* Bronze: brighten accents for dark backgrounds */
-  --color-bronze-50: #2a2418;
-  --color-bronze-100: #3a3020;
-  --color-bronze-200: #5a4a30;
-  --color-bronze-300: #7a6848;
-  --color-bronze-400: #d4b88a;
-  --color-bronze-500: #c4a878;
-  --color-bronze-600: #d4b88a;
-  --color-bronze-700: #9a8058;
-  --color-bronze-900: #3a2e1a;
-
-  /* Availability: invert for dark-bg readability */
-  --color-avail-ready: #e0e0e0;
-  --color-avail-order: #a0a0a0;
-  --color-avail-sold: #9a8a7e;
-}
-
-/* ─── dark-preserve: restores original light-mode colors ────────────────── */
-/* Apply to sections that are intentionally dark (hero, accent blocks,
-   image-overlay gradients). They stay dark in both light & dark mode.      */
-
-.dark .dark-preserve {
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #a39e96;
-  --color-stone-500: #aaa49a;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  --color-bronze-600: #725d3d;
-}
-
-/* bg-white is a Tailwind built-in — override in dark mode */
-.dark .bg-white,
-.dark .hover\:bg-white:hover {
-  background-color: #1f1d1a;
-}
-
-/* Printable invoice pages are a light-mode island even when the site is dark.
-   This keeps PDFs white/paper with dark ink instead of inheriting dark tokens. */
-.invoice-light,
-.dark .invoice-light {
-  color-scheme: light;
-  color: #262321;
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #8a857c;
-  --color-stone-500: #6f6a62;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-  --color-bronze-50: #faf6f0;
-  --color-bronze-100: #f0e8d8;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  --color-bronze-600: #725d3d;
-  --color-bronze-700: #6d5a3c;
-  --color-bronze-900: #453825;
-}
-
-.invoice-light .bg-white,
-.dark .invoice-light .bg-white,
-.invoice-light .hover\:bg-white:hover,
-.dark .invoice-light .hover\:bg-white:hover {
-  background-color: #fff;
-}
+/* Dark-mode colour remaps, .dark-preserve and .invoice-light live in src/master.css. */
 
 @media print {
   .invoice-light,
@@ -500,7 +233,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Body background */
 body { transition: background-color 0.5s ease; }
-html.dark body { background-color: #171310; }
+html.dark body { background-color: var(--color-paper-50); }
 
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #a09a92; }
@@ -763,7 +496,7 @@ button, a, [role="button"], input, select, textarea, label {
   input,
   select,
   textarea {
-    min-height: 44px;
+    min-height: var(--control-h-touch);
   }
 }
 
@@ -916,9 +649,9 @@ html, body {
   width: 15rem;
   flex-direction: column;
   overflow-y: auto;
-  border-right: 1px solid rgba(237, 233, 226, 0.09);
-  background: #0d0b09;
-  color: #c4beb4;
+  border-right: 1px solid var(--admin-rule);
+  background: var(--admin-void);
+  color: var(--admin-ink-quiet);
 }
 
 .admin-mark {
@@ -927,8 +660,8 @@ html, body {
   gap: 0.7rem;
   min-height: 4.75rem;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.09);
-  color: #a39b90;
+  border-bottom: 1px solid var(--admin-rule);
+  color: var(--admin-ink-dim);
   font-family: 'Karla', sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.18em;
@@ -936,7 +669,7 @@ html, body {
 }
 
 .admin-mark-monogram {
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.55rem;
   font-weight: 500;
@@ -949,12 +682,12 @@ html, body {
   padding: 1.5rem 0.75rem;
 }
 
-.admin-nav-group + .admin-nav-group { margin-top: 1.5rem; }
+.admin-nav-group + .admin-nav-group { margin-top: var(--space-4); }
 
 .admin-nav-group p {
   margin: 0 0 0.5rem;
   padding: 0 0.75rem;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-family: 'Karla', sans-serif;
   font-size: 0.6875rem;
   font-weight: 400;
@@ -964,10 +697,10 @@ html, body {
 
 .admin-nav-group a {
   display: block;
-  min-height: 2.5rem;
-  padding: 0.6rem 0.75rem;
+  min-height: 30px;
+  padding: 5px var(--space-3);
   border-left: 2px solid transparent;
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.9rem;
   line-height: 1.3rem;
@@ -975,26 +708,26 @@ html, body {
 }
 
 .admin-nav-group a:hover {
-  color: #d4b88a;
+  color: var(--admin-accent);
 }
 
 .admin-nav-group a.active {
-  border-left-color: #d4b88a;
-  color: #ede9e2;
+  border-left-color: var(--admin-accent);
+  color: var(--admin-ink);
 }
 
 .admin-account {
   display: grid;
   gap: 0.65rem;
   padding: 1.25rem 1.5rem 1.5rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.09);
+  border-top: 1px solid var(--admin-rule);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.8rem;
 }
 
 .admin-account span {
   overflow: hidden;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1002,13 +735,13 @@ html, body {
 .admin-account a,
 .admin-account button {
   width: fit-content;
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   transition: color 160ms ease;
 }
 
 .admin-account button { cursor: pointer; }
 .admin-account a:hover,
-.admin-account button:hover { color: #d4b88a; }
+.admin-account button:hover { color: var(--admin-accent); }
 
 .admin-main {
   display: grid;
@@ -1020,7 +753,7 @@ html, body {
 .admin-page {
   width: 100%;
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 4.5rem) clamp(1rem, 4vw, 3.5rem) 7rem;
+  padding: var(--page-pad-top) clamp(1rem, 4vw, 3.5rem) var(--space-12);
 }
 
 .admin-page-narrow { max-width: 52rem; }
@@ -1032,9 +765,9 @@ html, body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-page-header .admin-eyebrow { margin-bottom: 0.6rem; }
@@ -1049,20 +782,20 @@ html, body {
 /* A section is a heading and a rule, never a card. The bordered box this
    used to draw is the thing the approved design spec forbids. */
 .admin-section {
-  margin-top: 2.75rem;
+  margin-top: var(--section-gap);
 }
 
 .admin-section > header {
   margin-bottom: 1.5rem;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-page button,
 .admin-page input:not([type='checkbox']):not([type='radio']),
 .admin-page select,
 .admin-page a[class*='px-'] {
-  min-height: 44px;
+  min-height: var(--control-h); /* 32px desktop, 44px on touch (master.css) */
 }
 
 .admin-page button:focus-visible,
@@ -1090,9 +823,9 @@ html, body {
   display: block;
   margin: 2rem 0;
   padding: 1.3rem 0 1.45rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
-  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
-  color: #c4beb4;
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  color: var(--admin-ink-quiet);
   font-family: 'Lora', Georgia, serif;
   font-size: 1.02rem;
   line-height: 1.68;
@@ -1101,7 +834,7 @@ html, body {
 .admin-alert-label {
   display: block;
   margin-bottom: 0.6rem;
-  color: #8d867c;
+  color: var(--admin-ink-faint);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
   font-weight: 400;
@@ -1111,9 +844,9 @@ html, body {
 
 .admin-alert > div > p:first-child { margin-top: 0; }
 
-.admin-alert-success .admin-alert-label { color: #f2e3c4; }
-.admin-alert-warning .admin-alert-label { color: #d4b88a; }
-.admin-alert-error .admin-alert-label { color: #e0a08a; }
+.admin-alert-success .admin-alert-label { color: var(--admin-warm); }
+.admin-alert-warning .admin-alert-label { color: var(--admin-accent); }
+.admin-alert-error .admin-alert-label { color: var(--admin-wrong); }
 
 
 /* ─── The desk's reading grammar ─────────────────────────────────────────
@@ -1142,7 +875,7 @@ html, body {
 /* Type. Three sizes, and the smallest of them is still comfortably read. */
 .admin-page .admin-lede {
   margin: 1.1rem 0 0;
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Lora', Georgia, serif;
   font-size: 1.2rem;
   line-height: 1.62;
@@ -1150,7 +883,7 @@ html, body {
 
 .admin-page .admin-say {
   margin: 0.9rem 0 0;
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   font-family: 'Lora', Georgia, serif;
   font-size: 1.02rem;
   line-height: 1.68;
@@ -1158,7 +891,7 @@ html, body {
 
 .admin-page .admin-quiet {
   margin: 0.55rem 0 0;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.96rem;
   line-height: 1.68;
@@ -1167,21 +900,21 @@ html, body {
 /* Mono. Everything the machine says, and nothing else. */
 .admin-page .admin-tag {
   display: block;
-  color: #8d867c;
+  color: var(--admin-ink-faint);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.admin-page .admin-tag-lit { color: #d4b88a; }
+.admin-page .admin-tag-lit { color: var(--admin-accent); }
 
 /* A numbered part. The rule and the space above it do the separating that a
    tinted band was doing badly. */
 .admin-page .admin-movement {
   margin-top: 4.5rem;
   padding-top: 2.1rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
 }
 
 .admin-page .admin-movement > header {
@@ -1195,7 +928,7 @@ html, body {
 
 .admin-page .admin-movement h2 {
   margin: 0;
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   font-size: 2.05rem;
@@ -1205,7 +938,7 @@ html, body {
 
 .admin-page .admin-movement h3 {
   margin: 3.25rem 0 0;
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   font-size: 1.6rem;
@@ -1225,11 +958,11 @@ html, body {
   gap: 0 1.75rem;
   align-items: baseline;
   padding: 1.05rem 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.1);
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 10%);
 }
 
 .admin-page .admin-line-title {
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Lora', Georgia, serif;
   font-size: 1.05rem;
   line-height: 1.45;
@@ -1239,7 +972,7 @@ html, body {
   grid-column: 1 / -1;
   margin: 0.4rem 0 0;
   max-width: 40rem;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.96rem;
   line-height: 1.66;
@@ -1249,7 +982,7 @@ html, body {
 
 .admin-page .admin-state {
   flex: none;
-  color: #8d867c;
+  color: var(--admin-ink-faint);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
@@ -1257,9 +990,9 @@ html, body {
   white-space: nowrap;
 }
 
-.admin-page .admin-state-warm { color: #f2e3c4; }
-.admin-page .admin-state-brass { color: #d4b88a; }
-.admin-page .admin-state-wrong { color: #e0a08a; }
+.admin-page .admin-state-warm { color: var(--admin-warm); }
+.admin-page .admin-state-brass { color: var(--admin-accent); }
+.admin-page .admin-state-wrong { color: var(--admin-wrong); }
 
 /* A line that opens. Same row, plus the mono sign at the end of the state. */
 .admin-page .admin-line > summary {
@@ -1273,7 +1006,7 @@ html, body {
 
 .admin-page .admin-line > summary::-webkit-details-marker { display: none; }
 .admin-page .admin-line > summary::marker { content: ''; }
-.admin-page .admin-line > summary:hover .admin-line-title { color: #d4b88a; }
+.admin-page .admin-line > summary:hover .admin-line-title { color: var(--admin-accent); }
 .admin-page .admin-line[open] > summary .admin-state::after { content: '  \2212'; }
 .admin-page .admin-line > summary .admin-state::after { content: '  +'; }
 
@@ -1284,7 +1017,7 @@ html, body {
   overflow-x: auto;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.34);
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.86rem;
   line-height: 1.7;
@@ -1303,12 +1036,12 @@ html, body {
   border-bottom: 0 !important;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.26);
-  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.13);
+  box-shadow: inset 0 0 0 1px var(--admin-rule-strong);
   transition: box-shadow 150ms ease, background 150ms ease;
 }
 
 .admin-page label:has(> input):hover {
-  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.24);
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-ink-rgb) / 24%);
 }
 
 .admin-page label:has(> input):focus-within {
@@ -1320,7 +1053,7 @@ html, body {
 
 /* The label goes brass with the edge, so the field you are in is obvious
    from the corner of the eye and not only from the cursor. */
-.admin-page label:has(> input):focus-within span { color: #d4b88a !important; }
+.admin-page label:has(> input):focus-within span { color: var(--admin-accent) !important; }
 
 /* The kit's label is a 11px Karla eyebrow. On a desk that is small print on
    the one thing you have to read to type into. */
@@ -1355,9 +1088,9 @@ html, body {
   gap: 1.5rem;
   min-height: 48px;
   padding: 1.05rem 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
-  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
-  color: #ede9e2;
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  color: var(--admin-ink);
   cursor: pointer;
   font-family: 'Lora', Georgia, serif;
   font-size: 1.05rem;
@@ -1370,7 +1103,7 @@ html, body {
 .admin-page .admin-fold > summary::after {
   content: 'Read';
   flex: none;
-  color: #d4b88a;
+  color: var(--admin-accent);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
   letter-spacing: 0.1em;
@@ -1389,7 +1122,7 @@ html, body {
   align-items: center;
   gap: 0.55rem;
   min-height: 40px;
-  color: #d4b88a;
+  color: var(--admin-accent);
   cursor: pointer;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
@@ -1416,7 +1149,7 @@ html, body {
   margin: 1.75rem 0;
   padding: 0;
   list-style: none;
-  background: rgba(237, 233, 226, 0.1);
+  background: rgb(var(--admin-ink-rgb) / 10%);
 }
 
 .admin-page .admin-words > li {
@@ -1428,7 +1161,7 @@ html, body {
 }
 
 .admin-page .admin-word {
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 1.15rem;
   letter-spacing: 0.02em;
@@ -1439,7 +1172,7 @@ html, body {
   margin: 2rem 0 0;
   padding-left: 1.5rem;
   border-left: 1px solid rgba(212, 184, 138, 0.4);
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   font-family: 'Lora', Georgia, serif;
   font-size: 1.02rem;
   font-style: italic;
@@ -1464,7 +1197,7 @@ html, body {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.13);
+  border-top: 1px solid var(--admin-rule-strong);
 }
 
 .admin-atlas-sale-row {
@@ -1474,7 +1207,7 @@ html, body {
   justify-content: space-between;
   gap: 1.25rem;
   padding: 1.35rem 0;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-atlas-sale-row-facts p {
@@ -1483,13 +1216,13 @@ html, body {
 }
 
 .admin-atlas-sale-row-buyer {
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-size: 1rem;
 }
 
 .admin-atlas-sale-row-muted {
   margin-top: 0.3rem !important;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-size: 0.85rem;
 }
 
@@ -1504,7 +1237,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -1514,9 +1247,9 @@ html, body {
 .admin-atlas-sale-row-action input {
   min-width: 8rem;
   padding: 0.5rem 0.65rem;
-  border: 1px solid rgba(237, 233, 226, 0.2);
+  border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
   background: transparent;
-  color: #ede9e2;
+  color: var(--admin-ink);
   font-family: 'Lora', Georgia, serif;
   font-size: 0.9rem;
 }
@@ -1525,7 +1258,7 @@ html, body {
   padding: 0 0.9rem;
   border: none;
   background: none;
-  color: #d4b88a;
+  color: var(--admin-accent);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -1538,7 +1271,7 @@ html, body {
 .admin-atlas-sale-row-error {
   flex-basis: 100%;
   margin: 0.5rem 0 0;
-  color: #e0a08a;
+  color: var(--admin-wrong);
   font-size: 0.85rem;
 }
 
@@ -1546,8 +1279,8 @@ html, body {
   display: block;
   margin-top: 0.5rem;
   padding: 0.6rem 0.75rem;
-  border: 1px solid rgba(237, 233, 226, 0.2);
-  color: #f2e3c4;
+  border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
+  color: var(--admin-warm);
   font-size: 0.95rem;
   letter-spacing: 0.04em;
 }
@@ -1610,8 +1343,8 @@ html, body {
 .admin-action-card {
   display: grid;
   gap: 0.35rem;
-  min-height: 7rem;
-  padding: 1.25rem;
+  min-height: 4rem;
+  padding: var(--space-3) var(--space-4);
   border-right: 1px solid var(--color-wood-200);
   border-bottom: 1px solid var(--color-wood-200);
   background: var(--color-paper-50);
@@ -1641,7 +1374,7 @@ html, body {
 }
 
 .admin-tool-links a {
-  min-height: 44px;
+  min-height: var(--control-h);
   display: inline-flex;
   align-items: center;
   color: var(--color-wood-600);
@@ -1772,8 +1505,8 @@ html, body {
 
 .maintenance-input {
   width: 100%;
-  min-height: 44px;
-  padding: 0.7rem 0.8rem;
+  min-height: var(--control-h);
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-wood-300);
   border-radius: 0;
   background: var(--color-paper-50);
@@ -1798,27 +1531,7 @@ textarea.maintenance-input { resize: vertical; }
 
 .maintenance-section-actions { justify-content: flex-end; margin-bottom: 1rem; }
 
-.maintenance-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 0.68rem 1rem;
-  border: 1px solid;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
-}
-
-.maintenance-button:active:not(:disabled) { transform: translateY(1px); }
-.maintenance-button-primary { border-color: var(--color-bronze-600); background: var(--color-bronze-600); color: var(--color-paper-50); }
-.maintenance-button-primary:hover:not(:disabled) { border-color: var(--color-bronze-700); background: var(--color-bronze-700); }
-.maintenance-button-quiet { border-color: var(--color-wood-300); background: transparent; color: var(--color-wood-700); }
-.maintenance-button-quiet:hover:not(:disabled) { border-color: var(--color-wood-600); color: var(--color-wood-900); }
+/* .maintenance-button retired 2026-11-18: AdminMaintenance uses .btn-primary / .btn-outline from master.css. */
 
 .maintenance-loading,
 .maintenance-inline-error,
@@ -1985,8 +1698,8 @@ textarea.maintenance-input { resize: vertical; }
 
 .admin-menu-button {
   display: none;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--control-h-touch);
+  min-height: var(--control-h-touch);
 }
 
 .admin-menu-scrim { display: none; }
@@ -2041,7 +1754,7 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 .admin-access-card button {
-  min-height: 44px;
+  min-height: var(--control-h);
   margin-top: 1.5rem;
   color: var(--color-bronze-700);
   font-family: 'Karla', sans-serif;
@@ -2055,7 +1768,7 @@ textarea.maintenance-input { resize: vertical; }
    in the lifted quiet ink, not brass, because brass marks only what can be
    acted on. */
 .admin-eyebrow {
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   font-family: 'Karla', sans-serif;
   font-size: 0.75rem;
   font-weight: 400;

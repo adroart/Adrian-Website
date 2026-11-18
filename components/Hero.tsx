@@ -130,7 +130,7 @@ const Hero: React.FC = () => {
               <div className="mt-8">
                   <Link
                       to="/creations"
-                      className="inline-block font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/70 hover:border-bronze-400 hover:text-bronze-300 px-6 py-3 transition-colors duration-300"
+                      className="dark-preserve btn btn-outline"
                   >
                       Explore the Work
                   </Link>

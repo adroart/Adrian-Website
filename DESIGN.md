@@ -19,7 +19,7 @@ colors:
   surface-light: "#ebe8e1"
   surface-elevated-light: "#e0dbcf"
   on-background-light: "#23201e" # stone-950
-  primary-light: "#8a744e"    # bronze-600
+  primary-light: "#725d3d"    # bronze-600 (darkened 2026-09-01 for AA)
 typography:
   display:
     fontFamily: Cormorant Garamond
@@ -58,25 +58,40 @@ typography:
     fontFamily: Cinzel
     fontSize: 1.5rem
     fontWeight: 400
+# Every value here mirrors src/master.css, the one master style file.
+# If this file and master.css disagree, master.css wins.
 rounded:
-  full: 9999px
-spacing:
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 40px
-  2xl: 64px
-  3xl: 96px
+  none: 0px        # the house shape: buttons, inputs, cards
+  soft: 2px
+  round: 9999px    # icon buttons only
+spacing:           # 4px base
+  1: 4px
+  2: 8px
+  3: 12px
+  4: 16px
+  6: 24px
+  8: 32px
+  12: 48px
+controls:
+  height-sm: 28px
+  height: 32px     # desktop default for buttons, inputs, tabs, chips
+  height-touch: 44px  # touch screens only (pointer: coarse)
+  padding-x: 12px
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.background}"
-    typography: "{typography.eyebrow}"
-    rounded: "{rounded.full}"
-    padding: 14px
+    backgroundColor: "{colors.background}"   # wood-900; bronze in dark mode
+    textColor: "{colors.background-light}"
+    typography: "{typography.eyebrow}"       # Karla 11px, 600, uppercase, 0.12em
+    rounded: "{rounded.none}"
+    height: 32px
+    padding: 0 12px
+  button-outline:
+    border: 1px wood-700
+    rounded: "{rounded.none}"
+    height: 32px
   card:
-    backgroundColor: "{colors.surface}"
-    padding: 24px
+    padding: 16px   # 12 to 20px
+  section-gap: 32px # 24 to 48px
 ---
 
 ## Overview
@@ -115,9 +130,10 @@ A classical serif voice with one sans label and a monogram face.
 
 ## Layout
 
-Generous and gallery-like. Spacing reaches 96px between sections; give every
-work room to breathe. A single calm column with wide margins. The art is the
-hero — type recedes and frames it, never competes.
+Slim and streamlined: well spaced, never spacious. Adrian wants to see more on
+screen. Section gaps are 24 to 48px, card padding 12 to 20px, and nothing on the
+site uses 96px. The art is still the hero; the room it gets comes from the image
+size, not from empty bands around it. Type recedes and frames it, never competes.
 
 ## Elevation & Depth
 
@@ -126,21 +142,29 @@ raise an element. No hard borders or outlines around content.
 
 ## Shapes
 
-Soft and minimal. Buttons are full-round pills; content corners stay gentle.
-Avoid hard 90° edges on anything a viewer reads from.
+Square. Buttons, inputs, tabs and cards have no radius. The only round thing is
+an icon button (play, close). No pills.
 
 ## Components
 
-- **Primary button:** Bronze fill, wood text, full-round pill, uppercase Karla
-  label. One per frame.
-- **Card:** Wood surface, 24px padding, soft depth, no border.
+Buttons come only from the set in src/master.css. Every button is `.btn` plus
+one variant, all 32px tall on desktop (28px with `.btn-sm`, 44px on touch),
+square, Karla 11px uppercase at 0.12em:
+
+- **`.btn-primary`:** wood-900 fill, paper text; bronze fill in dark mode. One
+  per screen: the action the screen is for.
+- **`.btn-outline`:** 1px edge, no fill. Every other action.
+- **`.btn-ghost`:** text only. Inline actions and back links.
+- **`.btn-icon`:** round, one glyph.
+- **`.tab` / `.chip`:** a choice among siblings; underline or border when chosen.
+- **Card:** 16px padding, a step of surface colour, hairline rule where needed.
 
 ## Do's and Don'ts
 
 - **Do** lead with a Cormorant line and let the artwork dominate.
 - **Do** write in poetic, meditative, intimate language — feeling over intellect.
 - **Do** keep one bronze accent per composition; let wood and cream carry the rest.
-- **Do** leave gallery-grade space around every piece.
+- **Do** keep the page dense enough to see the work and its details together.
 - **Don't** add a second accent, bright red, or pure black/white.
 - **Don't** use the sans family for headlines or body — labels only.
 - **Don't** crowd or over-explain; the work speaks through stillness.

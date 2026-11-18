@@ -399,7 +399,7 @@ function WorkNotFound({ compact }: { compact: boolean }) {
                 </p>
                 <Link
                     to="/creations"
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+                    className="btn btn-primary"
                 >
                     Browse Creations
                 </Link>
@@ -833,7 +833,7 @@ function PublicIdentityRecord({
                     <button
                         type="button"
                         onClick={onRetry}
-                        className="px-7 py-3 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+                        className="btn btn-primary"
                     >
                         Try again
                     </button>

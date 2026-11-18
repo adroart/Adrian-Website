@@ -210,7 +210,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                 <Link
                     to="/inquire"
                     state={{ piece: art.title, pieceId: art.id }}
-                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                    className="btn btn-primary btn-block transition-colors flex items-center justify-center gap-3"
                 >
                     Commission a similar piece <ArrowRight size={14} />
                 </Link>
@@ -310,7 +310,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                         type="button"
                         onClick={advanceToReview}
                         disabled={!selectedSize}
-                        className="w-full min-h-[52px] py-4 mt-6 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="btn btn-primary btn-block mt-6 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {hasAnyAddOn ? 'Continue to options' : 'Continue to review'} <ArrowRight size={14} />
                     </button>
@@ -434,7 +434,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                         <button
                             onClick={handleAddToCartVariant}
                             disabled={!selectedSize}
-                            className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="btn btn-primary btn-block disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             <ShoppingBag size={16} /> Add to Cart
                         </button>
@@ -454,7 +454,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                                 ],
                                 availability: selectedIsInStock ? 'Ready to ship' : 'Made to order',
                             }}
-                            className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
+                            className="btn btn-primary btn-block"
                         >
                             Request to Purchase
                         </Link>

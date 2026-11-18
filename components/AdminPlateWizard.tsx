@@ -47,13 +47,12 @@ import {
 } from '../utils/adminPieces';
 
 const inputClass =
-  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'input placeholder:text-wood-400';
 const labelClass =
   'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
-const buttonClass =
-  'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
-const quietButtonClass =
-  'min-h-11 font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
+// Buttons come from src/master.css. Do not rebuild them from utilities.
+const buttonClass = 'btn btn-primary';
+const quietButtonClass = 'btn btn-outline';
 
 function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
   return {
@@ -588,7 +587,7 @@ const AdminPlateWizard: React.FC = () => {
                         key={kind}
                         type="button"
                         aria-pressed={recoveryKind === kind}
-                        className={recoveryKind === kind ? buttonClass : quietButtonClass}
+                        className={recoveryKind === kind ? 'chip is-active' : 'chip'}
                         disabled={Boolean(busy)}
                         onClick={() => {
                           setRecoveryKind(kind);

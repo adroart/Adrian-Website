@@ -367,7 +367,7 @@ const AdminPoetry: React.FC = () => {
                                 <button
                                     onClick={save}
                                     disabled={saving}
-                                    className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+                                    className="btn btn-primary btn-block"
                                 >
                                     {saving ? 'Saving...' : editing === 'new' ? 'Publish poem' : 'Save changes'}
                                 </button>
@@ -378,7 +378,7 @@ const AdminPoetry: React.FC = () => {
                     {!editing && (
                         <button
                             onClick={startNew}
-                            className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors mb-10"
+                            className="btn btn-primary btn-block mb-10"
                         >
                             New poem
                         </button>
