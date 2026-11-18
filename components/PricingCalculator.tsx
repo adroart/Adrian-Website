@@ -1,3 +1,4 @@
+import './admin/StudioSalesControls.css';
 /**
  * Internal Pricing Calculator — Adrian's private quoting engine, at
  * /admin/pricing behind the same auth as the rest of the control panel.
@@ -176,6 +177,7 @@ const PricingCalculator: React.FC = () => {
 
   return (
     <AdminPage width="narrow">
+      <div className="studio-sales-controls">
         <div className="max-w-2xl mx-auto">
           <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
             Admin
@@ -191,6 +193,7 @@ const PricingCalculator: React.FC = () => {
             {(['calculator', 'settings', 'reference'] as View[]).map((v) => (
               <button
                 key={v}
+                aria-current={view === v ? 'page' : undefined}
                 type="button"
                 onClick={() => setView(v)}
                 className={`font-label text-[11px] uppercase tracking-[0.2em] font-semibold px-4 py-3 -mb-px border-b-2 transition-colors capitalize ${
@@ -427,6 +430,7 @@ const PricingCalculator: React.FC = () => {
             />
           )}
         </div>
+      </div>
     </AdminPage>
   );
 };

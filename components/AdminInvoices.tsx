@@ -1,3 +1,4 @@
+import './admin/StudioSalesControls.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AdminAlert, AdminPage } from './admin/AdminPage';
@@ -562,8 +563,9 @@ const AdminInvoices: React.FC = () => {
 
   return (
     <AdminPage width="wide">
+      <div className="studio-sales-controls">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col gap-5 border-b border-wood-200 pb-8 md:flex-row md:items-end md:justify-between">
+          <div className="studio-sales-invoice-header flex flex-col gap-3 border-b border-wood-200 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
                 Admin
@@ -584,7 +586,7 @@ const AdminInvoices: React.FC = () => {
                 type="button"
                 onClick={saveInvoice}
                 disabled={saving}
-                className="bg-wood-900 px-5 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-paper-50 hover:bg-bronze-700 disabled:opacity-50"
+                className="studio-sales-primary"
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>
@@ -592,7 +594,7 @@ const AdminInvoices: React.FC = () => {
                 type="button"
                 onClick={sendInvoice}
                 disabled={saving}
-                className="bg-bronze-600 px-5 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-paper-50 hover:bg-bronze-700 disabled:opacity-50"
+                className="studio-sales-secondary"
               >
                 Send / copy link
               </button>
@@ -619,7 +621,7 @@ const AdminInvoices: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="studio-sales-payment-grid grid gap-6">
                   <div>
                     {loading ? (
                       <p className="font-sans text-sm text-wood-600">Loading payment options...</p>
@@ -628,16 +630,16 @@ const AdminInvoices: React.FC = () => {
                         No payment options yet. Add Wise, crypto, or bank transfer here.
                       </p>
                     ) : (
-                      <div className="grid gap-3 md:grid-cols-2">
+                      <div className="studio-sales-payment-list grid gap-3">
                         {presets.map(preset => {
                           const selected = draft.paymentPresetIds.includes(preset.id);
                           return (
                             <div key={preset.id} className={`border p-4 ${selected ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'}`}>
-                              <div className="mb-3 flex items-start justify-between gap-3">
+                              <div className="studio-sales-preset-heading mb-3 flex items-start justify-between gap-3">
                                 <button
                                   type="button"
                                   onClick={() => togglePaymentPreset(preset.id)}
-                                  className="text-left"
+                                  className="studio-sales-preset-title"
                                 >
                                   <span className="block font-serif text-xl text-wood-900">{preset.label}</span>
                                   <span className="font-sans text-sm text-wood-600">
@@ -1031,6 +1033,7 @@ const AdminInvoices: React.FC = () => {
             </aside>
           </div>
         </div>
+      </div>
     </AdminPage>
   );
 };
