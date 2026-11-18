@@ -109,44 +109,21 @@ export const LIGHT_CODE_SUBCATEGORIES = [
 // Jewelry photo gallery - not individual pieces, just images grouped by type.
 // Visitors inquire for details rather than purchasing directly.
 export const JEWELRY_GALLERY = {
-    rings: [
-        'YeMingZhu-rings_qgm7qx',
-        'YeMingZhu-rings-2_ygqyco',
-        'YeMingZhu-rings-3_odygxj',
-        'YeMingZhu-rings-4_fptped',
-        'YeMingZhu-rings-5_oyapeb',
-        'YeMingZhu-rings-6_eicz54',
-        'YeMingZhu-rings-7_myef90',
-        'YeMingZhu-rings-8_utmquw',
-        'YeMingZhu-rings-9_kbbst9',
-        'YeMingZhu-rings-10_gqldep',
-        'YeMingZhu-rings-11_yitxox',
-        'YeMingZhu-rings-12_glpyou',
-        'YeMingZhu-rings-13_tv4fxf',
-        'YeMingZhu-rings-14_dsajcl',
-        'YeMingZhu-rings-15_ndelke',
-        'YeMingZhu-rings-16_tap3wk',
-        'YeMingZhu-rings-17_eoxc9e',
-        'YeMingZhu-rings-18_er33rs',
-        'YeMingZhu-rings-19_gvbcuw',
-        'YeMingZhu-rings-20_ejpeye',
+    "rings": [
+        "jewelry-gallery-80018eeb114e3323",
+        "jewelry-gallery-a7c1ed97762663d0",
+        "jewelry-gallery-e6e7e09f3882bb4c",
+        "jewelry-gallery-aa137884db331786",
+        "jewelry-gallery-7e6c1eef1068890d",
+        "jewelry-gallery-f95c99f59cea100a"
     ],
-    jewelry: [
-        'yemingzhu-jewelrt_mo3gjq',
-        'yemingzhu-jewelrt-2_semfc0',
-        'yemingzhu-jewelrt-3_hfk7nj',
-        'yemingzhu-jewelrt-4_acd3vq',
-        'yemingzhu-jewelrt-5_h040zx',
-        'yemingzhu-jewelrt-6_khbjvu',
-        'yemingzhu-jewelrt-7_cbse3x',
-        'yemingzhu-jewelrt-8_pqnf0c',
-        'yemingzhu-jewelrt-9_w2evod',
-        'yemingzhu-jewelrt-10_e7llou',
-        'yemingzhu-jewelrt-11_hq7ybz',
-        'yemingzhu-jewelrt-12_cm227d',
-        'yemingzhu-jewelrt-13_ikghgm',
-        'yemingzhu-jewelrt-14_gj1lzk',
-    ],
+    "jewelry": [
+        "jewelry-gallery-a9e9968abbce9b45",
+        "jewelry-gallery-43cedbe2c3f69a88",
+        "jewelry-gallery-ad04487e92b1d86f",
+        "jewelry-gallery-81f1367385210783",
+        "jewelry-gallery-664cb439f68000ac"
+    ]
 };
 
 export const STORE_CATEGORIES = [

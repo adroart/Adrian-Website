@@ -1,0 +1,155 @@
+{
+  "status": "local candidate, selection and publication approval pending",
+  "source": "Lightroom cached edited previews, not original camera files",
+  "publicationAuthority": "Not established for this exact recovered selection; no production uploads authorized yet",
+  "candidateBranch": "codex/jewelry-restoration-20261118",
+  "groups": {
+    "rings": [
+      {
+        "publicId": "jewelry-gallery-80018eeb114e3323",
+        "r2Key": "image/jewelry-gallery-80018eeb114e3323",
+        "sha256": "80018eeb114e33233d528520b69a5459d23fa1541161f0d3c0164af56c38f034",
+        "bytes": 164032,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 9876,
+        "sourceFilename": "P1139173.RW2",
+        "sourcePath": "recovered/9876-P1139173.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 1"
+      },
+      {
+        "publicId": "jewelry-gallery-a7c1ed97762663d0",
+        "r2Key": "image/jewelry-gallery-a7c1ed97762663d0",
+        "sha256": "a7c1ed97762663d0b28d364bcacf28278c30dd7682bad96012e862c761b7ac97",
+        "bytes": 120067,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 10114,
+        "sourceFilename": "P1139306.RW2",
+        "sourcePath": "recovered/10114-P1139306.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 2"
+      },
+      {
+        "publicId": "jewelry-gallery-e6e7e09f3882bb4c",
+        "r2Key": "image/jewelry-gallery-e6e7e09f3882bb4c",
+        "sha256": "e6e7e09f3882bb4cb695d88f1370fe5c0d201bc117d77b0daf1c03c5f281cafb",
+        "bytes": 132817,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 10092,
+        "sourceFilename": "P1139277.RW2",
+        "sourcePath": "recovered/10092-P1139277.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 3"
+      },
+      {
+        "publicId": "jewelry-gallery-aa137884db331786",
+        "r2Key": "image/jewelry-gallery-aa137884db331786",
+        "sha256": "aa137884db33178676e0f3af3fe006d86df8cf7f744589c7778465e079238c12",
+        "bytes": 128253,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 10110,
+        "sourceFilename": "P1139299.RW2",
+        "sourcePath": "recovered/10110-P1139299.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 4"
+      },
+      {
+        "publicId": "jewelry-gallery-7e6c1eef1068890d",
+        "r2Key": "image/jewelry-gallery-7e6c1eef1068890d",
+        "sha256": "7e6c1eef1068890d3af969a586dc3f243b5cd5a805950be960efb9a23633f329",
+        "bytes": 169247,
+        "width": 1280,
+        "height": 1280,
+        "sourceId": 10182,
+        "sourceFilename": "P1139394.RW2",
+        "sourcePath": "recovered/10182-P1139394.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 5"
+      },
+      {
+        "publicId": "jewelry-gallery-f95c99f59cea100a",
+        "r2Key": "image/jewelry-gallery-f95c99f59cea100a",
+        "sha256": "f95c99f59cea100a797bb495cc1848d46e344f599ddda3ed93c573fd668dfaf6",
+        "bytes": 127337,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 10150,
+        "sourceFilename": "P1139344.RW2",
+        "sourcePath": "recovered/10150-P1139344.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Ring photograph 6"
+      }
+    ],
+    "pendants": [
+      {
+        "publicId": "jewelry-gallery-a9e9968abbce9b45",
+        "r2Key": "image/jewelry-gallery-a9e9968abbce9b45",
+        "sha256": "a9e9968abbce9b453e886c30e3f58b12f9eed6eda0b4eee2e255e3bc95f2e4b7",
+        "bytes": 187404,
+        "width": 716,
+        "height": 1280,
+        "sourceId": 9582,
+        "sourceFilename": "P1138859.RW2",
+        "sourcePath": "recovered/9582-P1138859.jpg",
+        "verifiedLegacyMatch": "yemingzhu-jewelrt-3_hfk7nj",
+        "displayLabel": "Pendant photograph 1"
+      },
+      {
+        "publicId": "jewelry-gallery-43cedbe2c3f69a88",
+        "r2Key": "image/jewelry-gallery-43cedbe2c3f69a88",
+        "sha256": "43cedbe2c3f69a8895ae92d57cb5a1a5890abb6680bf05f2f25056853ff1498c",
+        "bytes": 301059,
+        "width": 1280,
+        "height": 1280,
+        "sourceId": 9566,
+        "sourceFilename": "P1138830.RW2",
+        "sourcePath": "recovered/9566-P1138830.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Pendant photograph 2"
+      },
+      {
+        "publicId": "jewelry-gallery-ad04487e92b1d86f",
+        "r2Key": "image/jewelry-gallery-ad04487e92b1d86f",
+        "sha256": "ad04487e92b1d86f0cf9e2a61bb036995d2ccfbaadce0eb38b14ebe0c6dd0c22",
+        "bytes": 299520,
+        "width": 1280,
+        "height": 1280,
+        "sourceId": 9621,
+        "sourceFilename": "P1138917.RW2",
+        "sourcePath": "recovered/9621-P1138917.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Pendant photograph 3"
+      },
+      {
+        "publicId": "jewelry-gallery-81f1367385210783",
+        "r2Key": "image/jewelry-gallery-81f1367385210783",
+        "sha256": "81f1367385210783a2a39645458b9e5a0d180be2c78afddc9ddf157e0fd0a264",
+        "bytes": 185898,
+        "width": 1280,
+        "height": 853,
+        "sourceId": 9559,
+        "sourceFilename": "P1138928.RW2",
+        "sourcePath": "recovered/9559-P1138928.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Pendant photograph 4"
+      },
+      {
+        "publicId": "jewelry-gallery-664cb439f68000ac",
+        "r2Key": "image/jewelry-gallery-664cb439f68000ac",
+        "sha256": "664cb439f68000ac602f66a69a0333a1794a50290176d5c04d6a54456ba5def8",
+        "bytes": 265293,
+        "width": 1280,
+        "height": 1280,
+        "sourceId": 9395,
+        "sourceFilename": "P1139068.RW2",
+        "sourcePath": "recovered/9395-P1139068.jpg",
+        "verifiedLegacyMatch": null,
+        "displayLabel": "Pendant photograph 5"
+      }
+    ]
+  }
+}
