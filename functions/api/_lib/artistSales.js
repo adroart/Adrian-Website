@@ -311,7 +311,7 @@ async function saleReplay(env, row, digest) {
   };
 }
 
-export async function createVerifiedSale(env, rawInput) {
+export async function createVerifiedSale(env, rawInput, invoiceSource = null) {
   requireAtomic(env);
   const input = normalizeSaleInput(rawInput);
   const digest = await requestDigest(input, ['recordedAt']);
@@ -348,7 +348,9 @@ export async function createVerifiedSale(env, rawInput) {
     }
     if (seen.has(artworkRecordId)) throw codedError('invalid_request');
     seen.add(artworkRecordId);
-    resolvedItems.push({ ...artwork, artworkRecordId, createRecord, status, index });
+    const keeperPieceId = index === 0 && createRecord ? invoiceSource?.keeperPieceId ?? null : null;
+    if (keeperPieceId) status = 'identity_linked';
+    resolvedItems.push({ ...artwork, artworkRecordId, createRecord, status, index, keeperPieceId });
   }
 
   const statements = [statement(env, `
@@ -369,11 +371,11 @@ export async function createVerifiedSale(env, rawInput) {
       statements.push(statement(env, `
         INSERT INTO artist_artwork_records
           (id, artwork_id, edition_json, identification_status,
-           created_by_user_id, created_at, updated_at)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)
+           created_by_user_id, created_at, updated_at, keeper_piece_id)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6, ?7)
       `, item.artworkRecordId, item.artworkId,
       item.edition ? JSON.stringify(item.edition) : null, item.status,
-      input.administrator.userId, input.recordedAt));
+      input.administrator.userId, input.recordedAt, item.keeperPieceId));
     }
   }
   for (const item of resolvedItems) {
@@ -409,6 +411,48 @@ export async function createVerifiedSale(env, rawInput) {
       `, eventId, input.reconnectionCaseId, item.artworkRecordId,
       input.administrator.userId, eventKey, digest, input.recordedAt));
     }
+  }
+
+  if (invoiceSource) {
+    // A missing or changed row produces NULL and rolls back the whole batch.
+    const { invoice, confirmationDigest, revision, keeperPieceId, record } = invoiceSource;
+    const attachExisting = record && keeperPieceId && !record.keeper_piece_id;
+    if (attachExisting) {
+      const editionJson = editionFromJson(record.edition_json);
+      const identityInput = {
+        artworkRecordId: record.id, expectedVersion: Number(record.record_version),
+        administrator: input.administrator, idempotencyKey: `paid-invoice-identity:${invoice.id}`,
+        at: input.recordedAt,
+      };
+      const after = { ...identitySnapshot(record), editionJson, keeperPieceId,
+        identificationStatus: 'identity_linked', recordVersion: identityInput.expectedVersion + 1 };
+      const identityDigest = await sha256(`paid-invoice-identity:${confirmationDigest}`);
+      statements.push(...await identityMutationStatements(env, identityInput, record, 'identity_linked', after, identityDigest));
+    }
+    statements.push(statement(env, `
+      INSERT INTO paid_invoice_sales (sale_id, invoice_id, confirmation_digest, invoice_revision)
+      VALUES (?1, (SELECT id FROM invoices WHERE id = ?2 AND status = 'paid'
+        AND invoice_number = ?3 AND client_email = ?4 AND currency = ?5
+        AND total_cents = ?6 AND amount_paid_cents = ?6 AND paid_at = ?7
+        AND job_title = ?8 AND job_description = ?9 AND line_items_json = ?10
+        AND client_name = ?11 AND shipping_text = ?12
+        AND NOT EXISTS (SELECT 1 FROM artist_verified_sales previous
+          WHERE previous.private_reference = ?3 AND previous.id <> ?1)
+        AND NOT EXISTS (SELECT 1 FROM artist_artwork_records duplicate
+          WHERE duplicate.id <> ?20 AND duplicate.artwork_id = ?21
+            AND json_extract(duplicate.edition_json, '$.kind') = ?22
+            AND (?23 = 0 OR json_extract(duplicate.edition_json, '$.number') = ?23))
+        AND (SELECT id FROM keeper_pieces WHERE piece_id = ?21 AND edition_number = ?23
+          AND registration_status = 'registered' AND plate_status NOT IN ('void', 'superseded')) IS ?13
+        AND (?14 IS NULL OR EXISTS (SELECT 1 FROM artist_artwork_records
+          WHERE id = ?14 AND keeper_piece_id IS ?13 AND artwork_id = ?16
+            AND edition_json = ?17 AND record_version = ?18))), ?15, ?19)
+    `, saleId, invoice.id, invoice.invoice_number, invoice.client_email, invoice.currency,
+    invoice.total_cents, invoice.paid_at, invoice.job_title, invoice.job_description,
+    invoice.line_items_json, invoice.client_name, invoice.shipping_text, keeperPieceId,
+    record?.id ?? null, confirmationDigest, record?.artwork_id ?? null,
+    record?.edition_json ?? null, record ? Number(record.record_version) + (attachExisting ? 1 : 0) : null, revision, resolvedItems[0].artworkRecordId,
+    invoiceSource.artworkId, invoiceSource.kind, invoiceSource.number));
   }
 
   try {
@@ -651,9 +695,9 @@ function identitySnapshot(row) {
   };
 }
 
-async function mutateIdentity(env, input, row, action, after, digest) {
+async function identityMutationStatements(env, input, row, action, after, digest) {
   const eventId = await stableId('record-event', digest);
-  const statements = [
+  return [
     statement(env, `
       INSERT INTO artist_artwork_record_events
         (id, artwork_record_id, action, before_json, after_json, resulting_version,
@@ -672,6 +716,10 @@ async function mutateIdentity(env, input, row, action, after, digest) {
     after.identificationStatus, after.recordVersion, eventId, input.at,
     input.artworkRecordId, input.expectedVersion),
   ];
+}
+
+async function mutateIdentity(env, input, row, action, after, digest) {
+  const statements = await identityMutationStatements(env, input, row, action, after, digest);
   requireBatchResults(await env.DB.batch(statements), statements.length);
   return {
     artworkRecordId: input.artworkRecordId,
