@@ -72,3 +72,27 @@ for (const state of ['loading', 'error', 'content'] as const) {
     await expect(page.getByRole('button', { name: 'Piece information' })).toBeVisible();
   });
 }
+
+test('the Story opened from a piece holds a centered reading column on desktop', async ({ page }) => {
+  for (const { width, height, columnWidth } of [
+    { width: 1440, height: 900, columnWidth: 520 },
+    { width: 390, height: 844, columnWidth: 330 },
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/collector?frame=full');
+    const frame = page.locator('.collector-frame');
+    const story = frame.getByRole('button', { name: /^The story/ });
+    await story.click();
+
+    const title = frame.getByText('The story', { exact: true });
+    await expect(title).toBeVisible();
+    const layout = await title.evaluate(element => {
+      const { x, width } = element.parentElement!.getBoundingClientRect();
+      return { x, width };
+    });
+    expect(layout).toEqual({ x: (width - columnWidth) / 2, width: columnWidth });
+    expect(await frame.boundingBox()).toMatchObject({ x: 0, y: 0, width, height });
+    await frame.getByRole('button', { name: 'Back', exact: true }).click();
+    await expect(story).toBeVisible();
+  }
+});
