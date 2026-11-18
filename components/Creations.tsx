@@ -12,6 +12,7 @@ import ArtImage from './ArtImage';
 import { GalleryPhoto, SeriesEntrances } from './gallery/GalleryDisplay';
 import { artworkById, artworkSeries } from './gallery/galleryContent';
 import { piecePath } from '../utils/pieceSlug';
+import { JEWELRY_PHOTO_CROPS } from '../data/jewelryFraming';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,17 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
  * enough to feel abundant without asking anyone to scroll a kilometre.
  */
 const PAGE_SIZE = 48;
+
+function jewelryPhotoStyle(id: string): React.CSSProperties | undefined {
+    const crop = JEWELRY_PHOTO_CROPS[id];
+    if (!crop) return undefined;
+    return {
+        width: `${crop.width / crop.size * 100}%`,
+        height: `${crop.height / crop.size * 100}%`,
+        left: `${-crop.x / crop.size * 100}%`,
+        top: `${-crop.y / crop.size * 100}%`,
+    };
+}
 
 /**
  * Match a piece against a free-text query.
@@ -313,7 +325,7 @@ const Creations: React.FC = () => {
                             <button
                                 key={id}
                                 type="button"
-                                className={`gallery-mat cursor-zoom-in${title === "Rings" ? " jewelry-ring-mat" : ""}`}
+                                className="gallery-mat jewelry-photo cursor-zoom-in"
                                 aria-label={`Enlarge ${title.toLowerCase()} photograph ${photographs.indexOf(id) + 1}`}
                                 disabled={!loadedJewelryImages.includes(id)}
                                 onClick={() => {
@@ -322,7 +334,8 @@ const Creations: React.FC = () => {
                                 }}
                             >
                                 <img
-                                    src={img(id, { w: 600 })}
+                                    src={img(id, { w: 1200 })}
+                                    style={jewelryPhotoStyle(id)}
                                     alt={`${title === "Rings" ? "Ring" : "Pendant"} photograph ${photographs.indexOf(id) + 1}`}
                                     loading="lazy"
                                     decoding="async"
