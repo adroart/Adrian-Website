@@ -77,8 +77,8 @@ describe('certificate editor contracts', () => {
       new URL('../components/admin/CertificateEditor.tsx', import.meta.url), 'utf8',
     );
     for (const phrase of [
-      'Create template', 'Assign to selected artwork', 'Inherit', 'Override', 'Suppress',
-      'Effective preview', 'Materials', 'Makers and roles', 'Origin', 'Techniques',
+      'Create template', 'Assign to selected artwork', 'Inherit template', 'Use a custom value', 'Omit from certificate',
+      'Public certificate', 'Materials', 'Makers and roles', 'Origin', 'Techniques',
       'Certificate wording', 'Opening wording',
       'getArtworkState', 'artworkState.effective',
     ]) assert.match(source, new RegExp(phrase));
