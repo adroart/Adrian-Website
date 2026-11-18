@@ -12,6 +12,7 @@ import ArtImage from './ArtImage';
 import { GalleryPhoto, SeriesEntrances } from './gallery/GalleryDisplay';
 import { artworkById, artworkSeries } from './gallery/galleryContent';
 import { piecePath } from '../utils/pieceSlug';
+import { JEWELRY_PHOTO_CROPS } from '../data/jewelryFraming';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,17 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
  * enough to feel abundant without asking anyone to scroll a kilometre.
  */
 const PAGE_SIZE = 48;
+
+function jewelryPhotoStyle(id: string): React.CSSProperties | undefined {
+    const crop = JEWELRY_PHOTO_CROPS[id];
+    if (!crop) return undefined;
+    return {
+        width: `${crop.width / crop.size * 100}%`,
+        height: `${crop.height / crop.size * 100}%`,
+        left: `${-crop.x / crop.size * 100}%`,
+        top: `${-crop.y / crop.size * 100}%`,
+    };
+}
 
 /**
  * Match a piece against a free-text query.
@@ -305,7 +317,7 @@ const Creations: React.FC = () => {
     const renderJewelryGroup = (title: string, photographs: string[]) => {
         const visible = photographs.filter(id => !failedJewelryImages.includes(id));
         return (
-            <section className="gallery-band">
+            <section className="gallery-band" id={title === "Rings" ? "jewelry-rings" : "jewelry-pendants"}>
                 <div className="gallery-band-heading"><h2 className="gallery-subtitle">{title}</h2></div>
                 {visible.length ? (
                     <div className="gallery-grid">
@@ -313,7 +325,7 @@ const Creations: React.FC = () => {
                             <button
                                 key={id}
                                 type="button"
-                                className="gallery-mat cursor-zoom-in"
+                                className="gallery-mat jewelry-photo cursor-zoom-in"
                                 aria-label={`Enlarge ${title.toLowerCase()} photograph ${photographs.indexOf(id) + 1}`}
                                 disabled={!loadedJewelryImages.includes(id)}
                                 onClick={() => {
@@ -322,8 +334,9 @@ const Creations: React.FC = () => {
                                 }}
                             >
                                 <img
-                                    src={img(id, { w: 600 })}
-                                    alt=""
+                                    src={img(id, { w: 1200 })}
+                                    style={jewelryPhotoStyle(id)}
+                                    alt={`${title === "Rings" ? "Ring" : "Pendant"} photograph ${photographs.indexOf(id) + 1}`}
                                     loading="lazy"
                                     decoding="async"
                                     onLoad={() => setLoadedJewelryImages(prev => prev.includes(id) ? prev : [...prev, id])}
@@ -348,7 +361,7 @@ const Creations: React.FC = () => {
     };
 
     return (
-        <section className="public-gallery min-h-screen">
+        <section className={`public-gallery min-h-screen${filter === "Jewelry" ? " jewelry-gallery" : ""}`}>
             {isCuratedEntry && (
                 <div className="gallery-width">
                     <section className="gallery-hero" aria-labelledby="creations-title">
@@ -544,10 +557,20 @@ const Creations: React.FC = () => {
                 {filter === 'Jewelry' ? (
                     <>
                         <p className="gallery-intro">
-                            Each piece is one of a kind, crafted with Ye Ming Zhu and precious materials.
+                            Rings and pendants from the studio. Inquire about individual pieces.
                         </p>
-                        <Link to="/inquire" className="gallery-action">Inquire about jewelry</Link>
-                        {renderJewelryGroup('Pendants and jewelry', JEWELRY_GALLERY.jewelry)}
+                        <nav className="gallery-actions" aria-label="Jewelry groups">
+                            <a href="#jewelry-pendants" className="gallery-action" onClick={event => {
+                                event.preventDefault();
+                                document.getElementById('jewelry-pendants')?.scrollIntoView({ block: 'start' });
+                            }}>Pendants</a>
+                            <a href="#jewelry-rings" className="gallery-action" onClick={event => {
+                                event.preventDefault();
+                                document.getElementById('jewelry-rings')?.scrollIntoView({ block: 'start' });
+                            }}>Rings</a>
+                            <Link to="/inquire" className="gallery-action">Inquire about jewelry</Link>
+                        </nav>
+                        {renderJewelryGroup('Pendants', JEWELRY_GALLERY.jewelry)}
                         {renderJewelryGroup('Rings', JEWELRY_GALLERY.rings)}
                     </>
                 ) : displayedPieces.length > 0 ? (
