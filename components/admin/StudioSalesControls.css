@@ -1,0 +1,115 @@
+/* Scoped to sales tools. Public invoices and the other Studio workspaces keep their own controls. */
+.studio-sales-controls {
+  --sales-ink: #ede9e2;
+  --sales-quiet: #c4beb4;
+  --sales-accent: #d4b88a;
+  --sales-ground: #1d1714;
+  --sales-edge: rgb(237 233 226 / 26%);
+  --sales-fill: rgb(237 233 226 / 6%);
+}
+
+.admin-page .studio-sales-controls button,
+.admin-page .studio-sales-controls :is(.studio-sales-primary, .studio-sales-secondary, .studio-sales-quiet) {
+  min-height: 44px;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--sales-edge);
+  border-radius: 0.5rem;
+  background: var(--sales-fill);
+  color: var(--sales-ink);
+  font-family: var(--font-label);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: none;
+}
+
+.admin-page .studio-sales-controls .studio-sales-primary {
+  border-color: var(--sales-accent);
+  background: var(--sales-accent);
+  color: var(--sales-ground);
+  box-shadow: inset 0 1px rgb(255 255 255 / 20%);
+}
+
+.admin-page .studio-sales-controls .studio-sales-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--sales-quiet);
+}
+
+.admin-page .studio-sales-controls button:not(:disabled):hover {
+  border-color: var(--sales-quiet);
+  background: rgb(237 233 226 / 11%);
+}
+
+.admin-page .studio-sales-controls .studio-sales-primary:not(:disabled):hover {
+  border-color: #e2caa1;
+  background: #e2caa1;
+}
+
+.admin-page .studio-sales-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-page .studio-sales-controls :is(input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea) {
+  min-width: 0;
+  border-radius: 0.5rem;
+  border-color: rgb(237 233 226 / 37%);
+  background: rgb(13 11 9 / 33%);
+  color: var(--sales-ink);
+  color-scheme: dark;
+}
+
+.admin-page .studio-sales-controls :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--sales-accent);
+  outline-offset: 2px;
+}
+
+.studio-sales-controls .admin-page-header,
+.studio-sales-controls .studio-sales-invoice-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+}
+
+@media (max-width: 40rem) {
+  .studio-sales-controls .studio-sales-invoice-header > div:last-child {
+    gap: 0.4rem;
+  }
+}
+
+.admin-page .studio-sales-controls :is(.studio-sales-primary, .studio-sales-secondary, .studio-sales-quiet) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-page .studio-sales-controls button:is(.bg-bronze-50, .bg-bronze-600, .bg-wood-900, [aria-pressed=true], [aria-current=page]),
+.admin-page .studio-sales-controls button:is(.bg-bronze-50, .bg-bronze-600, .bg-wood-900, [aria-pressed=true], [aria-current=page]):not(:disabled):hover {
+  border-color: var(--sales-accent);
+  background: rgb(212 184 138 / 13%);
+  color: var(--sales-ink);
+}
+
+.studio-sales-controls .studio-sales-payment-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.studio-sales-controls .studio-sales-payment-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.studio-sales-controls .studio-sales-preset-heading {
+  flex-wrap: wrap;
+}
+
+.admin-page .studio-sales-controls .studio-sales-preset-title {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}

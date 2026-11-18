@@ -1,3 +1,4 @@
+import './StudioSalesControls.css';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../../data/mockData';
@@ -76,9 +77,9 @@ class WorkspaceRequestError extends Error {
 
 const inputClass = 'mt-2 block min-h-11 w-full rounded-none border border-wood-300 bg-paper-50 px-3 py-2 font-sans text-base text-wood-900';
 const labelClass = 'block font-sans text-base font-semibold text-wood-800';
-const buttonPrimary = 'collector-button-primary text-base! disabled:cursor-not-allowed';
-const buttonSecondary = 'collector-button-secondary text-base! disabled:cursor-not-allowed';
-const quietButton = 'min-h-11 border border-wood-300 px-4 py-2 font-sans text-base font-semibold text-wood-800 hover:border-bronze-500';
+const buttonPrimary = 'studio-sales-primary';
+const buttonSecondary = 'studio-sales-secondary';
+const quietButton = 'studio-sales-quiet';
 const statusText: Record<ReconnectionStatus, string> = {
   open: 'Open', partially_resolved: 'Partially resolved', resolved: 'Resolved', closed: 'Closed',
 };
@@ -844,6 +845,7 @@ const CollectorSales: React.FC = () => {
 
   return (
     <AdminPage width="wide">
+      <div className="studio-sales-controls">
       <AdminPageHeader
         title="Verified sales"
         description="Record real artwork history and reconnect personally with collectors. Buyer details, prices, notes, and evidence remain private to this studio workspace."
@@ -1111,6 +1113,7 @@ const CollectorSales: React.FC = () => {
           </div>
         </AdminSection>
       )}
+      </div>
     </AdminPage>
   );
 };
