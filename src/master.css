@@ -643,6 +643,21 @@
   --btn-active: var(--admin-accent);
 }
 
+/* The printable island resolves button roles against its own light ramps. */
+.invoice-light,
+.dark .invoice-light {
+  --btn-primary-bg: var(--color-wood-900);
+  --btn-primary-fg: var(--color-paper-50);
+  --btn-primary-bg-hover: var(--color-bronze-600);
+  --btn-edge: var(--color-wood-700);
+  --btn-edge-hover: var(--color-wood-900);
+  --btn-fg: var(--color-wood-900);
+  --btn-fill-hover: var(--color-paper-100);
+  --btn-ghost-fg: var(--color-wood-700);
+  --btn-ghost-fg-hover: var(--color-wood-900);
+  --btn-active: var(--color-bronze-600);
+}
+
 @layer components {
   .btn,
   .tab,

@@ -7,6 +7,8 @@ import {
 } from './artistSales.js';
 import { resolveArtworkCertificate } from './certificateContent.js';
 import { readMaintenanceWorkspaceProjection } from './registryMaintenance.js';
+import { plateWizardStageForPiece } from '../../../utils/plateWizard.ts';
+import { isPublicRegistryCode } from '../../../utils/publicRegistry.ts';
 import {
   identityRecoveryDependenciesForRow,
   identityRecoveryQualificationStatus,
@@ -47,7 +49,7 @@ async function selectedKeeper(env, selector, record) {
 }
 
 function validateRecord(row) {
-  if (!row) return;
+  if (!row) return null;
   const shapeIsValid = row.identification_status === 'unresolved'
     ? row.artwork_id === null && row.keeper_piece_id === null
     : row.identification_status === 'identified'
@@ -69,13 +71,15 @@ function validateRecord(row) {
             && edition.number >= 1 && (edition.size === null
               || (Number.isSafeInteger(edition.size) && edition.size >= edition.number))));
       if (!valid) throw new Error();
+      return edition;
     } catch {
       throw workspaceError('workspace_data_corrupt');
     }
   }
+  return null;
 }
 
-function validateSelection(selector, record, keeper) {
+function validateSelection(selector, record, keeper, recordEdition) {
   if (record?.identification_status === 'unresolved'
     && (selector.artworkId || selector.keeperPieceId)) {
     throw workspaceError('workspace_selector_conflict');
@@ -96,8 +100,7 @@ function validateSelection(selector, record, keeper) {
     throw workspaceError('workspace_data_corrupt');
   }
   if (record?.keeper_piece_id && keeper) {
-    const edition = JSON.parse(record.edition_json);
-    const number = edition.kind === 'unique' ? 0 : edition.number;
+    const number = recordEdition.kind === 'unique' ? 0 : recordEdition.number;
     if (Number(keeper.edition_number) !== number) {
       throw workspaceError('workspace_data_corrupt');
     }
@@ -105,6 +108,15 @@ function validateSelection(selector, record, keeper) {
   if (selector.artworkId && keeper && selector.artworkId !== keeper.piece_id) {
     throw workspaceError('workspace_selector_conflict');
   }
+}
+
+function exactEdition(keeper, recordEdition) {
+  if (!keeper && !recordEdition) return null;
+  const number = keeper
+    ? Number(keeper.edition_number)
+    : recordEdition.kind === 'unique' ? 0 : recordEdition.number;
+  if (!Number.isSafeInteger(number) || number < 0) throw workspaceError('workspace_data_corrupt');
+  return number === 0 ? { kind: 'unique' } : { kind: 'numbered', number };
 }
 
 async function certificateProjection(env, artworkId) {
@@ -120,32 +132,43 @@ async function certificateProjection(env, artworkId) {
 
 async function plateProjection(env, keeper) {
   if (!keeper) return null;
-  const identityQualification = await loadLatestPassedIdentityQualification(env.DB, keeper.id);
+  const hasFabricatedPlate = ['generated', 'active'].includes(keeper.plate_status);
+  const [identityQualification, plateQualification] = await Promise.all([
+    loadLatestPassedIdentityQualification(env.DB, keeper.id),
+    hasFabricatedPlate ? loadLatestPassedPieceQualification(env.DB, keeper.id) : null,
+  ]);
   const identityStatus = identityRecoveryQualificationStatus(
     identityQualification,
     identityRecoveryDependenciesForRow(keeper, env),
   ).status;
+  const plateStatus = hasFabricatedPlate
+    ? recoveryQualificationStatus(plateQualification, recoveryDependenciesForRow(keeper, env)).status
+    : undefined;
+  const projection = {
+    state: keeper.plate_status,
+    wizardStage: plateWizardStageForPiece({
+      plateStatus: keeper.plate_status,
+      backupStatus: keeper.backup_status,
+      recoveryQualificationStatus: plateStatus,
+      registered: true,
+    }),
+  };
   if (identityStatus !== 'current') {
     return {
-      state: keeper.plate_status,
+      ...projection,
       recoveryState: identityStatus === 'stale' ? 'identity_stale' : 'identity_missing',
     };
   }
-  if (!['generated', 'active'].includes(keeper.plate_status)) {
-    return { state: keeper.plate_status, recoveryState: 'not_required' };
+  if (!hasFabricatedPlate) {
+    return { ...projection, recoveryState: 'not_required' };
   }
   if (keeper.backup_status !== 'verified' || !keeper.backup_reference || !keeper.backup_sha256) {
-    return { state: keeper.plate_status, recoveryState: 'plate_backup_missing' };
+    return { ...projection, recoveryState: 'plate_backup_missing' };
   }
-  const qualification = await loadLatestPassedPieceQualification(env.DB, keeper.id);
-  const status = recoveryQualificationStatus(
-    qualification,
-    recoveryDependenciesForRow(keeper, env),
-  ).status;
   return {
-    state: keeper.plate_status,
-    recoveryState: status === 'current' ? 'current'
-      : status === 'stale' ? 'plate_recovery_stale' : 'plate_recovery_missing',
+    ...projection,
+    recoveryState: plateStatus === 'current' ? 'current'
+      : plateStatus === 'stale' ? 'plate_recovery_stale' : 'plate_recovery_missing',
   };
 }
 
@@ -175,7 +198,7 @@ function stablePath(path, params) {
 }
 
 function nextActionProjection({
-  record, keeper, artwork, certificate, invitation, caretaker, plate, sale,
+  record, keeper, artwork, certificate, invitation, caretaker, plate, legacySaleVerificationPath,
 }) {
   if (record?.identification_status === 'unresolved') {
     return {
@@ -184,10 +207,11 @@ function nextActionProjection({
       reason: 'This sales record is not matched to a catalog artwork.',
     };
   }
+  if (plate?.state === 'void' || plate?.state === 'superseded') return null;
   if (plate?.recoveryState === 'identity_missing' || plate?.recoveryState === 'identity_stale') {
     return {
       label: 'Verify identity recovery',
-      href: stablePath('/admin/pieces/wizard', { keeperPieceId: keeper.id }),
+      href: stablePath('/admin/pieces/wizard', { keeperPieceId: keeper.id, proof: 'identity' }),
       reason: 'The registered identity needs a current copied recovery check.',
     };
   }
@@ -225,21 +249,18 @@ function nextActionProjection({
         : 'No completed caretaker invitation is recorded.',
     };
   }
-  if (sale?.state === 'legacy_candidate') {
+  if (legacySaleVerificationPath) {
     return {
       label: 'Verify legacy sale',
-      href: stablePath('/admin/collector-sales', {
-        source: 'legacy_acquisition', acquisitionId: sale.legacyAcquisitionId,
-        artworkId: artwork.id, keeperPieceId: keeper.id,
-      }),
+      href: legacySaleVerificationPath,
       reason: 'A legacy sale record is waiting for verification.',
     };
   }
-  if (keeper) {
+  if (keeper && isPublicRegistryCode(keeper.public_code)) {
     return {
       label: 'Review caretaker experience',
-      href: stablePath('/admin/pieces', { keeperPieceId: keeper.id }),
-      reason: 'The core artwork record is ready for experience review.',
+      href: stablePath(`/works/${encodeURIComponent(artwork.id)}`, { instance: keeper.public_code }),
+      reason: 'See the public record for this exact piece.',
     };
   }
   return null;
@@ -248,10 +269,10 @@ function nextActionProjection({
 export async function getArtworkWorkspace(env, selector, now = new Date().toISOString()) {
   if (!env?.DB) throw workspaceError('db_not_configured');
   const record = await selectedRecord(env, selector);
-  validateRecord(record);
+  const recordEdition = validateRecord(record);
   const identityProjection = await selectedKeeper(env, selector, record);
   const keeper = identityProjection?.row ?? null;
-  validateSelection(selector, record, keeper);
+  validateSelection(selector, record, keeper, recordEdition);
 
   const artworkId = selector.artworkId ?? record?.artwork_id ?? keeper?.piece_id ?? null;
   const artwork = artworkId ? await resolveArtwork(env, artworkId) : null;
@@ -264,28 +285,29 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
     throw workspaceError('workspace_data_corrupt');
   }
 
+  const caretaker = { state: identityProjection?.caretaker ?? 'not_registered' };
   const [certificate, invitationRead, verifiedRead, maintenanceRead, plate] = await Promise.all([
     certificateProjection(env, artwork?.id ?? null),
-    readArtworkInvitationProjection(env, keeper?.id ?? null, now),
+    readArtworkInvitationProjection(env, keeper?.id ?? null, now, { preferAvailable: caretaker.state === 'unclaimed' }),
     readVerifiedSaleProjection(env, record?.id ?? null),
     readMaintenanceWorkspaceProjection(env, keeper?.id ?? null),
     plateProjection(env, keeper),
   ]);
   const invitation = invitationRead.invitation;
-  const caretaker = { state: identityProjection?.caretaker ?? 'not_registered' };
-  const sale = verifiedRead.sale ? {
-    public: verifiedRead.sale, legacyAcquisitionId: null,
-  } : maintenanceRead.legacySale ? {
-    public: { state: 'legacy_candidate', verifiedSaleId: null },
-    legacyAcquisitionId: maintenanceRead.legacySale.acquisitionId,
-  } : null;
+  const legacyAcquisitionId = !verifiedRead.sale && maintenanceRead.legacySale?.acquisitionId;
+  const legacySaleVerificationPath = legacyAcquisitionId ? stablePath('/admin/collector-sales', {
+    source: 'legacy_acquisition', acquisitionId: legacyAcquisitionId,
+    artworkId: artwork.id, keeperPieceId: keeper.id,
+  }) : null;
+  const sale = verifiedRead.sale ?? (legacySaleVerificationPath
+    ? { state: 'legacy_candidate', verifiedSaleId: null }
+    : null);
   const activity = activityProjection(
     record, identityProjection, invitationRead.activity,
     verifiedRead.activity, maintenanceRead.activity,
   );
   const nextAction = nextActionProjection({
-    record, keeper, artwork, certificate, invitation, caretaker, plate,
-    sale: sale ? { ...sale.public, legacyAcquisitionId: sale.legacyAcquisitionId } : null,
+    record, keeper, artwork, certificate, invitation, caretaker, plate, legacySaleVerificationPath,
   });
 
   return {
@@ -307,8 +329,12 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
     invitation,
     caretaker,
     plate,
-    sale: sale?.public ?? null,
+    sale,
     nextAction,
     activity,
+    edition: exactEdition(keeper, recordEdition),
+    selectionScope: selector.keeperPieceId || selector.artistArtworkRecordId
+      ? 'exact_record' : record ? 'implicit_record' : 'catalog',
+    legacySaleVerificationPath,
   };
 }

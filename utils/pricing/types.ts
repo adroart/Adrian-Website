@@ -139,4 +139,7 @@ export interface SavedQuote {
   quote: number;
   /** What Adrian actually charged, for comparing the formula against reality. */
   actualPrice: number | null;
+  configuration?: string;
+  artworkId?: string;
+  invoiceId?: number | null;
 }

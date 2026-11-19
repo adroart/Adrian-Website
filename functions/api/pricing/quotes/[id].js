@@ -58,6 +58,11 @@ async function patchQuote(request, env, id) {
 }
 
 async function deleteQuote(env, id) {
-  await env.DB.prepare('DELETE FROM pricing_quotes WHERE id = ?1').bind(id).run();
+  const result = await env.DB.prepare(`DELETE FROM pricing_quotes WHERE id = ?1
+    AND NOT EXISTS (SELECT 1 FROM invoices WHERE source_quote_id = ?1)`).bind(id).run();
+  if (result.meta?.changes === 0) {
+    const used = await env.DB.prepare('SELECT id FROM invoices WHERE source_quote_id = ?1').bind(id).first();
+    if (used) return jsonResponse({ ok: false, error: 'quote_already_accepted' }, 409);
+  }
   return jsonResponse({ ok: true });
 }

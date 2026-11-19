@@ -1,16 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   loadArtworkWorkspace,
   type ArtworkWorkspace as ArtworkWorkspaceData,
   type ArtworkWorkspaceSelector,
 } from '../../utils/artworkWorkspace';
-import { AdminAlert, AdminEmptyState, AdminPage, AdminSection } from './AdminPage';
+import { AdminEmptyState, AdminPage } from './AdminPage';
 import ArtworkWorkspaceHeader from './ArtworkWorkspaceHeader';
 
-type WorkspaceStatus = 'loading' | 'ready' | 'missing' | 'conflict' | 'error';
-
-const linkClass = 'font-sans text-base font-semibold text-bronze-700 underline decoration-bronze-300 underline-offset-4 hover:text-bronze-900';
+type WorkspaceStatus = 'loading' | 'ready' | 'missing' | 'invalid' | 'conflict' | 'inconsistent' | 'error';
 
 function oneQueryValue(searchParams: URLSearchParams, key: 'instance' | 'record'): string | undefined {
   const values = searchParams.getAll(key);
@@ -45,167 +43,222 @@ function queryPath(path: string, values: Record<string, string | undefined>): st
   return suffix ? `${path}?${suffix}` : path;
 }
 
-type PlateDestination = { href: string; label: string };
+type RecordAction = { href: string; label: string; primary?: boolean };
 
 export function artworkPlateDestination(
   keeperPieceId: string | null | undefined,
   plate: ArtworkWorkspaceData['plate'],
-): PlateDestination | null {
+): RecordAction | null {
   if (!keeperPieceId || !plate) return null;
-  const wizardActionable = plate.state === 'generated'
-    || (plate.state === 'active'
-      && (plate.recoveryState === 'plate_recovery_missing'
-        || plate.recoveryState === 'plate_recovery_stale'));
-  return wizardActionable
-    ? {
-        href: queryPath('/admin/pieces/wizard', { keeperPieceId }),
-        label: 'Open plate and recovery wizard',
-      }
-    : {
-        href: queryPath('/admin/pieces', { keeperPieceId }),
-        label: 'Open exact piece in plate registry',
-      };
-}
-
-function workspaceWithUsefulPlateAction(
-  workspace: ArtworkWorkspaceData,
-): ArtworkWorkspaceData {
-  if (!workspace.nextAction?.href.startsWith('/admin/pieces/wizard?')) return workspace;
-  const destination = artworkPlateDestination(
-    workspace.identity?.keeperPieceId,
-    workspace.plate,
-  );
-  if (!destination || destination.href.startsWith('/admin/pieces/wizard?')) return workspace;
-  return {
-    ...workspace,
-    nextAction: {
-      ...destination,
-      reason: 'Review this exact physical identity in the plate registry.',
-    },
+  const needsIdentityProof = (plate.recoveryState === 'identity_missing' || plate.recoveryState === 'identity_stale')
+    && ['legacy', 'generated', 'active'].includes(plate.state);
+  if (needsIdentityProof) return {
+    href: queryPath('/admin/pieces/wizard', { keeperPieceId, proof: 'identity' }),
+    label: 'Verify identity recovery',
+  };
+  const canResume = 'wizardStage' in plate
+    ? plate.wizardStage != null
+    : plate.state === 'generated' || (plate.state === 'active'
+      && ['plate_recovery_missing', 'plate_recovery_stale'].includes(plate.recoveryState));
+  return canResume ? {
+    href: queryPath('/admin/pieces/wizard', { keeperPieceId }),
+    label: 'Open plate and recovery wizard',
+  } : {
+    href: queryPath('/admin/pieces', { keeperPieceId }),
+    label: 'Open plate registry',
   };
 }
 
-function stateLabel(value: string | null | undefined): string {
-  return value ? value.replaceAll('_', ' ') : 'Not recorded';
+const certificateFields = {
+  materials: 'Materials',
+  makers: 'Makers and roles',
+  origin: 'Origin',
+  techniques: 'Techniques',
+  yearWording: 'Year wording',
+  editionWording: 'Edition wording',
+  certificateWording: 'Certificate wording',
+  openingWording: 'Opening wording',
+};
+
+const recoveryText = {
+  identity_missing: 'Identity recovery proof needed',
+  identity_stale: 'Identity recovery proof out of date',
+  plate_backup_missing: 'Plate backup needed',
+  plate_recovery_missing: 'Plate recovery proof needed',
+  plate_recovery_stale: 'Plate recovery proof out of date',
+  current: 'Recovery proof current',
+  not_required: 'Identity recovery proof current',
+};
+
+const plateText = {
+  legacy: 'No fabricated plate on record',
+  generated: 'Plate prepared',
+  active: 'Plate active',
+  void: 'Plate voided',
+  superseded: 'Plate replaced',
+};
+
+function recordListPath(state: unknown) {
+  if (state && typeof state === 'object' && 'artworkListReturnPath' in state
+    && typeof state.artworkListReturnPath === 'string'
+    && /^\/admin\/artworks(?:\?[^#\s]*)?$/.test(state.artworkListReturnPath)) {
+    return state.artworkListReturnPath;
+  }
+  return '/admin/artworks';
 }
 
-function DefinitionList({ items }: { items: Array<[string, React.ReactNode]> }) {
+function RecordSection({ id, title, status, note, action, secondary, returnState }: {
+  id: string;
+  title: string;
+  status: string;
+  note?: string;
+  action?: RecordAction | null;
+  secondary?: RecordAction | null;
+  returnState: { artworkReturnPath: string; artworkListReturnPath: string };
+}) {
   return (
-    <dl className="grid gap-4 font-sans text-base text-wood-700 sm:grid-cols-2">
-      {items.map(([label, value]) => (
-        <div key={label} className="min-w-0 border-t border-wood-200 pt-3">
-          <dt className="font-semibold text-wood-900">{label}</dt>
-          <dd className="mt-1 break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <section id={id} className="studio-record-section" aria-labelledby={`${id}-heading`}>
+      <h2 id={`${id}-heading`}>{title}</h2>
+      <div className="studio-record-summary">
+        <p className="studio-record-status">{status}</p>
+        {note && <p className="studio-record-note">{note}</p>}
+      </div>
+      {action && <div className="studio-record-section-actions">
+        {[action, secondary].filter((item): item is RecordAction => Boolean(item)).map(item => (
+          <Link key={item.href} className={`studio-record-action${item.primary ? ' studio-record-primary' : ''}`}
+            to={item.href} state={returnState}>{item.label}</Link>
+        ))}
+      </div>}
+    </section>
   );
 }
 
-function WorkspaceSummaries({ workspace }: { workspace: ArtworkWorkspaceData }) {
+const activityDate = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+const activityTime = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+
+function WorkspaceSummaries({ workspace, artworkReturnPath, artworkListReturnPath }: {
+  workspace: ArtworkWorkspaceData;
+  artworkReturnPath: string;
+  artworkListReturnPath: string;
+}) {
+  const returnState = { artworkReturnPath, artworkListReturnPath };
   const artworkId = workspace.catalog?.artworkId;
   const keeperPieceId = workspace.identity?.keeperPieceId;
-  const artistArtworkRecordId = workspace.salesRecord?.artworkRecordId;
-  const plateDestination = artworkPlateDestination(keeperPieceId, workspace.plate);
-  const publicPath = artworkId
-    ? queryPath(`/works/${encodeURIComponent(artworkId)}`, {
-        instance: workspace.identity?.publicCode,
-      })
+  const recordId = workspace.salesRecord?.artworkRecordId;
+  const next = workspace.nextAction;
+  const plate = workspace.plate;
+  const plateAction = artworkPlateDestination(keeperPieceId, plate);
+  const registryPath = keeperPieceId ? queryPath('/admin/pieces', { keeperPieceId }) : null;
+  const maintenancePath = keeperPieceId ? queryPath('/admin/maintenance', { artworkId, keeperPieceId }) : null;
+  const certificatePath = artworkId ? queryPath('/admin/certificates', { artworkId }) : null;
+  const invitePath = keeperPieceId && plate?.state !== 'void' && plate?.state !== 'superseded'
+    ? queryPath('/admin/invitations', { keeperPieceId }) : null;
+  const legacyPath = workspace.legacySaleVerificationPath
+    ?? (next?.href.includes('source=legacy_acquisition') ? next.href : null);
+  const registrationAction = !keeperPieceId && next?.href.startsWith('/admin/registrations?') ? next : null;
+  const salePath = recordId
+    ? queryPath('/admin/collector-sales', { artistArtworkRecordId: recordId, keeperPieceId })
     : null;
+  const outstandingRecovery = plate && !['current', 'not_required'].includes(plate.recoveryState)
+    && plate.state !== 'void' && plate.state !== 'superseded';
+  const primaryHref = (outstandingRecovery && plateAction?.href)
+    || registrationAction?.href
+    || (next?.href.startsWith('/admin/certificates?') ? certificatePath : null)
+    || (next?.href.startsWith('/admin/invitations?') ? invitePath : null)
+    || (next?.href === legacyPath ? legacyPath : null);
+
+  const action = (href: string | null | undefined, label: string): RecordAction | null =>
+    href ? { href, label, primary: href === primaryHref } : null;
+  const identityAction = registrationAction
+    ? action(registrationAction.href, 'Register artwork identity')
+    : plateAction && action(plateAction.href, plateAction.label === 'Verify identity recovery' ? 'Verify recovery' : plateAction.label);
+  const identitySecondary = registryPath && identityAction?.href !== registryPath
+    ? action(registryPath, 'Plate registry') : null;
+
+  const missingFacts = workspace.certificate.missingFields.map(field => certificateFields[field].toLowerCase());
+  const certificateStatus = missingFacts.length
+    ? `${missingFacts.length} certificate ${missingFacts.length === 1 ? 'fact' : 'facts'} missing`
+    : workspace.certificate.state === 'complete' ? 'Certificate facts complete' : 'Certificate unavailable';
+  const certificateNote = certificatePath
+    ? (missingFacts.length && missingFacts.length <= 3 ? `Add ${missingFacts.join(', ')}. ` : '')
+      + 'Edits apply to all editions.'
+    : undefined;
+
+  const saleStatus = workspace.sale?.state === 'verified' ? 'Sale verified'
+    : workspace.sale?.state === 'legacy_candidate' ? 'Earlier sale needs verification'
+    : recordId ? 'Sales record on file' : 'No sale recorded';
+  const ledgerLabel = workspace.sale?.state === 'verified' ? 'Open sale and ledger' : 'Open sales record';
+  const saleAction = action(legacyPath, 'Verify earlier sale') ?? action(salePath, ledgerLabel);
+  const saleSecondary = legacyPath ? action(salePath, ledgerLabel) : null;
+
+  const keeperStatus = {
+    active: 'Piece claimed',
+    unclaimed: 'Piece unclaimed',
+    released: 'Keeper released the piece',
+    not_registered: recordId ? 'Register the piece before inviting a keeper' : 'Choose an edition to view keeper status',
+  }[workspace.caretaker.state];
+  const invitationNote = workspace.invitation ? {
+    available: 'Invitation ready to use.',
+    redeemed: 'Invitation accepted.',
+    revoked: 'Last invitation withdrawn.',
+    expired: 'Last invitation expired.',
+  }[workspace.invitation.state] : keeperPieceId && workspace.caretaker.state === 'unclaimed'
+    ? 'No invitation on file.' : undefined;
+  const invitationLabel = workspace.invitation?.state === 'available'
+    ? 'View open invitation' : workspace.caretaker.state === 'unclaimed' ? 'Create invitation' : 'View invitations';
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
-      <div id="artwork-record-certificate" className="min-w-0">
-        <AdminSection title="Record and certificate">
-          <DefinitionList items={[
-            ['Sales artwork record', artistArtworkRecordId || 'No sales artwork record'],
-            ['Record relationship', stateLabel(workspace.salesRecord?.state)],
-            ['Certificate', stateLabel(workspace.certificate.state)],
-            ['Missing certificate facts', workspace.certificate.missingFields.length
-              ? workspace.certificate.missingFields.map(stateLabel).join(', ') : 'None'],
-          ]} />
-          <div className="mt-5 flex flex-wrap gap-4">
-            {artistArtworkRecordId && <Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId, keeperPieceId })}>Open sales record</Link>}
-            {artworkId && <Link className={linkClass} to={queryPath('/admin/certificates', { artworkId })}>Open certificate editor</Link>}
-          </div>
-        </AdminSection>
-      </div>
-
-      <div id="artwork-sale-ledger" className="min-w-0">
-        <AdminSection title="Verified sale and artwork ledger">
-          {workspace.sale || artistArtworkRecordId ? (
-            <>
-              <DefinitionList items={[
-                ['Verified sale', stateLabel(workspace.sale?.state)],
-                ['Verified sale ID', workspace.sale?.verifiedSaleId || 'Not verified'],
-                ['Artwork ledger', artistArtworkRecordId ? 'Available in the sales record' : 'No ledger linked'],
-              ]} />
-              {artistArtworkRecordId && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId, keeperPieceId })}>Open verified sale and ledger</Link></p>}
-            </>
-          ) : <AdminEmptyState title="No sale relationship" description="No verified sale or artwork ledger is linked to this catalog record." />}
-        </AdminSection>
-      </div>
-
-      <div id="artwork-invitation-caretaker" className="min-w-0">
-        <AdminSection title="Invitation and caretaker state">
-          <DefinitionList items={[
-            ['Invitation', stateLabel(workspace.invitation?.state)],
-            ['Invitation ID', workspace.invitation?.invitationId || 'Not recorded'],
-            ['Caretaker', stateLabel(workspace.caretaker.state)],
-          ]} />
-          {keeperPieceId && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/invitations', { keeperPieceId })}>Open invitations</Link></p>}
-        </AdminSection>
-      </div>
-
-      <div id="artwork-public-preview" className="min-w-0">
-        <AdminSection title="Public piece preview">
-          <DefinitionList items={[
-            ['Catalog ID', artworkId || 'Not resolved'],
-            ['Public code', workspace.identity?.publicCode || 'Not registered'],
-          ]} />
-          {publicPath
-            ? <p className="mt-5"><Link className={linkClass} to={publicPath}>Open public piece preview</Link></p>
-            : <AdminEmptyState title="No public preview" description="This record does not resolve to a catalog artwork." />}
-        </AdminSection>
-      </div>
-
-      <div id="artwork-plate-recovery" className="min-w-0">
-        <AdminSection title="Plate and recovery">
-          <DefinitionList items={[
-            ['Plate', stateLabel(workspace.plate?.state)],
-            ['Recovery', stateLabel(workspace.plate?.recoveryState)],
-            ['Physical identity', keeperPieceId || 'Not registered'],
-          ]} />
-          {plateDestination && <p className="mt-5"><Link className={linkClass} to={plateDestination.href}>{plateDestination.label}</Link></p>}
-        </AdminSection>
-      </div>
-
-      <div id="artwork-maintenance-history" className="min-w-0">
-        <AdminSection title="Maintenance and custody history">
-          {workspace.activity.length ? (
-            <ol className="space-y-3">
-              {workspace.activity.map((item) => (
-                <li key={`${item.occurredAt}:${item.kind}:${item.label}`} className="border-l-2 border-wood-200 pl-4">
-                  <p className="font-sans text-base text-wood-900">{item.label}</p>
-                  <p className="font-sans text-sm text-wood-600">{new Date(item.occurredAt).toLocaleString()}</p>
-                </li>
-              ))}
-            </ol>
-          ) : <AdminEmptyState title="No history yet" description="Maintenance and custody activity will appear here when it is recorded." />}
-          {(artworkId || keeperPieceId) && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/maintenance', { artworkId, keeperPieceId })}>Open Maintenance</Link></p>}
-        </AdminSection>
-      </div>
-    </div>
+    <>
+      <RecordSection id="artwork-plate-recovery" title="Identity and recovery" returnState={returnState}
+        status={plate ? recoveryText[plate.recoveryState] : keeperPieceId ? 'Identity registered'
+          : recordId ? 'Identity awaiting registration' : 'No edition selected'}
+        note={plate ? plateText[plate.state] : !recordId && !keeperPieceId ? 'Choose a registered piece in Artworks.' : undefined}
+        action={identityAction} secondary={identitySecondary} />
+      <RecordSection id="artwork-record-certificate" title="Certificate" returnState={returnState}
+        status={certificateStatus} note={certificateNote}
+        action={action(certificatePath, 'Edit certificate')} />
+      <RecordSection id="artwork-sale-ledger" title="Sale and ledger" returnState={returnState}
+        status={saleStatus} action={saleAction} secondary={saleSecondary} />
+      <RecordSection id="artwork-invitation-caretaker" title="Keeper" returnState={returnState}
+        status={keeperStatus} note={invitationNote} action={action(invitePath, invitationLabel)} />
+      <section className="studio-record-history" id="artwork-maintenance-history" aria-labelledby="artwork-activity-title">
+        <div className="studio-record-history-heading">
+          <h2 id="artwork-activity-title">Recent activity</h2>
+          {maintenancePath && <Link className="studio-record-action" to={maintenancePath}
+            state={returnState}>Open Maintenance</Link>}
+        </div>
+        {workspace.activity.length ? (
+          <ol className="studio-record-events">
+            {workspace.activity.map((item, index) => {
+              const date = new Date(item.occurredAt);
+              return <li key={`${item.occurredAt}:${item.kind}:${item.label}:${index}`}>
+                <span>{item.label}</span>
+                <time dateTime={item.occurredAt}>{activityDate.format(date)} · {activityTime.format(date)}</time>
+              </li>;
+            })}
+          </ol>
+        ) : <p className="studio-record-note">No activity recorded yet.</p>}
+      </section>
+    </>
   );
 }
 
-const ArtworkWorkspace: React.FC = () => {
-  const { artworkId } = useParams<{ artworkId: string }>();
-  const [searchParams] = useSearchParams();
-  const query = searchParams.toString();
-  const stableArtworkId = artworkId || 'unknown';
+const errorCopy = {
+  invalid: 'This record link is invalid. Open the piece again from Artworks.',
+  conflict: 'The selected artwork, edition, and sales record do not identify the same artwork. Open the piece again from Artworks.',
+  inconsistent: 'The saved identity and sales record disagree. Check the exact piece in Artworks.',
+  error: 'The artwork record could not be loaded.',
+};
+
+function WorkspaceView({ artworkId, route, backPath, query }: {
+  artworkId: string | undefined;
+  route: string;
+  backPath: string;
+  query: string;
+}) {
   const [workspace, setWorkspace] = useState<ArtworkWorkspaceData | null>(null);
   const [status, setStatus] = useState<WorkspaceStatus>('loading');
+  const [attempt, setAttempt] = useState(0);
   const statusRef = useRef<HTMLDivElement>(null);
   const selector = useMemo(() => {
     try {
@@ -214,61 +267,63 @@ const ArtworkWorkspace: React.FC = () => {
       return error;
     }
   }, [artworkId, query]);
-  const headerWorkspace = workspace ? workspaceWithUsefulPlateAction(workspace) : null;
 
   useEffect(() => {
     const controller = new AbortController();
-    setWorkspace(null);
-    setStatus('loading');
-
     if (selector instanceof Error) {
-      setStatus(selector.message === 'workspace_not_found' ? 'missing' : 'conflict');
-      window.requestAnimationFrame(() => statusRef.current?.focus());
+      setStatus(selector.message === 'workspace_not_found' ? 'missing' : 'invalid');
       return () => controller.abort();
     }
-
     void loadArtworkWorkspace(selector, controller.signal)
-      .then((result) => {
+      .then(result => {
         if (controller.signal.aborted) return;
         setWorkspace(result);
         setStatus('ready');
       })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted
-          || (error instanceof DOMException && error.name === 'AbortError')) return;
-        const code = error instanceof Error ? error.message : 'artwork_workspace_request_failed';
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        const code = error instanceof Error ? error.message : '';
         setStatus(code === 'workspace_not_found' ? 'missing'
-          : code === 'workspace_selector_conflict' || code === 'workspace_data_corrupt'
-            ? 'conflict' : 'error');
-        window.requestAnimationFrame(() => statusRef.current?.focus());
+          : code === 'workspace_selector_conflict' ? 'conflict'
+          : code === 'workspace_data_corrupt' ? 'inconsistent' : 'error');
       });
-
     return () => controller.abort();
-  }, [selector]);
+  }, [selector, attempt]);
+
+  useEffect(() => {
+    if (status !== 'ready' && status !== 'loading') statusRef.current?.focus();
+  }, [status]);
+
+  const code = workspace?.identity?.publicCode;
+  const publicHref = workspace?.catalog && code && workspace.plate?.state !== 'void'
+    ? queryPath(`/works/${encodeURIComponent(workspace.catalog.artworkId)}`, { instance: code }) : null;
 
   return (
     <AdminPage width="wide">
-      <ArtworkWorkspaceHeader artworkId={stableArtworkId} workspace={headerWorkspace} />
-
-      {status === 'loading' && <AdminAlert tone="info" live>Loading artwork workspace.</AdminAlert>}
-      {status === 'missing' && (
-        <div ref={statusRef} tabIndex={-1}>
-          <AdminEmptyState title="Artwork workspace not found" description="No catalog artwork or matching relationship was found for this exact route." />
-        </div>
-      )}
-      {status === 'conflict' && (
-        <div ref={statusRef} tabIndex={-1}>
-          <AdminAlert tone="error" live>The catalog, physical instance, and sales record do not identify the same artwork. Return to the source record and open the exact artwork again.</AdminAlert>
-        </div>
-      )}
-      {status === 'error' && (
-        <div ref={statusRef} tabIndex={-1}>
-          <AdminAlert tone="error" live>The artwork workspace could not be loaded. Reload this page to try again.</AdminAlert>
-        </div>
-      )}
-      {status === 'ready' && workspace && <WorkspaceSummaries workspace={workspace} />}
+      <div className="studio-record">
+        <ArtworkWorkspaceHeader artworkId={artworkId} workspace={workspace} backPath={backPath} publicHref={publicHref} />
+        {status === 'loading' && <p role="status" className="studio-record-message">Loading artwork workspace.</p>}
+        {status === 'missing' && <div ref={statusRef} tabIndex={-1}>
+          <AdminEmptyState title="Artwork workspace not found" description="Open Artworks to find a registered piece." />
+        </div>}
+        {status in errorCopy && <div ref={statusRef} tabIndex={-1} className="studio-record-message">
+          <p role="alert">{errorCopy[status as keyof typeof errorCopy]}</p>
+          {status === 'error' && <button type="button" className="studio-record-action" onClick={() => {
+            setStatus('loading');
+            setAttempt(current => current + 1);
+          }}>Retry</button>}
+        </div>}
+        {status === 'ready' && workspace && <WorkspaceSummaries workspace={workspace} artworkReturnPath={route} artworkListReturnPath={backPath} />}
+      </div>
     </AdminPage>
   );
-};
+}
 
-export default ArtworkWorkspace;
+export default function ArtworkWorkspace() {
+  const { artworkId } = useParams<{ artworkId: string }>();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const route = location.pathname + location.search;
+  return <WorkspaceView key={route} artworkId={artworkId} route={route}
+    query={searchParams.toString()} backPath={recordListPath(location.state)} />;
+}

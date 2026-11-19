@@ -1,6 +1,6 @@
 # The Piece Record format
 
-`schema: "adrian-piece-record"` · `schemaVersion: 1` · frozen 2026-08-19
+`schema: "adrian-piece-record"` · v1 frozen 2026-08-19 · v2 public history added 2026-11-19
 
 A Piece Record is one self-contained HTML file per physical piece. It is written
 to outlive the website. A person in 80 years, holding only this file and a
@@ -60,9 +60,14 @@ registry R2 bucket, write-once and content-addressed. Endpoint:
    scope of the dream and the date it first shone. Never a name, never a city,
    never an author reference of any kind. Same `includeLegacySections` gate as
    the lineage.
-6. **How to verify** — plain-language prose a person can follow with only a
+6. **Living history (v2)**, anonymous published reflections and explicitly public
+   place milestones, ordered within each kind. Reflections carry their words,
+   creation date and publication date. Milestones carry year, selected grain
+   (`city` or `region`), place label and country. These are past chapters, never
+   the current keeper’s location. The same `includeLegacySections` gate applies.
+7. **How to verify** — plain-language prose a person can follow with only a
    browser. Reproduced below, normatively.
-7. **Footer** — the record hash, the schema name and version, the generated
+8. **Footer** — the record hash, the schema name and version, the generated
    date, and the trigger that caused generation (`registration`, `activation`,
    `bind`, `transfer`, `yearly`, `contribution`, `attachment`, `on_demand`).
 
@@ -181,7 +186,8 @@ Never, in any field, at any depth, under any trigger:
 - birth details of any person,
 - prices, amounts, or currencies,
 - owner identity or email, or any name joined to a piece,
-- any identity and city together; the record carries no city at all,
+- any identity and city together; v2 may carry an anonymous, deliberately public
+  historical place label, never current Atlas display consent or coordinates,
 - the ownership code, its hash, verifier, ciphertext, or nonce,
 - internal identifiers (`kp-`, `tp-`, `dream-`, `consent-`, `auth-` prefixed),
 - IP addresses or user agents.
@@ -224,7 +230,40 @@ Any match throws, and the record is not generated.
 
 ## Versioning
 
-`schemaVersion` is frozen at 1. Any change to the canonical shape, the
-canonicalization, or the hash procedure requires `schemaVersion: 2` and a new
-section in this document. Existing records are never regenerated in place;
-new records are new files under new hashes.
+Version 1 remains frozen. Version 2 adds only the `livingHistory` section:
+
+```json
+{
+  "livingHistory": {
+    "included": true,
+    "reflections": [
+      { "words": "…", "createdAt": "2026-11-17T08:00:00.000Z", "publishedAt": "2026-11-17T09:00:00.000Z" }
+    ],
+    "milestones": [
+      { "year": 2025, "grain": "region", "place": "Bali", "country": "Indonesia" }
+    ]
+  }
+}
+```
+
+The generator emits v2 only when `includeLegacySections: true` and migration
+052's tables are available. Empty public history still produces this section
+with empty arrays. Gate-off builds and databases missing either 052 table keep
+the exact v1 shape and rendering. Unrelated database failures abort generation.
+Canonicalization, the hash procedure and the offline verifier are unchanged.
+Older v1 exports still verify against their original embedded JSON and hashes;
+no stored record is rewritten.
+
+Only reflections with `published_at IS NOT NULL` and milestones whose
+`visibility = 'public'` enter the extension. They survive passing and sales
+without depending on current contributor access. Offered or private words,
+private milestones (including author-granted successor reading), author IDs,
+entry IDs, account data, invitation references, and consent state never enter
+it. A successor reading grant conveys no publication permission. Public place
+labels come only from deliberately recorded historical milestones, never the
+current Atlas location or consent. The existing final privacy strip-pass still
+applies to the entire v2 record.
+
+Changes to either version's canonical shape require a new schema version.
+Existing records are never regenerated in place; new records are new files
+under new hashes.

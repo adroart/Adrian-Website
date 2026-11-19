@@ -11,7 +11,7 @@ import { Track } from './types';
 import { TRACKS as SEED_TRACKS } from './data/mockData';
 
 interface PlayerContextType {
-    tracks: Track[];                            // live list, fetched from R2 (falls back to seed)
+    tracks: Track[];                            // live list plus unmatched built-in tracks
     tracksLoaded: boolean;
     refreshTracks: () => Promise<void>;
     currentTrack: Track | null;
@@ -64,8 +64,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         try {
             const res = await fetch('/api/poems');
             const data = await res.json();
-            if (data?.ok && Array.isArray(data.poems)) {
-                setTracks(data.poems.length > 0 ? data.poems : SEED_TRACKS);
+            if (res.ok && data?.ok && Array.isArray(data.poems)) {
+                const live: Track[] = data.poems;
+                // Publishing another poem must keep built-in tracks available.
+                const unmatched = SEED_TRACKS.filter(seed => !live.some(track =>
+                    track.id === seed.id || track.slug === seed.slug));
+                setTracks([...live, ...unmatched]);
             }
         } catch {
             // Network failure — keep whatever we already have (seed or last good).

@@ -3,6 +3,8 @@ import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
+import { STORIES } from '../data/generatedStories';
+import { storyLinksArtwork } from './shared/StoryBody';
 import { ArrowRight, ArrowUpRight, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { LAUNCH_FLAGS } from '../launchFlags';
@@ -548,18 +550,14 @@ const PiecePage: React.FC = () => {
                         )}
                     </div>
 
-                    {art.relatedStorySlug && (
-                        <Link
-                            to={`/writings/${art.relatedStorySlug}`}
-                            className="flex items-center gap-3 px-5 py-4 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
-                        >
-                            <BookOpen size={16} className="text-bronze-600 shrink-0" />
-                            <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
-                                Read the story behind this piece
+                    {STORIES.filter(story => storyLinksArtwork(story, art)).map(story => (
+                        <Link key={story.slug} to={`/writings/${story.slug}`}
+                            className="flex items-center gap-3 px-5 py-3 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-3">
+                            <span className="font-label text-xs uppercase tracking-[0.15em] text-bronze-700 font-semibold">
+                                Read: {story.title}
                             </span>
-                            <ArrowRight size={12} className="text-bronze-600 ml-auto shrink-0" />
                         </Link>
-                    )}
+                    ))}
 
                     {/* Purchase section */}
                     <div ref={purchaseRef} className="border border-wood-200 bg-wood-50 px-5 py-6 md:p-8 mt-6 md:mt-2">

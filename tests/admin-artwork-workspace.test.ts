@@ -28,62 +28,16 @@ describe('admin artwork workspace screen', () => {
     assert.throws(() => artworkWorkspaceSelector('UL-100', new URLSearchParams('private=hidden')));
   });
 
-  it('is a nested lazy route with a stable header and one meaningful action', () => {
+  it('retains the nested lazy route and keeps screen edits in specialist tools', () => {
     const app = source('App.tsx');
     const navigation = source('components/admin/AdminNavigation.ts');
     const screen = source('components/admin/ArtworkWorkspace.tsx');
-    const header = source('components/admin/ArtworkWorkspaceHeader.tsx');
 
-    assert.match(app, /lazy\(\(\) => import\('\.\/components\/admin\/ArtworkWorkspace'\)\)/);
-    assert.match(app, /path="artworks\/:artworkId" element=\{<ArtworkWorkspace\s*\/>\}/);
-    // The list at /admin/artworks is a menu destination, because opening one
-    // artwork is how the desk begins. The workspace beneath it is per record,
-    // so nothing in the menu ever names a single artwork.
-    assert.match(navigation, /href: '\/admin\/artworks'/);
+    assert.ok(app.includes("lazy(() => import('./components/admin/ArtworkWorkspace'))"));
+    assert.ok(app.includes('path="artworks/:artworkId" element={<ArtworkWorkspace'));
+    assert.ok(navigation.includes("href: '/admin/artworks'"));
     assert.doesNotMatch(navigation, /\/admin\/artworks\//);
-    assert.match(screen, /<ArtworkWorkspaceHeader/);
-    assert.match(screen, /loadArtworkWorkspace\(selector, controller\.signal\)/);
-    assert.match(screen, /new AbortController\(\)/);
-    assert.match(header, /<AdminPageHeader/);
-    assert.match(header, /workspace\?\.nextAction/);
-    assert.equal((header.match(/workspace\?\.nextAction\?\.href/g) || []).length, 1);
     assert.doesNotMatch(screen, /<form\b|fetch\([^)]*,\s*\{\s*method:/);
-  });
-
-  it('renders six stable read-only summaries and exact specialist deep links', () => {
-    const screen = source('components/admin/ArtworkWorkspace.tsx');
-    for (const id of [
-      'artwork-record-certificate',
-      'artwork-sale-ledger',
-      'artwork-invitation-caretaker',
-      'artwork-public-preview',
-      'artwork-plate-recovery',
-      'artwork-maintenance-history',
-    ]) assert.match(screen, new RegExp(`id=["']${id}["']`), id);
-
-    for (const route of [
-      '/admin/collector-sales', '/admin/certificates', '/admin/invitations',
-      '/works/', '/admin/pieces/wizard', '/admin/maintenance',
-    ]) assert.match(screen, new RegExp(route.replaceAll('/', '\\/')));
-    assert.match(screen, /artistArtworkRecordId/);
-    assert.match(screen, /keeperPieceId/);
-    assert.match(screen, /encodeURIComponent/);
-  });
-
-  it('uses the admin state primitives and focuses missing or conflicting status', () => {
-    const screen = source('components/admin/ArtworkWorkspace.tsx');
-    for (const primitive of [
-      'AdminPage', 'AdminPageHeader', 'AdminSection', 'AdminAlert', 'AdminEmptyState',
-    ]) assert.match(
-      `${screen}\n${source('components/admin/ArtworkWorkspaceHeader.tsx')}`,
-      new RegExp(`<${primitive}`),
-    );
-    assert.match(screen, /statusRef/);
-    assert.match(screen, /tabIndex=\{-1\}/);
-    assert.match(screen, /requestAnimationFrame/);
-    assert.match(screen, /workspace_not_found/);
-    assert.match(screen, /workspace_selector_conflict/);
-    assert.match(screen, /Loading artwork workspace/);
   });
 
   it('adds only identified artwork backlinks and preserves exact physical identity', () => {

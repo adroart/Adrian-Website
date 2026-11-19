@@ -72,8 +72,8 @@ function publicArtwork(row) {
   };
 }
 
-/** Latest first-bind invitation and bounded public-state activity for one identity. */
-export async function readArtworkInvitationProjection(env, keeperPieceId, now) {
+/** Actionable first-bind invitation and bounded public-state activity for one identity. */
+export async function readArtworkInvitationProjection(env, keeperPieceId, now, { preferAvailable = false } = {}) {
   if (!keeperPieceId) return { invitation: null, activity: [] };
   const result = await env.DB.prepare(`
     SELECT invitation.id, invitation.created_at, invitation.expires_at,
@@ -86,11 +86,23 @@ export async function readArtworkInvitationProjection(env, keeperPieceId, now) {
      LIMIT 20
   `).bind(keeperPieceId).all();
   const rows = result?.results ?? [];
-  const latest = rows[0] ?? null;
-  const invitation = latest ? {
-    state: latest.redeemed_at ? 'redeemed' : latest.revoked_at ? 'revoked'
-      : Date.parse(latest.expires_at) <= Date.parse(now) ? 'expired' : 'available',
-    invitationId: latest.id,
+  let available = preferAvailable ? rows.find((row) => invitationStatus(row, now) === 'available') : null;
+  if (preferAvailable && !available && rows.length === 20) {
+    available = await env.DB.prepare(`
+      SELECT invitation.id, invitation.expires_at
+        FROM artwork_invitations invitation
+       WHERE invitation.keeper_piece_id = ?1
+         AND invitation.revoked_at IS NULL AND julianday(invitation.expires_at) > julianday(?2)
+         AND NOT EXISTS (
+           SELECT 1 FROM artwork_invitation_redemptions redemption WHERE redemption.invitation_id = invitation.id
+         )
+       ORDER BY invitation.created_at DESC, invitation.id DESC LIMIT 1
+    `).bind(keeperPieceId, now).first();
+  }
+  const selected = available ?? rows[0] ?? null;
+  const invitation = selected ? {
+    state: selected.redeemed_at ? 'redeemed' : invitationStatus(selected, now),
+    invitationId: selected.id,
   } : null;
   return {
     invitation,

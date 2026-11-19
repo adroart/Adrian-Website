@@ -2,7 +2,7 @@ import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 import {
   generateInvoiceNumber,
   normalizeInvoiceInput,
-  serializeInvoiceRow,
+  serializeStudioInvoiceRow,
   validateInvoice,
 } from '../_lib/invoices.js';
 
@@ -32,7 +32,7 @@ async function listInvoices(request, env) {
     const { results } = await env.DB.prepare(
       'SELECT * FROM invoices WHERE id = ?1 LIMIT 1',
     ).bind(invoiceId).all();
-    return jsonResponse({ ok: true, invoices: (results || []).map(serializeInvoiceRow) });
+    return jsonResponse({ ok: true, invoices: (results || []).map(serializeStudioInvoiceRow) });
   }
   const allowed = new Set(['status', 'limit', 'offset']);
   if (keys.some(key => !allowed.has(key))
@@ -54,7 +54,7 @@ async function listInvoices(request, env) {
 
   const stmt = env.DB.prepare(query);
   const { results } = bindings.length ? await stmt.bind(...bindings).all() : await stmt.all();
-  return jsonResponse({ ok: true, invoices: (results || []).map(serializeInvoiceRow) });
+  return jsonResponse({ ok: true, invoices: (results || []).map(serializeStudioInvoiceRow) });
 }
 
 async function createInvoice(request, env) {
@@ -73,6 +73,9 @@ async function createInvoice(request, env) {
   }
 
   const invoice = normalizeInvoiceInput({ ...body, invoiceNumber }, paymentPresets);
+  if (invoice.status !== 'draft') {
+    return jsonResponse({ ok: false, error: invoice.status === 'paid' ? 'payment_required' : 'save_as_draft' }, 409);
+  }
   const error = validateInvoice(invoice);
   if (error) return jsonResponse({ ok: false, error }, 400);
 
@@ -84,12 +87,10 @@ async function createInvoice(request, env) {
           job_title, job_description, currency, subtotal_cents, shipping_text, total_cents,
           due_today_cents, current_step_index, payment_preset_id, payment_preset_ids_json,
           payment_snapshot_json, payment_options_json, line_items_json, payment_schedule_json,
-          notes, offer_payment_choice, sent_at, paid_at
+          notes, offer_payment_choice
         )
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
-         CASE WHEN ?3 = 'sent' THEN unixepoch() ELSE NULL END,
-         CASE WHEN ?3 = 'paid' THEN unixepoch() ELSE NULL END)
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)
        RETURNING *`,
     )
     .bind(
@@ -118,7 +119,7 @@ async function createInvoice(request, env) {
     )
     .first();
 
-  return jsonResponse({ ok: true, invoice: serializeInvoiceRow(row) }, 201);
+  return jsonResponse({ ok: true, invoice: serializeStudioInvoiceRow(row) }, 201);
 }
 
 async function nextInvoiceNumber(env) {

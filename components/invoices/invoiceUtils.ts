@@ -108,6 +108,15 @@ export function inferPaymentTermMode(schedule: InvoiceScheduleItem[]): PaymentTe
   return 'single';
 }
 
+export function amountDueAtMilestone(
+  total: number, paid: number, schedule: InvoiceScheduleItem[], index: number,
+): number | null {
+  if (paid >= total) return 0;
+  if (schedule.reduce((sum, step) => sum + step.amountCents, 0) !== total) return null;
+  const dueToDate = schedule.slice(0, index + 1).reduce((sum, step) => sum + step.amountCents, 0);
+  return Math.max(0, Math.min(total - paid, dueToDate - paid));
+}
+
 export function publicInvoiceUrl(path: string): string {
   if (!path) return '';
   if (typeof window === 'undefined') return path;

@@ -134,11 +134,13 @@ const AdminBookEditor: React.FC = () => {
 
     const remove = async (id: string) => {
         if (!confirm('Clear the written page for this piece? The piece record stays; only your text is removed.')) return;
+        setMessage(null);
         try {
-            await fetch(`/api/book?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-            await refresh();
+            const response = await fetch(`/api/book?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+            setEntries(current => current.filter(entry => entry.id !== id));
         } catch {
-            setMessage({ type: 'err', text: 'Delete failed.' });
+            setMessage({ type: 'err', text: 'Delete failed. This book page is still listed.' });
         }
     };
 
@@ -159,7 +161,7 @@ const AdminBookEditor: React.FC = () => {
                     </p>
 
                     {message && (
-                        <div className={`mb-6 px-4 py-3 border ${
+                        <div role={message.type === 'err' ? 'alert' : 'status'} className={`mb-6 px-4 py-3 border ${
                             message.type === 'ok'
                                 ? 'border-bronze-300 bg-bronze-50 text-bronze-800'
                                 : 'border-danger-line bg-danger-soft text-danger'

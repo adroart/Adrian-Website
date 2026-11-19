@@ -21,7 +21,9 @@ export async function onRequest(context) {
 
 async function listQuotes(env) {
   const { results } = await env.DB
-    .prepare('SELECT * FROM pricing_quotes ORDER BY created_at DESC')
+    .prepare(`SELECT q.*, i.id AS invoice_id
+         FROM pricing_quotes q LEFT JOIN invoices i ON i.source_quote_id = q.id
+        ORDER BY q.created_at DESC, q.id DESC`)
     .all();
   return jsonResponse({ ok: true, quotes: (results || []).map(serializeQuoteRow) });
 }
@@ -40,8 +42,8 @@ async function createQuote(request, env) {
 
   const row = await env.DB
     .prepare(
-      `INSERT INTO pricing_quotes (name, inputs_json, suggested_retail, quote, actual_price)
-       VALUES (?1, ?2, ?3, ?4, ?5)
+      `INSERT INTO pricing_quotes (name, inputs_json, suggested_retail, quote, actual_price, configuration, artwork_id)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
        RETURNING *`,
     )
     .bind(
@@ -50,6 +52,8 @@ async function createQuote(request, env) {
       quote.suggestedRetail,
       quote.quote,
       quote.actualPrice,
+      quote.configuration,
+      quote.artworkId,
     )
     .first();
 

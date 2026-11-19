@@ -195,11 +195,13 @@ const AdminPoetry: React.FC = () => {
 
     const remove = async (slug: string) => {
         if (!confirm('Delete this poem? This cannot be undone.')) return;
+        setMessage(null);
         try {
-            await fetch(`/api/poems?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
-            await refresh();
+            const response = await fetch(`/api/poems?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
+            if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+            setPoems(current => current.filter(poem => poem.slug !== slug));
         } catch {
-            setMessage({ type: 'err', text: 'Delete failed.' });
+            setMessage({ type: 'err', text: 'Delete failed. This poem is still listed.' });
         }
     };
 
@@ -215,7 +217,7 @@ const AdminPoetry: React.FC = () => {
                     </p>
 
                     {message && (
-                        <div className={`mb-6 px-4 py-3 border ${
+                        <div role={message.type === 'err' ? 'alert' : 'status'} className={`mb-6 px-4 py-3 border ${
                             message.type === 'ok'
                                 ? 'border-bronze-300 bg-bronze-50 text-bronze-800'
                                 : 'border-danger-line bg-danger-soft text-danger'

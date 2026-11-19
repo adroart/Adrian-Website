@@ -42,7 +42,7 @@ function rows(sql: string, bindings: unknown[]): Row[] {
     identification_status: 'identified', created_at: '2026-08-02T00:00:00.000Z',
     updated_at: '2026-08-10T00:00:00.000Z',
   }];
-  if (sql.includes('artist_verified_sales')) return [{
+  if (sql.includes('artist_verified_sales') && !sql.includes('FROM invoices')) return [{
     id: 'sale-identified', buyer_email: 'collector@example.com',
     recorded_at: '2026-08-10T00:00:00.000Z', artwork_record_id: 'record-identified',
     artwork_id: 'UL-106', keeper_piece_id: null,
@@ -50,7 +50,7 @@ function rows(sql: string, bindings: unknown[]): Row[] {
   if (sql.includes('keeper_pieces')) return keepers;
   if (sql.includes('invoices')) {
     const invoices = [
-    { id: 1, invoice_number: 'INV-PAID', public_token: 'paid-token', status: 'paid', client_name: 'Mira', job_title: 'Original sculpture', total_cents: 10000, amount_paid_cents: 10000, updated_at: 1786406400, paid_at: 1786406400 },
+    { id: 1, invoice_number: 'INV-PAID', public_token: 'paid-token', status: 'paid', client_name: 'Mira', job_title: 'Original sculpture', needs_sale_review: 1, total_cents: 10000, amount_paid_cents: 10000, updated_at: 1786406400, paid_at: 1786406400 },
     { id: 2, invoice_number: 'INV-OPEN', public_token: 'open-token', status: 'sent', client_name: 'Noah', job_title: 'Commission', total_cents: 20000, amount_paid_cents: 0, updated_at: 1786406400, paid_at: null },
     { id: 3, invoice_number: 'INV-PART', public_token: 'part-token', status: 'sent', client_name: 'Aya', job_title: 'Edition', total_cents: 30000, amount_paid_cents: 5000, updated_at: 1786406400, paid_at: null },
     { id: 4, invoice_number: 'INV-LATE', public_token: 'late-token', status: 'overdue', client_name: 'Leo', job_title: 'Sculpture', total_cents: 40000, amount_paid_cents: 0, updated_at: 1786406400, paid_at: null },
@@ -107,7 +107,7 @@ describe('admin work queue', () => {
     assert.equal(result.queue.complete, true);
     assert.deepEqual(states('recovery'), ['missing', 'stale']);
     assert.deepEqual(states('sale_artwork'), ['ready_for_registration']);
-    assert.deepEqual(states('invoice'), ['open', 'overdue', 'partial']);
+    assert.deepEqual(states('invoice'), ['open', 'overdue', 'partial', 'ready_for_sale_review']);
     assert.deepEqual(states('viewing'), ['draft', 'requested_with_invoice']);
     assert.deepEqual(states('invitation'), ['expired', 'ready']);
     assert.deepEqual(states('legacy_sale'), []);
@@ -122,7 +122,8 @@ describe('admin work queue', () => {
     assert.equal(result.queue.items.find((item) => item.domain === 'sale_artwork')?.href,
       '/admin/registrations?artworkId=UL-106&artistArtworkRecordId=record-identified');
     assert.equal(result.queue.items.some((item) => item.href.includes('invoiceId=1')), false);
-    assert.doesNotMatch(JSON.stringify(result.queue), /sale verification|verify sale/i);
+    assert.equal(result.queue.items.find((item) => item.state === 'ready_for_sale_review')?.href,
+      '/admin/collector-sales/invoices/1');
     assert.equal(result.queue.items.some((item) => item.href.includes('keeperPieceId=kp-unresolved')), false);
     assert.equal(seen.filter((sql) => sql.includes('artwork_acquisitions')).length, 0,
       'legacy acquisition alerts are deferred until an exact completion relation exists');
@@ -142,7 +143,7 @@ describe('admin work queue', () => {
     }]);
     assert.doesNotMatch(
       JSON.stringify(result),
-      /collector@example\.com|paid-token|request-token|Private Collector|\bMira\b|\bNoah\b/,
+      /collector@example\.com|paid-token|request-token|accepted-private-token|Private Collector|\bMira\b|\bNoah\b|\bLeah\b/,
     );
     assert.deepEqual(await readAdminWorkQueue({ DB: database() }, { now: NOW }), result);
   });
