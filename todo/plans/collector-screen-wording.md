@@ -10,6 +10,24 @@
 
 ---
 
+## Placement and identity clarification, 2026-11-19
+
+Adrian clarified that keepers intentionally place their own artwork on the grid.
+Placement shows only a curated city, never an address or private coordinates.
+The placement choice starts off. Entering a city and completing registration do
+not grant permission to publish it. A keeper can remove the public placement.
+
+Attribution is a separate choice. Keeper identity starts hidden. Choosing to place
+a piece never enables name, face, chart, work, or mission sharing. Changing those
+identity choices never grants location permission.
+
+This supersedes earlier descriptions of city sharing as forced on during
+registration, and the unwired “Show on the map” control on Your links. That control
+is replaced by “Place this artwork on the grid” beside the city choice, saving
+the keeper's placement choice independently of their identity.
+
+---
+
 ## The pillar — why any of this moves a person. SETTLED
 
 Every screen's copy hangs off this paragraph; when a line drifts from it, the line is wrong.

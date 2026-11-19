@@ -46,6 +46,7 @@ async function mount(page: Page, user: () => string, bound: () => boolean) {
     policyVersion: 'collector-privacy-v1',
   }));
   await page.goto('/');
+  await page.getByRole('button', { name: 'Account', exact: true }).waitFor();
   await page.evaluate(async path => {
     const flags = await Function('return import("/launchFlags.ts")')();
     flags.LAUNCH_FLAGS.livingLegacy = true;
@@ -54,7 +55,7 @@ async function mount(page: Page, user: () => string, bound: () => boolean) {
   }, PATH);
 }
 
-async function bindAndReachProfile(page: Page, stopAtPrivateRead = false) {
+async function bindAndReachProfile(page: Page, stopAtPrivateRead = false, shareName = false, placeOnGrid = false, placementScreenshot?: string) {
   await page.getByRole('button', { name: 'Begin', exact: true }).click();
   await page.getByRole('textbox', { name: 'The code' }).fill(OWNERSHIP);
   await page.getByRole('button', { name: 'Unlock' }).click();
@@ -68,11 +69,29 @@ async function bindAndReachProfile(page: Page, stopAtPrivateRead = false) {
   await expect(page.getByText('It carries on')).toBeVisible();
   await page.getByRole('button', { name: 'Begin', exact: true }).click();
   await page.getByLabel('City').fill('Denpasar');
+  const placement = page.getByRole('checkbox', { name: 'Place this artwork on the grid' });
+  await expect(placement).not.toBeChecked();
+  if (placeOnGrid) await placement.check();
+  if (placementScreenshot) {
+    await expect.poll(() => placement.evaluate(element => {
+      for (let node: Element | null = element; node; node = node.parentElement) {
+        if (Number(getComputedStyle(node).opacity) < 0.99) return false;
+      }
+      return true;
+    })).toBe(true);
+    await expect.poll(() => page.locator('.collector-root').evaluate(root =>
+      root.getAnimations({ subtree: true }).filter(animation =>
+        animation.playState === 'running' && animation.effect?.getComputedTiming().iterations !== Infinity,
+      ).length,
+    )).toBe(0);
+    await page.screenshot({ path: placementScreenshot, scale: 'css' });
+  }
   await page.getByRole('button', { name: 'Continue' }).click();
   if (stopAtPrivateRead) return;
   await page.getByLabel('Date').fill('12/06/1990');
   await page.getByLabel('Time').fill('09:30');
   await page.getByLabel('Place of birth').fill('Denpasar');
+  if (shareName) await page.getByText('Your name', { exact: true }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Your links')).toBeVisible();
 }
@@ -224,5 +243,39 @@ for (const useSkip of [false, true]) {
       piece: { keeperPieceId: 'kp-adult', shareCity: false, cityId: null },
     }]);
     await page.screenshot({ path: testInfo.outputPath('private-completion.png'), fullPage: true });
+  });
+}
+
+for (const placeOnGrid of [false, true]) for (const shareName of [false, true]) {
+  test(`keeper explicitly chooses placement ${placeOnGrid} independently of name ${shareName}`, async ({ page }, testInfo) => {
+    let bound = false;
+    const writes: any[] = [];
+    await mount(page, () => 'adult', () => bound);
+    await page.route('**/api/keeper/bind', async route => {
+      bound = true;
+      await json(route, { ok: true, keeper: { pieceId: 'MD-905', editionNumber: 1 } });
+    });
+    await page.route('**/api/collector/onboarding', route => json(route, {
+      status: 'current',
+      inputs: { date: '1990-06-12', time: '09:30', place: {
+        label: 'Denpasar', lat: -8.65, lng: 115.22, tzId: 'Asia/Makassar',
+      } },
+    }));
+    await page.route('**/api/collector/privacy', route => {
+      if (route.request().method() === 'PUT') writes.push(route.request().postDataJSON());
+      return json(route, { ring1: { privateRecord: true }, ring2: { shareCity: false, cityId: null },
+        ring3: { shareDerivedChart: false }, ring4: {
+          shareIntention: false, shareName: false, shareFace: false, shareBusiness: false, shareMission: false,
+        } });
+    });
+    await bindAndReachProfile(page, false, shareName, placeOnGrid, testInfo.outputPath('placement-choice.png'));
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.getByText(/You are Light 47/)).toBeVisible();
+    expect(writes).toHaveLength(1);
+    expect(writes[0].piece).toEqual({
+      keeperPieceId: 'kp-adult', shareCity: placeOnGrid, cityId: placeOnGrid ? 'denpasar' : null,
+    });
+    expect(writes[0].person.shareName).toBe(shareName);
+    expect(writes[0].person.shareFace).toBe(false);
   });
 }

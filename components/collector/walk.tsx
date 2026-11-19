@@ -63,6 +63,7 @@ export type Screen = {
   rows?: [string, string, Target][];
   /** the What shows lamps */
   lamps?: boolean;
+  placement?: boolean;
   /** the add-a-link tile */
   tiles?: boolean;
   /**
@@ -163,7 +164,7 @@ const ph = (s: string): string => {
  * line ("Your name and face") stays in copy.ts untouched for Adrian to
  * resettle. There is NO links lamp — no privacy field exists for links. */
 const LAMP_NAME = ph('Your name');
-const LAMP_NAME_NOTE = ph('Off until you tick it. Your face is its own tick.');
+const LAMP_NAME_NOTE = ph('Show your name as the keeper who placed this artwork. Off until you tick it. Your face is a separate choice.');
 const LAMP_FACE = ph('Your face');
 const LAMP_FACE_NOTE = ph('Off until you tick it, and separate from your name.');
 const LAMP_CHART = ph('Your chart');
@@ -192,14 +193,14 @@ export const SHOW_LAMPS: [title: string, note: string][] = [
   [LAMP_MISSION, LAMP_MISSION_NOTE],
 ];
 
-/** the drawn defaults: the piece shines, the person opts in */
-export const SHOW_LAMPS_DEFAULT: boolean[] = [true, true, false, false, false, false, false];
+/** Publishing a city and identifying its keeper are separate deliberate choices. */
+export const SHOW_LAMPS_DEFAULT: boolean[] = [true, false, false, false, false, false, false];
 
 /**
  * The five identity lamps, indices 2..6 of SHOW_LAMPS in wire order, for the
  * who page (§7, 2026-08-20). The two piece-fact lamps at indices 0 and 1
- * (shareIntention, shareCity) disappear as choices there: the piece's own
- * facts are not optional, and default true always.
+ * (shareIntention, shareCity) have their own controls. Placement is chosen
+ * separately on the city screen and never enables the identity lamps.
  */
 export const WHO_LAMPS: [title: string, note: string][] = SHOW_LAMPS.slice(2);
 
@@ -235,11 +236,8 @@ const GIFT_FIELD_HINT = ph('Write what you wish for them');
    ask is visible before anyone enters private details. */
 const WHO_BIRTHDAY_PURPOSE =
   'Your birthday ties your piece to your astrology, and it lets the piece mark your day: once a year, near your birthday, it asks for a moment with you.';
-/* the links section's map-light toggle: an honest unwired placeholder. No
-   shareLinks field exists on the wire, so the choice stores client-side only
-   until one does. */
-const WHO_LINKS_SHOW_LABEL = ph('Show on the map');
-const WHO_LINKS_SHOW_NOTE = ph('Not connected yet. It will hold your choice here soon.');
+const PLACEMENT_LABEL = 'Place this artwork on the grid';
+const PLACEMENT_NOTE = 'Show its city, never an address. Your name stays hidden unless you choose to share it separately.';
 
 /* sign, the artist's second walk: "You should have to repeat your
    password." Its own row under the password, not beside it. */
@@ -436,6 +434,8 @@ export const WALK = {
   },
 
   lives: {
+    placement: true,
+    noRequiredNote: true,
     head: G.livesHead,
     body: G.livesBody,
     eyebrow: G.eyebrow,
@@ -924,7 +924,6 @@ export const WalkScreen: React.FC<Props> = ({
   /* who2's own bit of state: the links section's map-light toggle. Not
      lifted, because it is the honest unwired placeholder (§7): it stores
      here, client-side, until a wire exists. */
-  const [linksShow, setLinksShow] = useState(true);
   const lamps = lampsValue ?? ownLamps;
   const setLamps = (next: (l: boolean[]) => boolean[]) => {
     if (onLamps) onLamps(next(lamps));
@@ -1206,6 +1205,26 @@ export const WalkScreen: React.FC<Props> = ({
             </div>
           )}
 
+          {screen.placement && (
+            <div className="collector-placement">
+              <div>
+                <label className="collector-placement__choice">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(lamps[1])}
+                    onChange={event => {
+                      const checked = event.target.checked;
+                      setLamps(current => current.map((value, index) => index === 1 ? checked : value));
+                    }}
+                    className="collector-placement__checkbox"
+                  />
+                  {PLACEMENT_LABEL}
+                </label>
+                <Note>{PLACEMENT_NOTE}</Note>
+              </div>
+            </div>
+          )}
+
           {/* who1: born's old fields and the five identity lamps. who2:
               links' old field, tiles and the map-light toggle. Two screens
               now, the artist's second walk, rather than one page behind a
@@ -1272,9 +1291,7 @@ export const WalkScreen: React.FC<Props> = ({
                 {G.bornWhy}
               </button>
 
-              {/* the five identity lamps, inline. The two piece-fact lamps
-                  (what you place in it, the light on the map) do not appear
-                  here: they are not optional, and default true always. */}
+              {/* Identity choices never grant map placement. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {WHO_LAMPS.map(([title, note], i) => {
                   const idx = i + 2;
@@ -1314,15 +1331,6 @@ export const WalkScreen: React.FC<Props> = ({
                 onChange={v => onType?.(G.fieldSite, v)}
               />
               <LinkTiles open={linksOpen} onToggle={() => setLinksOpen(v => !v)} />
-              {/* the section-level show-on-the-map toggle, on by default
-                  (§7). Honest and unwired: no shareLinks field exists, so
-                  it stores client-side only for now. */}
-              <Lamp
-                title={WHO_LINKS_SHOW_LABEL}
-                note={WHO_LINKS_SHOW_NOTE}
-                on={linksShow}
-                onToggle={() => setLinksShow(v => !v)}
-              />
             </div>
           )}
 
