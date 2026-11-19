@@ -135,6 +135,7 @@ const Inquire: React.FC = () => {
   const routerState = routerLocation.state as {
     piece?: string;
     pieceId?: string;
+    mandalaCard?: number;
     mode?: 'purchase';
     price?: string;
     size?: string;
@@ -143,6 +144,8 @@ const Inquire: React.FC = () => {
   } | null;
 
   const purchaseMode = routerState?.mode === 'purchase';
+  const pieceId = routerState?.pieceId;
+  const mandalaCard = routerState?.mandalaCard;
   const purchasePrice = routerState?.price ?? '';
   const purchaseSize = routerState?.size ?? '';
   const purchaseAddOns = routerState?.addOns ?? [];
@@ -292,6 +295,7 @@ const Inquire: React.FC = () => {
           `Email: ${form.email}`,
           '',
           `Piece: ${pieceTitle}`,
+          ...(pieceId ? [`Artwork ID: ${pieceId}`] : []),
           ...(purchaseSize ? [`Size: ${purchaseSize}`] : []),
           ...(purchaseAddOns.length ? [`Add-ons: ${purchaseAddOns.join(', ')}`] : []),
           ...(purchaseAvailability ? [`Availability: ${purchaseAvailability}`] : []),
@@ -303,11 +307,13 @@ const Inquire: React.FC = () => {
           `Email: ${form.email}`,
           '',
           `Commission type: ${form.commissionType}`,
+          ...(pieceId ? [`Reference artwork: ${pieceTitle} (${pieceId})`] : []),
           '',
           `Vision: ${form.vision}`,
         ];
+    if (mandalaCard !== undefined) parts.push(`Source: Mandala Codes · Card ${mandalaCard}`);
     if (form.budget) parts.push(`Budget: ${form.budget}`);
-    if (form.location) parts.push(`Location: ${form.location}`);
+    if (form.location) parts.push(`${purchaseMode ? 'Shipping destination' : 'Location'}: ${form.location}`);
     const body = encodeURIComponent(parts.join('\n'));
     return `mailto:hello@adrianrasmussen.com?subject=${subject}&body=${body}`;
   };
@@ -323,18 +329,19 @@ const Inquire: React.FC = () => {
       const res = await fetch('/api/inquire', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(purchaseMode
-          ? {
-              ...form,
-              inquiryType: 'purchase',
-              pieceTitle,
-              purchaseSize,
-              purchaseAddOns,
-              purchaseAvailability,
-              purchasePrice,
-            }
-          : form
-        ),
+        body: JSON.stringify({
+          ...form,
+          ...(pieceId ? { pieceId, pieceTitle } : {}),
+          ...(mandalaCard !== undefined ? { source: 'mandalacodes', cardNumber: mandalaCard } : {}),
+          ...(purchaseMode ? {
+            inquiryType: 'purchase',
+            pieceTitle,
+            purchaseSize,
+            purchaseAddOns,
+            purchaseAvailability,
+            purchasePrice,
+          } : {}),
+        }),
       });
       if (res.ok) {
         setSubmitted(true);
@@ -763,6 +770,27 @@ const Inquire: React.FC = () => {
                         </p>
                       )}
                     </div>
+
+                    {purchaseMode && (
+                      <div className="mb-2 pt-3">
+                        <label htmlFor="field-shipping-destination" className="block font-label text-micro uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2">
+                          Shipping destination (optional)
+                        </label>
+                        <input
+                          id="field-shipping-destination"
+                          name="location"
+                          type="text"
+                          value={form.location}
+                          onChange={handleChange}
+                          maxLength={180}
+                          aria-describedby="shipping-destination-hint"
+                          className="w-full bg-transparent border-b-2 border-wood-200 focus:border-wood-700 pb-2 outline-none font-body text-base text-wood-900"
+                        />
+                        <p id="shipping-destination-hint" className="font-body text-sm text-wood-700 mt-1.5">
+                          City, country and postal code, if applicable. I’ll confirm shipping separately.
+                        </p>
+                      </div>
+                    )}
 
                     {/* ── Notes / Questions (purchase mode only - shown below name+email) */}
                     {purchaseMode && (

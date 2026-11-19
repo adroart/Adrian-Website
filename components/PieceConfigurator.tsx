@@ -64,6 +64,7 @@ export interface PieceConfiguratorProps {
     // If the reader arrived with a specific size in mind (e.g. from an oracle
     // BuySheet that surfaced a variant tile), pre-select it and skip step 1.
     initialSize?: string | null;
+    mandalaCard?: number;
 }
 
 /**
@@ -72,7 +73,7 @@ export interface PieceConfiguratorProps {
  * initialSize is provided. Used both inline on PiecePage and embedded in
  * the oracle BuySheet so readers never have to leave their reading.
  */
-const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize }) => {
+const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize, mandalaCard }) => {
     const { addToCart } = useCart();
     const reviewRef = useRef<HTMLDivElement>(null);
     const advanceToReview = () => {
@@ -209,7 +210,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                 </div>
                 <Link
                     to="/inquire"
-                    state={{ piece: art.title, pieceId: art.id }}
+                    state={{ piece: art.title, pieceId: art.id, mandalaCard }}
                     className="btn btn-primary btn-block transition-colors flex items-center justify-center gap-3"
                 >
                     Commission a similar piece <ArrowRight size={14} />
@@ -444,6 +445,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                             state={{
                                 piece: art.title,
                                 pieceId: art.id,
+                                mandalaCard,
                                 mode: 'purchase',
                                 price: formatPrice(mtoTotal),
                                 size: selectedSize,
@@ -466,7 +468,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
 
                     <Link
                         to="/inquire"
-                        state={{ piece: art.title, pieceId: art.id }}
+                        state={{ piece: art.title, pieceId: art.id, mandalaCard }}
                         className="block text-center font-label text-label uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-4 transition-colors"
                     >
                         Or commission a similar piece

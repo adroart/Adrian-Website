@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import AccountLayout from './account/AccountLayout';
+import AccountLayout, { MANDALA_PROFILE_HANDOFF } from './account/AccountLayout';
 import { useAccount } from '../lib/account/useAccount';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
@@ -16,8 +16,8 @@ const AccountDashboard: React.FC = () => {
       )}
 
       <div className="grid sm:grid-cols-2 gap-6">
-        <Link
-          to="/oracle/profile"
+        <a
+          href={MANDALA_PROFILE_HANDOFF}
           className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors"
         >
           <div className="font-label text-micro uppercase tracking-[0.28em] text-bronze-600 mb-3">
@@ -28,9 +28,9 @@ const AccountDashboard: React.FC = () => {
           </div>
           <p className="font-serif text-sm text-wood-700">
             Enter your birth data once and your eleven positions follow you
-            through every reading.
+            through every reading on Mandala Codes.
           </p>
-        </Link>
+        </a>
 
         <Link
           to="/account/orders"

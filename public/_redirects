@@ -60,7 +60,7 @@
 /oracle/universal-language/*   https://mandalacodes.com/oracle/universal-language/:splat  301
 /oracle/universal-language     https://mandalacodes.com/oracle/universal-language          301
 /oracle/the-systems            https://mandalacodes.com/oracle/universal-language          301
-/oracle/profile                https://mandalacodes.com/oracle/universal-language          301
+/oracle/profile                https://mandalacodes.com/profile          301
 
 # Legacy back-compat oracle URLs (pre-rename) — same target.
 /universal-language/*                            https://mandalacodes.com/oracle/universal-language/:splat  301

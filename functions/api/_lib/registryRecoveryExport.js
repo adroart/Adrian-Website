@@ -5,6 +5,7 @@ import {
   REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
   REGISTRY_RECOVERY_TABLES,
+  REGISTRY_RECOVERY_V11_TABLES,
 } from '../../../utils/registryRecoveryArchive.ts';
 
 export { REGISTRY_RECOVERY_TABLES };
@@ -125,10 +126,14 @@ const REFERENCED_COLLECTOR_USER_IDS_SQL = `
     )
 `;
 
-function tableStatement(env, table) {
+function tableStatement(env, table, livingTablesPresent = true) {
+  const referencedUsersSql = REFERENCED_AUTH_USER_IDS_SQL + (livingTablesPresent ? `
+    UNION SELECT author_user_id FROM collector_reflections
+    UNION SELECT author_user_id FROM collector_place_milestones
+  ` : '');
   if (table === 'user') {
     return env.DB.prepare(
-      `WITH referenced_users(id) AS (${REFERENCED_AUTH_USER_IDS_SQL})
+      `WITH referenced_users(id) AS (${referencedUsersSql})
        SELECT auth_user.* FROM "user" AS auth_user
        JOIN referenced_users ON referenced_users.id = auth_user.id
        ORDER BY CAST(auth_user.id AS BLOB) ASC`,
@@ -136,7 +141,7 @@ function tableStatement(env, table) {
   }
   if (table === 'account') {
     return env.DB.prepare(
-      `WITH referenced_users(id) AS (${REFERENCED_AUTH_USER_IDS_SQL})
+      `WITH referenced_users(id) AS (${referencedUsersSql})
        SELECT auth_account.* FROM "account" AS auth_account
        JOIN referenced_users ON referenced_users.id = auth_account.userId
        ORDER BY CAST(auth_account.id AS BLOB) ASC`,
@@ -292,12 +297,14 @@ function collectReferencedAuthUserIds(tables) {
     }
   }
   for (const [table, field] of [
+    ['collector_reflections', 'author_user_id'],
+    ['collector_place_milestones', 'author_user_id'],
     ['collector_dreams', 'author_user_id'],
     ['collector_dream_markers', 'author_user_id'],
     ['collector_dream_mutations', 'author_user_id'],
     ['collector_dream_rituals', 'keeper_user_id'],
   ]) {
-    for (const row of tables[table]) {
+    for (const row of tables[table] || []) {
       if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
     }
   }
@@ -325,14 +332,24 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
   }
   const exportedAt = options.exportedAt || new Date().toISOString();
   if (typeof env.DB.batch !== 'function') throw new Error('registry_recovery_snapshot_unavailable');
+  // Migration 052 is deliberately optional while keeper rollout is off. A
+  // partial installation fails closed instead of silently dropping a chapter.
+  const livingSchemaSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('collector_reflections', 'collector_place_milestones') ORDER BY name";
+  const installed = plainRows(await env.DB.prepare(livingSchemaSql).all());
+  if (installed.length !== 0 && installed.length !== 2) throw new Error('registry_recovery_living_schema_incomplete');
+  const livingTablesPresent = installed.length === 2;
+  const exportTables = livingTablesPresent ? REGISTRY_RECOVERY_TABLES : REGISTRY_RECOVERY_V11_TABLES;
   const results = await env.DB.batch(
-    REGISTRY_RECOVERY_TABLES.map((table) => tableStatement(env, table)),
+    [...exportTables.map((table) => tableStatement(env, table, livingTablesPresent)), env.DB.prepare(livingSchemaSql)],
   );
-  if (!Array.isArray(results) || results.length !== REGISTRY_RECOVERY_TABLES.length) {
+  if (!Array.isArray(results) || results.length !== exportTables.length + 1) {
     throw new Error('registry_recovery_snapshot_incomplete');
   }
+  if (JSON.stringify(plainRows(results[exportTables.length])) !== JSON.stringify(installed)) {
+    throw new Error('registry_recovery_living_schema_changed');
+  }
   const orderedTables = {};
-  REGISTRY_RECOVERY_TABLES.forEach((table, index) => {
+  exportTables.forEach((table, index) => {
     orderedTables[table] = plainRows(results[index]);
   });
   const referencedIds = collectReferencedAuthUserIds(orderedTables);
@@ -389,7 +406,7 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
   }
   return encryptPrivateRecoveryPayload({
     kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
-    schemaVersion: PRIVATE_RECOVERY_SCHEMA_VERSION,
+    schemaVersion: livingTablesPresent ? PRIVATE_RECOVERY_SCHEMA_VERSION : 11,
     exportedAt,
     tables: orderedTables,
   }, { key, keyId });

@@ -156,7 +156,7 @@ const SiteShell: React.FC = () => {
             <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
             <Route path="/oracle/universal-language" element={<UniversalLanguageIndexExternalRedirect />} />
             <Route path="/oracle/the-systems" element={<UniversalLanguageIndexExternalRedirect />} />
-            <Route path="/oracle/profile" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/oracle/profile" element={<MandalaProfileExternalRedirect />} />
             <Route path="/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
             <Route path="/universal-language" element={<UniversalLanguageIndexExternalRedirect />} />
             <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
@@ -293,12 +293,19 @@ const UniversalLanguageCardExternalRedirect: React.FC = () => {
   return null;
 };
 
-/** Old non-card oracle URLs (the index, the systems history, the profile,
+/** Old non-card oracle URLs (the index, the systems history,
  *  the legacy back-compat routes) all redirect to the deck's index page on
  *  mandalacodes.com. */
 const UniversalLanguageIndexExternalRedirect: React.FC = () => {
   useEffect(() => {
     window.location.replace('https://mandalacodes.com/oracle/universal-language');
+  }, []);
+  return null;
+};
+
+const MandalaProfileExternalRedirect: React.FC = () => {
+  useEffect(() => {
+    window.location.replace('https://mandalacodes.com/profile');
   }, []);
   return null;
 };
