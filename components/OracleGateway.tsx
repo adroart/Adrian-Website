@@ -44,7 +44,7 @@ const OracleGateway: React.FC = () => {
         <p className="font-label text-label uppercase tracking-[0.32em] text-bronze-600 mb-6">
           The Oracles
         </p>
-        <h1 className="font-serif text-[34px] sm:text-[44px] leading-[1.05] tracking-[-0.01em] text-wood-900 mb-6 sm:mb-8">
+        <h1 className="font-serif text-page-title sm:text-title-xl leading-[1.05] tracking-[-0.01em] text-wood-900 mb-6 sm:mb-8">
           The oracles I have made
         </h1>
         <p className="font-serif text-body-lg sm:text-title-sm text-wood-700 leading-[1.55] sm:leading-[1.5] max-w-prose">

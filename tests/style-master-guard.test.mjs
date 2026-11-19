@@ -26,7 +26,7 @@ const MASTER = 'src/master.css';
 const CEILING = {
   rawColours: 403,
   paletteColours: 4,
-  rawFontSizes: 199,
+  rawFontSizes: 195,
   rawFontFamilies: 6,
   buttonSizes: 65,
   handBuiltButtons: 87,
