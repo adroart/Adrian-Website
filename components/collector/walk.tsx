@@ -907,6 +907,7 @@ type Props = {
    */
   lampsValue?: boolean[];
   onLamps?: (lamps: boolean[]) => void;
+  mapChoice?: React.ReactNode;
 };
 
 export const WalkScreen: React.FC<Props> = ({
@@ -916,6 +917,7 @@ export const WalkScreen: React.FC<Props> = ({
   onType,
   lampsValue,
   onLamps,
+  mapChoice,
 }) => {
   const [ownLamps, setOwnLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
   const [linksOpen, setLinksOpen] = useState(false);
@@ -1025,7 +1027,9 @@ export const WalkScreen: React.FC<Props> = ({
     <Ground
       light={screen.light}
       wash={Boolean(screen.eyebrow) || screen.ignite}
-      pad={screen.eyebrow || screen.ignite ? '56px 30px 30px' : '44px 30px 30px'}
+      pad={mapChoice
+        ? '28px 30px calc(24px + var(--nav-height, 0px))'
+        : screen.eyebrow || screen.ignite ? '56px 30px 30px' : '44px 30px 30px'}
     >
       {/* the four advance on a tap anywhere: the fast lane is built in, and a
           skip link would teach everyone the screens are optional filler */}
@@ -1202,9 +1206,9 @@ export const WalkScreen: React.FC<Props> = ({
           )}
 
           {screen.placement && (
-            <div style={{ paddingTop: 24 }}>
+            <div className="collector-placement">
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 44, cursor: 'pointer', fontFamily: F.body, color: C.ink }}>
+                <label className="collector-placement__choice">
                   <input
                     type="checkbox"
                     checked={Boolean(lamps[1])}
@@ -1212,7 +1216,7 @@ export const WalkScreen: React.FC<Props> = ({
                       const checked = event.target.checked;
                       setLamps(current => current.map((value, index) => index === 1 ? checked : value));
                     }}
-                    style={{ width: 18, height: 18, accentColor: C.brass, flexShrink: 0 }}
+                    className="collector-placement__checkbox"
                   />
                   {PLACEMENT_LABEL}
                 </label>
@@ -1438,15 +1442,20 @@ export const WalkScreen: React.FC<Props> = ({
               }}
             >
               {SHOW_LAMPS.map(([title, note], i) => (
-                <Lamp
-                  key={title}
-                  title={title}
-                  note={note}
-                  on={Boolean(lamps[i])}
-                  onToggle={() => setLamps(l => l.map((v, j) => (j === i ? !v : v)))}
-                />
+                <div key={title} style={{ flex: 'none' }}>
+                  {i === 1 && mapChoice ? mapChoice : (
+                    <Lamp
+                      title={title}
+                      note={note}
+                      on={Boolean(lamps[i])}
+                      onToggle={() => setLamps(l => l.map((v, j) => (j === i ? !v : v)))}
+                    />
+                  )}
+                </div>
               ))}
-              <Lamp title={G.showBirth} note={G.showBirthNote} on={false} fixed fixedWord={G.showNever} />
+              <div style={{ flex: 'none' }}>
+                <Lamp title={G.showBirth} note={G.showBirthNote} on={false} fixed fixedWord={G.showNever} />
+              </div>
             </div>
           )}
 

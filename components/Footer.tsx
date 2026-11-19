@@ -77,7 +77,7 @@ const NewsletterForm: React.FC = () => {
     return (
         <div className="w-full md:w-80">
         <form
-            className={`flex border-b ${status === 'error' ? 'border-red-400' : 'border-wood-500'} focus-within:border-bronze-400 transition-colors pb-1 w-full group relative`}
+            className={`flex border-b ${status === 'error' ? 'border-danger-line' : 'border-wood-500'} focus-within:border-bronze-400 transition-colors pb-1 w-full group relative`}
             onSubmit={handleSubmit}
         >
             {/* #10 Floating label */}
@@ -108,7 +108,7 @@ const NewsletterForm: React.FC = () => {
             </button>
         </form>
         {status === 'error' && (
-            <p className="font-sans text-xs text-red-400 mt-1">Something went wrong. Please try again.</p>
+            <p className="font-sans text-xs text-danger mt-1">Something went wrong. Please try again.</p>
         )}
         </div>
     );
@@ -158,14 +158,14 @@ const Footer: React.FC = () => {
                     {/* Brand - 60% on desktop */}
                     <div className="md:w-[60%]">
                         <h2 className="font-display text-3xl md:text-4xl text-wood-100 mb-4 tracking-normal font-normal">Adrian Rasmussen</h2>
-                        <p className="font-sans text-wood-300 text-sm leading-[1.7] max-w-lg">
+                        <p className="font-sans text-wood-300 text-sm leading-prose max-w-lg">
                             Multidimensional art from the studio. <br />
                             Mandala series, sacred geometry, and layered wood.
                         </p>
                         {/* #13 "Currently" status line */}
                         <div className="mt-6 flex items-center gap-2.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse-slow"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold text-wood-200">
+                            <span className="font-label text-label uppercase tracking-[0.2em] font-semibold text-wood-200">
                                 For commissions and collaborations, get in touch.
                             </span>
                         </div>
@@ -201,7 +201,7 @@ const Footer: React.FC = () => {
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent"></div>
 
                 {/* Bottom bar */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-label font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-6">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 md:-my-3">
                         <span className="py-3 md:py-0">© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="py-3 hover:text-bronze-400 transition-colors">Privacy</Link>

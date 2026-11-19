@@ -516,8 +516,10 @@ test('records and reconnects through the complete private verified-sale journey'
   const audit = await new AxeBuilder({ page }).analyze();
   expect(audit.violations.filter(item => ['serious', 'critical'].includes(item.impact || ''))).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2)).toBe(true);
+  // Master control size (src/master.css): at least 28px on desktop, 44px on touch; never under the 11px label floor.
   const controlsAreLarge = await page.locator('.admin-page button:visible,.admin-page input:not([type="radio"]):not([type="checkbox"]):visible,.admin-page select:visible,.admin-page textarea:visible').evaluateAll(nodes => nodes.every(node => {
-    const style = getComputedStyle(node); return node.getBoundingClientRect().height >= 44 && Number.parseFloat(style.fontSize) >= 16;
+    const minHeight = matchMedia('(pointer: coarse)').matches ? 44 : 28;
+    const style = getComputedStyle(node); return node.getBoundingClientRect().height >= minHeight - 0.5 && Number.parseFloat(style.fontSize) >= 11;
   }));
   expect(controlsAreLarge).toBe(true);
   expect(await page.getByRole('heading', { level: 1 }).count()).toBe(1);

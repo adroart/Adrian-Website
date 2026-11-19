@@ -218,21 +218,21 @@ const SignInModal: React.FC<SignInModalProps> = ({
 
   const labelCls = 'block mb-2';
   const labelStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.15em',
+    fontFamily: 'var(--font-label)', fontSize: 'var(--text-label)', letterSpacing: '0.15em',
     textTransform: 'uppercase', color: C.sub, fontWeight: 600,
   };
   const inputStyle: React.CSSProperties = {
     width: '100%', border: `1px solid ${C.fieldBorder}`, background: '#fff',
-    padding: '12px 16px', fontFamily: 'var(--font-label)', fontSize: 16, color: C.ink,
+    padding: '12px 16px', fontFamily: 'var(--font-label)', fontSize: 'var(--text-body)', color: C.ink,
   };
   const primaryStyle: React.CSSProperties = {
     width: '100%', background: C.ink, color: C.surface,
-    fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.2em',
+    fontFamily: 'var(--font-label)', fontSize: 'var(--text-label)', letterSpacing: '0.2em',
     textTransform: 'uppercase', fontWeight: 600, padding: '12px', cursor: 'pointer', border: 0,
   };
   const linkStyle: React.CSSProperties = {
     background: 'transparent', border: 0, cursor: 'pointer', color: C.bronze,
-    fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.12em',
+    fontFamily: 'var(--font-label)', fontSize: 'var(--text-label)', letterSpacing: '0.12em',
     textTransform: 'uppercase', fontWeight: 600, padding: '6px 0',
   };
 
@@ -280,10 +280,10 @@ const SignInModal: React.FC<SignInModalProps> = ({
         </button>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <p style={{ ...labelStyle, color: C.bronze, marginBottom: 8 }}>Adrian Rasmussen Art</p>
-          <h2 id="sign-in-title" style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: 26, color: C.ink, fontWeight: 500, margin: 0 }}>
+          <h2 id="sign-in-title" style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: C.ink, fontWeight: 500, margin: 0 }}>
             {title}
           </h2>
-          <p style={{ fontFamily: 'var(--font-label)', fontSize: 14, color: C.sub, marginTop: 8 }}>
+          <p style={{ fontFamily: 'var(--font-label)', fontSize: 'var(--text-meta)', color: C.sub, marginTop: 8 }}>
             {subtitle}
           </p>
         </div>
@@ -291,7 +291,7 @@ const SignInModal: React.FC<SignInModalProps> = ({
         {error && (
           <div role="alert" aria-live="polite" style={{
             marginBottom: 16, padding: '8px 12px', border: '1px solid #d99',
-            background: '#fbeaea', color: '#8a2a2a', fontFamily: 'var(--font-label)', fontSize: 13,
+            background: '#fbeaea', color: '#8a2a2a', fontFamily: 'var(--font-label)', fontSize: 'var(--text-caption)',
           }}>
             {error}
           </div>
@@ -309,7 +309,7 @@ const SignInModal: React.FC<SignInModalProps> = ({
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.sub }}>
                   <span style={{ flex: 1, height: 1, background: C.border }} />
-                  <span style={{ fontFamily: 'var(--font-label)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em' }}>or</span>
+                  <span style={{ fontFamily: 'var(--font-label)', fontSize: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>or</span>
                   <span style={{ flex: 1, height: 1, background: C.border }} />
                 </div>
               </>

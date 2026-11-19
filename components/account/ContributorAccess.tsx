@@ -180,7 +180,7 @@ const ContributorAccess: React.FC = () => {
 
         <form onSubmit={inspect} className="space-y-5" aria-label="Inspect contributor invitation">
           <div>
-            <label htmlFor="contributor-invitation" className="block font-label text-[11px] uppercase tracking-[0.18em] text-wood-700 mb-2">
+            <label htmlFor="contributor-invitation" className="block font-label text-label uppercase tracking-[0.18em] text-wood-700 mb-2">
               Contributor invitation
             </label>
             <textarea
@@ -205,7 +205,7 @@ const ContributorAccess: React.FC = () => {
             <button
               type="submit"
               disabled={Boolean(busy) || !token.trim()}
-              className="min-h-11 rounded-full bg-wood-900 px-6 py-3 font-label text-[11px] uppercase tracking-[0.18em] text-paper-50 transition-colors hover:bg-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
+              className="min-h-11 rounded-full bg-wood-900 px-6 py-3 font-label text-label uppercase tracking-[0.18em] text-paper-50 transition-colors hover:bg-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
             >
               {busy === 'inspect' ? 'Checking invitation' : 'Check invitation'}
             </button>
@@ -214,7 +214,7 @@ const ContributorAccess: React.FC = () => {
                 type="button"
                 onClick={clearProof}
                 disabled={Boolean(busy)}
-                className="min-h-11 rounded-full px-6 py-3 font-label text-[11px] uppercase tracking-[0.18em] text-wood-700 hover:text-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
+                className="min-h-11 rounded-full px-6 py-3 font-label text-label uppercase tracking-[0.18em] text-wood-700 hover:text-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
               >
                 Cancel
               </button>
@@ -230,7 +230,7 @@ const ContributorAccess: React.FC = () => {
               {visibleAcceptedPath && (
                 <Link
                   to={visibleAcceptedPath}
-                  className="mt-3 inline-flex min-h-11 items-center rounded-full px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+                  className="mt-3 inline-flex min-h-11 items-center rounded-full px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
                 >
                   Open artwork record
                 </Link>
@@ -253,7 +253,7 @@ const ContributorAccess: React.FC = () => {
                   type="button"
                   onClick={() => void accept()}
                   disabled={Boolean(busy)}
-                  className="mt-6 min-h-11 rounded-full bg-bronze-700 px-6 py-3 font-label text-[11px] uppercase tracking-[0.18em] text-paper-50 transition-colors hover:bg-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
+                  className="mt-6 min-h-11 rounded-full bg-bronze-700 px-6 py-3 font-label text-label uppercase tracking-[0.18em] text-paper-50 transition-colors hover:bg-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
                 >
                   {busy === 'accept' ? 'Accepting access' : 'Accept contributor access'}
                 </button>

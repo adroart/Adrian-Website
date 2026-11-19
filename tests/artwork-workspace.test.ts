@@ -210,6 +210,7 @@ describe('read-only artwork workspace projection', () => {
       assert.deepEqual(identified.catalog, { artworkId: 'SIG-102', title: 'Communion' });
       assert.equal(identified.salesRecord?.state, 'identified');
       assert.equal(identified.identity, null);
+      assert.deepEqual(identified.edition, { kind: 'unique' });
 
       const linked = await getArtworkWorkspace(f.env, {
         keeperPieceId: 'keeper-linked', artistArtworkRecordId: 'record-linked',
@@ -218,11 +219,18 @@ describe('read-only artwork workspace projection', () => {
       assert.deepEqual(linked.identity, {
         keeperPieceId: 'keeper-linked', publicCode: 'AR-7KQ9M2WX', state: 'registered',
       });
+      assert.equal(linked.selectionScope, 'exact_record');
+
+      const implicitlyLinked = await getArtworkWorkspace(f.env, { artworkId: 'SIG-100' }, now);
+      assert.equal(implicitlyLinked.selectionScope, 'implicit_record');
+      assert.equal(implicitlyLinked.identity?.keeperPieceId, 'keeper-linked');
 
       const catalogOnly = await getArtworkWorkspace(f.env, { artworkId: 'UL-100' }, now);
       assert.equal(catalogOnly.catalog?.artworkId, 'UL-100');
       assert.equal(catalogOnly.salesRecord, null);
       assert.equal(catalogOnly.identity, null);
+      assert.equal(catalogOnly.edition, null);
+      assert.equal(catalogOnly.selectionScope, 'catalog');
 
       const registeredOnly = await getArtworkWorkspace(f.env, {
         keeperPieceId: 'keeper-only',
@@ -230,6 +238,34 @@ describe('read-only artwork workspace projection', () => {
       assert.equal(registeredOnly.catalog?.artworkId, 'SIG-101');
       assert.equal(registeredOnly.salesRecord, null);
       assert.equal(registeredOnly.identity?.keeperPieceId, 'keeper-only');
+    } finally { f.database.close(); }
+  });
+
+  it('distinguishes the same catalog artwork in different numbered edition records', async () => {
+    const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
+    const f = fixture();
+    try {
+      f.database.exec(`
+        INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
+          VALUES ('TST-001', 'Numbered work', 'Test', 8, '${now}');
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+           registered_at, plate_status, ownership_code_ciphertext, ownership_code_nonce,
+           ownership_code_key_version, registration_status, registered_by_user_id,
+           identity_backup_status, identity_backup_reference, identity_backup_sha256, identity_backup_at)
+          VALUES ('piece-7', 'TST-001', 7, '${digest('7')}', 'AR-7KQ8M2WX', 'issue-7',
+            '${now}', 'legacy', 'cipher-7', 'nonce-7', 1, 'registered', 'artist-admin', 'verified',
+            'identities/AR-7KQ8M2WX/${digest('8')}.json', '${digest('8')}', '${now}');
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, keeper_piece_id, identification_status, created_by_user_id, created_at, updated_at)
+          VALUES ('record-8', 'TST-001', '{"kind":"numbered","number":8,"size":8}', NULL,
+            'identified', 'artist-admin', '${now}', '${now}');
+      `);
+      const registered = await getArtworkWorkspace(f.env, { artworkId: 'TST-001', keeperPieceId: 'piece-7' }, now);
+      const identified = await getArtworkWorkspace(f.env, { artworkId: 'TST-001', artistArtworkRecordId: 'record-8' }, now);
+      assert.deepEqual(registered.edition, { kind: 'numbered', number: 7 });
+      assert.deepEqual(identified.edition, { kind: 'numbered', number: 8 });
+      assert.equal(registered.plate?.wizardStage, 'fabricate');
     } finally { f.database.close(); }
   });
 
@@ -269,11 +305,34 @@ describe('read-only artwork workspace projection', () => {
         state: 'available', invitationId: 'iv-123e4567-e89b-42d3-a456-426614174000',
       });
       assert.deepEqual(linked.caretaker, { state: 'unclaimed' });
-      assert.deepEqual(linked.plate, { state: 'legacy', recoveryState: 'identity_missing' });
+      assert.deepEqual(linked.plate, { state: 'legacy', recoveryState: 'identity_missing', wizardStage: 'fabricate' });
       assert.deepEqual(linked.sale, { state: 'verified', verifiedSaleId: 'sale-linked' });
 
       const legacy = await getArtworkWorkspace(f.env, { keeperPieceId: 'keeper-only' }, now);
       assert.deepEqual(legacy.sale, { state: 'legacy_candidate', verifiedSaleId: null });
+      assert.equal(legacy.legacySaleVerificationPath,
+        '/admin/collector-sales?source=legacy_acquisition&acquisitionId=legacy-acquisition&artworkId=SIG-101&keeperPieceId=keeper-only');
+      assert.equal(legacy.nextAction?.label, 'Verify identity recovery');
+    } finally { f.database.close(); }
+  });
+
+  it('prefers an available first-bind invitation over a newer expired invitation', async () => {
+    const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
+    const f = fixture();
+    try {
+      seedComposedReadState(f.database);
+      f.database.exec(`
+        INSERT INTO artwork_invitations
+          (id, keeper_piece_id, token_hash, intended_recipient_email,
+           created_by_user_id, idempotency_key, created_at, expires_at)
+        VALUES ('iv-123e4567-e89b-42d3-a456-426614174004', 'keeper-linked', '${digest('4')}', 'synthetic@example.test',
+          'artist-admin', 'invite-expired', '2026-08-10T11:00:00.000Z', '2026-08-10T11:01:00.000Z');
+      `);
+      const workspace = await getArtworkWorkspace(f.env, { keeperPieceId: 'keeper-linked' }, now);
+      assert.deepEqual(workspace.invitation, {
+        state: 'available', invitationId: 'iv-123e4567-e89b-42d3-a456-426614174000',
+      });
+      assert.equal(workspace.activity.filter(event => event.kind === 'invitation_created').length, 2);
     } finally { f.database.close(); }
   });
 
@@ -394,7 +453,7 @@ describe('read-only artwork workspace projection', () => {
       }, now);
       assert.deepEqual(linked.nextAction, {
         label: 'Verify identity recovery',
-        href: '/admin/pieces/wizard?keeperPieceId=keeper-linked',
+        href: '/admin/pieces/wizard?keeperPieceId=keeper-linked&proof=identity',
         reason: 'The registered identity needs a current copied recovery check.',
       });
       assert.ok(linked.activity.length > 0 && linked.activity.length <= 20);
@@ -462,6 +521,21 @@ describe('read-only artwork workspace projection', () => {
       assert.equal(active.caretaker.state, 'active');
       assert.notEqual(active.nextAction?.label, 'Resolve caretaker invitation');
       assert.notEqual(active.nextAction?.label, 'Create caretaker invitation');
+      assert.equal(active.nextAction?.href, '/works/SIG-100?instance=AR-7KQ9M2WX');
+      const { parseArtworkWorkspaceResponse } = await import('../utils/artworkWorkspace.ts');
+      assert.deepEqual(parseArtworkWorkspaceResponse({ ok: true, workspace: active }), active);
+      assert.throws(() => parseArtworkWorkspaceResponse({ ok: true, workspace: {
+        ...active, nextAction: { ...active.nextAction, href: '/works/SIG-100?instance=AR-8KQ9M2WX' },
+      } }));
+      const { onRequest } = await import('../functions/api/admin/artwork-workspace.js');
+      const response = await onRequest({
+        request: new Request('https://example.com/api/admin/artwork-workspace?keeperPieceId=keeper-linked', {
+          headers: { 'X-Test-Admin': 'yes' },
+        }),
+        env: f.env,
+      });
+      const compatible = parseArtworkWorkspaceResponse(await response.json());
+      assert.equal(compatible.nextAction?.href, '/admin/pieces?keeperPieceId=keeper-linked');
 
       f.database.exec(`
         UPDATE keeper_pieces
@@ -477,6 +551,7 @@ describe('read-only artwork workspace projection', () => {
 
   it('exposes one authenticated GET endpoint with strict selector validation and no-store responses', async () => {
     const { onRequest } = await import('../functions/api/admin/artwork-workspace.js');
+    const { EXACT_RECORD_PROJECTION, loadArtworkWorkspace, WORKSPACE_PROJECTION_HEADER } = await import('../utils/artworkWorkspace.ts');
     const f = fixture();
     const request = (query = '', init: RequestInit = {}) => new Request(
       `https://example.com/api/admin/artwork-workspace${query}`,
@@ -518,9 +593,32 @@ describe('read-only artwork workspace projection', () => {
       const success = await onRequest({ request: request('?keeperPieceId=keeper-only'), env: f.env });
       assert.equal(success.status, 200);
       assert.equal(success.headers.get('Cache-Control'), 'no-store');
-      const body = await success.json() as { ok: boolean; workspace: { identity: { keeperPieceId: string } } };
+      assert.equal(success.headers.get('Vary'), WORKSPACE_PROJECTION_HEADER);
+      const body = await success.json() as { ok: boolean; workspace: { identity: { keeperPieceId: string }; plate: object; nextAction: { href: string } } };
       assert.equal(body.ok, true);
       assert.equal(body.workspace.identity.keeperPieceId, 'keeper-only');
+      assert.equal(body.workspace.nextAction.href, '/admin/pieces/wizard?keeperPieceId=keeper-only');
+      assert.deepEqual(Object.keys(body.workspace).sort(), [
+        'activity', 'caretaker', 'catalog', 'certificate', 'identity', 'invitation', 'nextAction', 'plate', 'sale', 'salesRecord',
+      ]);
+      assert.deepEqual(Object.keys(body.workspace.plate).sort(), ['recoveryState', 'state']);
+
+      const actualFetch = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        assert.equal(new Headers(init?.headers).get(WORKSPACE_PROJECTION_HEADER), EXACT_RECORD_PROJECTION);
+        return onRequest({
+          request: new Request(new URL(String(input), 'https://example.com'), {
+            ...init, headers: { 'X-Test-Admin': 'yes', [WORKSPACE_PROJECTION_HEADER]: EXACT_RECORD_PROJECTION },
+          }),
+          env: f.env,
+        });
+      };
+      try {
+        const exact = await loadArtworkWorkspace({ keeperPieceId: 'keeper-only' });
+        assert.deepEqual(exact.edition, { kind: 'unique' });
+        assert.equal(exact.plate?.wizardStage, 'fabricate');
+        assert.equal(exact.nextAction?.href, '/admin/pieces/wizard?keeperPieceId=keeper-only&proof=identity');
+      } finally { globalThis.fetch = actualFetch; }
     } finally { f.database.close(); }
   });
 
@@ -538,6 +636,11 @@ describe('read-only artwork workspace projection', () => {
       }, now);
       const parsed = parseArtworkWorkspaceResponse({ ok: true, workspace });
       assert.deepEqual(parsed, workspace);
+      const { edition, selectionScope, legacySaleVerificationPath, ...olderWorkspace } = workspace;
+      assert.ok(olderWorkspace.plate);
+      const { wizardStage, ...olderPlate } = olderWorkspace.plate;
+      const older = { ...olderWorkspace, plate: olderPlate };
+      assert.deepEqual(parseArtworkWorkspaceResponse({ ok: true, workspace: older }), older);
       assert.equal(
         buildArtworkWorkspacePath({
           artworkId: 'SIG-100', keeperPieceId: 'Keeper Case-Sensitive',

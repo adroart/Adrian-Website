@@ -25,7 +25,7 @@ import { resolveArtworkCertificate } from './certificateContent.js';
 import { latestCatalogSnapshot } from './catalogSnapshot.js';
 
 export const PIECE_RECORD_SCHEMA = 'adrian-piece-record';
-export const PIECE_RECORD_SCHEMA_VERSION = 1;
+export const PIECE_RECORD_SCHEMA_VERSION = 2;
 export const PIECE_RECORD_TRIGGERS = new Set([
   'registration', 'activation', 'bind', 'transfer', 'yearly',
   'contribution', 'attachment', 'on_demand',
@@ -327,6 +327,43 @@ export async function gatherShines(env, keeperPieceId) {
     }));
 }
 
+/**
+ * Anonymous, deliberately public artwork history only. Successor reading
+ * permission is never publication permission. Neither query depends on the
+ * current keeper, contributor grant, or current Atlas display consent.
+ * Missing migration-052 tables retain the byte-compatible v1 record shape;
+ * missing source data or any other database failure must still fail closed.
+ */
+async function gatherLivingHistory(env, keeperPieceId) {
+  try {
+    const reflections = await allRows(env, `SELECT body, created_at, published_at
+        FROM collector_reflections
+       WHERE keeper_piece_id = ?1 AND published_at IS NOT NULL
+       ORDER BY created_at, id`, keeperPieceId);
+    const milestones = await allRows(env, `SELECT m.year, m.grain,
+          CASE m.grain WHEN 'region' THEN c.region ELSE c.city END AS place, c.country
+        FROM collector_place_milestones m
+        JOIN atlas_source_cities c ON c.id = m.place_id
+       WHERE m.keeper_piece_id = ?1 AND m.visibility = 'public'
+       ORDER BY m.year, m.created_at, m.id`, keeperPieceId);
+    return {
+      included: true,
+      reflections: reflections.map((row) => ({
+        words: String(row.body), createdAt: String(row.created_at), publishedAt: String(row.published_at),
+      })),
+      milestones: milestones.map((row) => ({
+        year: row.year, grain: row.grain, place: row.place, country: row.country,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof Error
+      && /no such table:\s*(?:main\.)?(?:collector_reflections|collector_place_milestones)\b/i.test(error.message)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 function editionShape(editionNumber, editionSize) {
   if (editionNumber === 0) return { kind: 'unique' };
   return {
@@ -360,8 +397,8 @@ function normalizedImage(primaryImage) {
 /**
  * Gather everything the record holds for one public code.
  *
- * options.includeLegacySections gates the lineage and shines sections. The
- * caller passes the same launch condition the public lineage endpoint
+ * options.includeLegacySections gates lineage, shines and public living history.
+ * The caller passes the same launch condition the public lineage endpoint
  * enforces (legacyEnabled()); this generator additionally includes lineage
  * only for plate statuses that endpoint would serve.
  */
@@ -400,6 +437,8 @@ export async function gatherPieceRecordData(env, publicCode, options = {}) {
   }
   const shineEntries = includeLegacySections ? await gatherShines(env, piece.id) : null;
 
+  const livingHistory = includeLegacySections ? await gatherLivingHistory(env, piece.id) : null;
+
   const editionNumber = Number(piece.edition_number);
   const edition = editionShape(
     Number.isSafeInteger(editionNumber) ? editionNumber : 0,
@@ -426,6 +465,7 @@ export async function gatherPieceRecordData(env, publicCode, options = {}) {
     catalog: snapshot ? { snapshotHash: snapshot.snapshotHash, source: snapshot.source } : null,
     certificate,
     light,
+    ...(livingHistory ? { livingHistory } : {}),
     lineage: lineageEvents === null
       ? { included: false }
       : { included: true, events: lineageEvents },
@@ -455,7 +495,7 @@ export async function buildPieceRecord(env, {
   const data = await gatherPieceRecordData(env, publicCode, { includeLegacySections });
   const record = {
     schema: PIECE_RECORD_SCHEMA,
-    schemaVersion: PIECE_RECORD_SCHEMA_VERSION,
+    schemaVersion: data.livingHistory ? PIECE_RECORD_SCHEMA_VERSION : 1,
     generatedAt,
     trigger,
     piece: data.piece,
@@ -464,6 +504,7 @@ export async function buildPieceRecord(env, {
     light: data.light,
     lineage: data.lineage,
     shines: data.shines,
+    ...(data.livingHistory ? { livingHistory: data.livingHistory } : {}),
     media: { primaryImage: normalizedImage(primaryImage) },
   };
   // The final strip-pass. A privacy violation aborts generation entirely.
@@ -756,6 +797,24 @@ function shinesSection(shines) {
   return lines.join('\n');
 }
 
+function livingHistorySection(history) {
+  // Older exports have no extension. Keep their rendering byte-compatible.
+  if (!history) return '';
+  const lines = ['<section id="living-history">', '<h2>Living history</h2>'];
+  lines.push('<p class="quiet">Published reflections and places deliberately shared as part of this piece’s history, with no name. Places describe a past chapter, not its current whereabouts.</p>');
+  for (const reflection of history.reflections) {
+    lines.push(`<div class="shine"><p>${escapeHtml(reflection.words)}</p><p class="shine-note">Written ${escapeHtml(dateOnly(reflection.createdAt))} · published ${escapeHtml(dateOnly(reflection.publishedAt))}</p></div>`);
+  }
+  for (const milestone of history.milestones) {
+    lines.push(`<p>${escapeHtml(milestone.year)} · ${escapeHtml(milestone.place)} · ${escapeHtml(milestone.country)}</p>`);
+  }
+  if (!history.reflections.length && !history.milestones.length) {
+    lines.push('<p class="quiet">No public reflections or place milestones have been recorded yet.</p>');
+  }
+  lines.push('</section>');
+  return lines.join('\n');
+}
+
 function verifySection() {
   const lines = ['<section id="how-to-verify">', '<h2>How to verify</h2>'];
   for (const paragraph of VERIFY_PROSE) {
@@ -798,6 +857,7 @@ export function renderPieceRecordHtml(record, { canonicalJson, recordHash }) {
     lightSection(record.light),
     lineageSection(record.lineage),
     shinesSection(record.shines),
+    livingHistorySection(record.livingHistory),
     verifySection(),
     '<footer>',
     `<p>Piece Record · ${escapeHtml(record.schema)} · schema version ${record.schemaVersion}</p>`,

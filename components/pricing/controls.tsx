@@ -11,7 +11,7 @@ export const Label: React.FC<{ children: React.ReactNode; className?: string }> 
   className = '',
 }) => (
   <span
-    className={`font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 font-semibold ${className}`}
+    className={`font-label text-label uppercase tracking-[0.2em] text-stone-500 font-semibold ${className}`}
   >
     {children}
   </span>
@@ -78,7 +78,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
               className={`font-sans text-sm px-3 py-2 border transition-colors ${
                 active
                   ? 'border-bronze-500 bg-bronze-50 text-wood-900'
-                  : 'border-wood-200 bg-white text-wood-500 hover:border-bronze-300 hover:text-wood-900'
+                  : 'border-wood-200 bg-surface-card text-wood-500 hover:border-bronze-300 hover:text-wood-900'
               }`}
             >
               {opt.label}
@@ -103,13 +103,13 @@ export const Toggle: React.FC<ToggleProps> = ({ label, value, onChange }) => (
     className={`flex items-center justify-between w-full px-4 py-3 border transition-colors text-left ${
       value
         ? 'border-bronze-500 bg-bronze-50'
-        : 'border-wood-200 bg-white hover:border-bronze-300'
+        : 'border-wood-200 bg-surface-card hover:border-bronze-300'
     }`}
     aria-pressed={value}
   >
     <span className="font-sans text-sm text-wood-900">{label}</span>
     <span
-      className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold ${
+      className={`font-label text-label uppercase tracking-[0.15em] font-semibold ${
         value ? 'text-bronze-700' : 'text-wood-400'
       }`}
     >
@@ -135,7 +135,7 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
 }) => (
   <div>
     {label && <Label className="block mb-2">{label}</Label>}
-    <div className="flex items-center border border-wood-200 bg-white focus-within:border-bronze-400 transition-colors">
+    <div className="flex items-center border border-wood-200 bg-surface-card focus-within:border-bronze-400 transition-colors">
       <span className="font-sans text-wood-400 pl-3 pr-1 select-none">$</span>
       <input
         type="number"
@@ -167,7 +167,7 @@ export const NumberField: React.FC<{
   className?: string;
 }> = ({ value, onChange, step = 1, prefix, suffix, className = '' }) => (
   <div
-    className={`flex items-center border border-wood-200 bg-white focus-within:border-bronze-400 transition-colors ${className}`}
+    className={`flex items-center border border-wood-200 bg-surface-card focus-within:border-bronze-400 transition-colors ${className}`}
   >
     {prefix && <span className="font-sans text-wood-400 pl-2 pr-0.5 text-sm select-none">{prefix}</span>}
     <input

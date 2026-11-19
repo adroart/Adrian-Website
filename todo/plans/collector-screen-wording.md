@@ -1168,3 +1168,14 @@ Round 1 in the Claude Design project (four options of the old single-screen open
 the conversation that produced this flow. It is the visual-direction reference only: espresso
 grounds, CAD line drawing, brass pill, type scale. The next design session builds the locked
 screens above in whichever direction Adrian picks, one screen per session.
+
+
+### Private record permissions at handoff. OWNER UPDATE, 19 November 2026
+
+Adrian clarified in the Studio finishing conversation:
+
+> When it is handed off, the previous owner who sells it gets to decide if it comes with it. If later on he wants it to transfer, he can also decide that.
+
+He also clarified that the artwork retains its enduring record of everyone who held it, their interactions and what they chose to share. A passing adds to that history rather than replacing or deleting it.
+
+This updates the earlier automatic travel rule for private contributions. Preserve entries, withhold successor reading until the author permits it, and let the author change their own contribution's permission after passing. Retaining this limited author control does not retain caretakership or allow changes to the next keeper's records. Reading permission is distinct from publication permission. Public history, permanently shared adult writing, sealed content and current Atlas location consent retain their separate rules. No revised screen wording is locked by this policy note; verify any new controls visually in the gated local prototype before rollout.

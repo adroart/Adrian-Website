@@ -134,17 +134,19 @@ const AdminBookEditor: React.FC = () => {
 
     const remove = async (id: string) => {
         if (!confirm('Clear the written page for this piece? The piece record stays; only your text is removed.')) return;
+        setMessage(null);
         try {
-            await fetch(`/api/book?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-            await refresh();
+            const response = await fetch(`/api/book?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+            setEntries(current => current.filter(entry => entry.id !== id));
         } catch {
-            setMessage({ type: 'err', text: 'Delete failed.' });
+            setMessage({ type: 'err', text: 'Delete failed. This book page is still listed.' });
         }
     };
 
-    const fieldLabel = 'font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
+    const fieldLabel = 'font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
     const fieldInput = 'w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
-    const proseArea = `${fieldInput} font-serif text-base leading-[1.7] resize-y`;
+    const proseArea = `${fieldInput} font-serif text-base leading-prose resize-y`;
 
     const editingArt = editing ? artById.get(editing) : undefined;
 
@@ -159,10 +161,10 @@ const AdminBookEditor: React.FC = () => {
                     </p>
 
                     {message && (
-                        <div className={`mb-6 px-4 py-3 border ${
+                        <div role={message.type === 'err' ? 'alert' : 'status'} className={`mb-6 px-4 py-3 border ${
                             message.type === 'ok'
                                 ? 'border-bronze-300 bg-bronze-50 text-bronze-800'
-                                : 'border-red-300 bg-red-50 text-red-800'
+                                : 'border-danger-line bg-danger-soft text-danger'
                         } font-sans text-sm`}>
                             {message.text}
                         </div>
@@ -177,13 +179,13 @@ const AdminBookEditor: React.FC = () => {
                                 </h2>
                                 <button
                                     onClick={cancelEdit}
-                                    className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-wood-700 font-semibold"
+                                    className="font-label text-label uppercase tracking-[0.15em] text-wood-400 hover:text-wood-700 font-semibold"
                                 >
                                     Cancel
                                 </button>
                             </div>
                             <p className="font-serif text-2xl text-wood-900 mb-1">{editingArt.title}</p>
-                            <p className="font-label text-[11px] text-wood-400 font-semibold mb-6">
+                            <p className="font-label text-label text-wood-400 font-semibold mb-6">
                                 {editingArt.series ? `${editingArt.series} · ` : ''}/works/{editingArt.id}
                             </p>
 
@@ -201,7 +203,7 @@ const AdminBookEditor: React.FC = () => {
 
                                 <div>
                                     <label className={fieldLabel}>The writing</label>
-                                    <p className="font-sans text-[11px] text-wood-400 mb-2">
+                                    <p className="font-sans text-label text-wood-400 mb-2">
                                         The main body of the page. Separate paragraphs with a blank line.
                                     </p>
                                     <textarea
@@ -215,7 +217,7 @@ const AdminBookEditor: React.FC = () => {
 
                                 <div>
                                     <label className={fieldLabel}>From the studio (optional)</label>
-                                    <p className="font-sans text-[11px] text-wood-400 mb-2">
+                                    <p className="font-sans text-label text-wood-400 mb-2">
                                         Process, intention, the making of it. Separate paragraphs with a blank line.
                                     </p>
                                     <textarea
@@ -297,7 +299,7 @@ const AdminBookEditor: React.FC = () => {
                                     <div key={art.id} className="bg-paper-50 border border-wood-200 px-5 py-4 flex items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-serif text-lg text-wood-900 truncate">{art.title}</p>
-                                            <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5 truncate">
+                                            <p className="font-label text-label text-wood-400 font-semibold mt-0.5 truncate">
                                                 {art.series ? `${art.series} · ` : ''}
                                                 {entry?.body?.length ? `${entry.body.length} paragraph${entry.body.length !== 1 ? 's' : ''}` : 'no body yet'}
                                                 {entry?.updatedAt ? ` · ${entry.updatedAt}` : ''}
@@ -308,19 +310,19 @@ const AdminBookEditor: React.FC = () => {
                                                 href={`/works/${art.id}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
                                             >
                                                 View
                                             </a>
                                             <button
                                                 onClick={() => startEdit(art.id)}
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => remove(art.id)}
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-[#e0a08a] font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-300 hover:text-[#e0a08a] font-semibold"
                                             >
                                                 Clear
                                             </button>

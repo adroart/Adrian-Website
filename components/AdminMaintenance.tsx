@@ -158,8 +158,8 @@ const acquisitionTypes = MAINTENANCE_CUSTODY_ACQUISITION_TYPES.map(value => ({
 
 const inputClass = 'maintenance-input';
 const labelClass = 'maintenance-label';
-const primaryButtonClass = 'maintenance-button maintenance-button-primary';
-const quietButtonClass = 'maintenance-button maintenance-button-quiet';
+const primaryButtonClass = 'btn btn-primary';
+const quietButtonClass = 'btn btn-outline';
 
 function messageFor(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback;

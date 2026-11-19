@@ -29,7 +29,7 @@ export async function onRequest(context) {
 async function getConfig(env) {
   // Public read, but if the DB isn't wired up, say so softly: the client
   // falls back to its bundled defaults rather than erroring.
-  if (!env.DB) return jsonResponse({ ok: true, config: null });
+  if (!env.DB) return jsonResponse({ ok: true, config: null, available: false });
   try {
     const row = await env.DB
       .prepare('SELECT config_json FROM pricing_config WHERE id = 1')
@@ -37,7 +37,7 @@ async function getConfig(env) {
     const config = row ? JSON.parse(row.config_json) : null;
     return jsonResponse({ ok: true, config });
   } catch {
-    return jsonResponse({ ok: true, config: null });
+    return jsonResponse({ ok: true, config: null, available: false });
   }
 }
 

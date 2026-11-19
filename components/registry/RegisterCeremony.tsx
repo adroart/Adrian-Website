@@ -561,8 +561,8 @@ const RegisterCeremony: React.FC<{ onStepChange?: (step: Step) => void }> = ({ o
       role="alert"
       style={{
         margin: '14px 0 0',
-        fontFamily: "'Lora', Georgia, serif",
-        fontSize: 12.5,
+        fontFamily: 'var(--font-body)',
+        fontSize: 'var(--text-label-lg)',
         lineHeight: 1.66,
         color: C.wrong,
       }}
@@ -604,8 +604,8 @@ const RegisterCeremony: React.FC<{ onStepChange?: (step: Step) => void }> = ({ o
                 role="alert"
                 style={{
                   margin: '14px 0 0',
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontSize: 12.5,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--text-label-lg)',
                   lineHeight: 1.66,
                   color: C.wrong,
                 }}

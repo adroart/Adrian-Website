@@ -27,6 +27,24 @@ async function all(env, sql, ...bindings) {
   return resultRows(await env.DB.prepare(sql).bind(...bindings).all());
 }
 
+async function invoiceRows(env) {
+  const fields = `SELECT invoice.id, invoice.invoice_number, invoice.public_token, invoice.status,
+    invoice.job_title, invoice.total_cents, invoice.amount_paid_cents, invoice.updated_at, invoice.paid_at`;
+  const tail = `FROM invoices invoice WHERE invoice.status IN ('draft', 'sent', 'paid', 'overdue')
+    OR invoice.amount_paid_cents > 0 ORDER BY invoice.updated_at DESC, invoice.id DESC`;
+  const saleReview = `CASE WHEN NOT EXISTS (
+      SELECT 1 FROM paid_invoice_sales source WHERE source.invoice_id = invoice.id
+    ) AND NOT EXISTS (
+      SELECT 1 FROM artist_verified_sales sale WHERE sale.private_reference = invoice.invoice_number
+    ) THEN 1 ELSE 0 END AS needs_sale_review`;
+  try {
+    return await all(env, `${fields}, ${saleReview} ${tail}`);
+  } catch (error) {
+    if (!/no such table:\s*paid_invoice_sales/i.test(String(error?.message))) throw error;
+    return all(env, `${fields} ${tail}`);
+  }
+}
+
 function instant(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value * 1000;
   const parsed = Date.parse(String(value ?? ''));
@@ -178,10 +196,7 @@ export async function readAdminWorkQueue(env, options = {}) {
           ORDER BY updated_at DESC, id DESC`),
         all(env, `SELECT id, recorded_at FROM artist_verified_sales
           ORDER BY recorded_at DESC, id DESC`),
-        all(env, `SELECT id, invoice_number, public_token, status, job_title,
-          total_cents, amount_paid_cents, updated_at, paid_at
-          FROM invoices WHERE status IN ('draft', 'sent', 'paid', 'overdue') OR amount_paid_cents > 0
-          ORDER BY updated_at DESC, id DESC`),
+        invoiceRows(env),
         all(env, `SELECT id, status, recipient_name, invoice_token, updated_at, requested_at
           FROM viewings WHERE status IN ('draft', 'requested')
           ORDER BY updated_at DESC, id DESC`),
@@ -244,10 +259,13 @@ export async function readAdminWorkQueue(env, options = {}) {
       let state = null;
       let actionLabel = 'Open invoice';
       let priority = 4;
-      // A paid invoice has no exact, clearable relation to a verified sale yet.
-      // Task 7 may add that relation; until then it must not claim verification work.
       if (invoice.status === 'paid' || (total > 0 && paid >= total)) {
         completedInvoiceIds.add(invoice.id);
+        if (invoice.status === 'paid' && total > 0 && paid === total && invoice.paid_at && invoice.needs_sale_review === 1) {
+          queue.push(item('invoice', `${invoice.invoice_number} · ${invoice.job_title || 'Invoice'}`,
+            'ready_for_sale_review', ageSignal(invoice.paid_at, now), 'Review sale',
+            `/admin/collector-sales/invoices/${invoice.id}`, invoice.paid_at, 3));
+        }
         continue;
       }
       if (invoice.status === 'overdue') state = 'overdue';

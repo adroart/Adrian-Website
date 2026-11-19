@@ -54,6 +54,7 @@ import { PiecePage, Relationship } from './PiecePage';
 import type { GroundInputs } from './PiecePage';
 import { CodePage, CodeSubmitOutcome } from './CodePage';
 import { InvitationPage } from './InvitationPage';
+import { PrivacyChoices } from './PrivacyChoices';
 import { WALK, WalkScreen, Screen, SHOW_LAMPS_DEFAULT } from './walk';
 import { VaultArrival } from './vaultArrival';
 import { StateScreen } from './states';
@@ -560,7 +561,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
       if (!outcome.ok) throw outcome;
       return outcome.data;
     },
-    [account.userId, keeperPieceId, isYours],
+    [account.userId, keeperPieceId, isYours, refreshTick],
   );
   useEffect(() => {
     if (privacy.status !== 'ready') return;
@@ -789,7 +790,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
         if (!cities.ok) return { kind: 'rejected', stage: 'privacy' };
         const city = cities.data.find(item => item.label.toLowerCase().includes(cityText));
         if (!city) return { kind: 'rejected', stage: 'privacy' };
-        piece = { keeperPieceId, shareCity: Boolean(chosen[1]), cityId: city.id };
+        piece = { keeperPieceId, shareCity: Boolean(chosen[1]), cityId: chosen[1] ? city.id : null };
       } catch { return { kind: 'network', stage: 'privacy' }; }
     }
     return persistCollectorGathering({
@@ -1309,6 +1310,12 @@ const AccountJourney: React.FC<WiredJourneyProps & {
             ]
           : [['Stop the passing', 'Nothing has moved yet.', '__cancelPassing']];
       }
+      if (key === 'passsell') {
+        screen.body = ph('The piece keeps its history. What was shared stays shared. You choose whether later caretakers may read your private records.');
+        screen.note = ph('Your private records stay preserved. You can change their sharing choices later, even after the passing. Anything sealed stays sealed.');
+        screen.link = ph('Review your private records');
+        screen.linkTo = '__privateHistory';
+      }
       if (key === 'passaccept') screen.to = '__acceptPassing';
       if (key === 'passvalue' && screen.rows) {
         const targets = [
@@ -1336,10 +1343,10 @@ const AccountJourney: React.FC<WiredJourneyProps & {
         setStep({ kind: 'walk', key: 'who2' });
         return;
       }
-      if ((from === 'who2' || from === 'shows') && key === 'light47') {
+      if (from === 'who2' && key === 'light47') {
         gatheringInFlight.current = true;
         setGatheringBusy(true);
-        void submitGathering(lamps, from === 'who2')
+        void submitGathering(lamps, true)
           .then(result => {
             if (!mounted.current || result.kind === 'cancelled') return;
             if (result.kind === 'saved') {
@@ -1475,6 +1482,10 @@ const AccountJourney: React.FC<WiredJourneyProps & {
         setStep({ kind: 'piece' });
         return;
       }
+      if (key === '__privateHistory') {
+        setStep({ kind: 'piece', room: 'history' });
+        return;
+      }
       if (key === '__garden') {
         setStep({ kind: 'piece', room: 'garden' });
         return;
@@ -1572,7 +1583,28 @@ const AccountJourney: React.FC<WiredJourneyProps & {
         }} />
     ) : <Ground light="j"><div style={{ flex: 1 }} /></Ground>;
   } else if (step.kind === 'walk') {
-    if (['who1', 'who2', 'shows'].includes(step.key)
+    if (step.key === 'shows') {
+      const back = () => setStep({ kind: 'piece', room: 'account' });
+      if (isYours && keeperPieceId && privacy.status === 'ready') {
+        surface = (
+          <PrivacyChoices
+            key={keeperPieceId}
+            screen={wiredScreen('shows')}
+            saved={privacy.data}
+            keeperPieceId={keeperPieceId}
+            onBack={back}
+            onSaved={() => { refresh(); back(); }}
+          />
+        );
+      } else if (privacy.status === 'failed') {
+        surface = (
+          <StateScreen state="offline" message={PRIVATE_READ_ERROR} receipt={[]}
+            onPrimary={privacy.retry} onSecondary={back} onBack={back} />
+        );
+      } else {
+        surface = <Ground light="i" wash><div style={{ flex: 1 }} /></Ground>;
+      }
+    } else if (['who1', 'who2'].includes(step.key)
       && (onboarding.status !== 'ready' || privacy.status !== 'ready')) {
       const failed = onboarding.status === 'failed' || privacy.status === 'failed';
       surface = failed ? (
@@ -1739,12 +1771,22 @@ const WiredCollectorArrival: React.FC<WiredCollectorArrivalProps> = ({
   artwork = null,
   beginClaim = false,
 }) => {
-  const story = useMemo(() => {
-    const paragraphs = [artwork?.longDescription || artwork?.description].filter(
-      (text): text is string => Boolean(text),
-    );
-    return paragraphs.length > 0 ? { lead: null, paragraphs } : null;
-  }, [artwork]);
+  const snapshot = useQuiet<string | null>(
+    true,
+    async () => {
+      const response = await fetch(`/api/works/${encodeURIComponent(identity.artworkId)}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data?.ok === true && data.artwork?.id === identity.artworkId
+        && typeof data.artwork.description === 'string' && data.artwork.description.trim()
+        ? data.artwork.description
+        : null;
+    },
+    [identity.artworkId],
+  );
+  const description = (snapshot.status === 'ready' ? snapshot.data : null)
+    || artwork?.longDescription || artwork?.description;
+  const story = description ? { lead: null, paragraphs: [description] } : null;
 
   return (
     <PendingBindProvider>

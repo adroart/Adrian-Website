@@ -89,7 +89,7 @@ const styles = `
     border: 1px solid rgba(196, 170, 124, 0.24);
     color: #f2ece3;
     padding: clamp(1.25rem, 4vw, 3.5rem);
-    font-family: "Lora", Georgia, serif;
+    font-family: var(--font-body);
   }
   .collector-field, .collector-field * { box-sizing: border-box; }
   .collector-field__header { max-width: 46rem; margin: 0 auto 2rem; text-align: center; }
@@ -98,7 +98,7 @@ const styles = `
   .collector-field__legend,
   .collector-field__state-line,
   .collector-field__lens-note {
-    font-family: "Karla", system-ui, sans-serif;
+    font-family: var(--font-label);
     font-size: 0.75rem;
     letter-spacing: 0.1em;
     line-height: 1.45;
@@ -108,7 +108,7 @@ const styles = `
   .collector-field h2 {
     margin: 0;
     color: #f7f1e8;
-    font-family: "Cormorant Garamond", Georgia, serif;
+    font-family: var(--font-display);
     font-size: clamp(2.4rem, 7vw, 4.5rem);
     font-weight: 400;
     line-height: 0.98;
@@ -165,7 +165,7 @@ const styles = `
   .collector-field__graticule { fill: none; stroke: rgba(196, 170, 124, 0.18); stroke-width: 1; }
   .collector-field__equator { stroke: rgba(196, 170, 124, 0.28); }
   .collector-field__horizon { fill: rgba(196, 170, 124, 0.025); stroke: rgba(196, 170, 124, 0.24); }
-  .collector-field__map-label { fill: #cdbb9c; font-family: "Karla", system-ui, sans-serif; font-size: 12px; letter-spacing: 1.4px; }
+  .collector-field__map-label { fill: #cdbb9c; font-family: var(--font-label); font-size: 12px; letter-spacing: 1.4px; }
   .collector-field__marker { transition: opacity 450ms ease, filter 450ms ease; }
   .collector-field__marker-core { filter: drop-shadow(0 0 8px currentColor); }
   .collector-field__map-legend {
@@ -219,7 +219,7 @@ const styles = `
     background: transparent;
     color: #f4eadb;
     padding: 0.7rem 1.25rem;
-    font-family: "Karla", system-ui, sans-serif;
+    font-family: var(--font-label);
     font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;

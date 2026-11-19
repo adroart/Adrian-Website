@@ -28,35 +28,12 @@
  * See: git log — "accessibility: contrast + typography pass"
  * ─────────────────────────────────────────────────────────────────────────── */
 @import "tailwindcss";
+/* Every colour, size, space, radius, shadow and button comes from here. */
+@import "./master.css";
 @custom-variant dark (&:where(.dark, .dark *));
 @source "../";
 @source "../components";
 
-/* ─── Art Image Design Tokens ─────────────────────────────────────────────── */
-/* These mirror the constants in components/ArtImage.tsx.
-   Defined here for reference and for any non-component CSS that needs them. */
-:root {
-  --art-hover-scale: 1.03;
-  --art-transition-duration: 700ms;
-  --art-transition-easing: ease-out;
-  /* Updated dynamically by Navigation.tsx based on scroll state */
-  --nav-height: 56px;
-
-  /* ─── Type scale ─────────────────────────────────────────────────────────
-   * Semantic sizes paired with their intended font role.
-   * Use these in new components instead of arbitrary text-[14px] values.
-   * Marketing/hero headings can fluid-size via clamp() inline; app UI
-   * (oracle reader, shop, piece pages) should hold to this fixed scale. */
-  --text-eyebrow:  0.6875rem; /* 11px — Karla uppercase labels       */
-  --text-caption:  0.8125rem; /* 13px — Lora — fine print only       */
-  --text-meta:     0.875rem;  /* 14px — Lora — secondary info, dates */
-  --text-small:    0.9375rem; /* 15px — Lora — secondary body        */
-  --text-body:     1rem;      /* 16px — Lora — default body          */
-  --text-lead:     1.0625rem; /* 17px — Lora — intro / lyrics        */
-  --text-subhead:  1.375rem;  /* 22px — Cormorant — small titles     */
-  --text-heading:  1.75rem;   /* 28px — Cormorant — page headings    */
-  --text-display:  clamp(2.5rem, 6vw, 4.5rem); /* 40-72px — hero    */
-}
 
 /* ─── Global Typography Foundations ───────────────────────────────────────── */
 
@@ -76,8 +53,8 @@ html {
 
 /* #5 Custom selection color — warm palette instead of jarring blue */
 ::selection {
-  background-color: #c4aa7c40;
-  color: #262321;
+  background-color: rgb(196 170 124 / 25%);
+  color: var(--color-wood-900);
 }
 .dark ::selection {
   background-color: #c4aa7c50;
@@ -109,13 +86,13 @@ h1, h2, h3, h4, h5, h6 {
  * disagrees now wins, which is what those classes were written expecting. */
 @layer base {
   blockquote {
-    border-left: 2px solid #c4aa7c;
+    border-left: 2px solid var(--color-bronze-400);
     padding-left: 1.5rem;
     margin-left: 0;
     margin-right: 0;
   }
   .dark blockquote {
-    border-left-color: #d4b88a;
+    border-left-color: var(--color-bronze-400);
   }
 }
 
@@ -127,17 +104,17 @@ h1, h2, h3, h4, h5, h6 {
 
 /* #36 Consistent placeholder styling */
 ::placeholder {
-  color: #7a746b;
+  color: var(--color-stone-500);
   opacity: 1;
 }
 /* #12 Pull-quote base styling */
 .pull-quote {
   position: relative;
   padding-left: 1.5rem;
-  border-left: 2px solid #c4aa7c80;
+  border-left: 2px solid rgb(196 170 124 / 50%);
 }
 .dark .pull-quote {
-  border-left-color: #d4b88a80;
+  border-left-color: rgb(var(--admin-accent-rgb) / 50%);
 }
 
 /* #30 Article prose refinements */
@@ -150,7 +127,7 @@ h1, h2, h3, h4, h5, h6 {
 /* #10 Drop cap on first paragraph of articles */
 .article-prose > p:first-of-type::first-letter {
   float: left;
-  font-family: "Cinzel", serif;
+  font-family: var(--font-initial);
   font-size: 3.5em;
   line-height: 0.8;
   padding-right: 0.1em;
@@ -188,94 +165,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @theme {
-  /* Font families — three roles, named for the role they play.
-   *
-   * Reach for these three and nothing else:
-   *   --font-display  Cormorant Garamond   titles, headings, the brand name
-   *   --font-body     Lora                 running text
-   *   --font-label    Karla                uppercase eyebrows, meta, data
-   *
-   * The --font-sans / --font-mono names below are Tailwind's built-in slots and are
-   * kept only so existing `font-sans` / `font-mono` classes keep rendering. Do NOT
-   * reach for them in new code: --font-sans resolves to Lora, which is a serif, and
-   * --font-mono resolves to Karla, which is a sans and not monospaced. Those two
-   * names have been actively misleading every reader of this file. For real
-   * monospace (tabular data, code) use --font-tabular.
-   */
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-body: "Lora", Georgia, serif;
-  --font-label: "Karla", "Helvetica Neue", Arial, sans-serif;
-  --font-tabular: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Tailwind slot aliases — see the warning above. */
-  --font-serif: var(--font-display);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-label);
-
-  /* Colors: taupe */
-  --color-taupe: #453d39;
-  --color-taupe-light: #594e48;
-
-  /* Colors: cream */
-  --color-cream: #f2efe9;
-  --color-cream-dark: #e6e2d8;
-
-  /* Colors: warm-gold */
-  --color-warm-gold: #b0966b;
-  --color-warm-gold-hover: #9e8459;
-
-  /* Colors: paper */
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-
-  /* Colors: wood */
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-
-  /* Colors: stone */
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #8a857c;
-  --color-stone-500: #6f6a62;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-
-  /* Colors: availability states */
-  --color-avail-ready: #1A1A1A;
-  --color-avail-order: #666666;
-  --color-avail-sold: #7a6a5e;
-
-  /* Colors: bronze */
-  --color-bronze-50: #faf6f0;
-  --color-bronze-100: #f0e8d8;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  /* Darkened from #8a744e (2026-09-01). text-bronze-600 is the site's eyebrow and
-     meta colour, 152 usages, and at #8a744e it measured 3.66:1 to 4.48:1 on the
-     light grounds it is used on, under the 4.5:1 it needs. #725d3d measures 4.54:1 on the darkest of them (paper-200)
-     and keeps the bronze character. The .dark block remaps this token, so this
-     value only ever applies on light grounds. */
-  --color-bronze-600: #725d3d;
-  --color-bronze-700: #6d5a3c;
-  --color-bronze-900: #453825;
-
+  /* Fonts and colours live in src/master.css. Only animations stay here. */
   /* Animations */
   --animate-spin-slow: spin 20s linear infinite;
   --animate-spin-reverse-slow: spinReverse 25s linear infinite;
@@ -318,164 +208,7 @@ h1, h2, h3, h4, h5, h6 {
   --animate-hero-bounce: heroBounce 2.5s ease-in-out infinite;
 }
 
-/* ─── Dark Mode: CSS Variable Remapping ─────────────────────────────────── */
-/* Overrides color tokens so all Tailwind utilities adapt automatically.
-   Intentionally dark sections use .dark-preserve to keep original colors. */
-
-.dark {
-  color-scheme: dark;
-
-  /* Paper: light surfaces → warm darks (wider spread for separation) */
-  --color-paper-50: #171310;
-  --color-paper-100: #1f1a15;
-  --color-paper-200: #29231c;
-  --color-paper-300: #362f26;
-
-  /* Wood: dark → light  (low end = dark surfaces, high end = light text) */
-  --color-wood-50: #181614;
-  --color-wood-100: #1f1d1a;
-  --color-wood-200: #3a3630;
-  --color-wood-300: #504a42;
-  --color-wood-400: #c4beb4;
-  --color-wood-500: #d4cec4;
-  --color-wood-600: #ddd8cf;
-  --color-wood-700: #d0cabe;
-  --color-wood-800: #dedad0;
-  --color-wood-900: #ede9e2;
-
-  /* Stone: inverted gray scale */
-  --color-stone-50: #141210;
-  --color-stone-100: #1c1a17;
-  --color-stone-200: #2e2b26;
-  --color-stone-300: #4a453e;
-  --color-stone-400: #b0aaa0;
-  --color-stone-500: #c0bab0;
-  --color-stone-600: #ccc5bc;
-  --color-stone-700: #d4cec4;
-  --color-stone-800: #dfdbd3;
-  --color-stone-900: #ece8e1;
-  --color-stone-950: #f2efe9;
-
-  /* Cream → warm darks */
-  --color-cream: #1a1816;
-  --color-cream-dark: #222018;
-
-  /* Taupe → light taupe */
-  --color-taupe: #c5beb8;
-  --color-taupe-light: #b0a89f;
-
-  /* Warm gold: brighten for dark backgrounds */
-  --color-warm-gold: #c8a878;
-  --color-warm-gold-hover: #b89868;
-
-  /* Bronze: brighten accents for dark backgrounds */
-  --color-bronze-50: #2a2418;
-  --color-bronze-100: #3a3020;
-  --color-bronze-200: #5a4a30;
-  --color-bronze-300: #7a6848;
-  --color-bronze-400: #d4b88a;
-  --color-bronze-500: #c4a878;
-  --color-bronze-600: #d4b88a;
-  --color-bronze-700: #9a8058;
-  --color-bronze-900: #3a2e1a;
-
-  /* Availability: invert for dark-bg readability */
-  --color-avail-ready: #e0e0e0;
-  --color-avail-order: #a0a0a0;
-  --color-avail-sold: #9a8a7e;
-}
-
-/* ─── dark-preserve: restores original light-mode colors ────────────────── */
-/* Apply to sections that are intentionally dark (hero, accent blocks,
-   image-overlay gradients). They stay dark in both light & dark mode.      */
-
-.dark .dark-preserve {
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #a39e96;
-  --color-stone-500: #aaa49a;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  --color-bronze-600: #725d3d;
-}
-
-/* bg-white is a Tailwind built-in — override in dark mode */
-.dark .bg-white,
-.dark .hover\:bg-white:hover {
-  background-color: #1f1d1a;
-}
-
-/* Printable invoice pages are a light-mode island even when the site is dark.
-   This keeps PDFs white/paper with dark ink instead of inheriting dark tokens. */
-.invoice-light,
-.dark .invoice-light {
-  color-scheme: light;
-  color: #262321;
-  --color-paper-50: #f5f4f0;
-  --color-paper-100: #ebe8e1;
-  --color-paper-200: #e0dbcf;
-  --color-paper-300: #cfc6b5;
-  --color-wood-50: #faf9f7;
-  --color-wood-100: #f0ece5;
-  --color-wood-200: #e0d8cc;
-  --color-wood-300: #c8bda8;
-  --color-wood-400: #a89070;
-  --color-wood-500: #8f7a5b;
-  --color-wood-600: #736046;
-  --color-wood-700: #524330;
-  --color-wood-800: #3d3226;
-  --color-wood-900: #262321;
-  --color-stone-50: #f7f6f4;
-  --color-stone-100: #ebe9e6;
-  --color-stone-200: #dcd9d4;
-  --color-stone-300: #c2beb8;
-  --color-stone-400: #8a857c;
-  --color-stone-500: #6f6a62;
-  --color-stone-600: #6b665f;
-  --color-stone-700: #524e49;
-  --color-stone-800: #3d3a36;
-  --color-stone-900: #2b2926;
-  --color-stone-950: #23201e;
-  --color-bronze-50: #faf6f0;
-  --color-bronze-100: #f0e8d8;
-  --color-bronze-200: #e6d9c3;
-  --color-bronze-300: #d5c1a0;
-  --color-bronze-400: #c4aa7c;
-  --color-bronze-500: #ab9266;
-  --color-bronze-600: #725d3d;
-  --color-bronze-700: #6d5a3c;
-  --color-bronze-900: #453825;
-}
-
-.invoice-light .bg-white,
-.dark .invoice-light .bg-white,
-.invoice-light .hover\:bg-white:hover,
-.dark .invoice-light .hover\:bg-white:hover {
-  background-color: #fff;
-}
+/* Dark-mode colour remaps, .dark-preserve and .invoice-light live in src/master.css. */
 
 @media print {
   .invoice-light,
@@ -487,11 +220,6 @@ h1, h2, h3, h4, h5, h6 {
   .no-print { display: none !important; }
   .print-only { display: block !important; }
 }
-/* Semantic status colors on dark backgrounds */
-.dark .bg-green-50 { background-color: #0a2010; }
-.dark .border-green-200 { border-color: #1a4030; }
-.dark .text-green-800 { color: #6ee7a0; }
-.dark .text-green-600 { color: #4ade80; }
 
 /* Cart overlay scrim stays dark */
 .dark .dark-overlay {
@@ -499,8 +227,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Body background */
-body { transition: background-color 0.5s ease; }
-html.dark body { background-color: #171310; }
+body { transition: background-color var(--duration-slow) ease; }
+html.dark body { background-color: var(--surface-page); }
 
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #a09a92; }
@@ -521,8 +249,8 @@ html.dark body { background-color: #171310; }
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.5s ease-out;
+  transition: grid-template-rows 0.6s var(--ease-reveal),
+              opacity var(--duration-slow) ease-out;
 }
 .form-reveal.is-open {
   grid-template-rows: 1fr;
@@ -569,12 +297,7 @@ html.dark body { background-color: #171310; }
  * sharp Mingti rendering across platforms. Falls back to system Song fonts
  * if the network fails. */
 .font-chinese-serif {
-  font-family: "Noto Serif TC", "Source Han Serif TC", "Source Han Serif SC",
-               "Noto Serif SC",
-               "PMingLiU", "MingLiU", "DFKai-SB",
-               "Songti TC", "Songti SC", "STSong",
-               "AR PL UMing TW", "AR PL UMing CN",
-               "宋體", "新細明體", serif;
+  font-family: var(--font-chinese);
   font-weight: 600;
   font-feature-settings: "palt";
   text-rendering: optimizeLegibility;
@@ -697,7 +420,7 @@ html.dark body { background-color: #171310; }
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .footer-link:hover::after {
   transform: scaleX(1);
@@ -713,7 +436,7 @@ html.dark body { background-color: #171310; }
   height: 4px;
   border-radius: 50%;
   background-color: var(--color-bronze-400);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .footer-link:hover::before {
   transform: translateY(-50%) scale(1);
@@ -735,7 +458,7 @@ html.dark body { background-color: #171310; }
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .hover-underline:hover::after {
   transform: scaleX(1);
@@ -763,7 +486,7 @@ button, a, [role="button"], input, select, textarea, label {
   input,
   select,
   textarea {
-    min-height: 44px;
+    min-height: var(--control-h-touch);
   }
 }
 
@@ -787,7 +510,7 @@ html, body {
 /* Varied reveal animations */
 .reveal-block {
   opacity: 0;
-  transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
+  transition: opacity var(--duration-reveal) var(--ease-reveal), transform var(--duration-reveal) var(--ease-reveal);
 }
 .reveal-up    { transform: translateY(36px); }
 .reveal-left  { transform: translateX(-44px); }
@@ -802,7 +525,7 @@ html, body {
 /* Drop caps */
 .drop-cap::first-letter {
   float: left;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 3.6em;
   line-height: 0.78;
   padding-right: 0.07em;
@@ -814,7 +537,7 @@ html, body {
 
 /* Paragraph opacity gradient (clears on reveal) */
 .pg-1 { opacity: 1; }
-.pg-2 { opacity: 0.75; transition: opacity 1s ease 0.5s; }
+.pg-2 { opacity: 0.75; transition: opacity 1s ease var(--duration-slow); }
 .pg-3 { opacity: 0.6;  transition: opacity 1s ease 0.7s; }
 .pg-4 { opacity: 0.5;  transition: opacity 1s ease 0.9s; }
 .reveal-block.is-visible .pg-2,
@@ -825,7 +548,7 @@ html, body {
 .tag-line {
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s;
+  transition: transform 0.7s var(--ease-reveal) 0.25s;
 }
 .reveal-block.is-visible .tag-line { transform: scaleX(1); }
 
@@ -836,8 +559,8 @@ html, body {
     position: absolute;
     right: -200px;
     width: 168px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: var(--text-body);
     font-style: italic;
     color: var(--color-wood-600);
     line-height: 1.45;
@@ -900,7 +623,7 @@ html, body {
 /* ─── Private Studio Workspace ───────────────────────────────────────── */
 .admin-shell {
   min-height: 100vh;
-  background: var(--color-paper-50);
+  background: var(--surface-admin);
 }
 
 /* The sidebar sits one shade deeper than the desk: the ceremony theme's void
@@ -916,9 +639,9 @@ html, body {
   width: 15rem;
   flex-direction: column;
   overflow-y: auto;
-  border-right: 1px solid rgba(237, 233, 226, 0.09);
-  background: #0d0b09;
-  color: #c4beb4;
+  border-right: 1px solid var(--admin-rule);
+  background: var(--admin-void);
+  color: var(--admin-ink-quiet);
 }
 
 .admin-mark {
@@ -927,18 +650,18 @@ html, body {
   gap: 0.7rem;
   min-height: 4.75rem;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.09);
-  color: #a39b90;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.7rem;
+  border-bottom: 1px solid var(--admin-rule);
+  color: var(--admin-ink-dim);
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .admin-mark-monogram {
-  color: #ede9e2;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.55rem;
+  color: var(--admin-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-title);
   font-weight: 500;
   letter-spacing: -0.03em;
   text-transform: none;
@@ -949,52 +672,52 @@ html, body {
   padding: 1.5rem 0.75rem;
 }
 
-.admin-nav-group + .admin-nav-group { margin-top: 1.5rem; }
+.admin-nav-group + .admin-nav-group { margin-top: var(--space-4); }
 
 .admin-nav-group p {
   margin: 0 0 0.5rem;
   padding: 0 0.75rem;
-  color: #a39b90;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
+  color: var(--admin-ink-dim);
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.admin-nav-group a {
+.admin-nav-links a {
   display: block;
-  min-height: 2.5rem;
-  padding: 0.6rem 0.75rem;
+  min-height: 30px;
+  padding: 5px var(--space-3);
   border-left: 2px solid transparent;
-  color: #c4beb4;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.9rem;
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-admin-nav);
   line-height: 1.3rem;
   transition: color 160ms ease, border-color 160ms ease;
 }
 
-.admin-nav-group a:hover {
-  color: #d4b88a;
+.admin-nav-links a:hover {
+  color: var(--admin-accent);
 }
 
-.admin-nav-group a.active {
-  border-left-color: #d4b88a;
-  color: #ede9e2;
+.admin-nav-links a.active {
+  border-left-color: var(--admin-accent);
+  color: var(--admin-ink);
 }
 
 .admin-account {
   display: grid;
   gap: 0.65rem;
   padding: 1.25rem 1.5rem 1.5rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.09);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.8rem;
+  border-top: 1px solid var(--admin-rule);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
 }
 
 .admin-account span {
   overflow: hidden;
-  color: #a39b90;
+  color: var(--admin-ink-dim);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1002,13 +725,13 @@ html, body {
 .admin-account a,
 .admin-account button {
   width: fit-content;
-  color: #c4beb4;
+  color: var(--admin-ink-quiet);
   transition: color 160ms ease;
 }
 
 .admin-account button { cursor: pointer; }
 .admin-account a:hover,
-.admin-account button:hover { color: #d4b88a; }
+.admin-account button:hover { color: var(--admin-accent); }
 
 .admin-main {
   display: grid;
@@ -1020,7 +743,7 @@ html, body {
 .admin-page {
   width: 100%;
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 4.5rem) clamp(1rem, 4vw, 3.5rem) 7rem;
+  padding: var(--page-pad-top) clamp(1rem, 4vw, 3.5rem) var(--space-12);
 }
 
 .admin-page-narrow { max-width: 52rem; }
@@ -1032,9 +755,9 @@ html, body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-page-header .admin-eyebrow { margin-bottom: 0.6rem; }
@@ -1049,20 +772,20 @@ html, body {
 /* A section is a heading and a rule, never a card. The bordered box this
    used to draw is the thing the approved design spec forbids. */
 .admin-section {
-  margin-top: 2.75rem;
+  margin-top: var(--section-gap);
 }
 
 .admin-section > header {
   margin-bottom: 1.5rem;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-page button,
 .admin-page input:not([type='checkbox']):not([type='radio']),
 .admin-page select,
 .admin-page a[class*='px-'] {
-  min-height: 44px;
+  min-height: var(--control-h); /* 32px desktop, 44px on touch (master.css) */
 }
 
 .admin-page button:focus-visible,
@@ -1090,20 +813,20 @@ html, body {
   display: block;
   margin: 2rem 0;
   padding: 1.3rem 0 1.45rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
-  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
-  color: #c4beb4;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.68;
 }
 
 .admin-alert-label {
   display: block;
   margin-bottom: 0.6rem;
-  color: #8d867c;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  color: var(--admin-ink-faint);
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1111,9 +834,9 @@ html, body {
 
 .admin-alert > div > p:first-child { margin-top: 0; }
 
-.admin-alert-success .admin-alert-label { color: #f2e3c4; }
-.admin-alert-warning .admin-alert-label { color: #d4b88a; }
-.admin-alert-error .admin-alert-label { color: #e0a08a; }
+.admin-alert-success .admin-alert-label { color: var(--admin-warm); }
+.admin-alert-warning .admin-alert-label { color: var(--admin-accent); }
+.admin-alert-error .admin-alert-label { color: var(--admin-wrong); }
 
 
 /* ─── The desk's reading grammar ─────────────────────────────────────────
@@ -1142,46 +865,46 @@ html, body {
 /* Type. Three sizes, and the smallest of them is still comfortably read. */
 .admin-page .admin-lede {
   margin: 1.1rem 0 0;
-  color: #ede9e2;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.2rem;
+  color: var(--admin-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-title-sm);
   line-height: 1.62;
 }
 
 .admin-page .admin-say {
   margin: 0.9rem 0 0;
-  color: #c4beb4;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.68;
 }
 
 .admin-page .admin-quiet {
   margin: 0.55rem 0 0;
-  color: #a39b90;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.96rem;
+  color: var(--admin-ink-dim);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
   line-height: 1.68;
 }
 
 /* Mono. Everything the machine says, and nothing else. */
 .admin-page .admin-tag {
   display: block;
-  color: #8d867c;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  color: var(--admin-ink-faint);
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.admin-page .admin-tag-lit { color: #d4b88a; }
+.admin-page .admin-tag-lit { color: var(--admin-accent); }
 
 /* A numbered part. The rule and the space above it do the separating that a
    tinted band was doing badly. */
 .admin-page .admin-movement {
   margin-top: 4.5rem;
   padding-top: 2.1rem;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
 }
 
 .admin-page .admin-movement > header {
@@ -1195,20 +918,20 @@ html, body {
 
 .admin-page .admin-movement h2 {
   margin: 0;
-  color: #ede9e2;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--admin-ink);
+  font-family: var(--font-display);
   font-weight: 300;
-  font-size: 2.05rem;
+  font-size: var(--text-title-md);
   line-height: 1.15;
   letter-spacing: -0.015em;
 }
 
 .admin-page .admin-movement h3 {
   margin: 3.25rem 0 0;
-  color: #ede9e2;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--admin-ink);
+  font-family: var(--font-display);
   font-weight: 300;
-  font-size: 1.6rem;
+  font-size: var(--text-title);
   line-height: 1.2;
 }
 
@@ -1225,13 +948,13 @@ html, body {
   gap: 0 1.75rem;
   align-items: baseline;
   padding: 1.05rem 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.1);
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 10%);
 }
 
 .admin-page .admin-line-title {
-  color: #ede9e2;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.05rem;
+  color: var(--admin-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.45;
 }
 
@@ -1239,9 +962,9 @@ html, body {
   grid-column: 1 / -1;
   margin: 0.4rem 0 0;
   max-width: 40rem;
-  color: #a39b90;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.96rem;
+  color: var(--admin-ink-dim);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
   line-height: 1.66;
 }
 
@@ -1249,17 +972,17 @@ html, body {
 
 .admin-page .admin-state {
   flex: none;
-  color: #8d867c;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  color: var(--admin-ink-faint);
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.admin-page .admin-state-warm { color: #f2e3c4; }
-.admin-page .admin-state-brass { color: #d4b88a; }
-.admin-page .admin-state-wrong { color: #e0a08a; }
+.admin-page .admin-state-warm { color: var(--admin-warm); }
+.admin-page .admin-state-brass { color: var(--admin-accent); }
+.admin-page .admin-state-wrong { color: var(--admin-wrong); }
 
 /* A line that opens. Same row, plus the mono sign at the end of the state. */
 .admin-page .admin-line > summary {
@@ -1273,7 +996,7 @@ html, body {
 
 .admin-page .admin-line > summary::-webkit-details-marker { display: none; }
 .admin-page .admin-line > summary::marker { content: ''; }
-.admin-page .admin-line > summary:hover .admin-line-title { color: #d4b88a; }
+.admin-page .admin-line > summary:hover .admin-line-title { color: var(--admin-accent); }
 .admin-page .admin-line[open] > summary .admin-state::after { content: '  \2212'; }
 .admin-page .admin-line > summary .admin-state::after { content: '  +'; }
 
@@ -1284,10 +1007,10 @@ html, body {
   overflow-x: auto;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.34);
-  color: #c4beb4;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.86rem;
-  line-height: 1.7;
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-tabular);
+  font-size: var(--text-meta);
+  line-height: var(--leading-prose);
 }
 
 /* Fields, on the desk.
@@ -1303,12 +1026,12 @@ html, body {
   border-bottom: 0 !important;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.26);
-  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.13);
-  transition: box-shadow 150ms ease, background 150ms ease;
+  box-shadow: inset 0 0 0 1px var(--admin-rule-strong);
+  transition: box-shadow var(--duration-fast) ease, background var(--duration-fast) ease;
 }
 
 .admin-page label:has(> input):hover {
-  box-shadow: inset 0 0 0 1px rgba(237, 233, 226, 0.24);
+  box-shadow: inset 0 0 0 1px rgb(var(--admin-ink-rgb) / 24%);
 }
 
 .admin-page label:has(> input):focus-within {
@@ -1320,18 +1043,18 @@ html, body {
 
 /* The label goes brass with the edge, so the field you are in is obvious
    from the corner of the eye and not only from the cursor. */
-.admin-page label:has(> input):focus-within span { color: #d4b88a !important; }
+.admin-page label:has(> input):focus-within span { color: var(--admin-accent) !important; }
 
 /* The kit's label is a 11px Karla eyebrow. On a desk that is small print on
    the one thing you have to read to type into. */
 .admin-page label:has(> input) > span:first-child span {
-  font-size: 0.8125rem !important;
+  font-size: var(--text-caption) !important;
   letter-spacing: 0.09em !important;
 }
 
 .admin-page label:has(> input) > input {
   margin-top: 7px !important;
-  font-size: 1.05rem !important;
+  font-size: var(--text-body) !important;
 }
 
 .admin-page label:has(> input) > input:focus-visible { outline: none; }
@@ -1355,12 +1078,12 @@ html, body {
   gap: 1.5rem;
   min-height: 48px;
   padding: 1.05rem 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.14);
-  border-bottom: 1px solid rgba(237, 233, 226, 0.14);
-  color: #ede9e2;
+  border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
+  color: var(--admin-ink);
   cursor: pointer;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.05rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   list-style: none;
 }
 
@@ -1370,9 +1093,9 @@ html, body {
 .admin-page .admin-fold > summary::after {
   content: 'Read';
   flex: none;
-  color: #d4b88a;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  color: var(--admin-accent);
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1389,10 +1112,10 @@ html, body {
   align-items: center;
   gap: 0.55rem;
   min-height: 40px;
-  color: #d4b88a;
+  color: var(--admin-accent);
   cursor: pointer;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   list-style: none;
@@ -1416,7 +1139,7 @@ html, body {
   margin: 1.75rem 0;
   padding: 0;
   list-style: none;
-  background: rgba(237, 233, 226, 0.1);
+  background: rgb(var(--admin-ink-rgb) / 10%);
 }
 
 .admin-page .admin-words > li {
@@ -1428,9 +1151,9 @@ html, body {
 }
 
 .admin-page .admin-word {
-  color: #ede9e2;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 1.15rem;
+  color: var(--admin-ink);
+  font-family: var(--font-tabular);
+  font-size: var(--text-body-lg);
   letter-spacing: 0.02em;
 }
 
@@ -1439,9 +1162,9 @@ html, body {
   margin: 2rem 0 0;
   padding-left: 1.5rem;
   border-left: 1px solid rgba(212, 184, 138, 0.4);
-  color: #c4beb4;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   font-style: italic;
   line-height: 1.72;
 }
@@ -1464,7 +1187,7 @@ html, body {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid rgba(237, 233, 226, 0.13);
+  border-top: 1px solid var(--admin-rule-strong);
 }
 
 .admin-atlas-sale-row {
@@ -1474,23 +1197,23 @@ html, body {
   justify-content: space-between;
   gap: 1.25rem;
   padding: 1.35rem 0;
-  border-bottom: 1px solid rgba(237, 233, 226, 0.13);
+  border-bottom: 1px solid var(--admin-rule-strong);
 }
 
 .admin-atlas-sale-row-facts p {
   margin: 0;
-  font-family: 'Lora', Georgia, serif;
+  font-family: var(--font-body);
 }
 
 .admin-atlas-sale-row-buyer {
-  color: #ede9e2;
-  font-size: 1rem;
+  color: var(--admin-ink);
+  font-size: var(--text-body);
 }
 
 .admin-atlas-sale-row-muted {
   margin-top: 0.3rem !important;
-  color: #a39b90;
-  font-size: 0.85rem;
+  color: var(--admin-ink-dim);
+  font-size: var(--text-admin-table);
 }
 
 .admin-atlas-sale-row-action {
@@ -1504,9 +1227,9 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  color: #a39b90;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.7rem;
+  color: var(--admin-ink-dim);
+  font-family: var(--font-tabular);
+  font-size: var(--text-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1514,20 +1237,20 @@ html, body {
 .admin-atlas-sale-row-action input {
   min-width: 8rem;
   padding: 0.5rem 0.65rem;
-  border: 1px solid rgba(237, 233, 226, 0.2);
+  border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
   background: transparent;
-  color: #ede9e2;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.9rem;
+  color: var(--admin-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
 }
 
 .admin-atlas-sale-row-action button {
   padding: 0 0.9rem;
   border: none;
   background: none;
-  color: #d4b88a;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8rem;
+  color: var(--admin-accent);
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: underline;
@@ -1538,17 +1261,17 @@ html, body {
 .admin-atlas-sale-row-error {
   flex-basis: 100%;
   margin: 0.5rem 0 0;
-  color: #e0a08a;
-  font-size: 0.85rem;
+  color: var(--admin-wrong);
+  font-size: var(--text-meta);
 }
 
 .admin-atlas-sale-row-done code {
   display: block;
   margin-top: 0.5rem;
   padding: 0.6rem 0.75rem;
-  border: 1px solid rgba(237, 233, 226, 0.2);
-  color: #f2e3c4;
-  font-size: 0.95rem;
+  border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
+  color: var(--admin-warm);
+  font-size: var(--text-meta);
   letter-spacing: 0.04em;
 }
 
@@ -1558,8 +1281,8 @@ html, body {
 
 .admin-dashboard-loading {
   color: var(--color-wood-500);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.82rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
 }
 
 .admin-attention-list {
@@ -1574,8 +1297,8 @@ html, body {
   min-height: 4rem;
   border-bottom: 1px solid var(--color-wood-200);
   color: var(--color-wood-800);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.86rem;
+  font-family: var(--font-label);
+  font-size: var(--text-admin-table);
   transition: color 160ms ease, background-color 160ms ease;
 }
 
@@ -1586,15 +1309,15 @@ html, body {
 
 .admin-attention-count {
   color: var(--color-bronze-700);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-heading);
   line-height: 1;
   text-align: center;
 }
 
 .admin-attention-row > span:last-child {
   color: var(--color-wood-500);
-  font-size: 0.65rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1610,8 +1333,8 @@ html, body {
 .admin-action-card {
   display: grid;
   gap: 0.35rem;
-  min-height: 7rem;
-  padding: 1.25rem;
+  min-height: 4rem;
+  padding: var(--space-3) var(--space-4);
   border-right: 1px solid var(--color-wood-200);
   border-bottom: 1px solid var(--color-wood-200);
   background: var(--color-paper-50);
@@ -1622,15 +1345,15 @@ html, body {
 
 .admin-action-card strong {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.35rem;
+  font-family: var(--font-display);
+  font-size: var(--text-card-title);
   font-weight: 500;
 }
 
 .admin-action-card span {
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.78rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   line-height: 1.45;
 }
 
@@ -1641,12 +1364,12 @@ html, body {
 }
 
 .admin-tool-links a {
-  min-height: 44px;
+  min-height: var(--control-h);
   display: inline-flex;
   align-items: center;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.8rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   text-decoration: underline;
   text-decoration-color: var(--color-wood-300);
   text-underline-offset: 0.3rem;
@@ -1671,8 +1394,8 @@ html, body {
   padding: 0.65rem 0.85rem;
   border-right: 1px solid var(--color-wood-200);
   color: var(--color-wood-500);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -1687,7 +1410,7 @@ html, body {
   place-items: center;
   border: 1px solid var(--color-wood-300);
   border-radius: 999px;
-  font-size: 0.62rem;
+  font-size: var(--text-micro);
 }
 
 .admin-stage-list li.is-complete { color: var(--color-wood-700); }
@@ -1720,15 +1443,15 @@ html, body {
 .maintenance-acquisition-form h3,
 .maintenance-review-heading h3 {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-weight: 500;
   line-height: 1.08;
 }
 
-.maintenance-search-heading h2 { font-size: 1.75rem; }
+.maintenance-search-heading h2 { font-size: var(--text-heading); }
 .maintenance-detail-heading h2 { margin-top: 0.35rem; font-size: clamp(2rem, 4vw, 3.25rem); }
 .maintenance-acquisition-form h3,
-.maintenance-review-heading h3 { font-size: 1.5rem; }
+.maintenance-review-heading h3 { font-size: var(--text-title); }
 
 .maintenance-search-heading p,
 .maintenance-detail-heading > p:last-child,
@@ -1736,8 +1459,8 @@ html, body {
 .maintenance-review-heading > p:last-child {
   margin-top: 0.35rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.84rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   line-height: 1.55;
 }
 
@@ -1754,8 +1477,8 @@ html, body {
   display: block;
   margin-bottom: 0.45rem;
   color: var(--color-wood-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1765,21 +1488,21 @@ html, body {
   display: block;
   margin-top: 0.4rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   line-height: 1.45;
 }
 
 .maintenance-input {
   width: 100%;
-  min-height: 44px;
-  padding: 0.7rem 0.8rem;
+  min-height: var(--control-h);
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-wood-300);
   border-radius: 0;
   background: var(--color-paper-50);
   color: var(--color-wood-900);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.88rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.4;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
@@ -1798,35 +1521,15 @@ textarea.maintenance-input { resize: vertical; }
 
 .maintenance-section-actions { justify-content: flex-end; margin-bottom: 1rem; }
 
-.maintenance-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 0.68rem 1rem;
-  border: 1px solid;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
-}
-
-.maintenance-button:active:not(:disabled) { transform: translateY(1px); }
-.maintenance-button-primary { border-color: var(--color-bronze-600); background: var(--color-bronze-600); color: var(--color-paper-50); }
-.maintenance-button-primary:hover:not(:disabled) { border-color: var(--color-bronze-700); background: var(--color-bronze-700); }
-.maintenance-button-quiet { border-color: var(--color-wood-300); background: transparent; color: var(--color-wood-700); }
-.maintenance-button-quiet:hover:not(:disabled) { border-color: var(--color-wood-600); color: var(--color-wood-900); }
+/* .maintenance-button retired 2026-11-18: AdminMaintenance uses .btn-primary / .btn-outline from master.css. */
 
 .maintenance-loading,
 .maintenance-inline-error,
 .maintenance-unlocked,
 .maintenance-muted {
   margin-top: 1rem;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.84rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   line-height: 1.5;
 }
 
@@ -1858,9 +1561,9 @@ textarea.maintenance-input { resize: vertical; }
 .maintenance-result:hover { background: var(--color-paper-100); }
 .maintenance-result.is-selected { border-left-color: var(--color-bronze-600); background: var(--color-bronze-50); }
 .maintenance-result > span:first-child { display: grid; min-width: 0; gap: 0.25rem; }
-.maintenance-result strong { overflow-wrap: anywhere; font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500; }
+.maintenance-result strong { overflow-wrap: anywhere; font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; }
 .maintenance-result small,
-.maintenance-result-state { color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.72rem; line-height: 1.45; }
+.maintenance-result-state { color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.45; }
 .maintenance-result-state { max-width: 9rem; text-align: right; }
 
 .maintenance-detail { margin-top: 3rem; }
@@ -1882,8 +1585,8 @@ textarea.maintenance-input { resize: vertical; }
 
 .maintenance-definition-list dt {
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.65rem;
+  font-family: var(--font-label);
+  font-size: var(--text-micro);
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1893,8 +1596,8 @@ textarea.maintenance-input { resize: vertical; }
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
   color: var(--color-wood-900);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.87rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.5;
   white-space: pre-wrap;
 }
@@ -1912,8 +1615,8 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 .maintenance-acquisition-row > div { display: grid; gap: 0.25rem; min-width: 0; }
-.maintenance-acquisition-row strong { color: var(--color-wood-900); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 500; text-transform: capitalize; }
-.maintenance-acquisition-row span { overflow-wrap: anywhere; color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.78rem; line-height: 1.45; }
+.maintenance-acquisition-row strong { color: var(--color-wood-900); font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; text-transform: capitalize; }
+.maintenance-acquisition-row span { overflow-wrap: anywhere; color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.45; }
 
 .maintenance-acquisition-form,
 .maintenance-review {
@@ -1946,8 +1649,8 @@ textarea.maintenance-input { resize: vertical; }
 .maintenance-history h4 {
   margin-bottom: 0.75rem;
   color: var(--color-wood-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1976,17 +1679,17 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 .maintenance-history summary > span:first-child { display: grid; gap: 0.2rem; }
-.maintenance-history summary strong { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 500; text-transform: capitalize; }
+.maintenance-history summary strong { font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; text-transform: capitalize; }
 .maintenance-history summary small,
 .maintenance-history summary > span:last-child,
-.maintenance-history details > p { color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.75rem; line-height: 1.5; }
+.maintenance-history details > p { color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.5; }
 .maintenance-history details > p { margin: 0.5rem 0 1rem; }
-.maintenance-history-snapshots pre { max-width: 100%; overflow-x: auto; color: var(--color-wood-800); font-family: 'Karla', sans-serif; font-size: 0.72rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.maintenance-history-snapshots pre { max-width: 100%; overflow-x: auto; color: var(--color-wood-800); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .admin-menu-button {
   display: none;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--control-h-touch);
+  min-height: var(--control-h-touch);
 }
 
 .admin-menu-scrim { display: none; }
@@ -2003,7 +1706,7 @@ textarea.maintenance-input { resize: vertical; }
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: var(--color-paper-50);
+  background: var(--surface-admin);
 }
 
 .admin-shell-loading::after {
@@ -2027,25 +1730,25 @@ textarea.maintenance-input { resize: vertical; }
 .admin-access-card h1 {
   margin-top: 0.75rem;
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: var(--text-page-title);
   line-height: 1.1;
 }
 
 .admin-access-card p:not(.admin-eyebrow) {
   margin-top: 1rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.9rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.6;
 }
 
 .admin-access-card button {
-  min-height: 44px;
+  min-height: var(--control-h);
   margin-top: 1.5rem;
   color: var(--color-bronze-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -2055,9 +1758,9 @@ textarea.maintenance-input { resize: vertical; }
    in the lifted quiet ink, not brass, because brass marks only what can be
    acted on. */
 .admin-eyebrow {
-  color: #a39b90;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  color: var(--admin-ink-dim);
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -2075,8 +1778,8 @@ textarea.maintenance-input { resize: vertical; }
     border: 1px solid var(--color-wood-300);
     background: var(--color-paper-50);
     color: var(--color-wood-900);
-    font-family: 'Karla', sans-serif;
-    font-size: 0.68rem;
+    font-family: var(--font-label);
+    font-size: var(--text-label);
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -2096,7 +1799,7 @@ textarea.maintenance-input { resize: vertical; }
   .admin-sidebar {
     width: min(18rem, calc(100vw - 3rem));
     transform: translate3d(-100%, 0, 0);
-    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 200ms var(--ease-reveal);
   }
 
   .admin-sidebar.is-open { transform: translate3d(0, 0, 0); }
@@ -2160,7 +1863,7 @@ textarea.maintenance-input { resize: vertical; }
 .collector-title,
 .collector-door-title {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
 }
 
 .collector-arrival-title { font-size: clamp(2.25rem, 8vw, 4.5rem); line-height: 1.05; }
@@ -2168,8 +1871,8 @@ textarea.maintenance-input { resize: vertical; }
 
 .collector-eyebrow {
   color: var(--color-bronze-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2179,9 +1882,9 @@ textarea.maintenance-input { resize: vertical; }
 .collector-lede,
 .collector-copy {
   color: var(--color-wood-700);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: clamp(1rem, 2.2vw, 1.125rem);
-  line-height: 1.7;
+  line-height: var(--leading-prose);
 }
 
 .collector-arrival-story { max-width: 38rem; margin: 1.75rem auto 0; }
@@ -2189,9 +1892,9 @@ textarea.maintenance-input { resize: vertical; }
 .collector-arrival-record {
   margin-top: 1.5rem;
   color: var(--color-wood-500);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: var(--text-meta);
-  line-height: 1.7;
+  line-height: var(--leading-prose);
   letter-spacing: 0.02em;
 }
 
@@ -2230,12 +1933,12 @@ textarea.maintenance-input { resize: vertical; }
   background: var(--color-paper-100);
 }
 
-.collector-door-title { display: block; font-size: 1.55rem; line-height: 1.15; }
+.collector-door-title { display: block; font-size: var(--text-title); line-height: 1.15; }
 .collector-door-copy {
   display: block;
   margin-top: 0.8rem;
   color: var(--color-wood-600);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: var(--text-body);
   line-height: 1.6;
 }
@@ -2252,8 +1955,8 @@ textarea.maintenance-input { resize: vertical; }
 .collector-button-secondary {
   min-height: 2.75rem;
   padding: 0.75rem 1.25rem;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2265,8 +1968,8 @@ textarea.maintenance-input { resize: vertical; }
 .collector-proof-form { display: grid; gap: 0.75rem; margin-top: 1.5rem; }
 .collector-proof-form label { color: var(--color-wood-600); font: 600 0.75rem 'Karla', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
 .collector-proof-form input { min-height: 2.75rem; border: 1px solid var(--color-wood-300); background: var(--color-paper-50); padding: 0.75rem; color: var(--color-wood-900); }
-.collector-error { margin-top: 1rem; color: var(--color-bronze-800); font-family: 'Lora', serif; font-size: var(--text-small); }
-.collector-saved { margin-top: 1rem; color: var(--color-wood-700); font-family: 'Lora', serif; font-size: var(--text-small); text-align: center; }
+.collector-error { margin-top: 1rem; color: var(--color-bronze-800); font-family: var(--font-body); font-size: var(--text-small); }
+.collector-saved { margin-top: 1rem; color: var(--color-wood-700); font-family: var(--font-body); font-size: var(--text-small); text-align: center; }
 
 .collector-certificate-facts { margin-top: 2rem; border-top: 1px solid var(--color-wood-200); }
 .collector-certificate-fact { display: grid; grid-template-columns: minmax(7rem, 0.35fr) minmax(0, 1fr); gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--color-wood-100); }
@@ -2274,7 +1977,7 @@ textarea.maintenance-input { resize: vertical; }
 .collector-certificate-fact dd { color: var(--color-wood-800); font: var(--text-body) 'Lora', serif; overflow-wrap: anywhere; }
 
 .collector-private-screen .font-label {
-  font-size: 0.75rem;
+  font-size: var(--text-label-lg);
   letter-spacing: 0.12em;
 }
 
@@ -2309,7 +2012,7 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 /* On paper-coloured surfaces the bronze needs to go darker to stay visible. */
-:where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white)
+:where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white, .bg-surface-page, .bg-surface-card, .bg-surface-band)
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-color: var(--color-bronze-700);
 }
@@ -2360,5 +2063,258 @@ textarea.maintenance-input { resize: vertical; }
   .reveal-block .pg-3,
   .reveal-block .pg-4 {
     opacity: 1 !important;
+  }
+}
+
+/* Studio destinations use the shared navigation type and colour defaults. */
+.admin-tools-link {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--control-h);
+  margin-left: var(--space-6);
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-admin-nav);
+  text-underline-offset: 0.2em;
+}
+.admin-tools-link:hover,
+.admin-tools-link.active { color: var(--admin-accent); text-decoration: underline; }
+.admin-record-return { padding: var(--space-3) clamp(1rem, 4vw, 3.5rem) 0; }
+.admin-record-return a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  color: var(--admin-accent);
+  font: var(--text-body) var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* The exact artwork record groups each status with its destination. */
+.studio-record {
+  --record-ink: var(--admin-ink);
+  --record-muted: var(--admin-ink-quiet);
+  --record-brass: var(--admin-accent);
+  --record-ground: var(--admin-ground);
+  --record-hairline: rgb(var(--admin-ink-rgb) / 14%);
+  --record-edge: rgb(var(--admin-ink-rgb) / 26%);
+  max-width: 73rem;
+  color: var(--record-ink);
+}
+
+.studio-record-header {
+  padding-bottom: 1.2rem;
+}
+
+.studio-record-header-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.studio-record h1,
+.studio-record h2 {
+  margin: 0;
+  color: var(--record-ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.studio-record h1 {
+  font-size: var(--text-page-title);
+  line-height: 1.05;
+}
+
+.studio-record h2 {
+  font-size: var(--text-section-heading);
+  line-height: 1.1;
+}
+
+.studio-record-facts {
+  margin: 0.4rem 0 0;
+  font: 600 var(--text-body)/1.4 var(--font-label);
+  color: var(--record-muted);
+  overflow-wrap: anywhere;
+}
+
+.studio-record .studio-record-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  width: fit-content;
+  color: var(--record-brass);
+  font: 600 var(--text-button)/1.2 var(--font-label);
+}
+
+.studio-record .studio-record-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: var(--control-h);
+  max-width: 100%;
+  padding: var(--space-1) var(--control-px);
+  border: 1px solid var(--record-edge);
+  border-radius: var(--radius-none);
+  color: var(--record-ink);
+  background: rgb(var(--admin-ink-rgb) / 6%);
+  font: 600 var(--text-button)/1.18 var(--font-label);
+  text-align: center;
+  text-decoration: none;
+}
+
+.studio-record .studio-record-action:hover {
+  background: rgb(var(--admin-ink-rgb) / 11%);
+  border-color: var(--record-muted);
+}
+
+.studio-record .studio-record-primary {
+  background: var(--record-brass);
+  border-color: var(--record-brass);
+  color: var(--record-ground);
+}
+
+.studio-record .studio-record-primary:hover {
+  background: var(--admin-accent-hover);
+  border-color: var(--admin-accent-hover);
+}
+
+.studio-record :is(.studio-record-back, .studio-record-action):focus-visible {
+  outline: 2px solid var(--record-brass);
+  outline-offset: 2px;
+}
+
+.studio-record-section {
+  display: grid;
+  grid-template-columns: clamp(10rem, 14vw, 13rem) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 0.35rem 1.25rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--record-hairline);
+}
+
+.studio-record-summary {
+  grid-column: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.studio-record-status {
+  margin: 0;
+  font: 600 var(--text-body)/1.35 var(--font-label);
+}
+
+.studio-record-note {
+  max-width: 66ch;
+  margin: 0.22rem 0 0;
+  color: var(--record-muted);
+  font: 400 var(--text-small)/1.45 var(--font-body);
+}
+
+.studio-record-section-actions {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.studio-record-history {
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--record-hairline);
+}
+
+.studio-record-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+}
+
+.studio-record-events {
+  padding: 0;
+  margin: 0.3rem 0 0;
+  list-style: none;
+}
+
+.studio-record-events li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.16rem 1rem;
+  padding: 0.42rem 0;
+  font: 400 var(--text-small)/1.4 var(--font-body);
+}
+
+.studio-record-events time {
+  color: var(--record-muted);
+  font: 500 var(--text-small)/1.4 var(--font-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.studio-record-message {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--record-hairline);
+  color: var(--record-muted);
+}
+
+.studio-record-message .studio-record-action {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 69.99rem) {
+  .studio-record-section {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    align-items: start;
+  }
+
+  .studio-record-section h2 {
+    grid-column: 1 / -1;
+  }
+
+  .studio-record-summary {
+    grid-column: 1;
+  }
+
+  .studio-record-section-actions {
+    grid-column: 2;
+    max-width: 12rem;
+  }
+}
+
+@media (max-width: 37rem) {
+  .studio-record-header {
+    padding-bottom: 0.8rem;
+  }
+
+  .admin-page:has(> .studio-record) {
+    padding-block: 0.85rem 2rem;
+  }
+
+  .studio-record-section {
+    grid-template-columns: minmax(0, 1fr) fit-content(46%);
+    align-items: start;
+    column-gap: 0.65rem;
+    padding: 0.66rem 0;
+  }
+
+  .studio-record-section-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .studio-record-section-actions > a {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .studio-record-events li {
+    flex-wrap: wrap;
   }
 }

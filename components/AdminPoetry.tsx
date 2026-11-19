@@ -195,15 +195,17 @@ const AdminPoetry: React.FC = () => {
 
     const remove = async (slug: string) => {
         if (!confirm('Delete this poem? This cannot be undone.')) return;
+        setMessage(null);
         try {
-            await fetch(`/api/poems?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
-            await refresh();
+            const response = await fetch(`/api/poems?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
+            if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+            setPoems(current => current.filter(poem => poem.slug !== slug));
         } catch {
-            setMessage({ type: 'err', text: 'Delete failed.' });
+            setMessage({ type: 'err', text: 'Delete failed. This poem is still listed.' });
         }
     };
 
-    const fieldLabel = 'font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
+    const fieldLabel = 'font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2';
     const fieldInput = 'w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
 
     return (
@@ -215,10 +217,10 @@ const AdminPoetry: React.FC = () => {
                     </p>
 
                     {message && (
-                        <div className={`mb-6 px-4 py-3 border ${
+                        <div role={message.type === 'err' ? 'alert' : 'status'} className={`mb-6 px-4 py-3 border ${
                             message.type === 'ok'
                                 ? 'border-bronze-300 bg-bronze-50 text-bronze-800'
-                                : 'border-red-300 bg-red-50 text-red-800'
+                                : 'border-danger-line bg-danger-soft text-danger'
                         } font-sans text-sm`}>
                             {message.text}
                         </div>
@@ -233,7 +235,7 @@ const AdminPoetry: React.FC = () => {
                                 </h2>
                                 <button
                                     onClick={cancelEdit}
-                                    className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-wood-700 font-semibold"
+                                    className="font-label text-label uppercase tracking-[0.15em] text-wood-400 hover:text-wood-700 font-semibold"
                                 >
                                     Cancel
                                 </button>
@@ -319,7 +321,7 @@ const AdminPoetry: React.FC = () => {
 
                                 <div>
                                     <label className={fieldLabel}>The poem</label>
-                                    <p className="font-sans text-[11px] text-wood-400 mb-2">
+                                    <p className="font-sans text-label text-wood-400 mb-2">
                                         Separate stanzas with a blank line.
                                     </p>
                                     <textarea
@@ -327,7 +329,7 @@ const AdminPoetry: React.FC = () => {
                                         onChange={e => updateField('poemText', e.target.value)}
                                         rows={14}
                                         placeholder={`Before the morning knew its name,\nthe river had already begun.\n\nA small bird, a small fire,\na small reason to keep going.`}
-                                        className={`${fieldInput} font-serif text-base leading-[1.7] resize-y`}
+                                        className={`${fieldInput} font-serif text-base leading-prose resize-y`}
                                     />
                                 </div>
 
@@ -367,7 +369,7 @@ const AdminPoetry: React.FC = () => {
                                 <button
                                     onClick={save}
                                     disabled={saving}
-                                    className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+                                    className="btn btn-primary btn-block"
                                 >
                                     {saving ? 'Saving...' : editing === 'new' ? 'Publish poem' : 'Save changes'}
                                 </button>
@@ -378,7 +380,7 @@ const AdminPoetry: React.FC = () => {
                     {!editing && (
                         <button
                             onClick={startNew}
-                            className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors mb-10"
+                            className="btn btn-primary btn-block mb-10"
                         >
                             New poem
                         </button>
@@ -393,7 +395,7 @@ const AdminPoetry: React.FC = () => {
                                     <div key={poem.slug} className="bg-paper-50 border border-wood-200 px-5 py-4 flex items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-serif text-lg text-wood-900 truncate">{poem.title}</p>
-                                            <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5 truncate">
+                                            <p className="font-label text-label text-wood-400 font-semibold mt-0.5 truncate">
                                                 /{poem.slug}
                                                 {poem.duration ? ` · ${poem.duration}` : ''}
                                             </p>
@@ -403,19 +405,19 @@ const AdminPoetry: React.FC = () => {
                                                 href={`/poetry/${poem.slug}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
                                             >
                                                 View
                                             </a>
                                             <button
                                                 onClick={() => startEdit(poem)}
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => remove(poem.slug)}
-                                                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-[#e0a08a] font-semibold"
+                                                className="font-label text-label uppercase tracking-[0.15em] text-wood-300 hover:text-[#e0a08a] font-semibold"
                                             >
                                                 Delete
                                             </button>

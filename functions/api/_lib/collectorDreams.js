@@ -203,7 +203,7 @@ function establishedAdult(birthDate, at, timeZone) {
   return age >= 18;
 }
 
-async function requireAdult(db, userId, now) {
+export async function requireAdult(db, userId, now) {
   const user = await authorInternalUser(db, userId);
   if (!user) throw new Error('user_not_synced');
   const profile = await db.prepare(

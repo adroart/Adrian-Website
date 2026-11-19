@@ -1,3 +1,9 @@
+import type { PlateWizardStageKey } from './plateWizard';
+import { isPublicRegistryCode } from './publicRegistry';
+
+export const WORKSPACE_PROJECTION_HEADER = 'X-Artwork-Workspace-Projection';
+export const EXACT_RECORD_PROJECTION = '2';
+
 export type ArtworkWorkspaceSelector = {
   artworkId?: string;
   keeperPieceId?: string;
@@ -19,6 +25,8 @@ export type ArtworkActivityKind =
   | 'identity_registered' | 'caretaker_claimed' | 'caretaker_released'
   | 'plate_generated' | 'plate_activated' | 'invitation_created'
   | 'invitation_revoked' | 'invitation_redeemed' | 'maintenance_recorded';
+export type ArtworkWorkspaceEdition = { kind: 'unique' } | { kind: 'numbered'; number: number };
+export type ArtworkWorkspaceSelectionScope = 'catalog' | 'implicit_record' | 'exact_record';
 
 export type ArtworkWorkspace = {
   catalog: { artworkId: string; title: string } | null;
@@ -27,10 +35,13 @@ export type ArtworkWorkspace = {
   certificate: { state: ArtworkCertificateState; missingFields: CertificateField[] };
   invitation: { state: ArtworkInvitationState; invitationId: string } | null;
   caretaker: { state: ArtworkCaretakerState };
-  plate: { state: ArtworkPlateState; recoveryState: ArtworkRecoveryState } | null;
+  plate: { state: ArtworkPlateState; recoveryState: ArtworkRecoveryState; wizardStage?: PlateWizardStageKey | null } | null;
   sale: { state: ArtworkSaleState; verifiedSaleId: string | null } | null;
   nextAction: { label: string; href: string; reason: string } | null;
   activity: Array<{ kind: ArtworkActivityKind; occurredAt: string; label: string }>;
+  edition?: ArtworkWorkspaceEdition | null;
+  selectionScope?: ArtworkWorkspaceSelectionScope;
+  legacySaleVerificationPath?: string | null;
 };
 
 type CertificateField =
@@ -140,11 +151,28 @@ function parseCaretaker(value: unknown) {
   return { state: state(item.state, CARETAKER_STATES) };
 }
 function parsePlate(value: unknown) {
-  const item = object(value); exact(item, ['state', 'recoveryState']);
+  const item = object(value);
+  const hasStage = Object.hasOwn(item, 'wizardStage');
+  exact(item, hasStage ? ['state', 'recoveryState', 'wizardStage'] : ['state', 'recoveryState']);
   return {
     state: state(item.state, PLATE_STATES),
     recoveryState: state(item.recoveryState, RECOVERY_STATES),
+    ...(hasStage ? {
+      wizardStage: nullable(item.wizardStage, stage => state(stage, ['fabricate', 'backup', 'recovery', 'activate'] as PlateWizardStageKey[])),
+    } : {}),
   };
+}
+
+function parseEdition(value: unknown): ArtworkWorkspaceEdition {
+  const item = object(value);
+  if (item.kind === 'unique') {
+    exact(item, ['kind']);
+    return { kind: 'unique' };
+  }
+  exact(item, ['kind', 'number']);
+  if (item.kind !== 'numbered' || typeof item.number !== 'number'
+    || !Number.isSafeInteger(item.number) || item.number < 1) invalid();
+  return { kind: 'numbered', number: item.number };
 }
 function parseSale(value: unknown) {
   const item = object(value); exact(item, ['state', 'verifiedSaleId']);
@@ -158,7 +186,7 @@ const ACTION_ROUTES: Record<string, Set<string>> = {
   '/admin/collector-sales': new Set([
     'artistArtworkRecordId', 'source', 'acquisitionId', 'artworkId', 'keeperPieceId',
   ]),
-  '/admin/pieces/wizard': new Set(['keeperPieceId']),
+  '/admin/pieces/wizard': new Set(['keeperPieceId', 'proof']),
   '/admin/registrations': new Set(['artworkId', 'artistArtworkRecordId']),
   '/admin/certificates': new Set(['artworkId']),
   '/admin/invitations': new Set(['keeperPieceId']),
@@ -166,12 +194,20 @@ const ACTION_ROUTES: Record<string, Set<string>> = {
   '/admin/maintenance': new Set(['artworkId', 'keeperPieceId']),
 };
 
+const ACTION_ORIGIN = 'https://internal.invalid';
+
 function safeActionHref(value: unknown): string {
   const href = text(value, 1000);
   if (!href.startsWith('/') || href.startsWith('//') || href.includes('\\')) invalid();
-  const url = new URL(href, 'https://internal.invalid');
-  if (url.origin !== 'https://internal.invalid' || url.hash || !ACTION_ROUTES[url.pathname]) invalid();
+  const url = new URL(href, ACTION_ORIGIN);
+  if (url.origin !== ACTION_ORIGIN || url.hash) invalid();
+  if (/^\/works\/[A-Z]{2,3}-\d{3}$/.test(url.pathname)) {
+    if ([...url.searchParams.keys()].join() !== 'instance'
+      || !isPublicRegistryCode(url.searchParams.get('instance'))) invalid();
+    return href;
+  }
   const allowed = ACTION_ROUTES[url.pathname];
+  if (!allowed) invalid();
   for (const key of url.searchParams.keys()) {
     if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) invalid();
   }
@@ -184,8 +220,10 @@ function safeActionHref(value: unknown): string {
       'acquisitionId', 'artworkId', 'keeperPieceId', 'source',
     ]) && url.searchParams.get('source') === 'legacy_acquisition';
     if (!recordLookup && !legacyLookup) invalid();
-  } else if (url.pathname === '/admin/pieces/wizard'
-    || url.pathname === '/admin/invitations' || url.pathname === '/admin/pieces') {
+  } else if (url.pathname === '/admin/pieces/wizard') {
+    const identityProof = exactQuery(['keeperPieceId', 'proof']) && url.searchParams.get('proof') === 'identity';
+    if (!exactQuery(['keeperPieceId']) && !identityProof) invalid();
+  } else if (url.pathname === '/admin/invitations' || url.pathname === '/admin/pieces') {
     if (!exactQuery(['keeperPieceId'])) invalid();
   } else if (url.pathname === '/admin/registrations') {
     if (!exactQuery(['artistArtworkRecordId', 'artworkId'])) invalid();
@@ -223,9 +261,11 @@ export function parseArtworkWorkspaceResponse(value: unknown): ArtworkWorkspace 
   const body = object(value); exact(body, ['ok', 'workspace']);
   if (body.ok !== true) invalid();
   const workspace = object(body.workspace);
+  const optional = ['edition', 'selectionScope', 'legacySaleVerificationPath']
+    .filter(key => Object.hasOwn(workspace, key));
   exact(workspace, [
     'catalog', 'salesRecord', 'identity', 'certificate', 'invitation', 'caretaker',
-    'plate', 'sale', 'nextAction', 'activity',
+    'plate', 'sale', 'nextAction', 'activity', ...optional,
   ]);
   const parsed: ArtworkWorkspace = {
     catalog: nullable(workspace.catalog, parseCatalog),
@@ -239,6 +279,31 @@ export function parseArtworkWorkspaceResponse(value: unknown): ArtworkWorkspace 
     nextAction: nullable(workspace.nextAction, parseNextAction),
     activity: parseActivity(workspace.activity),
   };
+  if (Object.hasOwn(workspace, 'edition')) {
+    parsed.edition = nullable(workspace.edition, parseEdition);
+    if (Boolean(parsed.edition) !== Boolean(parsed.identity || parsed.salesRecord?.state === 'identified')) invalid();
+  }
+  if (Object.hasOwn(workspace, 'selectionScope')) {
+    parsed.selectionScope = state(workspace.selectionScope, ['catalog', 'implicit_record', 'exact_record']);
+    if (parsed.selectionScope === 'catalog' && (parsed.salesRecord || parsed.identity)) invalid();
+    if (parsed.selectionScope === 'implicit_record' && (!parsed.salesRecord || !parsed.catalog)) invalid();
+  }
+  if (Object.hasOwn(workspace, 'legacySaleVerificationPath')) {
+    parsed.legacySaleVerificationPath = nullable(workspace.legacySaleVerificationPath, safeActionHref);
+    if (Boolean(parsed.legacySaleVerificationPath) !== (parsed.sale?.state === 'legacy_candidate')) invalid();
+    if (parsed.legacySaleVerificationPath) {
+      const url = new URL(parsed.legacySaleVerificationPath, ACTION_ORIGIN);
+      if (url.pathname !== '/admin/collector-sales'
+        || url.searchParams.get('source') !== 'legacy_acquisition'
+        || url.searchParams.get('artworkId') !== parsed.catalog?.artworkId
+        || url.searchParams.get('keeperPieceId') !== parsed.identity?.keeperPieceId) invalid();
+    }
+  }
+  if (parsed.nextAction?.href.startsWith('/works/')) {
+    const url = new URL(parsed.nextAction.href, ACTION_ORIGIN);
+    if (url.pathname !== `/works/${parsed.catalog?.artworkId}`
+      || url.searchParams.get('instance') !== parsed.identity?.publicCode) invalid();
+  }
   if (parsed.identity && !parsed.catalog) invalid();
   if (parsed.salesRecord?.state === 'unresolved'
     && (parsed.catalog !== null || parsed.identity !== null)) invalid();
@@ -276,7 +341,11 @@ export async function loadArtworkWorkspace(
   selector: ArtworkWorkspaceSelector,
   signal?: AbortSignal,
 ): Promise<ArtworkWorkspace> {
-  const response = await fetch(buildArtworkWorkspacePath(selector), { cache: 'no-store', signal });
+  const response = await fetch(buildArtworkWorkspacePath(selector), {
+    cache: 'no-store',
+    headers: { [WORKSPACE_PROJECTION_HEADER]: EXACT_RECORD_PROJECTION },
+    signal,
+  });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
     const code = body && typeof body === 'object' && typeof body.error === 'string'

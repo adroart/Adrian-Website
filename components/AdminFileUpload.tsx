@@ -29,6 +29,7 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const isAudio = /\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(file.key);
@@ -49,70 +50,82 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
   const handleDelete = async () => {
     if (!confirmDelete) { setConfirmDelete(true); return; }
     setDeleting(true);
-    await fetch(`/api/delete-file?key=${encodeURIComponent(file.key)}`, { method: 'DELETE' });
-    onDelete(file.key);
+    setDeleteError('');
+    try {
+      const response = await fetch(`/api/delete-file?key=${encodeURIComponent(file.key)}`, { method: 'DELETE' });
+      if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+      onDelete(file.key);
+    } catch {
+      setDeleteError('Delete failed. This file is still listed.');
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <div className="bg-paper-50 border border-wood-200 px-5 py-4">
-      <div className="flex items-center gap-4">
-        {isAudio && (
-          <button
-            onClick={togglePlay}
-            aria-label={playing ? 'Pause' : 'Play'}
-            className="w-8 h-8 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
-          >
-            {playing ? (
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
-                <rect x="0" y="0" width="3" height="12" rx="1" />
-                <rect x="7" y="0" width="3" height="12" rx="1" />
-              </svg>
-            ) : (
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
-                <path d="M1 1l8 5-8 5V1z" />
-              </svg>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-[1_1_10rem] items-center gap-3">
+          {isAudio && (
+            <button
+              onClick={togglePlay}
+              aria-label={playing ? 'Pause' : 'Play'}
+              className="w-8 h-8 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
+            >
+              {playing ? (
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
+                  <rect x="0" y="0" width="3" height="12" rx="1" />
+                  <rect x="7" y="0" width="3" height="12" rx="1" />
+                </svg>
+              ) : (
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
+                  <path d="M1 1l8 5-8 5V1z" />
+                </svg>
             )}
           </button>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="font-sans text-sm text-wood-900 font-medium truncate">{file.key}</p>
-          <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5">
-            {formatSize(file.size)} · {formatDate(file.uploaded)}
-          </p>
+          )}
+          <div className="min-w-0">
+            <p className="font-sans text-sm text-wood-900 font-medium truncate">{file.key}</p>
+            <p className="font-label text-label text-wood-600 font-semibold mt-0.5">
+              {formatSize(file.size)} · {formatDate(file.uploaded)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {isAudio && (
             <Link
               to={poetryCreatePath(file.url)}
-              className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 hover:text-bronze-900 font-semibold transition-colors"
+              className="font-label text-label uppercase tracking-[0.15em] text-bronze-700 hover:text-bronze-900 font-semibold transition-colors"
             >
               Use in poem
             </Link>
           )}
           <button
             onClick={copy}
-            className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+            className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
           >
             {copied ? 'Copied' : 'Copy URL'}
           </button>
           <a
             href={file.url}
             download
-            className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+            className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
           >
             Download
           </a>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold transition-colors ${
-              confirmDelete ? 'text-[#e0a08a] hover:text-[#e0a08a]' : 'text-wood-300 hover:text-[#e0a08a]'
+            className={`font-label text-label uppercase tracking-[0.15em] font-semibold transition-colors ${
+              confirmDelete ? 'text-danger hover:text-danger' : 'text-wood-600 hover:text-danger'
             }`}
           >
             {deleting ? 'Deleting...' : confirmDelete ? 'Confirm' : 'Delete'}
           </button>
         </div>
       </div>
+      {deleteError && <p role="alert" className="mt-2 font-sans text-sm text-danger">{deleteError}</p>}
       {isAudio && (
         <audio
           ref={audioRef}
@@ -198,7 +211,7 @@ const AdminFileUpload: React.FC = () => {
             <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-6">Upload</h2>
             <div className="space-y-5">
               <div>
-                <label className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">File</label>
+                <label className="font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">File</label>
                 <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-wood-300 hover:border-bronze-400 transition-colors cursor-pointer py-8 px-4 text-center">
                   <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" />
                   {file ? (
@@ -206,13 +219,13 @@ const AdminFileUpload: React.FC = () => {
                   ) : (
                     <>
                       <span className="font-sans text-sm text-wood-500 mb-1">Drop a file here or click to browse</span>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">MP3, WAV, OGG, M4A</span>
+                      <span className="font-label text-label uppercase tracking-[0.15em] text-wood-400 font-semibold">MP3, WAV, OGG, M4A</span>
                     </>
                   )}
                 </label>
               </div>
               <div>
-                <label className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">Filename in bucket</label>
+                <label className="font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">Filename in bucket</label>
                 <input
                   type="text"
                   value={filename}
@@ -221,15 +234,15 @@ const AdminFileUpload: React.FC = () => {
                   className="w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400"
                 />
               </div>
-              {uploadError && <p className="font-sans text-sm text-red-600">{uploadError}</p>}
+              {uploadError && <p className="font-sans text-sm text-danger">{uploadError}</p>}
               {uploadResult && (
                 <div className="bg-wood-50 border border-wood-200 p-4">
-                  <p className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold mb-2">Uploaded. Copy this URL:</p>
+                  <p className="font-label text-label uppercase tracking-[0.15em] text-bronze-600 font-semibold mb-2">Uploaded. Copy this URL:</p>
                   <div className="flex items-center gap-3">
                     <code className="font-mono text-xs text-wood-800 break-all flex-1">{uploadResult.url}</code>
                     <button
                       onClick={() => { navigator.clipboard.writeText(uploadResult.url); }}
-                      className="flex-shrink-0 font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+                      className="flex-shrink-0 font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
                     >
                       Copy
                     </button>
@@ -239,7 +252,7 @@ const AdminFileUpload: React.FC = () => {
               <button
                 onClick={handleUpload}
                 disabled={!file || !filename || uploading}
-                className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+                className="btn btn-primary btn-block"
               >
                 {uploading ? 'Uploading...' : 'Upload'}
               </button>

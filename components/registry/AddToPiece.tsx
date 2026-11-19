@@ -347,7 +347,7 @@ const AddToPiece: React.FC<{ onStepChange?: (step: Step) => void }> = ({ onStepC
       style={{
         margin: '14px 0 0',
         fontFamily: "'Lora', Georgia, serif",
-        fontSize: 12.5,
+        fontSize: 'var(--text-label-lg)',
         lineHeight: 1.66,
         color: C.wrong,
       }}

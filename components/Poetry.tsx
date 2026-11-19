@@ -18,7 +18,7 @@ const Poetry: React.FC = () => {
     });
 
     return (
-        <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+        <section className="min-h-screen bg-surface-page pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-20">
@@ -76,7 +76,7 @@ const Poetry: React.FC = () => {
                                         } group-hover:text-bronze-700 transition-colors`}>
                                             {opening}
                                         </p>
-                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-2 truncate">
+                                        <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-2 truncate">
                                             {track.title}
                                             {track.duration && (
                                                 <>

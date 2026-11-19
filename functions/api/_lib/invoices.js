@@ -283,3 +283,10 @@ export function serializeInvoiceRow(row) {
     paidAt: toIso(row.paid_at),
   };
 }
+
+// Studio-only metadata. Public token routes must use serializeInvoiceRow.
+export function serializeStudioInvoiceRow(row) {
+  const invoice = serializeInvoiceRow(row);
+  if (!invoice || !row.source_quote_id) return invoice;
+  return { ...invoice, sourceQuote: parseJsonObject(row.source_quote_json) };
+}

@@ -3,20 +3,37 @@ import AxeBuilder from '@axe-core/playwright';
 
 test.describe.configure({ mode: 'serial' });
 
-test('navigates into and out of Stories without the global error screen', async ({ page }) => {
-  await page.goto('/');
-
-  await page.evaluate(() => {
-    history.pushState({}, '', '/keystatic');
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  });
+test('Publishing reaches Stories and Book, with a return link from Stories', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json', json: { ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } },
+  }));
+  await page.goto('/admin/publishing');
+  await expect(page.getByRole('heading', { name: 'Publishing', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Book', exact: true })).toHaveAttribute('href', '/admin/book');
+  await page.getByRole('link', { name: 'Stories', exact: true }).click();
+  await expect(page).toHaveURL(/\/keystatic/);
 
   await expect(page.getByText('Something went wrong')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Return to Admin' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to Publishing' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Return to Admin' }).click();
-  await expect(page).toHaveURL(/\/admin(?:\/login)?$/);
+  await page.getByRole('link', { name: 'Back to Publishing' }).click();
+  await expect(page).toHaveURL(/\/admin\/publishing$/);
   await expect(page.getByText('Something went wrong')).toHaveCount(0);
+});
+
+test('Studio areas keep their workspaces visible and fit the viewport', async ({ page }, testInfo) => {
+  await page.route('/api/admin/verify', route => route.fulfill({ json: { ok: true, admin: { id: 'admin', email: 'studio@example.test' } } }));
+  for (const area of [
+    { path: 'sales', title: 'Sales', links: ['Invoices', 'Private viewings', 'Verified sales', 'Pricing'] },
+    { path: 'publishing', title: 'Publishing', links: ['Stories', 'Poetry', 'Book', 'Media'] },
+    { path: 'tools', title: 'Studio tools', links: ['Certificate editor', 'Invitations', 'Plate registry', 'Maintenance', 'Succession', 'Screen development system'] },
+  ]) {
+    await page.goto(`/admin/${area.path}`);
+    await expect(page.getByRole('heading', { name: area.title, exact: true })).toBeVisible();
+    for (const name of area.links) await expect(page.locator('main').getByRole('link', { name, exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    if (process.env.STUDIO_SCREENSHOTS) await page.screenshot({ path: `${process.env.STUDIO_SCREENSHOTS}/${area.path}-${testInfo.project.name}.png`, fullPage: true, animations: 'disabled' });
+  }
 });
 
 test('admin shell is keyboard reachable and has no serious accessibility violations', async ({ page }) => {
@@ -60,8 +77,19 @@ test('mobile admin menu fits the viewport and closes after navigation', async ({
   }));
   await page.goto('/admin');
   await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('navigation', { name: 'Admin navigation' }).getByRole('link', { name: 'Pricing' }).click();
+  const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
+  await expect(navigation.getByRole('link')).toHaveText(['Studio overview', 'Sales', 'Artwork', 'Publishing']);
+  await navigation.getByRole('link', { name: 'Sales', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Sales', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Pricing', exact: true })).toHaveAttribute('href', '/admin/pricing');
+  await expect(page.getByRole('link', { name: 'Verified sales', exact: true })).toHaveAttribute('href', '/admin/collector-sales');
   await expect(page.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'false');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('link', { name: 'Studio tools' }).click();
+  await expect(page.getByRole('heading', { name: 'Studio tools' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Succession' })).toHaveAttribute('href', '/admin/succession');
+  await expect(page.getByRole('link', { name: 'Screen development system' })).toHaveAttribute('href', '/admin/screens');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 
@@ -139,6 +167,11 @@ test('admin work queue shows exact actions and never reports clear work on an in
   await page.goto('/admin');
   await expect(page.getByText(/complete work queue could not be checked/i)).toBeVisible();
   await expect(page.getByText('Nothing is waiting')).toHaveCount(0);
+  complete = true;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('link', { name: /INV-OPEN.*Open invoice/ })).toHaveAttribute(
+    'href', '/admin/invoices?invoiceId=2',
+  );
 });
 
 test('invoice and viewing work links select the exact record on fresh load and URL change', async ({ page }) => {
@@ -295,11 +328,10 @@ test('admin Artwork navigation reaches registration and its identity follow-up a
 
   await page.goto('/admin');
   const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
-  await expect(navigation.getByRole('link', { name: 'Register an artwork' })).toHaveAttribute('href', '/admin/register');
-  await expect(navigation.getByRole('link', { name: 'Artworks' })).toHaveAttribute('href', '/admin/artworks');
+  await expect(page.getByRole('link', { name: 'Register an artwork', exact: true })).toHaveAttribute('href', '/admin/register');
+  await expect(navigation.getByRole('link', { name: 'Artwork', exact: true })).toHaveAttribute('href', '/admin/artworks');
 
-  if ((page.viewportSize()?.width || 0) < 768) await page.getByRole('button', { name: 'Menu' }).click();
-  await navigation.getByRole('link', { name: 'Register an artwork' }).click();
+  await page.getByRole('link', { name: 'Register an artwork', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Register an artwork.' })).toBeVisible();
   await expect(page.getByText(/physical plate is optional and can come later/i)).toBeVisible();
 
@@ -365,16 +397,17 @@ test('artwork workspace keeps its header stable and renders exact relationships 
         ok: true,
         workspace: {
           catalog: { artworkId: 'UL-100', title: 'Art of Living' },
+          edition: { kind: 'unique' }, selectionScope: 'exact_record', legacySaleVerificationPath: null,
           salesRecord: { artworkRecordId: 'record-1', state: 'identity_linked' },
           identity: { keeperPieceId: 'keeper-1', publicCode: 'AR-BCDEFGHJ', state: 'registered' },
           certificate: { state: 'complete', missingFields: [] },
           invitation: { state: 'redeemed', invitationId: 'invitation-1' },
           caretaker: { state: 'active' },
-          plate: { state: 'legacy', recoveryState: 'not_required' },
+          plate: { state: 'legacy', recoveryState: 'not_required', wizardStage: null },
           sale: { state: 'verified', verifiedSaleId: 'sale-1' },
           nextAction: {
             label: 'Review caretaker experience',
-            href: '/admin/pieces?keeperPieceId=keeper-1',
+            href: '/works/UL-100?instance=AR-BCDEFGHJ',
             reason: 'The core artwork record is ready for experience review.',
           },
           activity: [{
@@ -397,25 +430,26 @@ test('artwork workspace keeps its header stable and renders exact relationships 
     artworkId: 'UL-100', keeperPieceId: 'keeper-1', artistArtworkRecordId: 'record-1',
   });
   for (const title of [
-    'Record and certificate', 'Verified sale and artwork ledger',
-    'Invitation and caretaker state', 'Public piece preview',
-    'Plate and recovery', 'Maintenance and custody history',
+    'Identity and recovery', 'Certificate', 'Sale and ledger', 'Keeper', 'Recent activity',
   ]) await expect(page.getByRole('heading', { name: title })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Review caretaker experience' })).toHaveCount(1);
-  await expect(page.getByRole('link', { name: 'Open sales record' })).toHaveAttribute(
+  await expect(page.locator('.studio-record').getByRole('heading', { level: 2 })).toHaveCount(5);
+  await expect(page.getByText('Unique work · UL-100 · AR-BCDEFGHJ', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Edit certificate' })).toHaveAttribute('href', '/admin/certificates?artworkId=UL-100');
+  await expect(page.getByRole('link', { name: 'View invitations' })).toHaveAttribute('href', '/admin/invitations?keeperPieceId=keeper-1');
+  await expect(page.getByRole('link', { name: 'Open sale and ledger' })).toHaveAttribute(
     'href', '/admin/collector-sales?artistArtworkRecordId=record-1&keeperPieceId=keeper-1',
   );
-  await expect(page.getByRole('link', { name: 'Open public piece preview' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'View public piece' })).toHaveAttribute(
     'href', '/works/UL-100?instance=AR-BCDEFGHJ',
   );
-  await expect(page.getByRole('link', { name: 'Open exact piece in plate registry' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open plate registry' })).toHaveAttribute(
     'href', '/admin/pieces?keeperPieceId=keeper-1',
   );
   await expect(page.getByRole('link', { name: 'Open Maintenance' })).toHaveAttribute(
     'href', '/admin/maintenance?artworkId=UL-100&keeperPieceId=keeper-1',
   );
-  await page.getByRole('link', { name: 'Review caretaker experience' }).focus();
-  await expect(page.getByRole('link', { name: 'Review caretaker experience' })).toBeFocused();
+  await page.getByRole('link', { name: 'View public piece' }).focus();
+  await expect(page.getByRole('link', { name: 'View public piece' })).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact || ''))).toEqual([]);
@@ -428,22 +462,40 @@ test('artwork workspace focuses missing and conflicting exact identity states', 
     body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
   }));
   let error = 'workspace_not_found';
-  await page.route('**/api/admin/artwork-workspace**', route => route.fulfill({
-    status: error === 'workspace_not_found' ? 404 : 409,
-    contentType: 'application/json',
-    body: JSON.stringify({ ok: false, error }),
-  }));
+  const requestedSelectors: string[] = [];
+  await page.route('**/api/admin/artwork-workspace**', route => {
+    requestedSelectors.push(new URL(route.request().url()).search);
+    return route.fulfill({
+      status: error === 'workspace_not_found' ? 404 : error === 'workspace_selector_conflict' ? 409 : 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, error }),
+    });
+  });
 
   await page.goto('/admin/artworks/MISSING-100');
   const missing = page.getByRole('heading', { name: 'Artwork workspace not found' });
   await expect(missing).toBeVisible();
-  await expect.poll(() => missing.evaluate(node => node.parentElement?.parentElement === document.activeElement)).toBe(true);
+  await expect(page.locator('.studio-record [tabindex="-1"]').filter({ has: missing })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
 
   error = 'workspace_selector_conflict';
   await page.goto('/admin/artworks/UL-100?instance=wrong-instance&record=record-1');
   const conflict = page.getByRole('alert').filter({ hasText: /do not identify the same artwork/i });
   await expect(conflict).toBeVisible();
-  await expect.poll(() => conflict.evaluate(node => node.parentElement === document.activeElement)).toBe(true);
+  await expect(page.locator('.studio-record [tabindex="-1"]').filter({ has: conflict })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
+
+  error = 'workspace_unavailable';
+  await page.reload();
+  const unavailable = page.getByRole('alert').filter({ hasText: 'The artwork record could not be loaded.' });
+  await expect(unavailable).toBeVisible();
+  await expect(page.locator('.studio-record [tabindex="-1"]').filter({ has: unavailable })).toBeFocused();
+  const attemptsBeforeRetry = requestedSelectors.length;
+  const lastSelector = requestedSelectors.at(-1);
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect.poll(() => requestedSelectors.length).toBe(attemptsBeforeRetry + 1);
+  expect(requestedSelectors.at(-1)).toBe(lastSelector);
+  await expect(unavailable).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 
@@ -1012,8 +1064,9 @@ test('certificate deep link selects and loads the exact artwork on a fresh load'
   });
 
   await page.goto('/admin/certificates?artworkId=UL-100');
-  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveValue('UL-100');
-  await expect(page.getByText(/"materials":/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: / · UL-100$/ })).toBeVisible();
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Public certificate' }).getByText('Wood', { exact: true })).toBeVisible();
   expect(requestedArtworkId).toBe('UL-100');
 });
 
@@ -1130,14 +1183,14 @@ test('opens Maintenance from Artwork and renders the private five-section detail
   }
   const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
   await expect(navigation.getByText('Artwork', { exact: true })).toBeVisible();
-  await navigation.getByRole('link', { name: 'Artworks' }).click();
+  await navigation.getByRole('link', { name: 'Artwork', exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/artworks$/);
   await expect(page.getByRole('heading', { name: 'Artworks', exact: true })).toBeVisible();
   const artworkLink = page.getByRole('link', { name: /Art of Living - 32.*UL-100.*AR-7KQ9M2WX/ });
   await expect(artworkLink).toHaveAttribute('href', '/admin/artworks/UL-100?instance=kp-local-maintenance');
   await artworkLink.click();
   await expect(page).toHaveURL(/\/admin\/artworks\/UL-100\?instance=kp-local-maintenance$/);
-  await expect(page.getByRole('heading', { name: 'Maintenance and custody history' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Recent activity', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Open Maintenance' }).click();
   await expect(page).toHaveURL(/\/admin\/maintenance\?artworkId=UL-100&keeperPieceId=kp-local-maintenance$/);
   await expect(page.getByRole('heading', { name: 'Maintenance', exact: true })).toBeVisible();

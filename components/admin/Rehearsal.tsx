@@ -80,13 +80,11 @@ function statusLabel(status: StepStatus): string {
   return 'waiting';
 }
 
-const buttonClass =
-  'min-h-11 inline-block font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
-const quietButtonClass =
-  'min-h-11 inline-block font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
+// Buttons come from src/master.css. Do not rebuild them from utilities.
+const buttonClass = 'btn btn-primary';
+const quietButtonClass = 'btn btn-outline';
 const dimLinkClass = 'inline-block font-sans text-sm text-wood-400 underline underline-offset-4 hover:text-wood-600';
-const disabledLinkClass =
-  'inline-block font-label text-[11px] uppercase tracking-[0.14em] text-wood-300 border border-wood-200 px-4 py-2 cursor-not-allowed';
+const disabledLinkClass = 'btn btn-outline opacity-50 cursor-not-allowed';
 
 function linkClassFor(status: StepStatus): string {
   if (status === 'current') return buttonClass;
@@ -120,7 +118,7 @@ const StepShell: React.FC<React.PropsWithChildren<{
         {name}
       </h3>
       <span
-        className={`font-label text-[10px] uppercase tracking-[0.15em] ${
+        className={`font-label text-micro uppercase tracking-[0.15em] ${
           status === 'current' ? 'text-bronze-700' : status === 'done' ? 'text-wood-500' : 'text-wood-400'
         }`}
       >
@@ -327,7 +325,7 @@ const Rehearsal: React.FC = () => {
             {chain.confirmedAt ? (
               <p className="font-sans text-sm text-wood-500">Confirmed {formatDate(chain.confirmedAt)}.</p>
             ) : piecesError ? (
-              <p className="font-sans text-sm text-red-700" role="alert">{piecesError}</p>
+              <p className="font-sans text-sm text-danger" role="alert">{piecesError}</p>
             ) : newestRow ? (
               <div className="border border-wood-200 bg-paper-50 p-4">
                 <p className="font-sans text-sm text-wood-700">

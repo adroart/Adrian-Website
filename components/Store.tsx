@@ -86,12 +86,12 @@ const ProcessBlock: React.FC = () => (
     <div className="break-inside-avoid mb-6 sm:mb-8 lg:mb-10">
         <div className="bg-wood-100 border border-wood-200 p-7">
             <span className="font-label text-xs uppercase tracking-[0.1em] text-bronze-600 mb-3 block font-semibold">The Studio</span>
-            <p className="font-sans text-base text-wood-700 leading-[1.7]">
+            <p className="font-sans text-base text-wood-700 leading-prose">
                 I start with silence. Before the laser is turned on, there is the intention. Often the design arrives in a flash during meditation or tea ceremony. The execution is a dance between digital precision and analog chaos.
             </p>
             <Link
                 to="/writings/the-practice-creation"
-                className="mt-4 inline-flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-bronze-600 hover:text-bronze-700 font-semibold transition-colors"
+                className="mt-4 inline-flex items-center gap-1.5 font-label text-label uppercase tracking-[0.1em] text-bronze-600 hover:text-bronze-700 font-semibold transition-colors"
             >
                 How I create <ArrowRight size={11} />
             </Link>
@@ -103,7 +103,7 @@ const MaterialBlock: React.FC = () => (
     <div className="break-inside-avoid mb-6 sm:mb-8 lg:mb-10">
         <div className="border border-wood-200 p-7">
             <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-3 block font-semibold">On Materials</span>
-            <p className="font-sans text-base text-wood-700 leading-[1.7]">
+            <p className="font-sans text-base text-wood-700 leading-prose">
                 Birch, basswood, walnut. Indonesian hardwoods selected by hand. The grain itself is part of the composition. Beneath every layer of paint and gold leaf, the wood breathes.
             </p>
         </div>
@@ -174,12 +174,12 @@ const ShopHero: React.FC<{
                         <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-all duration-500" />
                     </div>
                     <div className="p-6 md:p-8">
-                        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">{main.category}</span>
+                        <span className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold">{main.category}</span>
                         <h2 className="font-serif text-2xl md:text-3xl text-wood-900 font-medium mt-1.5 mb-3 leading-snug group-hover:text-bronze-700 transition-colors">
                             {main.title}
                         </h2>
                         {main.material && (
-                            <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold mb-3">{main.material}</p>
+                            <p className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold mb-3">{main.material}</p>
                         )}
                         <div className="flex items-center justify-between">
                             <span className="font-sans text-lg text-wood-700 font-medium">
@@ -206,7 +206,7 @@ const ShopHero: React.FC<{
                             <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-all duration-500" />
                         </div>
                         <div className="p-5 md:p-6 shrink-0">
-                            <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">{second.category}</span>
+                            <span className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold">{second.category}</span>
                             <h3 className="font-serif text-xl text-wood-900 font-medium mt-1 mb-2 leading-snug group-hover:text-bronze-700 transition-colors">
                                 {second.title}
                             </h3>
@@ -255,7 +255,7 @@ const ShopCollectionCard: React.FC<{
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4">
                 <h4 className="font-serif text-xl text-paper-50 font-medium leading-tight">{collection.name}</h4>
-                <span className="font-label text-[11px] uppercase tracking-[0.1em] text-paper-300 font-bold mt-1 block">
+                <span className="font-label text-label uppercase tracking-[0.1em] text-paper-300 font-bold mt-1 block">
                     {count} {count === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active</span>}
                 </span>
@@ -297,7 +297,7 @@ const ProductCard: React.FC<{
                     <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/70 transition-all duration-500 flex flex-col justify-end p-4 pointer-events-none">
                         <div className="translate-y-3 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 space-y-1.5">
                             {product.material && (
-                                <p className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-300 font-semibold">
+                                <p className="font-label text-label uppercase tracking-[0.1em] text-bronze-300 font-semibold">
                                     {product.material}
                                 </p>
                             )}
@@ -306,7 +306,7 @@ const ProductCard: React.FC<{
                                     {product.description}
                                 </p>
                             )}
-                            <span className="font-label text-[11px] uppercase tracking-[0.1em] text-paper-50 font-semibold inline-block mt-0.5">
+                            <span className="font-label text-label uppercase tracking-[0.1em] text-paper-50 font-semibold inline-block mt-0.5">
                                 View
                             </span>
                         </div>
@@ -316,7 +316,7 @@ const ProductCard: React.FC<{
 
             {/* Label band - matching GalleryTileCard style */}
             <div className="px-1 pt-3 pb-1">
-                <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
+                <span className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold">
                     {product.category}
                 </span>
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium mt-1">
@@ -325,14 +325,14 @@ const ProductCard: React.FC<{
 
                 {/* Material · Dimensions dots line */}
                 {(product.material || product.dimensions) && (
-                    <p className="mt-1 font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold leading-relaxed">
+                    <p className="mt-1 font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold leading-relaxed">
                         {[product.material, product.dimensions].filter(Boolean).join(' · ')}
                     </p>
                 )}
 
                 {/* Edition info */}
                 {product.edition && (
-                    <p className="mt-0.5 font-label text-[11px] uppercase tracking-[0.1em] text-bronze-600 font-semibold">
+                    <p className="mt-0.5 font-label text-label uppercase tracking-[0.1em] text-bronze-600 font-semibold">
                         {product.edition}
                     </p>
                 )}
@@ -344,7 +344,7 @@ const ProductCard: React.FC<{
                                 ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
                                 : formatPrice(product.price)}
                         </span>
-                        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
+                        <span className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold">
                             {product.hasVariants ? 'Multiple sizes' : product.isReadyToShip ? 'Ready to ship' : 'Made to order'}
                         </span>
                     </div>
@@ -434,19 +434,19 @@ const InspectionDrawer: React.FC<{
                     <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full animate-pulse ${
                             product.available
-                                ? (product.isReadyToShip || product.hasVariants ? 'bg-green-500' : 'bg-bronze-500')
+                                ? (product.isReadyToShip || product.hasVariants ? 'bg-success' : 'bg-bronze-500')
                                 : 'bg-wood-400'
                         }`} />
                         <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold">
                             Ref: {product.id}
                         </span>
                         {product.available && product.hasVariants && (
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 bg-wood-100 border border-wood-200 px-2 py-0.5 font-semibold">
+                            <span className="font-label text-label uppercase tracking-[0.2em] text-wood-600 bg-wood-100 border border-wood-200 px-2 py-0.5 font-semibold">
                                 Multiple Sizes
                             </span>
                         )}
                         {product.available && !product.isReadyToShip && !product.hasVariants && (
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 bg-bronze-50 border border-bronze-200 px-2 py-0.5 font-semibold">
+                            <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 bg-bronze-50 border border-bronze-200 px-2 py-0.5 font-semibold">
                                 Crafted for You
                             </span>
                         )}
@@ -455,7 +455,7 @@ const InspectionDrawer: React.FC<{
                         onClick={onClose}
                         className="p-4 -mr-4 hover:bg-wood-100 rounded-full transition-colors group flex items-center gap-2"
                     >
-                        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold hidden sm:inline">Close</span>
+                        <span className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold hidden sm:inline">Close</span>
                         <X size={28} className="text-wood-900 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
@@ -483,7 +483,7 @@ const InspectionDrawer: React.FC<{
                     <Link
                         to={piecePath(product)}
                         onClick={onClose}
-                        className="flex items-center gap-1.5 mb-8 font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 hover:text-bronze-600 font-semibold transition-colors"
+                        className="flex items-center gap-1.5 mb-8 font-label text-label uppercase tracking-[0.1em] text-wood-700 hover:text-bronze-600 font-semibold transition-colors"
                     >
                         <ArrowRight size={10} />
                         View in full gallery
@@ -494,7 +494,7 @@ const InspectionDrawer: React.FC<{
                         <h1 className="text-3xl md:text-4xl font-serif text-wood-900 mb-4 leading-[1.1] font-medium">
                             {product.title}
                         </h1>
-                        <p className="font-sans text-lg text-wood-700 leading-[1.7] font-normal">
+                        <p className="font-sans text-lg text-wood-700 leading-prose font-normal">
                             {product.longDescription || product.description}
                         </p>
 
@@ -503,7 +503,7 @@ const InspectionDrawer: React.FC<{
                             <Link
                                 to={`/writings/${relatedStorySlug}`}
                                 onClick={onClose}
-                                className="mt-4 inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.1em] text-bronze-600 hover:text-bronze-700 font-semibold transition-colors"
+                                className="mt-4 inline-flex items-center gap-2 font-label text-label uppercase tracking-[0.1em] text-bronze-600 hover:text-bronze-700 font-semibold transition-colors"
                             >
                                 <BookOpen size={12} />
                                 Read the story behind this piece
@@ -590,7 +590,7 @@ const InspectionDrawer: React.FC<{
                                             <h4 className="font-sans text-base text-wood-900 font-medium leading-snug group-hover:text-bronze-700 transition-colors truncate">
                                                 {rp.title}
                                             </h4>
-                                            <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold mt-0.5 truncate">
+                                            <p className="font-label text-label uppercase tracking-[0.1em] text-wood-700 font-semibold mt-0.5 truncate">
                                                 {rp.category}
                                             </p>
                                             <span className="font-sans text-sm text-wood-600 font-medium mt-1 block">
@@ -743,7 +743,7 @@ const ControlDeck: React.FC<{
 
                 {/* Results count */}
                 <span
-                    className="hidden lg:inline font-label text-[10px] uppercase tracking-[0.15em] text-wood-300 font-semibold shrink-0"
+                    className="hidden lg:inline font-label text-micro uppercase tracking-[0.15em] text-wood-300 font-semibold shrink-0"
                     aria-live="polite"
                     aria-atomic="true"
                 >
@@ -793,7 +793,7 @@ const CommissionSection: React.FC = () => (
                 <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-5 leading-snug">
                     Don't see exactly what you're looking for?
                 </h2>
-                <p className="font-sans text-lg text-wood-700 leading-[1.7] mb-8">
+                <p className="font-sans text-lg text-wood-700 leading-prose mb-8">
                     Every piece here can be a starting point for something uniquely yours. A different size, a different material, or a completely new vision.
                 </p>
                 <Link
@@ -934,15 +934,15 @@ const Store: React.FC = () => {
     }, [filteredProducts, visibleCount]);
 
     return (
-        <section className="pt-24 min-h-screen bg-paper-50 animate-fade-in">
+        <section className="pt-24 min-h-screen bg-surface-page animate-fade-in">
 
             {/* Checkout banners */}
             {checkoutBanner === 'success' && (
-                <div className="bg-green-50 border-b border-green-200 px-6 py-4 flex items-center justify-between">
-                    <p className="font-label text-xs uppercase tracking-[0.2em] text-green-800 font-semibold">
+                <div className="bg-success-soft border-b border-success-line px-6 py-4 flex items-center justify-between">
+                    <p className="font-label text-xs uppercase tracking-[0.2em] text-success font-semibold">
                         Your order was placed successfully. Thank you.
                     </p>
-                    <button onClick={() => setCheckoutBanner(null)} className="text-green-600 hover:text-green-900 transition-colors">
+                    <button onClick={() => setCheckoutBanner(null)} className="text-success hover:text-success transition-colors">
                         <X size={16} />
                     </button>
                 </div>
@@ -964,7 +964,7 @@ const Store: React.FC = () => {
                 <h1 className="font-display text-5xl md:text-7xl text-wood-900 mb-6 font-normal tracking-tight leading-[1.05]">
                     Available Pieces
                 </h1>
-                <p className="font-serif text-xl text-wood-700 max-w-2xl mx-auto leading-[1.7]">
+                <p className="font-serif text-xl text-wood-700 max-w-2xl mx-auto leading-prose">
                     A curated selection of works ready for your home, alongside pieces made to your commission.
                 </p>
             </div>

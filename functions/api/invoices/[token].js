@@ -10,7 +10,8 @@ export async function onRequestGet({ env, params }) {
   }
 
   const row = await env.DB
-    .prepare("SELECT * FROM invoices WHERE public_token = ?1 AND status != 'void'")
+    .prepare(`SELECT * FROM invoices WHERE public_token = ?1
+      AND sent_at IS NOT NULL AND total_cents > 0 AND status NOT IN ('draft', 'void')`)
     .bind(token)
     .first();
 

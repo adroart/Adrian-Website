@@ -32,8 +32,15 @@ test('sales controls keep Save primary and selection visible through hover', asy
     height: element.getBoundingClientRect().height,
     transform: getComputedStyle(element).textTransform,
   }));
-  expect(primary.height).toBeGreaterThanOrEqual(44);
-  expect(primary.transform).toBe('none');
+  // Master control height (src/master.css): 32px on desktop, 44px on touch screens.
+  const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+  if (touch) expect(primary.height).toBeGreaterThanOrEqual(44);
+  else {
+    expect(primary.height).toBeGreaterThanOrEqual(28);
+    expect(primary.height).toBeLessThanOrEqual(34);
+  }
+  // Master button label: Karla 11px uppercase, like every other button on the site.
+  expect(primary.transform).toBe('uppercase');
   expect(primary.background).not.toBe(await share.evaluate(element => getComputedStyle(element).backgroundColor));
   await expect(page.getByRole('button', { name: 'Fixture transfer' })).toBeVisible();
   const card = page.locator('.studio-sales-payment-list > div').first();
