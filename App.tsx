@@ -43,6 +43,7 @@ const Succession = lazy(() => import('./components/admin/Succession'));
 const ScreenDevelopment = lazy(() => import('./components/admin/ScreenDevelopment'));
 const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
 const CollectorSales = lazy(() => import('./components/admin/CollectorSales'));
+const PaidInvoiceReview = lazy(() => import('./components/admin/PaidInvoiceReview'));
 const AtlasPendingSales = lazy(() => import('./components/admin/AtlasPendingSales'));
 const CertificateEditor = lazy(() => import('./components/admin/CertificateEditor'));
 const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
@@ -198,6 +199,7 @@ const SiteShell: React.FC = () => {
               <Route path="registrations" element={<RegistrationsRedirect />} />
               <Route path="invitations" element={<ArtworkInvitations />} />
               <Route path="collector-sales" element={<CollectorSales />} />
+              <Route path="collector-sales/invoices/:invoiceId" element={<PaidInvoiceReview />} />
               <Route path="atlas-sales" element={<AtlasPendingSales />} />
               <Route path="certificates" element={<CertificateEditor artworks={FULL_ARCHIVE.map(({ id: artworkId, title }) => ({ id: artworkId, title }))} />} />
               <Route path="maintenance" element={<AdminMaintenance />} />

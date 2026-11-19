@@ -361,7 +361,7 @@ export async function onRequest({ request, env }) {
         administrator: authority, createdAt: recordedAt,
       });
       status = result.replayed ? 200 : 201;
-    } else if (body.action === 'createSale' && exactKeys(body, [
+    } else if (body.action === 'createSale' && !key.startsWith('paid-invoice:') && exactKeys(body, [
       'action', 'occurrence', 'buyerEmail', 'total', 'privateReference', 'privateNotes',
       'reconnectionCaseId', 'artworks', 'idempotencyKey',
     ])) {

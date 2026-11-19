@@ -1,6 +1,6 @@
 import './admin/StudioSalesControls.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AdminAlert, AdminPage } from './admin/AdminPage';
 import { exactAdminPageSelection } from './admin/adminMode';
 import type {
@@ -966,6 +966,12 @@ const AdminInvoices: React.FC = () => {
                     )}
                   </div>
                 </div>
+                {savedInvoice?.status === 'paid' && savedInvoice.totalCents > 0
+                  && savedInvoice.amountPaidCents === savedInvoice.totalCents && (
+                  <div className="mt-5 border-t border-wood-100 pt-5">
+                    <Link className="studio-sales-secondary" to={`/admin/collector-sales/invoices/${savedInvoice.id}`}>Review sale</Link>
+                  </div>
+                )}
                 {savedInvoice?.publicUrlPath && (
                   <div className="mt-5 border-t border-wood-100 pt-5">
                     <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Public link</p>
