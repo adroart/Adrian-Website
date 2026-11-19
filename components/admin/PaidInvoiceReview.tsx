@@ -17,9 +17,9 @@ type Confirmation = {
   revision: string; artworkId: string; edition: { kind: 'unique' } | { kind: 'numbered'; number: number };
   saleDate: string; artworkPriceCents: number | null; singleArtwork: true;
 };
-const label = 'block font-sans text-sm font-semibold text-wood-800';
-const input = 'mt-1 block min-h-11 w-full border border-wood-300 bg-paper-50 px-3 py-2 font-sans text-base text-wood-900';
-const link = 'font-sans font-semibold text-bronze-800 underline underline-offset-4';
+const label = 'block font-body text-sm font-semibold text-wood-800';
+const input = 'mt-1 block min-h-[var(--control-h)] w-full border border-wood-300 bg-paper-50 px-3 py-2 font-body text-base text-wood-900';
+const link = 'font-body font-semibold text-bronze-800 underline underline-offset-4';
 const catalog = [...FULL_ARCHIVE].sort((a, b) => a.title.localeCompare(b.title));
 
 const messages: Record<string, string> = {
@@ -165,7 +165,7 @@ function ReviewForm({ invoiceId }: { invoiceId: string }) {
     {error && <AdminAlert tone="error">{error} <button type="button" className={link} disabled={busy} onClick={() => setRetry(value => value + 1)}>Reload review</button></AdminAlert>}
     {locked && <AdminSection title="Unlock the private registry">
       <form className="space-y-3" onSubmit={unlockReview}>
-        {review && <p className="font-sans text-sm text-wood-800">Your confirmation is still here. Unlock to continue.</p>}
+        {review && <p className="font-body text-sm text-wood-800">Your confirmation is still here. Unlock to continue.</p>}
         {unlockError && <AdminAlert tone="error" live>{unlockError}</AdminAlert>}
         <label className={`${label} max-w-xs`}>Registry secret
           <input className={input} type="password" name="registrySecret" autoComplete="off" required autoFocus disabled={unlocking} />
@@ -175,12 +175,12 @@ function ReviewForm({ invoiceId }: { invoiceId: string }) {
     </AdminSection>}
     {review?.invoiceChangedSinceLink && <AdminAlert tone="warning">The invoice has changed since this sale was linked. Open Verified Sales to see the recorded facts.</AdminAlert>}
     {invoice && <AdminSection title={`${invoice.number} · ${invoice.title}`}>
-      <p className="font-sans text-sm text-wood-800">{invoice.buyerName}{invoice.buyerEmail && ` · ${invoice.buyerEmail}`} · {review?.invoiceChangedSinceLink ? 'Current invoice total' : 'Paid'} {formatMoney(invoice.totalCents, invoice.currency)} {invoice.currency}</p>
-      {invoice.description && <p className="mt-2 whitespace-pre-wrap font-sans text-sm text-wood-700">{invoice.description}</p>}
-      <ul className="mt-3 divide-y divide-wood-200 font-sans text-sm text-wood-800">
+      <p className="font-body text-sm text-wood-800">{invoice.buyerName}{invoice.buyerEmail && ` · ${invoice.buyerEmail}`} · {review?.invoiceChangedSinceLink ? 'Current invoice total' : 'Paid'} {formatMoney(invoice.totalCents, invoice.currency)} {invoice.currency}</p>
+      {invoice.description && <p className="mt-2 whitespace-pre-wrap font-body text-sm text-wood-700">{invoice.description}</p>}
+      <ul className="mt-3 divide-y divide-wood-200 font-body text-sm text-wood-800">
         {invoice.lineItems.map((item, index) => <li key={index} className="flex justify-between gap-3 py-1.5"><span>{item.description}{item.terms && <small className="block">{item.terms}</small>}{item.hasVariants && <small className="block">Options were offered. Confirm the agreed piece and edition from your correspondence.</small>}</span>{!item.hasVariants && item.amountCents !== null && <span className="shrink-0">{formatMoney(item.amountCents, invoice.currency)}</span>}</li>)}
       </ul>
-      {invoice.shipping && <p className="mt-2 font-sans text-sm text-wood-700">Shipping · {invoice.shipping}</p>}
+      {invoice.shipping && <p className="mt-2 font-body text-sm text-wood-700">Shipping · {invoice.shipping}</p>}
     </AdminSection>}
     {review?.linkedSale && <AdminSection title="Verified sale linked">
       <p className="mb-3">{review.linkedSale.keeperPieceId ? 'The matching artwork identity is linked.' : 'The artwork and edition are recorded. Register its physical identity from Verified Sales when ready.'}</p>
@@ -199,9 +199,9 @@ function ReviewForm({ invoiceId }: { invoiceId: string }) {
             <label className={label}>Sale date<input className={input} type="date" required value={saleDate} onChange={event => setSaleDate(event.target.value)} /></label>
             <label className={label}>Artwork price, excluding shipping (optional)<input className={input} type="number" min="0" step="0.01" value={artworkPrice} onChange={event => setArtworkPrice(event.target.value)} /></label>
           </div>
-          <label className="flex min-h-11 items-center gap-3 font-sans text-sm text-wood-800"><input type="checkbox" className="size-5" required checked={singleArtwork} onChange={event => setSingleArtwork(event.target.checked)} />This invoice covers one artwork.</label>
+          <label className="flex min-h-[var(--control-h)] items-center gap-3 font-body text-sm text-wood-800"><input type="checkbox" className="size-5" required checked={singleArtwork} onChange={event => setSingleArtwork(event.target.checked)} />This invoice covers one artwork.</label>
         </fieldset>
-        {artworkId && kind && <p className="font-sans text-sm text-wood-800">Confirm {artwork?.title || artworkId} · {kind === 'unique' ? 'unique work' : `edition ${editionNumber || '…'}`}.</p>}
+        {artworkId && kind && <p className="font-body text-sm text-wood-800">Confirm {artwork?.title || artworkId} · {kind === 'unique' ? 'unique work' : `edition ${editionNumber || '…'}`}.</p>}
         <button className="studio-sales-primary" type="submit" disabled={locked || busy}>{busy ? 'Saving…' : attempt ? 'Retry same confirmation' : 'Confirm and link sale'}</button>
       </form>
     </AdminSection>}
