@@ -20,6 +20,7 @@ export type CollectorFieldIdentity = {
   status: 'registered' | 'private' | 'unregistered';
   ordinal: number | null;
   city: CollectorFieldCity | null;
+  placedBy?: string;
   brightness: 1 | 0.24;
   markerSize: 1;
 };
@@ -132,7 +133,7 @@ function parseIdentity(value: unknown): CollectorFieldIdentity {
   const identity = record(value);
   exact(identity, [
     'publicCode', 'editionLabel', 'status', 'ordinal', 'city', 'brightness',
-    'markerSize',
+    'markerSize', ...('placedBy' in identity ? ['placedBy'] : []),
   ]);
   const publicCode = nullableText(identity.publicCode, 11);
   if (publicCode !== null && !/^AR-[A-Z0-9]{8}$/.test(publicCode)) invalid();
@@ -146,6 +147,8 @@ function parseIdentity(value: unknown): CollectorFieldIdentity {
     ordinal = identity.ordinal;
   }
   const city = parseCity(identity.city);
+  const placedBy = 'placedBy' in identity ? text(identity.placedBy, 200) : undefined;
+  if (placedBy && (status !== 'registered' || !city)) invalid();
   if (identity.markerSize !== COLLECTOR_FIELD_NEUTRAL_MARKER_SIZE) invalid();
   if (status === 'registered') {
     if (!city || publicCode === null || ordinal === null
@@ -163,6 +166,7 @@ function parseIdentity(value: unknown): CollectorFieldIdentity {
     status,
     ordinal,
     city,
+    ...(placedBy ? { placedBy } : {}),
     brightness: identity.brightness as 1 | 0.24,
     markerSize: 1,
   };

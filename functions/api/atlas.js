@@ -191,10 +191,14 @@ export async function buildPublicAtlasState(env, generatedAt = new Date().toISOS
         ORDER BY artwork_id ASC`,
     ).all(),
     env.DB.prepare(
-      `SELECT privacy.keeper_piece_id, privacy.city_id, city.label AS city_label
+      `SELECT privacy.keeper_piece_id, privacy.city_id, city.label AS city_label,
+              CASE WHEN identity_privacy.share_name = 1 AND keeper.emailVerified = 1
+                   THEN substr(trim(keeper.name), 1, 200) END AS placed_by
          FROM collector_piece_privacy AS privacy
          JOIN keeper_pieces AS piece ON piece.id = privacy.keeper_piece_id
          JOIN users AS account ON account.id = privacy.user_id
+         LEFT JOIN collector_person_privacy AS identity_privacy ON identity_privacy.user_id = account.id
+         LEFT JOIN user AS keeper ON keeper.id = account.auth_user_id
          JOIN profiles AS profile ON profile.user_id = privacy.user_id
          JOIN collector_curated_cities AS city ON city.id = privacy.city_id
         WHERE privacy.share_city = 1
