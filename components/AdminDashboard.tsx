@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
                     {stateText(item.state)} · {item.signal}
                   </span>
                 </span>
-                <span className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-wood-500">
+                <span className="font-sans text-micro font-semibold uppercase tracking-[0.12em] text-wood-500">
                   {item.actionLabel}
                 </span>
               </Link>

@@ -241,7 +241,7 @@ function PublicIdentityRedirectState() {
             aria-live="polite"
         >
             <div className="max-w-2xl w-full border border-wood-200 p-8 md:p-12 text-center">
-                <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                <h1 className="font-label text-label uppercase tracking-[0.2em] text-wood-400 font-semibold">
                     Opening the verified artwork record
                 </h1>
             </div>
@@ -313,7 +313,7 @@ function DraftArtworkRecord({
                 <div className="border border-wood-200 p-8 md:p-12">
                     <div className="border border-wood-100 p-6 md:p-10">
                         <div className="text-center mb-10">
-                            <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
+                            <p className="font-label text-label uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
                                 Adrian Rasmussen
                             </p>
                             {followsIdentity ? (
@@ -326,7 +326,7 @@ function DraftArtworkRecord({
                                 </h1>
                             )}
                             {draft.series && (
-                                <p className="font-sans text-[13px] text-wood-400 tracking-wide">{draft.series} Series</p>
+                                <p className="font-sans text-caption text-wood-400 tracking-wide">{draft.series} Series</p>
                             )}
                         </div>
                         <OrnamentalDivider />
@@ -347,11 +347,11 @@ function DraftArtworkRecord({
                             </div>
                         )}
                         {!identity && draft.description && (
-                            <p className="font-sans text-[15px] text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
+                            <p className="font-sans text-meta text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
                                 {draft.description}
                             </p>
                         )}
-                        <p className="font-sans text-[13px] text-wood-400 text-center">Registered · in the artist's registry</p>
+                        <p className="font-sans text-caption text-wood-400 text-center">Registered · in the artist's registry</p>
                         {identity && (
                             <div className="mt-10">
                                 <CertificateScreen
@@ -385,7 +385,7 @@ function WorkNotFound({ compact }: { compact: boolean }) {
     return (
         <section className={`${compact ? 'pt-16' : 'min-h-screen pt-32'} pb-32 px-6 flex items-center justify-center`}>
             <div className="max-w-xl text-center">
-                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-6 font-semibold">
+                <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 block mb-6 font-semibold">
                     Works Registry
                 </span>
                 {compact ? (
@@ -393,7 +393,7 @@ function WorkNotFound({ compact }: { compact: boolean }) {
                 ) : (
                     <h1 className="font-serif text-4xl md:text-5xl text-wood-900 mb-6 font-medium">Work Not Found</h1>
                 )}
-                <p className="font-sans text-base text-wood-600 mb-12 leading-[1.7]">
+                <p className="font-sans text-base text-wood-600 mb-12 leading-prose">
                     No record exists for this identifier. If you scanned a QR code and reached
                     this page, the piece may not yet be registered.
                 </p>
@@ -447,7 +447,7 @@ function CatalogArtworkRecord({
 
                         {/* Artist name */}
                         <div className="text-center mb-10">
-                            <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
+                            <p className="font-label text-label uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
                                 Adrian Rasmussen
                             </p>
 
@@ -462,7 +462,7 @@ function CatalogArtworkRecord({
                             )}
 
                             {artwork.series && (
-                                <p className="font-sans text-[13px] text-wood-400 tracking-wide">
+                                <p className="font-sans text-caption text-wood-400 tracking-wide">
                                     {artwork.series} Series
                                 </p>
                             )}
@@ -477,7 +477,7 @@ function CatalogArtworkRecord({
 
                         {/* Certificate label */}
                         {!identity && (
-                            <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
+                            <p className="text-center font-label text-micro uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
                                 Artwork catalogue
                             </p>
                         )}
@@ -526,7 +526,7 @@ function CatalogArtworkRecord({
                                     <div className="w-1 h-1 rotate-45 border border-wood-200" />
                                     <div className="h-px w-8 bg-wood-100" />
                                 </div>
-                                <p className="font-sans text-[15px] text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
+                                <p className="font-sans text-meta text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
                                     {artwork.longDescription || artwork.description}
                                 </p>
                             </>
@@ -535,17 +535,17 @@ function CatalogArtworkRecord({
                         {/* Provenance timeline */}
                         {!identity && provenance.length > 0 && (
                             <div className="max-w-md mx-auto mb-10">
-                                <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                                <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
                                     Provenance
                                 </p>
                                 <div className="space-y-3">
                                     {provenance.map((evt, i) => (
                                         <div key={i} className="flex items-baseline gap-4">
-                                            <span className="font-sans text-[13px] text-wood-400 shrink-0 w-10 text-right tabular-nums">
+                                            <span className="font-sans text-caption text-wood-400 shrink-0 w-10 text-right tabular-nums">
                                                 {evt.year}
                                             </span>
                                             <div className="w-px h-3 bg-bronze-200 shrink-0 self-center" />
-                                            <div className="font-sans text-[13px] text-wood-600">
+                                            <div className="font-sans text-caption text-wood-600">
                                                 <span className="text-wood-700 font-medium">
                                                     {EVENT_LABELS[evt.event]}
                                                 </span>
@@ -578,7 +578,7 @@ function CatalogArtworkRecord({
                                     <p className="font-serif text-lg text-wood-700 italic mb-1">
                                         Adrian Rasmussen
                                     </p>
-                                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                    <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                         Artist
                                     </p>
                                 </div>
@@ -602,7 +602,7 @@ function CatalogArtworkRecord({
                                 {book.body.map((para, i) => (
                                     <p
                                         key={i}
-                                        className={`font-serif text-[17px] md:text-lg text-wood-700 leading-[1.9] ${i === 0 ? 'drop-cap' : ''}`}
+                                        className={`font-serif text-body md:text-lg text-wood-700 leading-[1.9] ${i === 0 ? 'drop-cap' : ''}`}
                                     >
                                         {para}
                                     </p>
@@ -614,7 +614,7 @@ function CatalogArtworkRecord({
                             <BookSection label="From the Studio">
                                 <div className="space-y-4">
                                     {book.makersNote.map((para, i) => (
-                                        <p key={i} className="font-sans text-[15px] text-wood-600 leading-[1.8]">
+                                        <p key={i} className="font-sans text-meta text-wood-600 leading-airy">
                                             {para}
                                         </p>
                                     ))}
@@ -624,7 +624,7 @@ function CatalogArtworkRecord({
 
                         {!identity && book.materialsStory && (
                             <BookSection label="Materials">
-                                <p className="font-serif text-[17px] italic text-wood-600 leading-[1.8]">
+                                <p className="font-serif text-body italic text-wood-600 leading-airy">
                                     {book.materialsStory}
                                 </p>
                             </BookSection>
@@ -632,7 +632,7 @@ function CatalogArtworkRecord({
 
                         {book.inspiration && (
                             <BookSection label="What It Reaches Toward">
-                                <p className="font-serif text-[17px] italic text-wood-600 leading-[1.8]">
+                                <p className="font-serif text-body italic text-wood-600 leading-airy">
                                     {book.inspiration}
                                 </p>
                             </BookSection>
@@ -644,11 +644,11 @@ function CatalogArtworkRecord({
                 <div className="text-center mt-8 space-y-4 print:hidden">
                     <Link
                         to={`/creations/${artwork.id}`}
-                        className="inline-block font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
+                        className="inline-block font-label text-label uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
                     >
                         View this piece
                     </Link>
-                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-300 font-semibold">
+                    <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-300 font-semibold">
                         adrianrasmussen.com/works/{artwork.id}
                     </p>
                 </div>
@@ -797,7 +797,7 @@ function PublicIdentityRecord({
         return (
             <section className="pt-28 px-6" aria-live="polite">
                 <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
-                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                    <h1 className="font-label text-label uppercase tracking-[0.2em] text-wood-400 font-semibold">
                         Verifying artwork identity
                     </h1>
                 </div>
@@ -809,7 +809,7 @@ function PublicIdentityRecord({
         return (
             <section data-testid="public-registry-not-found" className="pt-28 px-6" role="status">
                 <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
-                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
+                    <h1 className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
                         Registry identity not found
                     </h1>
                     <p className="font-sans text-sm leading-relaxed text-wood-600">
@@ -824,7 +824,7 @@ function PublicIdentityRecord({
         return (
             <section data-testid="public-registry-unavailable" className="pt-28 px-6" role="status">
                 <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
-                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
+                    <h1 className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
                         Registry temporarily unavailable
                     </h1>
                     <p className="font-sans text-sm leading-relaxed text-wood-600 mb-7">
@@ -849,10 +849,10 @@ function PublicIdentityRecord({
             <div className="max-w-2xl mx-auto border border-bronze-300 p-6 sm:p-8 md:p-12 print:p-6">
                 <div className="border border-wood-100 p-5 sm:p-6 md:p-10 print:p-4 min-w-0">
                     <div className="text-center mb-9">
-                        <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-7 font-semibold">
+                        <p className="font-label text-micro uppercase tracking-[0.25em] text-bronze-600 mb-7 font-semibold">
                             Verified artwork identity
                         </p>
-                        <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-7 font-semibold">
+                        <p className="font-label text-label uppercase tracking-[0.3em] text-wood-400 mb-7 font-semibold">
                             {identity.artistName}
                         </p>
                         {headingLevel === 1 ? (
@@ -865,7 +865,7 @@ function PublicIdentityRecord({
                             </h2>
                         )}
                         {identity.series && (
-                            <p className="font-sans text-[13px] text-wood-400 tracking-wide break-words">
+                            <p className="font-sans text-caption text-wood-400 tracking-wide break-words">
                                 {identity.series} Series
                             </p>
                         )}
@@ -882,22 +882,22 @@ function PublicIdentityRecord({
                     </div>
 
                     <div className="max-w-md mx-auto min-w-0">
-                        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                        <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
                             Public provenance
                         </p>
                         {identity.publicProvenance.length === 0 ? (
-                            <p className="font-sans text-[13px] text-wood-500 text-center">
+                            <p className="font-sans text-caption text-wood-500 text-center">
                                 No public provenance recorded.
                             </p>
                         ) : (
                             <ol className="space-y-3">
                                 {identity.publicProvenance.map((event, index) => (
                                     <li key={`${event.year}-${event.event}-${index}`} className="flex items-start gap-3 min-w-0">
-                                        <span className="font-sans text-[13px] text-wood-400 shrink-0 max-w-[40%] break-all tabular-nums">
+                                        <span className="font-sans text-caption text-wood-400 shrink-0 max-w-[40%] break-all tabular-nums">
                                             {event.year}
                                         </span>
                                         <span className="w-px h-3 bg-bronze-200 shrink-0 mt-1" aria-hidden="true" />
-                                        <span className="font-sans text-[13px] text-wood-600 break-words min-w-0">
+                                        <span className="font-sans text-caption text-wood-600 break-words min-w-0">
                                             <span className="text-wood-700 font-medium">{EVENT_LABELS[event.event]}</span>
                                             {event.note && <span className="text-wood-500">{' · '}{event.note}</span>}
                                         </span>
@@ -909,18 +909,18 @@ function PublicIdentityRecord({
 
                     {identity.creatorHistory.length > 0 && (
                         <div className="max-w-md mx-auto mt-10 pt-10 border-t border-wood-100 min-w-0">
-                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                            <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
                                 Creator history
                             </p>
                             <ol className="space-y-5">
                                 {identity.creatorHistory.map((entry, index) => (
                                     <li key={`${entry.entryType}-${entry.title}-${index}`} className="border-l border-bronze-200 pl-4 min-w-0">
                                         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
-                                            <p className="font-label text-[10px] uppercase tracking-[0.14em] text-bronze-600 font-semibold">
+                                            <p className="font-label text-micro uppercase tracking-[0.14em] text-bronze-600 font-semibold">
                                                 {CREATOR_HISTORY_LABELS[entry.entryType]}
                                             </p>
                                             {entry.occurredAt && (
-                                                <time className="font-sans text-[11px] text-wood-400 tabular-nums" dateTime={entry.occurredAt}>
+                                                <time className="font-sans text-label text-wood-400 tabular-nums" dateTime={entry.occurredAt}>
                                                     {entry.occurredAt}
                                                 </time>
                                             )}
@@ -929,12 +929,12 @@ function PublicIdentityRecord({
                                             {entry.title}
                                         </p>
                                         {entry.role && (
-                                            <p className="mt-1 font-sans text-[12px] text-wood-500 break-words">
+                                            <p className="mt-1 font-sans text-label-lg text-wood-500 break-words">
                                                 {entry.role}
                                             </p>
                                         )}
                                         {entry.detail && (
-                                            <p className="mt-2 font-sans text-[13px] leading-relaxed text-wood-600 whitespace-pre-wrap break-words">
+                                            <p className="mt-2 font-sans text-caption leading-relaxed text-wood-600 whitespace-pre-wrap break-words">
                                                 {entry.detail}
                                             </p>
                                         )}
@@ -946,10 +946,10 @@ function PublicIdentityRecord({
 
                     {recordProbe.status === 'present' && recordProbe.publicCode === publicCode && (
                         <div className="max-w-md mx-auto mt-10 pt-10 border-t border-wood-100 text-center min-w-0 print:hidden">
-                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5">
+                            <p className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5">
                                 Permanent record
                             </p>
-                            <p className="font-sans text-[13px] leading-relaxed text-wood-600 mb-5">
+                            <p className="font-sans text-caption leading-relaxed text-wood-600 mb-5">
                                 A single file holding this artwork's identity and the instructions
                                 to verify it. It opens with no internet connection, and it can be
                                 saved anywhere.
@@ -958,7 +958,7 @@ function PublicIdentityRecord({
                                 href={`/api/records/${encodeURIComponent(publicCode)}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-block font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
+                                className="inline-block font-label text-label uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
                             >
                                 Open the permanent record
                             </a>
@@ -1064,13 +1064,13 @@ function PublicLineageHistory({ publicCode, state }: { publicCode: string; state
                 <div className="h-px w-8 bg-wood-100" />
                 <h2
                     id="registry-history-heading"
-                    className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold"
+                    className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold"
                 >
                     Registry history
                 </h2>
                 <div className="h-px w-8 bg-wood-100" />
             </div>
-            <p className="font-sans text-[12px] text-wood-400 text-center mb-6">
+            <p className="font-sans text-label-lg text-wood-400 text-center mb-6">
                 Permanent record for <span className="font-medium text-wood-600">{publicCode}</span>
             </p>
 
@@ -1086,13 +1086,13 @@ function PublicLineageHistory({ publicCode, state }: { publicCode: string; state
             )}
 
             {state.status === 'error' && (
-                <p className="border-l border-bronze-300 pl-4 py-1 font-sans text-[13px] leading-relaxed text-wood-600" role="status">
+                <p className="border-l border-bronze-300 pl-4 py-1 font-sans text-caption leading-relaxed text-wood-600" role="status">
                     This history could not be verified right now. The artwork record remains unchanged.
                 </p>
             )}
 
             {state.status === 'ready' && state.events.length === 0 && (
-                <p className="font-sans text-[13px] leading-relaxed text-wood-500 text-center">
+                <p className="font-sans text-caption leading-relaxed text-wood-500 text-center">
                     No public registry events have been recorded yet.
                 </p>
             )}
@@ -1105,20 +1105,20 @@ function PublicLineageHistory({ publicCode, state }: { publicCode: string; state
                             <li key={event.eventHash} className="relative border-l border-bronze-200 pl-5 py-0.5">
                                 <span className="absolute -left-[3px] top-2 block h-[5px] w-[5px] rotate-45 bg-bronze-500" aria-hidden="true" />
                                 <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
-                                    <p className="font-sans text-[13px] text-wood-700 font-medium">
+                                    <p className="font-sans text-caption text-wood-700 font-medium">
                                         {formatLineageEventLabel(event.eventType)}
                                     </p>
-                                    <time className="font-sans text-[11px] text-wood-400 tabular-nums" dateTime={event.eventAt}>
+                                    <time className="font-sans text-label text-wood-400 tabular-nums" dateTime={event.eventAt}>
                                         {formatLineageDate(event.eventAt)}
                                     </time>
                                 </div>
                                 {details.length > 0 && (
-                                    <p className="mt-1 font-sans text-[11px] text-wood-500 leading-relaxed">
+                                    <p className="mt-1 font-sans text-label text-wood-500 leading-relaxed">
                                         {details.map(([label, value]) => `${label}: ${value}`).join(' · ')}
                                     </p>
                                 )}
                                 <p
-                                    className="mt-2 font-mono text-[9px] leading-relaxed tracking-[0.03em] text-wood-300 break-all"
+                                    className="mt-2 font-mono text-micro leading-relaxed tracking-[0.03em] text-wood-300 break-all"
                                     title="Tamper-evident event hash"
                                 >
                                     {event.eventHash}
@@ -1150,7 +1150,7 @@ function BookSection({ label, children }: { label: string; children: React.React
         <section className="max-w-xl mx-auto mb-14">
             <div className="flex items-center gap-4 mb-6">
                 <div className="h-px w-8 bg-bronze-300" />
-                <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold">
+                <p className="font-label text-micro uppercase tracking-[0.25em] text-bronze-600 font-semibold">
                     {label}
                 </p>
                 <div className="h-px flex-1 bg-wood-100" />
@@ -1163,10 +1163,10 @@ function BookSection({ label, children }: { label: string; children: React.React
 function DetailRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex justify-between items-baseline">
-            <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
+            <span className="font-label text-label uppercase tracking-[0.15em] text-wood-400 font-semibold">
                 {label}
             </span>
-            <span className="font-sans text-[14px] text-wood-700 text-right max-w-[60%] min-w-0 ml-4 break-words">
+            <span className="font-sans text-meta text-wood-700 text-right max-w-[60%] min-w-0 ml-4 break-words">
                 {value}
             </span>
         </div>

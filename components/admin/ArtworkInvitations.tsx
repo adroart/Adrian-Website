@@ -13,7 +13,7 @@ import {
 } from '../../utils/artworkInvitations';
 
 const inputClass = 'input placeholder:text-wood-400';
-const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+const labelClass = 'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 // Buttons come from src/master.css. Do not rebuild them from utilities.
 const buttonClass = 'btn btn-outline';
 
@@ -182,7 +182,7 @@ export const ArtworkInvitations: React.FC = () => {
                     {row.intendedRecipientEmail} · {row.status} · expires {new Date(row.expiresAt).toLocaleDateString()}
                   </p>
                   {linkedInvitation?.invitationId === row.invitationId && (
-                    <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 mt-2">
+                    <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 mt-2">
                       Selected for this registered piece
                     </p>
                   )}

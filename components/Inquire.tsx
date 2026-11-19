@@ -253,7 +253,7 @@ const Inquire: React.FC = () => {
   const floatLabel = (field: string) => {
     const isUp = focused[field] || form[field as keyof FormState]?.trim();
     return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.1em] font-semibold transition-all duration-200 ${
-      isUp ? 'top-0 text-[10px] text-wood-700' : 'top-3 text-xs text-wood-700'
+      isUp ? 'top-0 text-micro text-wood-700' : 'top-3 text-xs text-wood-700'
     }`;
   };
 
@@ -405,10 +405,10 @@ const Inquire: React.FC = () => {
   );
 
   const errorBlock = sendStatus === 'ERROR' && (
-    <div className="flex flex-col gap-3 p-4 border border-wood-300 bg-white mb-4">
+    <div className="flex flex-col gap-3 p-4 border border-wood-300 bg-surface-card mb-4">
       <div className="flex items-start gap-3">
         <AlertCircle size={16} className="shrink-0 mt-0.5 text-wood-600" />
-        <p className="font-sans text-sm text-red-700">{errorMsg}</p>
+        <p className="font-sans text-sm text-danger">{errorMsg}</p>
       </div>
       {mailtoFallback && (
         <a
@@ -422,7 +422,7 @@ const Inquire: React.FC = () => {
   );
 
   return (
-    <section className="bg-paper-50 min-h-screen animate-fade-in">
+    <section className="bg-surface-page min-h-screen animate-fade-in">
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-20">
 
         {/* ── Header ─────────────────────────────────────────────────── */}
@@ -485,12 +485,12 @@ const Inquire: React.FC = () => {
                       }`}
                     />
                   </div>
-                  <div className="p-5 md:p-6 flex flex-col flex-1 bg-white">
+                  <div className="p-5 md:p-6 flex flex-col flex-1 bg-surface-card">
                     <h2 className="font-label text-lg tracking-[0.08em] text-wood-900 mb-2">
                       {path.title}
                     </h2>
                     <p
-                      className={`font-sans text-wood-600 leading-[1.7] mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
+                      className={`font-sans text-wood-600 leading-prose mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
                         isSelected ? 'max-h-40 opacity-100' : 'max-h-16 opacity-60'
                       }`}
                     >
@@ -524,7 +524,7 @@ const Inquire: React.FC = () => {
             <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
               Past Commissions Include
             </p>
-            <p className="font-sans text-lg text-wood-600 leading-[1.7]">
+            <p className="font-sans text-lg text-wood-600 leading-prose">
               Oracle deck illustrations, hand-carved furniture, festival stage designs,
               and illuminated altar pieces.
             </p>
@@ -552,13 +552,13 @@ const Inquire: React.FC = () => {
                   <h4 className="font-serif text-3xl text-wood-900 mb-4 font-medium">
                     {purchaseMode ? 'Purchase request received.' : 'The conversation has begun.'}
                   </h4>
-                  <p className="font-serif text-xl text-wood-700 leading-[1.7] mb-2">
+                  <p className="font-serif text-xl text-wood-700 leading-prose mb-2">
                     {purchaseMode
                       ? `Your request for "${pieceTitle}" is on its way to the studio.`
                       : chosenPath.successMsg
                     }
                   </p>
-                  <p className="font-serif text-wood-600 leading-[1.7] mb-10">
+                  <p className="font-serif text-wood-600 leading-prose mb-10">
                     {purchaseMode
                       ? 'I will confirm the details and follow up with next steps within a couple of days, including a separate note about shipping for your destination.'
                       : CALL_BUDGET_VALUES.has(form.budget)
@@ -608,26 +608,26 @@ const Inquire: React.FC = () => {
                     {purchaseMode && pieceTitle ? (
                       /* Purchase mode: piece summary card */
                       <div className="mb-8">
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 mb-4">
+                        <p className="font-label text-micro uppercase tracking-[0.15em] text-wood-700 mb-4">
                           Purchase request
                         </p>
-                        <div className="border border-wood-200 bg-white p-5 mb-2 space-y-2">
+                        <div className="border border-wood-200 bg-surface-card p-5 mb-2 space-y-2">
                           <p className="font-serif text-xl text-wood-900 leading-[1.3]">{pieceTitle}</p>
                           {purchaseSize && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Size</span>
+                              <span className="font-label text-micro uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Size</span>
                               {purchaseSize}
                             </p>
                           )}
                           {purchaseAddOns.length > 0 && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Add-ons</span>
+                              <span className="font-label text-micro uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Add-ons</span>
                               {purchaseAddOns.join(', ')}
                             </p>
                           )}
                           {purchaseAvailability && (
                             <p className="font-sans text-sm text-wood-600">
-                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Availability</span>
+                              <span className="font-label text-micro uppercase tracking-[0.12em] text-wood-700 font-semibold mr-2">Availability</span>
                               {purchaseAvailability}
                             </p>
                           )}
@@ -641,7 +641,7 @@ const Inquire: React.FC = () => {
                     ) : pieceTitle ? (
                       /* Prefilled commission: piece title IS the heading */
                       <div className="mb-[6px]">
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 mb-3">
+                        <p className="font-label text-micro uppercase tracking-[0.15em] text-wood-700 mb-3">
                           Commission inquiry
                         </p>
                         <p className="font-serif text-2xl md:text-3xl text-wood-900 leading-[1.25] mb-1">
@@ -675,7 +675,7 @@ const Inquire: React.FC = () => {
                     <div className="mb-[6px]">
                       <label
                         htmlFor="field-vision"
-                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
+                        className="block font-label text-micro uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
                       >
                         {!pieceTitle ? 'What wants to exist?' : null}
                       </label>
@@ -697,7 +697,7 @@ const Inquire: React.FC = () => {
                         required
                       />
                       {getFieldError('vision') && (
-                        <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
+                        <p id="vision-error" role="alert" className="font-sans text-sm text-danger mt-1.5 animate-fade-in">
                           {getFieldError('vision')}
                         </p>
                       )}
@@ -728,7 +728,7 @@ const Inquire: React.FC = () => {
                         <Check size={13} className="absolute right-0 top-6 text-bronze-600 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('name') && (
-                        <p id="name-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
+                        <p id="name-error" role="alert" className="font-sans text-sm text-danger mt-1 animate-fade-in">
                           {getFieldError('name')}
                         </p>
                       )}
@@ -758,7 +758,7 @@ const Inquire: React.FC = () => {
                         <Check size={13} className="absolute right-0 top-6 text-bronze-600 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('email') && (
-                        <p id="email-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
+                        <p id="email-error" role="alert" className="font-sans text-sm text-danger mt-1 animate-fade-in">
                           {getFieldError('email')}
                         </p>
                       )}
@@ -769,7 +769,7 @@ const Inquire: React.FC = () => {
                     <div className="mb-[6px] pt-3">
                       <label
                         htmlFor="field-vision"
-                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
+                        className="block font-label text-micro uppercase tracking-[0.15em] text-wood-700 font-semibold mb-2"
                       >
                         Notes or questions
                       </label>
@@ -854,7 +854,7 @@ const Inquire: React.FC = () => {
                         <div className="border-t border-wood-150 pt-8 mt-8 mb-8">
                           <div className="flex items-center gap-3 mb-2">
                             <span className="flex-1 h-px bg-wood-100" />
-                            <span className="font-label text-[11px] text-bronze-600 tracking-[0.15em] uppercase">
+                            <span className="font-label text-label text-bronze-600 tracking-[0.15em] uppercase">
                               Optional details
                             </span>
                             <span className="flex-1 h-px bg-wood-100" />
@@ -870,7 +870,7 @@ const Inquire: React.FC = () => {
                           <div>
                             <label
                               htmlFor="field-budget"
-                              className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 font-semibold mb-3"
+                              className="block font-label text-label uppercase tracking-[0.12em] text-wood-700 font-semibold mb-3"
                             >
                               Budget Range
                             </label>
@@ -941,7 +941,7 @@ const Inquire: React.FC = () => {
                           : 'bg-paper-50 border-wood-300'
                       }`}
                     />
-                    <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 font-semibold">
+                    <p className="font-label text-label uppercase tracking-[0.12em] text-wood-700 font-semibold">
                       {item.label}
                     </p>
                     <p className="font-sans text-sm text-wood-700 mt-1">{item.sub}</p>
@@ -967,7 +967,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   How long does a commission take?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
+                <p className="font-sans text-base text-wood-600 leading-airy max-w-[68ch]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to
                   completion. Spatial commissions and installations vary widely depending on
                   scope, anywhere from 2 months to a year. We'll establish a timeline together
@@ -979,7 +979,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
+                <p className="font-sans text-base text-wood-600 leading-airy max-w-[68ch]">
                   Most pieces are created in my studio and ship internationally. Ready-to-ship
                   items typically arrive within 2 to 3 weeks. Commissioned work ships upon
                   completion. I handle packaging personally to ensure safe arrival.
@@ -990,7 +990,7 @@ const Inquire: React.FC = () => {
                 <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   What sizes are available?
                 </h4>
-                <p className="font-sans text-base text-wood-600 leading-[1.8] max-w-[68ch]">
+                <p className="font-sans text-base text-wood-600 leading-airy max-w-[68ch]">
                   I work across all scales, from palm-sized talismans and jewelry to
                   room-filling installations. For commissions, size is part of the conversation.
                   For ready-to-ship pieces, dimensions are listed on each piece's page.

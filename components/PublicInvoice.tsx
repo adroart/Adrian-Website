@@ -143,8 +143,8 @@ const PublicInvoice: React.FC = () => {
   if (!invoice) {
     return (
       <section className="invoice-light min-h-screen bg-paper-100 px-6 py-16">
-        <div className="mx-auto max-w-xl border border-wood-200 bg-white p-8">
-          <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
+        <div className="mx-auto max-w-xl border border-wood-200 bg-surface-card p-8">
+          <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
             Invoice
           </p>
           <h1 className="font-serif text-3xl text-wood-900 mb-4">Invoice not available</h1>
@@ -162,7 +162,7 @@ const PublicInvoice: React.FC = () => {
   }
 
   return (
-    <section className="invoice-light min-h-screen bg-paper-100 px-4 py-8 print:bg-white print:p-0">
+    <section className="invoice-light min-h-screen bg-paper-100 px-4 py-8 print:bg-surface-card print:p-0">
       <style>{`
         .invoice-flash { animation: invoice-flash 1.4s ease-out; }
         @keyframes invoice-flash {
@@ -206,7 +206,7 @@ const PublicInvoice: React.FC = () => {
           .invoice-a4 .pay-step p { line-height: 1.25 !important; }
           /* Shrink the bank/account details block (the tallest element). */
           .invoice-a4 .pay-details {
-            font-size: 10px !important;
+            font-size: var(--text-micro) !important;
             line-height: 1.35 !important;
             margin-top: 0.35rem !important;
             padding-top: 0.35rem !important;
@@ -216,19 +216,19 @@ const PublicInvoice: React.FC = () => {
       `}</style>
 
       <div className="invoice-print-hide mx-auto mb-5 flex max-w-[210mm] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link to="/" className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:text-bronze-700">
+        <Link to="/" className="font-label text-label uppercase tracking-[0.12em] text-wood-600 hover:text-bronze-700">
           Adrian Rasmussen
         </Link>
         <button
           type="button"
           onClick={() => window.print()}
-          className="border border-wood-300 bg-white px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-800 hover:border-bronze-500 hover:text-bronze-800"
+          className="border border-wood-300 bg-surface-card px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-800 hover:border-bronze-500 hover:text-bronze-800"
         >
           Print / save PDF
         </button>
       </div>
 
-      <article className="invoice-a4 mx-auto flex flex-col border border-wood-200 bg-white px-7 py-7 shadow-sm sm:px-9 sm:py-8 print:px-[14mm] print:py-[12mm]">
+      <article className="invoice-a4 mx-auto flex flex-col border border-wood-200 bg-surface-card px-7 py-7 shadow-sm sm:px-9 sm:py-8 print:px-[14mm] print:py-[12mm]">
         <header className="border-b border-wood-900 pb-4">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -236,7 +236,7 @@ const PublicInvoice: React.FC = () => {
               <p className="mt-1 font-sans text-sm text-wood-700">Multidisciplinary artist · adrianrasmussen.com</p>
             </div>
             <div className="text-left sm:text-right">
-              <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">Invoice</p>
+              <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold">Invoice</p>
               <p className="font-serif text-2xl text-wood-900">{invoice.invoiceNumber}</p>
               <p className="font-sans text-sm text-wood-600">{formatDate(invoiceDate)}</p>
             </div>
@@ -245,19 +245,19 @@ const PublicInvoice: React.FC = () => {
 
         <div className="print-tight grid gap-6 border-b border-wood-200 py-4 sm:grid-cols-[1fr_1.15fr]">
           <section>
-            <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
+            <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
               Prepared for
             </p>
-            <h2 className="font-serif text-[1.45rem] leading-tight text-wood-900">{invoice.clientName}</h2>
+            <h2 className="font-serif text-title leading-tight text-wood-900">{invoice.clientName}</h2>
             {invoice.clientEmail && <p className="font-sans text-sm text-wood-700">{invoice.clientEmail}</p>}
             {invoice.clientLocation && <p className="font-sans text-sm text-wood-700">{invoice.clientLocation}</p>}
           </section>
 
           <section>
-            <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
+            <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
               Job
             </p>
-            <h2 className="font-serif text-[1.45rem] leading-tight text-wood-900">{invoice.jobTitle}</h2>
+            <h2 className="font-serif text-title leading-tight text-wood-900">{invoice.jobTitle}</h2>
             <p className="mt-1 whitespace-pre-line font-sans text-sm leading-snug text-wood-700">
               {invoice.jobDescription}
             </p>
@@ -265,7 +265,7 @@ const PublicInvoice: React.FC = () => {
         </div>
 
         <section className="print-tight border-b border-wood-200 py-4">
-          <div className="grid grid-cols-[1fr_90px] gap-4 border-b border-wood-200 pb-2 font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold">
+          <div className="grid grid-cols-[1fr_90px] gap-4 border-b border-wood-200 pb-2 font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold">
             <span>Description</span>
             <span className="text-right">Amount</span>
           </div>
@@ -288,7 +288,7 @@ const PublicInvoice: React.FC = () => {
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">
+                      <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold">
                         {group.section}
                       </p>
                       {group.caption && (
@@ -318,7 +318,7 @@ const PublicInvoice: React.FC = () => {
                     </p>
                     {item.variants && item.variants.length > 0 && (
                       <div role="radiogroup" aria-label={item.description} className="no-print col-span-2 -mt-1">
-                        <p className="mb-2 font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">
+                        <p className="mb-2 font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold">
                           Choose one · required
                         </p>
                         <div className="grid gap-2">
@@ -338,7 +338,7 @@ const PublicInvoice: React.FC = () => {
                                     : 'border-wood-300 bg-paper-50 text-wood-800 hover:border-bronze-600 hover:bg-bronze-50'
                                 }`}
                               >
-                                <span className={`col-span-2 font-label text-[10px] uppercase tracking-[0.12em] font-semibold sm:col-span-1 ${active ? 'text-paper-50' : 'text-bronze-700'}`}>
+                                <span className={`col-span-2 font-label text-micro uppercase tracking-[0.12em] font-semibold sm:col-span-1 ${active ? 'text-paper-50' : 'text-bronze-700'}`}>
                                   {active ? 'Selected' : 'Select'}
                                 </span>
                                 <span className="font-sans text-sm leading-snug">{v.label}</span>
@@ -403,7 +403,7 @@ const PublicInvoice: React.FC = () => {
 
         <section className="print-tight grid gap-4 border-b border-wood-200 py-4 sm:grid-cols-[1fr_190px]">
           <div>
-            <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
+            <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
               Payment schedule
             </p>
             {offerChoice && amountPaid === 0 && (
@@ -413,7 +413,7 @@ const PublicInvoice: React.FC = () => {
                     key={mode}
                     type="button"
                     onClick={() => setPlanChoice(mode)}
-                    className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
+                    className={`font-label text-label uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
                       planChoice === mode
                         ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
                         : 'border-wood-300 text-wood-600 hover:border-bronze-500'
@@ -429,7 +429,7 @@ const PublicInvoice: React.FC = () => {
                 <div key={`${step.label}-${index}`} className={`pay-step border px-3 py-2 ${index === invoice.currentStepIndex ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
+                      <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500">
                         Step {index + 1} · {step.dueTiming}
                       </p>
                       <p className="font-sans text-sm text-wood-900">{step.label}</p>
@@ -443,7 +443,7 @@ const PublicInvoice: React.FC = () => {
           </div>
 
           <div className="border border-wood-900 bg-wood-900 p-3 text-paper-50 sm:mt-7">
-            <p className="font-label text-[11px] uppercase tracking-[0.12em] text-paper-200 font-semibold">Due today</p>
+            <p className="font-label text-label uppercase tracking-[0.12em] text-paper-200 font-semibold">Due today</p>
             <p className="font-serif text-3xl leading-tight">
               <span key={`due-${choiceChanges}`} className={choiceChanges > 0 ? 'invoice-flash-dark' : ''}>{formatMoney(displayDueToday, invoice.currency)}</span>
             </p>
@@ -458,7 +458,7 @@ const PublicInvoice: React.FC = () => {
         <section className="print-tight-top mt-auto pt-4">
           <div className="grid gap-4 sm:grid-cols-[1fr_1.35fr]">
             <div>
-              <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
+              <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
                 Payment method
               </p>
               <div className="grid gap-2">
@@ -478,17 +478,17 @@ const PublicInvoice: React.FC = () => {
                 <>
                   <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold">
+                      <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold">
                         {methodLabel(selectedPayment.method)}
                       </p>
-                      <h2 className="font-serif text-[1.35rem] leading-tight text-wood-900">{selectedPayment.label}</h2>
+                      <h2 className="font-serif text-subhead leading-tight text-wood-900">{selectedPayment.label}</h2>
                     </div>
                     {paymentAction && (
                       <a
                         href={paymentAction.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="invoice-print-hide shrink-0 bg-wood-900 px-4 py-2.5 text-center font-label text-[11px] uppercase tracking-[0.12em] text-paper-50 hover:bg-bronze-700"
+                        className="invoice-print-hide shrink-0 bg-wood-900 px-4 py-2.5 text-center font-label text-label uppercase tracking-[0.12em] text-paper-50 hover:bg-bronze-700"
                       >
                         {paymentAction.label}
                       </a>
@@ -501,7 +501,7 @@ const PublicInvoice: React.FC = () => {
                   )}
                   {selectedPayment.details && isWiseMethod(selectedPayment.method) ? (
                     <div className="mt-3 border-t border-wood-200 pt-3">
-                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">Send to this Wisetag</p>
+                      <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500">Send to this Wisetag</p>
                       <p className="font-serif text-3xl sm:text-4xl text-wood-900 leading-tight mt-1 break-all">{selectedPayment.details}</p>
                     </div>
                   ) : selectedPayment.details ? (
@@ -544,7 +544,7 @@ const PublicInvoice: React.FC = () => {
 
           {invoice.notes && (
             <div className="mt-4 border-t border-wood-200 pt-3">
-              <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
+              <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
                 Notes
               </p>
               <p className="whitespace-pre-line font-sans text-sm leading-snug text-wood-700">{invoice.notes}</p>
@@ -567,11 +567,11 @@ const PaymentButton: React.FC<{
     className={`border px-3 py-2 text-left transition-colors ${
       active
         ? 'border-bronze-600 bg-bronze-600 text-paper-50'
-        : 'border-wood-300 bg-white text-wood-800 hover:border-bronze-500'
+        : 'border-wood-300 bg-surface-card text-wood-800 hover:border-bronze-500'
     }`}
   >
     <span className="block font-sans text-sm">{option.label}</span>
-    <span className={`block font-label text-[11px] uppercase tracking-[0.12em] ${active ? 'text-paper-200' : 'text-wood-500'}`}>
+    <span className={`block font-label text-label uppercase tracking-[0.12em] ${active ? 'text-paper-200' : 'text-wood-500'}`}>
       {methodLabel(option.method)}
     </span>
   </button>

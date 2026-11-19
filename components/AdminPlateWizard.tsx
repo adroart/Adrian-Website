@@ -49,7 +49,7 @@ import {
 const inputClass =
   'input placeholder:text-wood-400';
 const labelClass =
-  'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+  'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 // Buttons come from src/master.css. Do not rebuild them from utilities.
 const buttonClass = 'btn btn-primary';
 const quietButtonClass = 'btn btn-outline';
@@ -423,7 +423,7 @@ const AdminPlateWizard: React.FC = () => {
   return (
     <AdminPage width="medium">
       <div className="max-w-3xl mx-auto">
-        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+        <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
           Artwork Registry · Guided
         </p>
         <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate wizard</h1>
@@ -447,7 +447,7 @@ const AdminPlateWizard: React.FC = () => {
               <input ref={unlockInputRef} type="password" autoComplete="off" className={`${inputClass} flex-1 min-w-[16rem]`} placeholder="Registry unlock secret" aria-label="Registry unlock secret" />
               <button type="submit" className={buttonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : 'Unlock registry'}</button>
             </form>
-            {unlockError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{unlockError}</p>}
+            {unlockError && <p className="font-sans text-sm text-danger mt-3" role="alert">{unlockError}</p>}
           </section>
         ) : !started ? (
           /* CHOOSE */
@@ -463,7 +463,7 @@ const AdminPlateWizard: React.FC = () => {
             </p>
             {deepLinkNote && <p className="font-sans text-sm text-wood-500 mb-4" role="status">{deepLinkNote}</p>}
             {loadError ? (
-              <div className="border border-red-300 bg-paper-50 p-6"><p className="font-sans text-sm text-red-700" role="alert">{loadError}</p></div>
+              <div className="border border-danger-line bg-paper-50 p-6"><p className="font-sans text-sm text-danger" role="alert">{loadError}</p></div>
             ) : loading && rows.length === 0 ? (
               <div className="border border-wood-200 bg-paper-50 p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : resumable.length === 0 ? (
@@ -501,7 +501,7 @@ const AdminPlateWizard: React.FC = () => {
               <Link to="/admin/pieces" className={quietButtonClass}>Open the full desk</Link>
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mt-4" role="status">{driveStatus}</p>}
-            {stepError && <p className="font-sans text-sm text-red-700 mt-4" role="alert">{stepError}</p>}
+            {stepError && <p className="font-sans text-sm text-danger mt-4" role="alert">{stepError}</p>}
           </section>
         ) : (
           /* RUN */
@@ -571,7 +571,7 @@ const AdminPlateWizard: React.FC = () => {
                   {piece?.backupStatus !== 'verified' && (
                     <button type="button" className={buttonClass} disabled={Boolean(busy)} onClick={() => void runRowAction('backup')}>{busy === 'backup' ? 'Retrying…' : 'Retry encrypted backup'}</button>
                   )}
-                  {piece?.backupStatus === 'verified' && <p className="font-sans text-sm text-green-800" role="status">Backup verified. You can continue.</p>}
+                  {piece?.backupStatus === 'verified' && <p className="font-sans text-sm text-success" role="status">Backup verified. You can continue.</p>}
                 </div>
               )}
 
@@ -612,10 +612,10 @@ const AdminPlateWizard: React.FC = () => {
                   </div>
                   {copiedBackupFilename && <p className="font-sans text-sm text-wood-600 mt-3">Chosen copy: {copiedBackupFilename}</p>}
                   <button type="button" className={`${buttonClass} mt-4`} disabled={Boolean(busy) || !copiedBackupDocument || activeQualification?.status === 'current'} onClick={() => void runRowAction('verify-recovery')}>{busy === 'verify-recovery' ? 'Proving…' : 'Verify copied recovery file'}</button>
-                  {activeQualification?.status === 'current' && <p className="font-sans text-sm text-green-800 mt-3" role="status">This copy's proof is current.</p>}
-                  {activeQualification?.status === 'stale' && <p className="font-sans text-sm text-red-700 mt-3" role="alert">This copy's proof is stale because the backup or one of its required versions changed. Download and verify a fresh archived file.</p>}
+                  {activeQualification?.status === 'current' && <p className="font-sans text-sm text-success mt-3" role="status">This copy's proof is current.</p>}
+                  {activeQualification?.status === 'stale' && <p className="font-sans text-sm text-danger mt-3" role="alert">This copy's proof is stale because the backup or one of its required versions changed. Download and verify a fresh archived file.</p>}
                   {(!activeQualification || activeQualification.status === 'missing') && <p className="font-sans text-sm text-wood-600 mt-3">{recoveryKind === 'identity' ? 'No identity proof yet. Every collector claim on this piece is refused until there is one.' : 'No plate proof yet. Activation remains blocked.'}</p>}
-                  {piece?.identityRecoveryQualification?.status === 'current' && piece?.recoveryQualification?.status === 'current' && <p className="font-sans text-sm text-green-800 mt-3" role="status">Both copies are proved. You can continue.</p>}
+                  {piece?.identityRecoveryQualification?.status === 'current' && piece?.recoveryQualification?.status === 'current' && <p className="font-sans text-sm text-success mt-3" role="status">Both copies are proved. You can continue.</p>}
                 </div>
               )}
 
@@ -644,8 +644,8 @@ const AdminPlateWizard: React.FC = () => {
                 </div>
               )}
 
-              {stepNote && <p className="font-sans text-sm text-green-800 mt-4" role="status">{stepNote}</p>}
-              {stepError && <p className="font-sans text-sm text-red-700 mt-4" role="alert">{stepError}</p>}
+              {stepNote && <p className="font-sans text-sm text-success mt-4" role="status">{stepNote}</p>}
+              {stepError && <p className="font-sans text-sm text-danger mt-4" role="alert">{stepError}</p>}
             </div>
 
             {/* NAV */}

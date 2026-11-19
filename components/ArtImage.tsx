@@ -124,7 +124,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
                 ].filter(Boolean).join(' ')}
                 aria-label={rest.alt ?? 'Image unavailable'}
             >
-                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-300 font-semibold">
+                <span className="font-label text-micro uppercase tracking-[0.15em] text-wood-300 font-semibold">
                     Image unavailable
                 </span>
             </div>

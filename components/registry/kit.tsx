@@ -181,7 +181,7 @@ export const SecretField: React.FC<{
         outline: 0,
         padding: 0,
         fontFamily: F.mono,
-        fontSize: 16,
+        fontSize: 'var(--text-body)',
         color: C.ink,
       }}
     />
@@ -194,7 +194,7 @@ export const CodeBlock: React.FC<{ children: string }> = ({ children }) => (
     style={{
       margin: '14px 0 0',
       fontFamily: F.mono,
-      fontSize: 17,
+      fontSize: 'var(--text-body)',
       letterSpacing: '.06em',
       lineHeight: 1.6,
       color: C.inkWarm,

@@ -5,10 +5,16 @@
  * pages, account, collector, admin, invoices.
  *
  * Order of this file:
- *   1. Scales      spacing, control heights, radii, shadows, type sizes
+ *   1. Scales      spacing, control heights, radii, shadows, borders, motion
+ *      Type        steps, roles (page title, card title, button ...), and
+ *                  Tailwind's text-xs ... text-9xl and leading-* names
  *   2. Colours     the ramps (paper, wood, stone, bronze, cream, taupe, gold)
  *   3. Themes      dark remap, .dark-preserve bands, the .invoice-light island
+ *   3b. Roles      text colours (ink, muted, link, accent, danger, on-dark),
+ *                  surfaces (page, band, card, panel, admin, invoice), borders
  *   4. Buttons     the only button styles on the site: .btn + one variant
+ *
+ * The quickest changes: see "Change this, this changes" in DESIGN.md.
  *
  * Density rule (Adrian, 2026-11-18): slim and streamlined. Well spaced, never
  * spacious. Buttons 28 to 34px tall on desktop, 44px only on touch screens.
@@ -60,23 +66,20 @@
   --shadow-overlay: 0 12px 32px rgb(38 35 33 / 18%);
   --shadow-focus: 0 0 0 2px var(--color-bronze-500);
 
-  /* Type sizes. Pair each with its font role (see the fonts in section 2). */
-  --text-label:    0.6875rem;  /* 11px  Karla, uppercase, 0.12em. The floor. */
-  --text-label-lg: 0.75rem;    /* 12px  Karla, uppercase, 0.12em             */
-  --text-caption:  0.8125rem;  /* 13px  Lora, fine print                     */
-  --text-meta:     0.875rem;   /* 14px  Lora, secondary info, dates, UI text */
-  --text-body:     1rem;       /* 16px  Lora, running text                   */
-  --text-subhead:  1.375rem;   /* 22px  Cormorant, small titles              */
-  --text-heading:  1.75rem;    /* 28px  Cormorant, page headings             */
-  --text-display:  clamp(2.5rem, 6vw, 4.5rem); /* 40 to 72px, hero          */
   --tracking-label: 0.12em;
 
-  /* Older names kept so existing CSS keeps working. 15px and 17px sat 1px either
-     side of the 16px body and read as mistakes, so they fold into their nearest
-     step. */
-  --text-eyebrow: var(--text-label);
-  --text-small:   var(--text-meta);
-  --text-lead:    var(--text-body);
+  /* Borders. One hairline weight for rules and edges, one heavier for quotes
+     and the active tab underline. */
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
+  /* Motion. Every transition on the site picks one of these. */
+  --duration-fast: 150ms;              /* hovers, focus rings           */
+  --duration-base: 300ms;              /* panels, menus, colour changes */
+  --duration-slow: 500ms;              /* theme switch, page fades      */
+  --duration-reveal: 850ms;            /* scroll reveals on long pages  */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Art image motion. Mirrors components/ArtImage.tsx. */
   --art-hover-scale: 1.03;
@@ -84,6 +87,89 @@
   --art-transition-easing: ease-out;
   /* Updated by Navigation.tsx from scroll state. */
   --nav-height: 56px;
+}
+
+/* ─── Type: the scale, then the roles ──────────────────────────────────────
+ * Three layers. Change the one that matches your intent:
+ *
+ *   ROLES      what a piece of text IS (page title, card title, button).
+ *              Change a role to restyle every text of that kind.
+ *   STEPS      the scale itself (11, 12, 13, 14, 16 ... px).
+ *              Change a step to move every role that sits on it.
+ *   TAILWIND   text-xs, text-sm, text-2xl ... in the markup. They are not
+ *              Tailwind's defaults any more: each one points at a role or step
+ *              here, so the 1,200+ size classes in the components follow this
+ *              file too. Their values are unchanged from Tailwind's.
+ *
+ * In @theme so each name is also a class: `text-card-title`, `text-label`.
+ * `static` keeps every value in the output even if no class uses it yet. */
+@theme static {
+  /* STEPS. Pair each with its font role (see the fonts in section 2). */
+  --text-micro:    0.625rem;   /* 10px  BELOW THE FLOOR. Legacy tiny labels; set to var(--text-label) to retire it. */
+  --text-label:    0.6875rem;  /* 11px  Karla, uppercase, 0.12em. The floor. */
+  --text-label-lg: 0.75rem;    /* 12px  Karla, uppercase, 0.12em             */
+  --text-caption:  0.8125rem;  /* 13px  Lora, fine print                     */
+  --text-meta:     0.875rem;   /* 14px  Lora, secondary info, dates, UI text */
+  --text-body:     1rem;       /* 16px  Lora, running text                   */
+  --text-body-lg:  1.125rem;   /* 18px  Lora, intro paragraphs               */
+  --text-title-sm: 1.25rem;    /* 20px  Cormorant, the smallest title        */
+  --text-subhead:  1.375rem;   /* 22px  Cormorant, small titles              */
+  --text-title:    1.5rem;     /* 24px  Cormorant                            */
+  --text-heading:  1.75rem;    /* 28px  Cormorant                            */
+  --text-title-md: 1.875rem;   /* 30px  Cormorant                            */
+  --text-title-lg: 2.25rem;    /* 36px  Cormorant                            */
+  --text-title-xl: 3rem;       /* 48px  Cormorant                            */
+  --text-title-2xl: 3.75rem;   /* 60px  Cormorant                            */
+  --text-title-3xl: 4.5rem;    /* 72px  Cormorant                            */
+  --text-title-4xl: 6rem;      /* 96px  Cormorant                            */
+  --text-title-5xl: 8rem;      /* 128px Cormorant                            */
+  --text-display:  clamp(2.5rem, 6vw, 4.5rem); /* 40 to 72px, hero          */
+
+  /* ROLES. Every section uses one of these, not a step and never a raw size. */
+  --text-page-title:      var(--text-title-lg);   /* 36px  h1 of a page          */
+  --text-section-heading: var(--text-title);      /* 24px  h2 inside a page      */
+  --text-card-title:      var(--text-title-sm);   /* 20px  title on a card       */
+  --text-small:           var(--text-meta);       /* 14px  captions, meta        */
+  --text-nav:             var(--text-label-lg);   /* 12px  site header nav       */
+  --text-admin-nav:       var(--text-meta);       /* 14px  studio sidebar links  */
+  --text-admin-table:     var(--text-meta);       /* 14px  rows in admin lists   */
+  --text-button:          var(--text-label);      /* 11px  every .btn .tab .chip */
+  /* --text-body above is both the step and the body role. */
+
+  /* Older names kept so existing CSS keeps working. 15px and 17px sat 1px either
+     side of the 16px body and read as mistakes, so they fold into their nearest
+     step. */
+  --text-eyebrow: var(--text-label);
+  --text-lead:    var(--text-body);
+
+  /* TAILWIND names, now owned here. Same values as Tailwind's defaults. */
+  --text-xs:   var(--text-label-lg);        --text-xs--line-height: 1.333;
+  --text-sm:   var(--text-small);           --text-sm--line-height: 1.43;
+  --text-base: var(--text-body);            --text-base--line-height: 1.5;
+  --text-lg:   var(--text-body-lg);         --text-lg--line-height: 1.556;
+  --text-xl:   var(--text-card-title);      --text-xl--line-height: 1.4;
+  --text-2xl:  var(--text-section-heading); --text-2xl--line-height: 1.333;
+  --text-3xl:  var(--text-title-md);        --text-3xl--line-height: 1.2;
+  --text-4xl:  var(--text-page-title);      --text-4xl--line-height: 1.111;
+  --text-5xl:  var(--text-title-xl);        --text-5xl--line-height: 1;
+  --text-6xl:  var(--text-title-2xl);       --text-6xl--line-height: 1;
+  --text-7xl:  var(--text-title-3xl);       --text-7xl--line-height: 1;
+  --text-8xl:  var(--text-title-4xl);       --text-8xl--line-height: 1;
+  --text-9xl:  var(--text-title-5xl);       --text-9xl--line-height: 1;
+
+  /* Line heights (leading-tight, leading-relaxed ...). */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  --leading-prose: 1.7;   /* long reading text, the most used on the site */
+  --leading-airy: 1.8;    /* letters and slower passages                  */
+
+  /* Tailwind's default transition (transition, transition-colors ...). */
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-standard);
 }
 
 /* Touch screens: every control grows to a 44px target. Desktop stays slim. */
@@ -117,6 +203,12 @@
   --font-body: "Lora", Georgia, serif;
   --font-label: "Karla", "Helvetica Neue", Arial, sans-serif;
   --font-tabular: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Two special-purpose stacks: the drop cap on long articles, and Chinese
+     characters (tea names, hexagram titles). Not for anything else. */
+  --font-initial: "Cinzel", serif;
+  --font-chinese: "Noto Serif TC", "Source Han Serif TC", "Source Han Serif SC",
+    "Noto Serif SC", "PMingLiU", "MingLiU", "DFKai-SB", "Songti TC", "Songti SC",
+    "STSong", "AR PL UMing TW", "AR PL UMing CN", "宋體", "新細明體", serif;
 
   /* Tailwind slot aliases — see the warning above. */
   --font-serif: var(--font-display);
@@ -299,7 +391,7 @@
 /* bg-white is a Tailwind built-in — override in dark mode */
 .dark .bg-white,
 .dark .hover\:bg-white:hover {
-  background-color: #1f1d1a;
+  background-color: var(--surface-card);
 }
 
 /* Printable invoice pages are a light-mode island even when the site is dark.
@@ -307,7 +399,7 @@
 .invoice-light,
 .dark .invoice-light {
   color-scheme: light;
-  color: #262321;
+  color: var(--ink);
   --color-paper-50: #f5f4f0;
   --color-paper-100: #ebe8e1;
   --color-paper-200: #e0dbcf;
@@ -350,7 +442,7 @@
 .dark .invoice-light .bg-white,
 .invoice-light .hover\:bg-white:hover,
 .dark .invoice-light .hover\:bg-white:hover {
-  background-color: #fff;
+  background-color: var(--surface-invoice);
 }
 /* Studio (admin) inks. The admin column is always dark, so these are raw values
    on purpose: the .dark remap would hand an always-dark surface the wrong ends of
@@ -377,6 +469,118 @@
   --admin-void-rgb: 13 11 9;
 }
 
+/* ─── 3b. Roles: what each colour is FOR ────────────────────────────────────
+ * Components should reach for these first. Each role points at a ramp step,
+ * so night mode, the dark bands and the invoice island follow automatically.
+ * Change a role here to recolour every text or surface of that kind.
+ *
+ * Declared again on each theme scope on purpose: a CSS variable resolves where
+ * it is declared, so declaring it on .dark too makes it pick up the dark ramp. */
+:root,
+.dark,
+.invoice-light,
+.dark .invoice-light {
+  /* Text */
+  --ink: var(--color-wood-900);              /* main text                    */
+  --ink-muted: var(--color-wood-600);        /* secondary text, meta         */
+  --link: var(--color-wood-900);             /* links                        */
+  --link-hover: var(--color-bronze-600);
+  --accent: var(--color-bronze-600);         /* eyebrows, the one warm note  */
+  --danger: oklch(50.5% 0.213 27.518);       /* errors (was text-red-700)    */
+  --danger-soft: oklch(97.1% 0.013 17.38);   /* error box ground (red-50)    */
+  --danger-line: oklch(80.8% 0.114 19.571);  /* error box edge (red-300)     */
+  --success: oklch(44.8% 0.119 151.328);     /* confirmations (green-800)    */
+  --success-soft: oklch(98.2% 0.018 155.826);/* (green-50)                   */
+  --success-line: oklch(92.5% 0.084 155.995);/* (green-200)                  */
+  --ink-on-dark: var(--admin-ink);           /* text on any dark band        */
+
+  /* Surfaces */
+  --surface-page: var(--color-paper-50);     /* the page behind everything   */
+  --surface-band: var(--color-paper-100);    /* a full-width section band    */
+  --surface-card: #ffffff;                   /* cards, sheets (was bg-white) */
+  --surface-panel: var(--color-paper-100);   /* side panels, drawers         */
+  --surface-dark-band: #262321;              /* hero and dark accent bands   */
+  --surface-admin: var(--color-paper-50);    /* the studio ground (admin is always .dark, so the dark paper) */
+  --surface-invoice: #ffffff;                /* the printable invoice page   */
+
+  /* Borders */
+  --line: var(--color-wood-200);             /* hairline rules, card edges   */
+  --line-strong: var(--color-wood-300);      /* inputs, emphasised edges     */
+}
+
+/* Night mode: only the roles that are not ramp steps need a dark value. */
+.dark {
+  --surface-card: #1f1d1a;
+  --danger: var(--admin-wrong);
+  --danger-soft: rgb(224 160 138 / 10%);
+  --danger-line: rgb(224 160 138 / 40%);
+  --success: #6ee7a0;
+  --success-soft: rgb(110 231 160 / 8%);
+  --success-line: #1a4030;
+}
+
+/* Dark bands (hero, accent blocks) in either theme: text roles turn light. */
+.dark-preserve,
+.dark .dark-preserve {
+  --ink: var(--ink-on-dark);
+  --ink-muted: var(--admin-ink-quiet);
+  --link: var(--ink-on-dark);
+  --link-hover: var(--admin-accent);
+  --accent: var(--admin-accent);
+  --line: var(--admin-rule-strong);
+  --line-strong: var(--admin-edge);
+}
+
+/* The roles as classes: text-ink, text-danger, bg-surface-card, border-line ... */
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-ink-on-dark: var(--ink-on-dark);
+  --color-surface-page: var(--surface-page);
+  --color-surface-band: var(--surface-band);
+  --color-surface-card: var(--surface-card);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-dark-band: var(--surface-dark-band);
+  --color-surface-admin: var(--surface-admin);
+  --color-surface-invoice: var(--surface-invoice);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+}
+
+/* ─── 3c. The gallery room (/creations) ─────────────────────────────────────
+ * The public gallery is an exhibition room with its own slightly warmer paper
+ * and inks, in both themes. Its stylesheet (components/gallery/publicGallery.css)
+ * reads only these. */
+.public-gallery {
+  --color-paper-50: #f5f1e9;
+  --color-paper-100: #eee6d8;
+  --gallery-ink: #262321;
+  --gallery-muted: #625748;
+  --gallery-accent: #725339;
+  --gallery-mat: #eee6d8;
+  --gallery-rule: #d6cbbc;
+  --gallery-primary-text: #f5f1e9;
+}
+.dark .public-gallery {
+  --color-paper-50: #292520;
+  --color-paper-100: #332e28;
+  --gallery-ink: #f5f1e9;
+  --gallery-muted: #d6c9b8;
+  --gallery-accent: #e1c197;
+  --gallery-mat: #211d19;
+  --gallery-rule: #51483e;
+  --gallery-primary-text: #211d19;
+}
+
 /* ─── 4. Buttons ──────────────────────────────────────────────────────────── */
 /* The whole set. Every button on the site is .btn plus one variant:
  *
@@ -391,7 +595,7 @@
  * In @layer components so a utility (mt-4, w-full) still wins over it. */
 :root {
   --btn-font: var(--font-label);
-  --btn-size: var(--text-label);
+  --btn-size: var(--text-button);
   --btn-weight: 600;
   --btn-tracking: var(--tracking-label);
   --btn-radius: var(--radius-none);

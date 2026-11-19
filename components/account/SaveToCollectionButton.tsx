@@ -156,7 +156,7 @@ const stcStyles = `
     align-items: center;
     gap: 6px;
     font-family: var(--font-label);
-    font-size: 11px;
+    font-size: var(--text-label);
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -170,7 +170,7 @@ const stcStyles = `
   .stc__inline:hover { color: var(--color-wood-900); }
   .stc__btn {
     font-family: var(--font-label);
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--color-bronze-600);
@@ -197,8 +197,8 @@ const stcStyles = `
     box-shadow: 0 8px 24px -10px rgba(0,0,0,0.18);
   }
   .stc__menu-empty {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
+    font-family: var(--font-display);
+    font-size: var(--text-caption);
     color: var(--color-wood-600);
     margin: 4px 6px 8px;
   }
@@ -207,8 +207,8 @@ const stcStyles = `
     display: block;
     width: 100%;
     text-align: left;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
+    font-family: var(--font-display);
+    font-size: var(--text-meta);
     color: var(--color-wood-900);
     background: transparent;
     border: 0;
@@ -225,8 +225,8 @@ const stcStyles = `
   }
   .stc__input {
     flex: 1;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
+    font-family: var(--font-display);
+    font-size: var(--text-meta);
     padding: 6px 8px;
     border: 1px solid color-mix(in oklab, var(--color-wood-600) 22%, transparent);
     border-radius: 2px;
@@ -234,7 +234,7 @@ const stcStyles = `
   }
   .stc__create-btn {
     font-family: var(--font-label);
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-paper-50);

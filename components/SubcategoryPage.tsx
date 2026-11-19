@@ -177,7 +177,7 @@ const SubcategoryPage: React.FC = () => {
 
     if (!config) {
         return (
-            <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+            <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Not Found</h1>
                     <p className="font-sans text-lg text-wood-600 mb-8">This section does not exist.</p>
@@ -280,7 +280,7 @@ const SubcategoryPage: React.FC = () => {
                         {/* Size filter */}
                         {config.filters.includes('size') && sizeOptions.length > 1 && (
                             <div className="gallery-filters">
-                                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Size</span>
+                                <span className="font-label text-label-lg uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Size</span>
                                 {sizeOptions.map(s => (
                                     <button
                                         key={s}
@@ -297,7 +297,7 @@ const SubcategoryPage: React.FC = () => {
                         {/* Finish filter */}
                         {config.filters.includes('finish') && finishOptions.length > 1 && (
                             <div className="gallery-filters">
-                                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Finish</span>
+                                <span className="font-label text-label-lg uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Finish</span>
                                 {finishOptions.map(f => (
                                     <button
                                         key={f}
@@ -327,7 +327,7 @@ const SubcategoryPage: React.FC = () => {
                         {hasFiltersActive && (
                             <button
                                 onClick={clearAllFilters}
-                                className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap underline underline-offset-2"
+                                className="font-label text-label-lg uppercase tracking-[0.12em] text-wood-600 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap underline underline-offset-2"
                             >
                                 Clear all
                             </button>
@@ -411,7 +411,7 @@ const SubcategoryPage: React.FC = () => {
                         <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
                             A Light Code can also be created for you.
                         </h3>
-                        <p className="font-sans text-lg text-paper-200 leading-[1.7] font-light mb-8">
+                        <p className="font-sans text-lg text-paper-200 leading-prose font-light mb-8">
                             Through conversation, I receive the energy and intentions of your life, then anchor what wants to come through.
                         </p>
                         <Link

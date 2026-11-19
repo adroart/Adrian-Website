@@ -63,7 +63,7 @@ const PricingExplorer: React.FC = () => {
 
   return (
     <section className="bg-paper-100 border border-wood-200 px-6 py-10 md:px-12 md:py-14 max-w-3xl mx-auto">
-      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
+      <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
         Explore pricing
       </p>
       <h2 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Find your range</h2>
@@ -109,14 +109,14 @@ const PricingExplorer: React.FC = () => {
 
       <div className="mt-10 pt-8 border-t border-wood-200">
         <div className="flex items-center justify-between gap-4 mb-2">
-          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 font-semibold">
+          <p className="font-label text-label uppercase tracking-[0.2em] text-stone-500 font-semibold">
             Typical range
           </p>
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
             aria-label="Currency"
-            className="font-label text-[11px] uppercase tracking-[0.15em] font-semibold text-wood-600 bg-transparent border border-wood-200 px-2 py-1 focus:border-bronze-400 outline-none transition-colors"
+            className="font-label text-label uppercase tracking-[0.15em] font-semibold text-wood-600 bg-transparent border border-wood-200 px-2 py-1 focus:border-bronze-400 outline-none transition-colors"
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
@@ -137,13 +137,13 @@ const PricingExplorer: React.FC = () => {
         <div className="flex flex-wrap gap-4 mt-8">
           <Link
             to="/creations/multidimensional-art"
-            className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold px-6 py-3 bg-wood-900 text-paper-50 hover:bg-wood-700 transition-colors"
+            className="font-label text-label uppercase tracking-[0.2em] font-semibold px-6 py-3 bg-wood-900 text-paper-50 hover:bg-wood-700 transition-colors"
           >
             Browse pieces
           </Link>
           <Link
             to="/inquire"
-            className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold px-6 py-3 border border-wood-300 text-wood-900 hover:border-bronze-400 transition-colors"
+            className="font-label text-label uppercase tracking-[0.2em] font-semibold px-6 py-3 border border-wood-300 text-wood-900 hover:border-bronze-400 transition-colors"
           >
             Start a conversation
           </Link>

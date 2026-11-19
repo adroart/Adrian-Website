@@ -37,7 +37,7 @@ function pieceImg(p: ViewingPiece, w: number, crop: 'fit' | 'fill' = 'fit'): str
 }
 
 const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <span className={`font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600 ${className}`}>{children}</span>
+  <span className={`font-label text-micro uppercase tracking-[0.22em] text-bronze-600 ${className}`}>{children}</span>
 );
 
 /**
@@ -52,7 +52,7 @@ const Keywords: React.FC<{ words?: string[] }> = ({ words }) => {
       {words.map((w) => (
         <li
           key={w}
-          className="font-label text-[12px] uppercase tracking-[0.12em] text-bronze-700 border border-bronze-300 px-3 py-1.5 whitespace-nowrap"
+          className="font-label text-label-lg uppercase tracking-[0.12em] text-bronze-700 border border-bronze-300 px-3 py-1.5 whitespace-nowrap"
         >
           {w}
         </li>
@@ -97,7 +97,7 @@ const PieceCard: React.FC<{
         {/* The label row spans the full art width, 5px under the art; the star
             sits at its right end (its original spot), separate from the title. */}
         <div className="flex items-baseline justify-between gap-4 w-full">
-          <Label className="!text-[13px] sm:!text-[14px] tracking-[0.18em]">Universal Language · No. {piece.code}</Label>
+          <Label className="!text-caption sm:!text-meta tracking-[0.18em]">Universal Language · No. {piece.code}</Label>
           {piece.recommended && <span className="text-bronze-600 text-lg leading-none" aria-label="recommended">★</span>}
         </div>
 
@@ -118,7 +118,7 @@ const PieceCard: React.FC<{
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors mt-3"
+            className="font-label text-label uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors mt-3"
           >
             {expanded ? 'Read less' : 'Read more'}
           </button>
@@ -129,7 +129,7 @@ const PieceCard: React.FC<{
           <button
             type="button"
             onClick={onToggleSelect}
-            className={`font-label text-[11px] uppercase tracking-[0.18em] border px-5 py-2.5 transition-colors ${
+            className={`font-label text-label uppercase tracking-[0.18em] border px-5 py-2.5 transition-colors ${
               selected
                 ? 'border-bronze-500 bg-bronze-200 text-bronze-700'
                 : 'border-wood-300 text-wood-700 hover:border-bronze-500 hover:text-bronze-700'
@@ -142,7 +142,7 @@ const PieceCard: React.FC<{
               href={piece.pieceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-label text-[11px] uppercase tracking-[0.18em] border border-wood-300 text-wood-700 hover:border-bronze-500 hover:text-bronze-700 px-5 py-2.5 transition-colors"
+              className="font-label text-label uppercase tracking-[0.18em] border border-wood-300 text-wood-700 hover:border-bronze-500 hover:text-bronze-700 px-5 py-2.5 transition-colors"
             >
               Go deeper
             </a>
@@ -222,10 +222,10 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
   };
 
   return (
-    <div className="min-h-screen bg-paper-50 text-wood-900 pb-28">
+    <div className="min-h-screen bg-surface-page text-wood-900 pb-28">
       {/* 1 · Cover — title, then the contact-sheet pulled up tight beneath it. */}
       <header className="max-w-4xl mx-auto px-6 pt-24 sm:pt-28 pb-16">
-        <Label className="text-[11px] tracking-[0.32em]">A Private Viewing</Label>
+        <Label className="text-label tracking-[0.32em]">A Private Viewing</Label>
         <h1 className="font-display text-5xl sm:text-7xl leading-[1.02] text-wood-900 mt-3">
           For {data.recipientName}
         </h1>
@@ -250,7 +250,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
                 ) : (
                   <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
                 )}
-                <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-600 group-hover:text-bronze-700 leading-tight transition-colors">
+                <span className="font-label text-micro uppercase tracking-[0.12em] text-wood-600 group-hover:text-bronze-700 leading-tight transition-colors">
                   {p.recommended && <span className="text-bronze-600">★ </span>}
                   {p.name}
                 </span>
@@ -259,8 +259,8 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
           })}
         </div>
         <div className="flex justify-between mt-10 border-t border-wood-200 pt-3">
-          <Label className="text-[9px] tracking-[0.16em]">Pieces chosen with you in mind</Label>
-          <Label className="text-[9px] tracking-[0.16em]">adrianrasmussen.com</Label>
+          <Label className="text-micro tracking-[0.16em]">Pieces chosen with you in mind</Label>
+          <Label className="text-micro tracking-[0.16em]">adrianrasmussen.com</Label>
         </div>
       </header>
 
@@ -274,7 +274,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
       {/* 4 · The recommendation (signed dealer's note) */}
       {data.recommendation && data.recommendation.picks.length > 0 && (
         <section className="max-w-3xl mx-auto px-6 py-20 border-t border-wood-200">
-          <Label className="text-[11px] tracking-[0.32em]">A Recommendation</Label>
+          <Label className="text-label tracking-[0.32em]">A Recommendation</Label>
           <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-3 leading-tight">
             What I'd choose for you
           </h2>
@@ -318,7 +318,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
       {/* The rest of the collection — only for open/anonymous viewings. */}
       {data.showRestOfCollection && (
         <section className="max-w-3xl mx-auto px-6 py-16 border-t border-wood-200">
-          <Label className="text-[11px] tracking-[0.32em]">The rest of the collection</Label>
+          <Label className="text-label tracking-[0.32em]">The rest of the collection</Label>
           <p className="font-sans italic text-wood-600 text-base mt-3 mb-8 max-w-prose">
             The full Universal Language. Tap any piece to read its code.
           </p>
@@ -338,7 +338,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
                   ) : (
                     <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
                   )}
-                  <span className="font-label text-[9px] uppercase tracking-[0.14em] text-wood-500 group-hover:text-bronze-700 block mt-1.5">No. {code}</span>
+                  <span className="font-label text-micro uppercase tracking-[0.14em] text-wood-500 group-hover:text-bronze-700 block mt-1.5">No. {code}</span>
                 </a>
               );
             })}
@@ -354,7 +354,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
               <button
                 type="button"
                 onClick={() => setTrayOpen((o) => !o)}
-                className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700"
+                className="font-label text-label uppercase tracking-[0.18em] text-bronze-700"
               >
                 {chosen.length} piece{chosen.length === 1 ? '' : 's'} selected
               </button>
@@ -362,7 +362,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
                 type="button"
                 onClick={requestPieces}
                 disabled={requesting || requested}
-                className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700 border border-bronze-500 px-4 py-2 hover:bg-bronze-200 disabled:opacity-60 transition-colors"
+                className="font-label text-label uppercase tracking-[0.18em] text-bronze-700 border border-bronze-500 px-4 py-2 hover:bg-bronze-200 disabled:opacity-60 transition-colors"
               >
                 {requested ? '✓ Request received' : requesting ? 'Sending…' : 'Request these pieces'}
               </button>
@@ -379,7 +379,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
                       <button
                         type="button"
                         onClick={() => toggle(p.id)}
-                        className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500 hover:text-bronze-700 underline underline-offset-4"
+                        className="font-label text-micro uppercase tracking-[0.16em] text-wood-500 hover:text-bronze-700 underline underline-offset-4"
                       >
                         Remove
                       </button>

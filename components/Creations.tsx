@@ -127,7 +127,7 @@ const CollectionCard: React.FC<{
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
-                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
+                <span className="font-label text-label-lg uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-600 ml-2">· Active filter</span>}
                 </span>
@@ -558,7 +558,7 @@ const Creations: React.FC = () => {
                         {remaining > 0 && (
                             <div className="flex flex-col items-center gap-3 pt-14">
                                 <p
-                                    className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold"
+                                    className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold"
                                     aria-live="polite"
                                 >
                                     Showing {displayedPieces.length} of {filteredArchive.length}

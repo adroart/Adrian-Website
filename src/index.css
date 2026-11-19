@@ -127,7 +127,7 @@ h1, h2, h3, h4, h5, h6 {
 /* #10 Drop cap on first paragraph of articles */
 .article-prose > p:first-of-type::first-letter {
   float: left;
-  font-family: "Cinzel", serif;
+  font-family: var(--font-initial);
   font-size: 3.5em;
   line-height: 0.8;
   padding-right: 0.1em;
@@ -220,11 +220,6 @@ h1, h2, h3, h4, h5, h6 {
   .no-print { display: none !important; }
   .print-only { display: block !important; }
 }
-/* Semantic status colors on dark backgrounds */
-.dark .bg-green-50 { background-color: #0a2010; }
-.dark .border-green-200 { border-color: #1a4030; }
-.dark .text-green-800 { color: #6ee7a0; }
-.dark .text-green-600 { color: #4ade80; }
 
 /* Cart overlay scrim stays dark */
 .dark .dark-overlay {
@@ -232,8 +227,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Body background */
-body { transition: background-color 0.5s ease; }
-html.dark body { background-color: var(--color-paper-50); }
+body { transition: background-color var(--duration-slow) ease; }
+html.dark body { background-color: var(--surface-page); }
 
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #a09a92; }
@@ -254,8 +249,8 @@ html.dark body { background-color: var(--color-paper-50); }
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.5s ease-out;
+  transition: grid-template-rows 0.6s var(--ease-reveal),
+              opacity var(--duration-slow) ease-out;
 }
 .form-reveal.is-open {
   grid-template-rows: 1fr;
@@ -302,12 +297,7 @@ html.dark body { background-color: var(--color-paper-50); }
  * sharp Mingti rendering across platforms. Falls back to system Song fonts
  * if the network fails. */
 .font-chinese-serif {
-  font-family: "Noto Serif TC", "Source Han Serif TC", "Source Han Serif SC",
-               "Noto Serif SC",
-               "PMingLiU", "MingLiU", "DFKai-SB",
-               "Songti TC", "Songti SC", "STSong",
-               "AR PL UMing TW", "AR PL UMing CN",
-               "宋體", "新細明體", serif;
+  font-family: var(--font-chinese);
   font-weight: 600;
   font-feature-settings: "palt";
   text-rendering: optimizeLegibility;
@@ -430,7 +420,7 @@ html.dark body { background-color: var(--color-paper-50); }
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .footer-link:hover::after {
   transform: scaleX(1);
@@ -446,7 +436,7 @@ html.dark body { background-color: var(--color-paper-50); }
   height: 4px;
   border-radius: 50%;
   background-color: var(--color-bronze-400);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .footer-link:hover::before {
   transform: translateY(-50%) scale(1);
@@ -468,7 +458,7 @@ html.dark body { background-color: var(--color-paper-50); }
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--duration-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .hover-underline:hover::after {
   transform: scaleX(1);
@@ -520,7 +510,7 @@ html, body {
 /* Varied reveal animations */
 .reveal-block {
   opacity: 0;
-  transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
+  transition: opacity var(--duration-reveal) var(--ease-reveal), transform var(--duration-reveal) var(--ease-reveal);
 }
 .reveal-up    { transform: translateY(36px); }
 .reveal-left  { transform: translateX(-44px); }
@@ -535,7 +525,7 @@ html, body {
 /* Drop caps */
 .drop-cap::first-letter {
   float: left;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 3.6em;
   line-height: 0.78;
   padding-right: 0.07em;
@@ -547,7 +537,7 @@ html, body {
 
 /* Paragraph opacity gradient (clears on reveal) */
 .pg-1 { opacity: 1; }
-.pg-2 { opacity: 0.75; transition: opacity 1s ease 0.5s; }
+.pg-2 { opacity: 0.75; transition: opacity 1s ease var(--duration-slow); }
 .pg-3 { opacity: 0.6;  transition: opacity 1s ease 0.7s; }
 .pg-4 { opacity: 0.5;  transition: opacity 1s ease 0.9s; }
 .reveal-block.is-visible .pg-2,
@@ -558,7 +548,7 @@ html, body {
 .tag-line {
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s;
+  transition: transform 0.7s var(--ease-reveal) 0.25s;
 }
 .reveal-block.is-visible .tag-line { transform: scaleX(1); }
 
@@ -569,8 +559,8 @@ html, body {
     position: absolute;
     right: -200px;
     width: 168px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: var(--text-body);
     font-style: italic;
     color: var(--color-wood-600);
     line-height: 1.45;
@@ -633,7 +623,7 @@ html, body {
 /* ─── Private Studio Workspace ───────────────────────────────────────── */
 .admin-shell {
   min-height: 100vh;
-  background: var(--color-paper-50);
+  background: var(--surface-admin);
 }
 
 /* The sidebar sits one shade deeper than the desk: the ceremony theme's void
@@ -662,16 +652,16 @@ html, body {
   padding: 1.5rem;
   border-bottom: 1px solid var(--admin-rule);
   color: var(--admin-ink-dim);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.7rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .admin-mark-monogram {
   color: var(--admin-ink);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.55rem;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
   font-weight: 500;
   letter-spacing: -0.03em;
   text-transform: none;
@@ -688,8 +678,8 @@ html, body {
   margin: 0 0 0.5rem;
   padding: 0 0.75rem;
   color: var(--admin-ink-dim);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.6875rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -701,8 +691,8 @@ html, body {
   padding: 5px var(--space-3);
   border-left: 2px solid transparent;
   color: var(--admin-ink-quiet);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-body);
+  font-size: var(--text-admin-nav);
   line-height: 1.3rem;
   transition: color 160ms ease, border-color 160ms ease;
 }
@@ -721,8 +711,8 @@ html, body {
   gap: 0.65rem;
   padding: 1.25rem 1.5rem 1.5rem;
   border-top: 1px solid var(--admin-rule);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
 }
 
 .admin-account span {
@@ -826,8 +816,8 @@ html, body {
   border-top: 1px solid rgb(var(--admin-ink-rgb) / 14%);
   border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
   color: var(--admin-ink-quiet);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.68;
 }
 
@@ -835,8 +825,8 @@ html, body {
   display: block;
   margin-bottom: 0.6rem;
   color: var(--admin-ink-faint);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -876,24 +866,24 @@ html, body {
 .admin-page .admin-lede {
   margin: 1.1rem 0 0;
   color: var(--admin-ink);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.2rem;
+  font-family: var(--font-body);
+  font-size: var(--text-title-sm);
   line-height: 1.62;
 }
 
 .admin-page .admin-say {
   margin: 0.9rem 0 0;
   color: var(--admin-ink-quiet);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.68;
 }
 
 .admin-page .admin-quiet {
   margin: 0.55rem 0 0;
   color: var(--admin-ink-dim);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.96rem;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
   line-height: 1.68;
 }
 
@@ -901,8 +891,8 @@ html, body {
 .admin-page .admin-tag {
   display: block;
   color: var(--admin-ink-faint);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -929,9 +919,9 @@ html, body {
 .admin-page .admin-movement h2 {
   margin: 0;
   color: var(--admin-ink);
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-display);
   font-weight: 300;
-  font-size: 2.05rem;
+  font-size: var(--text-title-md);
   line-height: 1.15;
   letter-spacing: -0.015em;
 }
@@ -939,9 +929,9 @@ html, body {
 .admin-page .admin-movement h3 {
   margin: 3.25rem 0 0;
   color: var(--admin-ink);
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-display);
   font-weight: 300;
-  font-size: 1.6rem;
+  font-size: var(--text-title);
   line-height: 1.2;
 }
 
@@ -963,8 +953,8 @@ html, body {
 
 .admin-page .admin-line-title {
   color: var(--admin-ink);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.05rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   line-height: 1.45;
 }
 
@@ -973,8 +963,8 @@ html, body {
   margin: 0.4rem 0 0;
   max-width: 40rem;
   color: var(--admin-ink-dim);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.96rem;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
   line-height: 1.66;
 }
 
@@ -983,8 +973,8 @@ html, body {
 .admin-page .admin-state {
   flex: none;
   color: var(--admin-ink-faint);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1018,9 +1008,9 @@ html, body {
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.34);
   color: var(--admin-ink-quiet);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.86rem;
-  line-height: 1.7;
+  font-family: var(--font-tabular);
+  font-size: var(--text-meta);
+  line-height: var(--leading-prose);
 }
 
 /* Fields, on the desk.
@@ -1037,7 +1027,7 @@ html, body {
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.26);
   box-shadow: inset 0 0 0 1px var(--admin-rule-strong);
-  transition: box-shadow 150ms ease, background 150ms ease;
+  transition: box-shadow var(--duration-fast) ease, background var(--duration-fast) ease;
 }
 
 .admin-page label:has(> input):hover {
@@ -1058,13 +1048,13 @@ html, body {
 /* The kit's label is a 11px Karla eyebrow. On a desk that is small print on
    the one thing you have to read to type into. */
 .admin-page label:has(> input) > span:first-child span {
-  font-size: 0.8125rem !important;
+  font-size: var(--text-caption) !important;
   letter-spacing: 0.09em !important;
 }
 
 .admin-page label:has(> input) > input {
   margin-top: 7px !important;
-  font-size: 1.05rem !important;
+  font-size: var(--text-body) !important;
 }
 
 .admin-page label:has(> input) > input:focus-visible { outline: none; }
@@ -1092,8 +1082,8 @@ html, body {
   border-bottom: 1px solid rgb(var(--admin-ink-rgb) / 14%);
   color: var(--admin-ink);
   cursor: pointer;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.05rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   list-style: none;
 }
 
@@ -1104,8 +1094,8 @@ html, body {
   content: 'Read';
   flex: none;
   color: var(--admin-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1124,8 +1114,8 @@ html, body {
   min-height: 40px;
   color: var(--admin-accent);
   cursor: pointer;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   list-style: none;
@@ -1162,8 +1152,8 @@ html, body {
 
 .admin-page .admin-word {
   color: var(--admin-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 1.15rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-body-lg);
   letter-spacing: 0.02em;
 }
 
@@ -1173,8 +1163,8 @@ html, body {
   padding-left: 1.5rem;
   border-left: 1px solid rgba(212, 184, 138, 0.4);
   color: var(--admin-ink-quiet);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 1.02rem;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   font-style: italic;
   line-height: 1.72;
 }
@@ -1212,18 +1202,18 @@ html, body {
 
 .admin-atlas-sale-row-facts p {
   margin: 0;
-  font-family: 'Lora', Georgia, serif;
+  font-family: var(--font-body);
 }
 
 .admin-atlas-sale-row-buyer {
   color: var(--admin-ink);
-  font-size: 1rem;
+  font-size: var(--text-body);
 }
 
 .admin-atlas-sale-row-muted {
   margin-top: 0.3rem !important;
   color: var(--admin-ink-dim);
-  font-size: 0.85rem;
+  font-size: var(--text-admin-table);
 }
 
 .admin-atlas-sale-row-action {
@@ -1238,8 +1228,8 @@ html, body {
   flex-direction: column;
   gap: 0.35rem;
   color: var(--admin-ink-dim);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.7rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1250,8 +1240,8 @@ html, body {
   border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
   background: transparent;
   color: var(--admin-ink);
-  font-family: 'Lora', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
 }
 
 .admin-atlas-sale-row-action button {
@@ -1259,8 +1249,8 @@ html, body {
   border: none;
   background: none;
   color: var(--admin-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8rem;
+  font-family: var(--font-tabular);
+  font-size: var(--text-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: underline;
@@ -1272,7 +1262,7 @@ html, body {
   flex-basis: 100%;
   margin: 0.5rem 0 0;
   color: var(--admin-wrong);
-  font-size: 0.85rem;
+  font-size: var(--text-meta);
 }
 
 .admin-atlas-sale-row-done code {
@@ -1281,7 +1271,7 @@ html, body {
   padding: 0.6rem 0.75rem;
   border: 1px solid rgb(var(--admin-ink-rgb) / 20%);
   color: var(--admin-warm);
-  font-size: 0.95rem;
+  font-size: var(--text-meta);
   letter-spacing: 0.04em;
 }
 
@@ -1291,8 +1281,8 @@ html, body {
 
 .admin-dashboard-loading {
   color: var(--color-wood-500);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.82rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
 }
 
 .admin-attention-list {
@@ -1307,8 +1297,8 @@ html, body {
   min-height: 4rem;
   border-bottom: 1px solid var(--color-wood-200);
   color: var(--color-wood-800);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.86rem;
+  font-family: var(--font-label);
+  font-size: var(--text-admin-table);
   transition: color 160ms ease, background-color 160ms ease;
 }
 
@@ -1319,15 +1309,15 @@ html, body {
 
 .admin-attention-count {
   color: var(--color-bronze-700);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-heading);
   line-height: 1;
   text-align: center;
 }
 
 .admin-attention-row > span:last-child {
   color: var(--color-wood-500);
-  font-size: 0.65rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1355,15 +1345,15 @@ html, body {
 
 .admin-action-card strong {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.35rem;
+  font-family: var(--font-display);
+  font-size: var(--text-card-title);
   font-weight: 500;
 }
 
 .admin-action-card span {
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.78rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   line-height: 1.45;
 }
 
@@ -1378,8 +1368,8 @@ html, body {
   display: inline-flex;
   align-items: center;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.8rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   text-decoration: underline;
   text-decoration-color: var(--color-wood-300);
   text-underline-offset: 0.3rem;
@@ -1404,8 +1394,8 @@ html, body {
   padding: 0.65rem 0.85rem;
   border-right: 1px solid var(--color-wood-200);
   color: var(--color-wood-500);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -1420,7 +1410,7 @@ html, body {
   place-items: center;
   border: 1px solid var(--color-wood-300);
   border-radius: 999px;
-  font-size: 0.62rem;
+  font-size: var(--text-micro);
 }
 
 .admin-stage-list li.is-complete { color: var(--color-wood-700); }
@@ -1453,15 +1443,15 @@ html, body {
 .maintenance-acquisition-form h3,
 .maintenance-review-heading h3 {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-weight: 500;
   line-height: 1.08;
 }
 
-.maintenance-search-heading h2 { font-size: 1.75rem; }
+.maintenance-search-heading h2 { font-size: var(--text-heading); }
 .maintenance-detail-heading h2 { margin-top: 0.35rem; font-size: clamp(2rem, 4vw, 3.25rem); }
 .maintenance-acquisition-form h3,
-.maintenance-review-heading h3 { font-size: 1.5rem; }
+.maintenance-review-heading h3 { font-size: var(--text-title); }
 
 .maintenance-search-heading p,
 .maintenance-detail-heading > p:last-child,
@@ -1469,8 +1459,8 @@ html, body {
 .maintenance-review-heading > p:last-child {
   margin-top: 0.35rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.84rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   line-height: 1.55;
 }
 
@@ -1487,8 +1477,8 @@ html, body {
   display: block;
   margin-bottom: 0.45rem;
   color: var(--color-wood-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1498,8 +1488,8 @@ html, body {
   display: block;
   margin-top: 0.4rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   line-height: 1.45;
 }
 
@@ -1511,8 +1501,8 @@ html, body {
   border-radius: 0;
   background: var(--color-paper-50);
   color: var(--color-wood-900);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.88rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.4;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
@@ -1538,8 +1528,8 @@ textarea.maintenance-input { resize: vertical; }
 .maintenance-unlocked,
 .maintenance-muted {
   margin-top: 1rem;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.84rem;
+  font-family: var(--font-label);
+  font-size: var(--text-caption);
   line-height: 1.5;
 }
 
@@ -1571,9 +1561,9 @@ textarea.maintenance-input { resize: vertical; }
 .maintenance-result:hover { background: var(--color-paper-100); }
 .maintenance-result.is-selected { border-left-color: var(--color-bronze-600); background: var(--color-bronze-50); }
 .maintenance-result > span:first-child { display: grid; min-width: 0; gap: 0.25rem; }
-.maintenance-result strong { overflow-wrap: anywhere; font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500; }
+.maintenance-result strong { overflow-wrap: anywhere; font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; }
 .maintenance-result small,
-.maintenance-result-state { color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.72rem; line-height: 1.45; }
+.maintenance-result-state { color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.45; }
 .maintenance-result-state { max-width: 9rem; text-align: right; }
 
 .maintenance-detail { margin-top: 3rem; }
@@ -1595,8 +1585,8 @@ textarea.maintenance-input { resize: vertical; }
 
 .maintenance-definition-list dt {
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.65rem;
+  font-family: var(--font-label);
+  font-size: var(--text-micro);
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1606,8 +1596,8 @@ textarea.maintenance-input { resize: vertical; }
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
   color: var(--color-wood-900);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.87rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.5;
   white-space: pre-wrap;
 }
@@ -1625,8 +1615,8 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 .maintenance-acquisition-row > div { display: grid; gap: 0.25rem; min-width: 0; }
-.maintenance-acquisition-row strong { color: var(--color-wood-900); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 500; text-transform: capitalize; }
-.maintenance-acquisition-row span { overflow-wrap: anywhere; color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.78rem; line-height: 1.45; }
+.maintenance-acquisition-row strong { color: var(--color-wood-900); font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; text-transform: capitalize; }
+.maintenance-acquisition-row span { overflow-wrap: anywhere; color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.45; }
 
 .maintenance-acquisition-form,
 .maintenance-review {
@@ -1659,8 +1649,8 @@ textarea.maintenance-input { resize: vertical; }
 .maintenance-history h4 {
   margin-bottom: 0.75rem;
   color: var(--color-wood-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.68rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1689,12 +1679,12 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 .maintenance-history summary > span:first-child { display: grid; gap: 0.2rem; }
-.maintenance-history summary strong { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 500; text-transform: capitalize; }
+.maintenance-history summary strong { font-family: var(--font-display); font-size: var(--text-title-sm); font-weight: 500; text-transform: capitalize; }
 .maintenance-history summary small,
 .maintenance-history summary > span:last-child,
-.maintenance-history details > p { color: var(--color-wood-600); font-family: 'Karla', sans-serif; font-size: 0.75rem; line-height: 1.5; }
+.maintenance-history details > p { color: var(--color-wood-600); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.5; }
 .maintenance-history details > p { margin: 0.5rem 0 1rem; }
-.maintenance-history-snapshots pre { max-width: 100%; overflow-x: auto; color: var(--color-wood-800); font-family: 'Karla', sans-serif; font-size: 0.72rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.maintenance-history-snapshots pre { max-width: 100%; overflow-x: auto; color: var(--color-wood-800); font-family: var(--font-label); font-size: var(--text-label-lg); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .admin-menu-button {
   display: none;
@@ -1716,7 +1706,7 @@ textarea.maintenance-input { resize: vertical; }
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: var(--color-paper-50);
+  background: var(--surface-admin);
 }
 
 .admin-shell-loading::after {
@@ -1740,16 +1730,16 @@ textarea.maintenance-input { resize: vertical; }
 .admin-access-card h1 {
   margin-top: 0.75rem;
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: var(--text-page-title);
   line-height: 1.1;
 }
 
 .admin-access-card p:not(.admin-eyebrow) {
   margin-top: 1rem;
   color: var(--color-wood-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.9rem;
+  font-family: var(--font-label);
+  font-size: var(--text-meta);
   line-height: 1.6;
 }
 
@@ -1757,8 +1747,8 @@ textarea.maintenance-input { resize: vertical; }
   min-height: var(--control-h);
   margin-top: 1.5rem;
   color: var(--color-bronze-700);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1769,8 +1759,8 @@ textarea.maintenance-input { resize: vertical; }
    acted on. */
 .admin-eyebrow {
   color: var(--admin-ink-dim);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1788,8 +1778,8 @@ textarea.maintenance-input { resize: vertical; }
     border: 1px solid var(--color-wood-300);
     background: var(--color-paper-50);
     color: var(--color-wood-900);
-    font-family: 'Karla', sans-serif;
-    font-size: 0.68rem;
+    font-family: var(--font-label);
+    font-size: var(--text-label);
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -1809,7 +1799,7 @@ textarea.maintenance-input { resize: vertical; }
   .admin-sidebar {
     width: min(18rem, calc(100vw - 3rem));
     transform: translate3d(-100%, 0, 0);
-    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 200ms var(--ease-reveal);
   }
 
   .admin-sidebar.is-open { transform: translate3d(0, 0, 0); }
@@ -1873,7 +1863,7 @@ textarea.maintenance-input { resize: vertical; }
 .collector-title,
 .collector-door-title {
   color: var(--color-wood-900);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
 }
 
 .collector-arrival-title { font-size: clamp(2.25rem, 8vw, 4.5rem); line-height: 1.05; }
@@ -1881,8 +1871,8 @@ textarea.maintenance-input { resize: vertical; }
 
 .collector-eyebrow {
   color: var(--color-bronze-600);
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1892,9 +1882,9 @@ textarea.maintenance-input { resize: vertical; }
 .collector-lede,
 .collector-copy {
   color: var(--color-wood-700);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: clamp(1rem, 2.2vw, 1.125rem);
-  line-height: 1.7;
+  line-height: var(--leading-prose);
 }
 
 .collector-arrival-story { max-width: 38rem; margin: 1.75rem auto 0; }
@@ -1902,9 +1892,9 @@ textarea.maintenance-input { resize: vertical; }
 .collector-arrival-record {
   margin-top: 1.5rem;
   color: var(--color-wood-500);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: var(--text-meta);
-  line-height: 1.7;
+  line-height: var(--leading-prose);
   letter-spacing: 0.02em;
 }
 
@@ -1943,12 +1933,12 @@ textarea.maintenance-input { resize: vertical; }
   background: var(--color-paper-100);
 }
 
-.collector-door-title { display: block; font-size: 1.55rem; line-height: 1.15; }
+.collector-door-title { display: block; font-size: var(--text-title); line-height: 1.15; }
 .collector-door-copy {
   display: block;
   margin-top: 0.8rem;
   color: var(--color-wood-600);
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: var(--text-body);
   line-height: 1.6;
 }
@@ -1965,8 +1955,8 @@ textarea.maintenance-input { resize: vertical; }
 .collector-button-secondary {
   min-height: 2.75rem;
   padding: 0.75rem 1.25rem;
-  font-family: 'Karla', sans-serif;
-  font-size: 0.75rem;
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1978,8 +1968,8 @@ textarea.maintenance-input { resize: vertical; }
 .collector-proof-form { display: grid; gap: 0.75rem; margin-top: 1.5rem; }
 .collector-proof-form label { color: var(--color-wood-600); font: 600 0.75rem 'Karla', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
 .collector-proof-form input { min-height: 2.75rem; border: 1px solid var(--color-wood-300); background: var(--color-paper-50); padding: 0.75rem; color: var(--color-wood-900); }
-.collector-error { margin-top: 1rem; color: var(--color-bronze-800); font-family: 'Lora', serif; font-size: var(--text-small); }
-.collector-saved { margin-top: 1rem; color: var(--color-wood-700); font-family: 'Lora', serif; font-size: var(--text-small); text-align: center; }
+.collector-error { margin-top: 1rem; color: var(--color-bronze-800); font-family: var(--font-body); font-size: var(--text-small); }
+.collector-saved { margin-top: 1rem; color: var(--color-wood-700); font-family: var(--font-body); font-size: var(--text-small); text-align: center; }
 
 .collector-certificate-facts { margin-top: 2rem; border-top: 1px solid var(--color-wood-200); }
 .collector-certificate-fact { display: grid; grid-template-columns: minmax(7rem, 0.35fr) minmax(0, 1fr); gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--color-wood-100); }
@@ -1987,7 +1977,7 @@ textarea.maintenance-input { resize: vertical; }
 .collector-certificate-fact dd { color: var(--color-wood-800); font: var(--text-body) 'Lora', serif; overflow-wrap: anywhere; }
 
 .collector-private-screen .font-label {
-  font-size: 0.75rem;
+  font-size: var(--text-label-lg);
   letter-spacing: 0.12em;
 }
 
@@ -2022,7 +2012,7 @@ textarea.maintenance-input { resize: vertical; }
 }
 
 /* On paper-coloured surfaces the bronze needs to go darker to stay visible. */
-:where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white)
+:where(.bg-paper-50, .bg-paper-100, .bg-wood-50, .bg-wood-100, .bg-white, .bg-surface-page, .bg-surface-card, .bg-surface-band)
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-color: var(--color-bronze-700);
 }

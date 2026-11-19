@@ -74,7 +74,7 @@ const OFFERINGS = CREATION_CATEGORIES
 
 const Home: React.FC = () => {
     return (
-        <div className="bg-paper-50 min-h-screen animate-fade-in">
+        <div className="bg-surface-page min-h-screen animate-fade-in">
 
             {/* ── Who I am ────────────────────────────────────────────────
                 Adrian on this section: "this is where they actually learn about me
@@ -115,12 +115,12 @@ const Home: React.FC = () => {
                         />
                     </div>
 
-                    <p className="mt-10 md:mt-14 font-sans text-[17px] md:text-xl text-wood-700 leading-[1.75] font-light text-center text-pretty">
+                    <p className="mt-10 md:mt-14 font-sans text-body md:text-xl text-wood-700 leading-[1.75] font-light text-center text-pretty">
                         My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
                     </p>
 
                     {/* An artist statement should be signed. */}
-                    <p className="mt-8 md:mt-10 font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold text-center">
+                    <p className="mt-8 md:mt-10 font-label text-label uppercase tracking-[0.26em] text-bronze-600 font-semibold text-center">
                         Adrian Rasmussen
                     </p>
 
@@ -157,14 +157,14 @@ const Home: React.FC = () => {
                     {/* The heading, across the full width, with the way in beside it. */}
                     <div className="md:col-span-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
                         <div>
-                            <span className="font-label text-[11px] uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
+                            <span className="font-label text-label uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
                             <h2 className="font-display font-light text-4xl md:text-5xl lg:text-[3.4rem] leading-[1.1] tracking-[-0.012em] text-wood-900 text-balance">
                                 I create across many forms.
                             </h2>
                         </div>
                         <Link
                             to="/creations"
-                            className="inline-flex items-center gap-2.5 py-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
+                            className="inline-flex items-center gap-2.5 py-2 font-label text-label uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
                         >
                             Explore all creations <ArrowRight size={13} aria-hidden="true" />
                         </Link>
@@ -172,7 +172,7 @@ const Home: React.FC = () => {
 
                     {/* The introduction */}
                     <div className="order-1 md:order-none md:col-start-1 md:row-start-2">
-                        <p className="font-sans text-[15px] leading-[1.85] text-wood-700 max-w-[46ch] text-pretty">
+                        <p className="font-sans text-meta leading-[1.85] text-wood-700 max-w-[46ch] text-pretty">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                             These are not decoration. They are portals.
                         </p>
@@ -205,10 +205,10 @@ const Home: React.FC = () => {
                                 className={`group flex items-baseline justify-between gap-6 pb-5 md:py-4 border-b border-wood-200 transition-colors md:order-none ${NAME_ORDER[i]}`}
                             >
                                 <span>
-                                    <span className="block font-display text-xl md:text-[22px] leading-[1.25] text-wood-900 group-hover:text-bronze-600 transition-colors">
+                                    <span className="block font-display text-xl md:text-subhead leading-[1.25] text-wood-900 group-hover:text-bronze-600 transition-colors">
                                         {o.label}
                                     </span>
-                                    <span className="block mt-1 font-sans text-[12.5px] leading-[1.5] text-wood-700">
+                                    <span className="block mt-1 font-sans text-label-lg leading-[1.5] text-wood-700">
                                         {o.desc}
                                     </span>
                                 </span>
@@ -245,10 +245,10 @@ const Home: React.FC = () => {
                             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-wood-900 leading-[1.15] mb-6 font-medium">
                                 Every piece begins with a conversation
                             </h2>
-                            <p className="font-sans text-lg text-wood-600 leading-[1.7] font-light mb-4">
+                            <p className="font-sans text-lg text-wood-600 leading-prose font-light mb-4">
                                 The geometry is exact. The laser is precise. But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.
                             </p>
-                            <p className="font-sans text-lg text-wood-600 leading-[1.7] font-light mb-10">
+                            <p className="font-sans text-lg text-wood-600 leading-prose font-light mb-10">
                                 Whether you're drawn to a specific form or simply feel a resonance with the work, the process starts the same way. Tell me what you're feeling. We'll find the piece together.
                             </p>
                             <Link
@@ -282,7 +282,7 @@ const Home: React.FC = () => {
                             <Link
                                 key={story.id}
                                 to={`/writings/${story.slug}`}
-                                className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md overflow-hidden"
+                                className="group bg-surface-card border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md overflow-hidden"
                             >
                                 {/* A writing with no picture gets no frame. Rendering the
                                     box regardless is what put an empty panel on the live
@@ -304,7 +304,7 @@ const Home: React.FC = () => {
                                     <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                         {story.title}
                                     </h3>
-                                    <p className="font-sans text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
+                                    <p className="font-sans text-base text-wood-600 leading-prose font-light line-clamp-3">
                                         {story.excerpt}
                                     </p>
                                     <span className="inline-flex items-center gap-2 mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-600 group-hover:text-bronze-600 font-semibold transition-colors">
@@ -320,7 +320,7 @@ const Home: React.FC = () => {
                                 <Link
                                     key={story.id}
                                     to={`/writings/${story.slug}`}
-                                    className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md flex overflow-hidden"
+                                    className="group bg-surface-card border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md flex overflow-hidden"
                                 >
                                     {story.image && (
                                     <div className="w-28 sm:w-36 md:w-44 flex-shrink-0 overflow-hidden">

@@ -122,7 +122,7 @@ const Hero: React.FC = () => {
                   Bringing the <br/>formless into form.
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
-              <p className="font-sans text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
+              <p className="font-sans text-lg md:text-2xl text-paper-100 font-light leading-prose tracking-wide max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
                   From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>
@@ -145,7 +145,7 @@ const Hero: React.FC = () => {
         style={{ opacity: safeOpacity * 0.6 }}
         aria-label="Scroll to content"
       >
-          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-50 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
+          <span className="font-label text-label uppercase tracking-[0.2em] text-paper-50 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent animate-hero-bounce"></div>
       </button>
     </section>

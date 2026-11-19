@@ -64,7 +64,7 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({ title, children }) => {
                   <Link
                     to={item.to}
                     className={[
-                      'flex min-h-11 items-center font-label text-[11px] uppercase tracking-[0.22em] py-2 transition-colors',
+                      'flex min-h-11 items-center font-label text-label uppercase tracking-[0.22em] py-2 transition-colors',
                       active ? 'text-bronze-600' : 'text-wood-700 hover:text-bronze-600',
                     ].join(' ')}
                   >

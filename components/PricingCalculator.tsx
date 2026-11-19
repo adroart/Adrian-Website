@@ -179,7 +179,7 @@ const PricingCalculator: React.FC = () => {
     <AdminPage width="narrow">
       <div className="studio-sales-controls">
         <div className="max-w-2xl mx-auto">
-          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
+          <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
             Admin
           </p>
           <h1 className="font-title text-4xl md:text-5xl text-wood-900 mb-2">Pricing</h1>
@@ -196,7 +196,7 @@ const PricingCalculator: React.FC = () => {
                 aria-current={view === v ? 'page' : undefined}
                 type="button"
                 onClick={() => setView(v)}
-                className={`font-label text-[11px] uppercase tracking-[0.2em] font-semibold px-4 py-3 -mb-px border-b-2 transition-colors capitalize ${
+                className={`font-label text-label uppercase tracking-[0.2em] font-semibold px-4 py-3 -mb-px border-b-2 transition-colors capitalize ${
                   view === v
                     ? 'border-bronze-500 text-wood-900'
                     : 'border-transparent text-wood-400 hover:text-wood-700'
@@ -387,7 +387,7 @@ const PricingCalculator: React.FC = () => {
                 </div>
 
                 <div className="mt-4 bg-wood-900 text-paper-50 px-5 py-4 flex items-baseline justify-between gap-4">
-                  <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-300 font-semibold">
+                  <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-300 font-semibold">
                     Quote · {Math.round(config.marginPercent * 100)}% margin
                   </span>
                   <span className="font-serif text-3xl tabular-nums">{formatMoney(breakdown.quote)}</span>
@@ -397,14 +397,14 @@ const PricingCalculator: React.FC = () => {
                   <button
                     type="button"
                     onClick={saveCurrentQuote}
-                    className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
+                    className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
                   >
                     Save this piece to reference
                   </button>
                   <button
                     type="button"
                     onClick={draftInvoice}
-                    className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
+                    className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
                   >
                     Create invoice
                   </button>
@@ -487,7 +487,7 @@ const ReferenceTab: React.FC<{
             <button
               type="button"
               onClick={applySuggestion}
-              className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-700 hover:text-bronze-900 transition-colors font-semibold border-b border-bronze-400 pb-0.5"
+              className="font-label text-label uppercase tracking-[0.2em] text-bronze-700 hover:text-bronze-900 transition-colors font-semibold border-b border-bronze-400 pb-0.5"
             >
               Recenter base prices ×{insight.medianRatio.toFixed(2)}
             </button>
@@ -506,7 +506,7 @@ const ReferenceTab: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemove(q.id)}
-                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-wood-700 transition-colors font-semibold"
+                className="font-label text-label uppercase tracking-[0.15em] text-wood-300 hover:text-wood-700 transition-colors font-semibold"
               >
                 Remove
               </button>

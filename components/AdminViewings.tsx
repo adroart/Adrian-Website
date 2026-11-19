@@ -46,7 +46,7 @@ const SPHERE_LABELS: Record<SphereKey, string> = {
 
 const inputClass =
   'input placeholder:text-wood-400';
-const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+const labelClass = 'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 
 /** A single editable card on the chart board. */
 const BoardCard: React.FC<{
@@ -64,7 +64,7 @@ const BoardCard: React.FC<{
   >
     <div className="flex items-start justify-between gap-3">
       <div>
-        <span className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600">
+        <span className="font-label text-micro uppercase tracking-[0.18em] text-bronze-600">
           {sphere} · No. {piece.code}
         </span>
         <input
@@ -76,7 +76,7 @@ const BoardCard: React.FC<{
       <button
         type="button"
         onClick={onToggleRecommend}
-        className={`font-label text-[10px] uppercase tracking-[0.16em] shrink-0 ${
+        className={`font-label text-micro uppercase tracking-[0.16em] shrink-0 ${
           piece.recommended ? 'text-bronze-700' : 'text-wood-400 hover:text-bronze-600'
         }`}
       >
@@ -402,7 +402,7 @@ const AdminViewings: React.FC = () => {
     return (
       <AdminPage width="medium">
           <div className="max-w-4xl mx-auto">
-            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+            <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
               The Curation Desk
             </p>
             <div className="flex items-center justify-between mb-8">
@@ -433,8 +433,8 @@ const AdminViewings: React.FC = () => {
                       {row.intention && <span className="font-sans text-sm text-wood-500 ml-3">{row.intention}</span>}
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
-                      {row.invoiceToken && <span className="font-label text-[10px] uppercase tracking-[0.14em] text-bronze-600">invoice</span>}
-                      <span className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500">{STATUS_LABEL[row.status] || row.status}</span>
+                      {row.invoiceToken && <span className="font-label text-micro uppercase tracking-[0.14em] text-bronze-600">invoice</span>}
+                      <span className="font-label text-micro uppercase tracking-[0.16em] text-wood-500">{STATUS_LABEL[row.status] || row.status}</span>
                     </div>
                   </button>
                 ))}
@@ -450,12 +450,12 @@ const AdminViewings: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+              <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
                 The Curation Desk
               </p>
               <h1 className="font-display text-3xl text-wood-900">{viewingId ? `Editing · ${recipientName || 'Viewing'}` : 'Build a Viewing'}</h1>
             </div>
-            <button type="button" onClick={() => { setView('list'); loadList(); }} className="font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 hover:text-bronze-700 underline underline-offset-4">
+            <button type="button" onClick={() => { setView('list'); loadList(); }} className="font-label text-label uppercase tracking-[0.16em] text-wood-600 hover:text-bronze-700 underline underline-offset-4">
               ← All viewings
             </button>
           </div>
@@ -482,10 +482,10 @@ const AdminViewings: React.FC = () => {
             </div>
 
             <div className="mt-4 flex gap-5">
-              <button type="button" onClick={() => setMode('chart')} className={`font-label text-[11px] uppercase tracking-[0.16em] ${mode === 'chart' ? 'text-bronze-700' : 'text-wood-500'}`}>
+              <button type="button" onClick={() => setMode('chart')} className={`font-label text-label uppercase tracking-[0.16em] ${mode === 'chart' ? 'text-bronze-700' : 'text-wood-500'}`}>
                 {mode === 'chart' ? '● ' : '○ '}Enter chart
               </button>
-              <button type="button" onClick={() => setMode('birth')} className={`font-label text-[11px] uppercase tracking-[0.16em] ${mode === 'birth' ? 'text-bronze-700' : 'text-wood-500'}`}>
+              <button type="button" onClick={() => setMode('birth')} className={`font-label text-label uppercase tracking-[0.16em] ${mode === 'birth' ? 'text-bronze-700' : 'text-wood-500'}`}>
                 {mode === 'birth' ? '● ' : '○ '}From birth moment
               </button>
             </div>
@@ -499,7 +499,7 @@ const AdminViewings: React.FC = () => {
               <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {SPHERE_KEYS.map((k) => (
                   <div key={k}>
-                    <label className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-600 block mb-1">{SPHERE_LABELS[k]}</label>
+                    <label className="font-label text-micro uppercase tracking-[0.12em] text-wood-600 block mb-1">{SPHERE_LABELS[k]}</label>
                     <div className="flex gap-1.5">
                       <input type="number" min={0} max={64} value={chart[k].gate || ''} onChange={(e) => setChart((p) => ({ ...p, [k]: { ...p[k], gate: Number(e.target.value) } }))} placeholder="gate" className={`${inputClass} px-2`} />
                       <input type="number" min={1} max={6} value={chart[k].line} onChange={(e) => setChart((p) => ({ ...p, [k]: { ...p[k], line: Number(e.target.value) } }))} placeholder="ln" className={`${inputClass} px-2 w-16`} />
@@ -513,7 +513,7 @@ const AdminViewings: React.FC = () => {
               <button type="button" onClick={compute} disabled={loading} className="btn btn-outline">
                 {loading ? 'Computing…' : 'Compute the chart'}
               </button>
-              {error && <span className="font-sans text-sm text-red-700">{error}</span>}
+              {error && <span className="font-sans text-sm text-danger">{error}</span>}
             </div>
           </div>
 
@@ -521,10 +521,10 @@ const AdminViewings: React.FC = () => {
           {pieces.length > 0 && (
             <>
               <div className="flex items-center justify-between mb-4">
-                <p className="font-label text-[11px] uppercase tracking-[0.16em] text-wood-600">
+                <p className="font-label text-label uppercase tracking-[0.16em] text-wood-600">
                   The board · {pieces.length} pieces · {recommendedCount} recommended
                 </p>
-                <button type="button" onClick={() => setShowPreview((s) => !s)} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 underline underline-offset-4">
+                <button type="button" onClick={() => setShowPreview((s) => !s)} className="font-label text-label uppercase tracking-[0.16em] text-bronze-700 underline underline-offset-4">
                   {showPreview ? 'Back to the board' : 'Preview the Viewing'}
                 </button>
               </div>

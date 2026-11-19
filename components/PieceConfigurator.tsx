@@ -228,11 +228,11 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                     <button
                         type="button"
                         onClick={() => setConfigStep(1)}
-                        className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors ${
+                        className={`font-label text-label uppercase tracking-[0.18em] font-semibold transition-colors ${
                             configStep === 1 ? 'text-wood-900' : 'text-wood-700 hover:text-wood-700'
                         }`}
                     >
-                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
+                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-micro ${
                             configStep === 1 ? 'bg-wood-900 text-paper-50' : 'bg-wood-200 text-wood-700'
                         }`}>1</span>
                         Size
@@ -242,11 +242,11 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                         type="button"
                         onClick={advanceToReview}
                         disabled={!selectedSize}
-                        className={`font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`font-label text-label uppercase tracking-[0.18em] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                             configStep === 2 ? 'text-wood-900' : 'text-wood-700 hover:text-wood-700'
                         }`}
                     >
-                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-[10px] ${
+                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full mr-2 text-micro ${
                             configStep === 2 ? 'bg-wood-900 text-paper-50' : 'bg-wood-200 text-wood-700'
                         }`}>2</span>
                         {hasAnyAddOn ? 'Options' : 'Review'}
@@ -281,7 +281,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-sans text-lg text-wood-900">{sizeOption.size}</span>
-                                            <span className={`font-label text-[10px] uppercase tracking-[0.15em] font-semibold ${
+                                            <span className={`font-label text-micro uppercase tracking-[0.15em] font-semibold ${
                                                 isInStock ? 'text-avail-ready' : 'text-wood-400'
                                             }`}>
                                                 {isInStock
@@ -327,10 +327,10 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                             className="w-full flex items-center justify-between px-4 py-3 mb-6 border border-wood-200 hover:border-wood-400 transition-colors text-left group"
                         >
                             <div>
-                                <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-700 font-semibold block">Size</span>
+                                <span className="font-label text-micro uppercase tracking-[0.18em] text-wood-700 font-semibold block">Size</span>
                                 <span className="font-sans text-base text-wood-900">{selectedSizeData.size}</span>
                             </div>
-                            <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
+                            <span className="font-label text-label uppercase tracking-[0.18em] text-bronze-600 group-hover:text-bronze-600 font-semibold">
                                 Change
                             </span>
                         </button>
@@ -394,7 +394,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                                                     +{formatPrice(illuminationPrice)}
                                                 </span>
                                             </div>
-                                            <p className="font-sans text-sm text-wood-700 mt-1 leading-[1.7]">
+                                            <p className="font-sans text-sm text-wood-700 mt-1 leading-prose">
                                                 LED installation included. We will finalize the light design together after your order.
                                             </p>
                                         </div>
@@ -412,7 +412,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                                 {formatPrice(mtoTotal)}
                             </span>
                         </div>
-                        <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold transition-all duration-300">
+                        <div className="font-label text-label uppercase tracking-[0.2em] text-wood-600 font-semibold transition-all duration-300">
                             {selectedIsInStock ? (
                                 <>
                                     <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-ready rounded-sm mr-1">In stock</span>
@@ -424,7 +424,7 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                             )}
                         </div>
                         {editionText && (
-                            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-1">
+                            <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-1">
                                 {editionText}
                             </p>
                         )}
@@ -460,14 +460,14 @@ const PieceConfigurator: React.FC<PieceConfiguratorProps> = ({ art, initialSize 
                         </Link>
                     )}
 
-                    <p className="text-center font-sans text-[13px] text-wood-600 mt-4 leading-[1.55] max-w-[40ch] mx-auto">
+                    <p className="text-center font-sans text-caption text-wood-600 mt-4 leading-[1.55] max-w-[40ch] mx-auto">
                         Shipping and lead time will be confirmed for your piece and destination before purchase.
                     </p>
 
                     <Link
                         to="/inquire"
                         state={{ piece: art.title, pieceId: art.id }}
-                        className="block text-center font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-4 transition-colors"
+                        className="block text-center font-label text-label uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold mt-4 transition-colors"
                     >
                         Or commission a similar piece
                     </Link>

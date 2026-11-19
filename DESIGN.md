@@ -94,6 +94,44 @@ components:
   section-gap: 32px # 24 to 48px
 ---
 
+## Change this, this changes
+
+Every value below lives in `src/master.css`. Change the one line and the site
+follows. Day, night, the dark bands and the invoice page all re-resolve.
+
+| Change this line in `src/master.css` | What changes on the site |
+|---|---|
+| `--surface-page` | The background behind every page (home, about, writings, inquire, poetry, legal pages, 404) |
+| `--surface-card` | Every white card and sheet, and its night colour (was 22 `bg-white`) |
+| `--surface-band` / `--surface-panel` | Full-width tinted bands, side panels and drawers |
+| `--surface-admin` | The studio (admin) background |
+| `--surface-invoice` | The printable invoice page |
+| `--ink` / `--ink-muted` | Main text and secondary text where a component uses the role (`text-ink`) |
+| `--accent` | The warm accent on eyebrows and highlights that use `text-accent` |
+| `--danger` / `--success` | Every error and confirmation message (was 45 red and green classes) |
+| `--line` / `--line-strong` | Hairline rules and card edges that use the role |
+| `--text-body` | Body text everywhere (`text-base` points at it) |
+| `--text-small` | Captions and meta (`text-sm` points at it) |
+| `--text-page-title` | Page titles (`text-4xl` points at it) |
+| `--text-section-heading` | Section headings (`text-2xl`) |
+| `--text-card-title` | Card titles (`text-xl`, admin action tiles) |
+| `--text-nav` / `--text-admin-nav` | The site header links / the studio sidebar links |
+| `--text-admin-table` | Rows in admin lists |
+| `--text-button` | The label size on every button, tab and chip |
+| `--text-micro` | The legacy 10px labels. Set it to `var(--text-label)` to lift them all to the 11px floor |
+| `--font-display` / `--font-body` / `--font-label` | The three typefaces, site-wide |
+| `--leading-prose` | Line height of long reading text (was `leading-[1.7]` across the long-form pages) |
+| `--control-h` | Height of every button, input, tab and chip on desktop (touch stays 44px) |
+| `--btn-primary-bg` | The fill of every primary button |
+| `--space-*`, `--card-pad`, `--section-gap` | Spacing steps and the named gaps |
+| `--duration-fast` | Speed of every hover and default transition |
+| `--color-paper-50` ... `--color-bronze-900` | The raw ramps: every role that points at a step moves with it |
+
+**Not in the file, on purpose:** the collector journey, the ceremony kit and the
+walkthrough keep their own token files (`components/ceremony/tokens.ts`,
+`components/collector/tokens.ts`). They are a locked design, and their colours
+feed SVG drawing attributes, which CSS variables do not reliably reach.
+
 ## Overview
 
 This is Adrian Rasmussen's personal artist portfolio and shop — multidimensional
@@ -109,7 +147,7 @@ is the default hero ground; a paper-light gallery variant exists for daylight.
 A warm natural range — wood, stone, bronze — pulled straight from the material of
 the sculptures.
 
-- **Bronze (#c4aa7c dark / #8a744e light):** The single accent. The call to
+- **Bronze (#c4aa7c dark / #725d3d light):** The single accent. The call to
   action and key emphasis, echoing the metal in the work.
 - **Darkest wood (#262321):** The hero ground and default canvas.
 - **Cream (#f2efe9):** Primary text and headlines on the dark ground.

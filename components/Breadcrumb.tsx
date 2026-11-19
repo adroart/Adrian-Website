@@ -52,7 +52,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ crumbs, className = '' }) => {
     return (
         <nav
             aria-label="Breadcrumb"
-            className={`flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 ${className}`}
+            className={`flex items-center gap-1.5 font-label text-label uppercase tracking-[0.15em] text-wood-700 ${className}`}
         >
             {crumbs.map((crumb, i) => (
                 <React.Fragment key={i}>

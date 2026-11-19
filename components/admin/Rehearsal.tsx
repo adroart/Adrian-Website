@@ -118,7 +118,7 @@ const StepShell: React.FC<React.PropsWithChildren<{
         {name}
       </h3>
       <span
-        className={`font-label text-[10px] uppercase tracking-[0.15em] ${
+        className={`font-label text-micro uppercase tracking-[0.15em] ${
           status === 'current' ? 'text-bronze-700' : status === 'done' ? 'text-wood-500' : 'text-wood-400'
         }`}
       >
@@ -325,7 +325,7 @@ const Rehearsal: React.FC = () => {
             {chain.confirmedAt ? (
               <p className="font-sans text-sm text-wood-500">Confirmed {formatDate(chain.confirmedAt)}.</p>
             ) : piecesError ? (
-              <p className="font-sans text-sm text-red-700" role="alert">{piecesError}</p>
+              <p className="font-sans text-sm text-danger" role="alert">{piecesError}</p>
             ) : newestRow ? (
               <div className="border border-wood-200 bg-paper-50 p-4">
                 <p className="font-sans text-sm text-wood-700">

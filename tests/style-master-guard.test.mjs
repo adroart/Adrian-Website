@@ -4,10 +4,11 @@
 // src/master.css. This test keeps it that way:
 //   1. master.css defines the scales and the five button variants.
 //   2. No other stylesheet defines a .btn variant.
-//   3. Hard-coded colours and hand-built button sizes outside master.css may
-//      only go DOWN. The ceilings below are the counts on the day the master
-//      file landed (2026-11-18). When you migrate a file, lower the ceiling to
-//      the new count so nobody can quietly add one back.
+//   3. Hard-coded colours, Tailwind palette colours (red-700, bg-white ...), raw
+//      font sizes, raw font stacks and hand-built button sizes outside
+//      master.css may only go DOWN. The ceilings below are today's counts
+//      (2026-11-19). When you migrate a file, lower the ceiling to the new
+//      count so nobody can quietly add one back.
 //
 // Run alone: node --test tests/style-master-guard.test.mjs
 import { describe, it } from 'node:test';
@@ -19,8 +20,14 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const MASTER = 'src/master.css';
 
 // Ceilings. Lower these as files migrate; never raise them.
+// On main before the master file: raw colours 658, palette 85, font sizes 684,
+// font stacks 87, control sizes 89, hand-built buttons 116. Most of what is left
+// sits in the collector, ceremony and walkthrough screens (see the PR body).
 const CEILING = {
-  rawColours: 407,
+  rawColours: 403,
+  paletteColours: 4,
+  rawFontSizes: 199,
+  rawFontFamilies: 6,
   buttonSizes: 65,
   handBuiltButtons: 87,
 };
@@ -46,6 +53,14 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 // A colour literal: #rgb, #rgba, #rrggbb, #rrggbbaa, or rgb()/rgba() with digits.
 // rgb(var(--admin-ink-rgb) / 14%) is a token and does not count.
 const RAW_COLOUR = /(?<![\w&/-])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b|\brgba?\(\s*\d/g;
+// A Tailwind built-in palette colour. The site's palette is paper / wood / stone /
+// bronze plus the roles (ink, danger, surface-card ...), all defined in master.css.
+const PALETTE = /(?<![\w-])(?:[a-z-]+:)*(?:text|bg|border|ring|outline|fill|stroke|from|via|to|divide|decoration|placeholder|shadow|accent|caret)-(?:white|black|(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral)-\d{2,3})(?![\w-])/g;
+// A raw font size: text-[13px] in markup, font-size: 13px in CSS, fontSize: 13 inline.
+// var(--text-*) and the named classes (text-sm, text-card-title ...) do not count.
+const RAW_FONT_SIZE = /\btext-\[\d*\.?\d+(?:px|rem|em)\]|font-size:\s*\d*\.?\d+(?:px|rem|em)|fontSize:\s*['"]?\d*\.?\d+(?:px|rem)?['"]?(?=\s*[,}])/g;
+// A font named outright instead of var(--font-display / body / label / tabular).
+const RAW_FONT_FAMILY = /font-family:\s*(?!var\(|inherit)['"A-Za-z][^;}]*|fontFamily:\s*['"](?!var\()[^'"]*['"]/g;
 // A fixed control size: min-h-11 / min-h-[44px] / h-11 in markup, min-height: 44px in CSS.
 const BUTTON_SIZE = /\bmin-h-(?:9|10|11|12|14|\[\d+px\])(?![\w-])|\bh-(?:10|11|12)(?![\w-])|min-height:\s*\d+px/g;
 // A button assembled from utilities: label font + uppercase + its own padding in one class string, any order.
@@ -77,6 +92,23 @@ describe('master style file', () => {
       '44px controls must be scoped to touch screens');
   });
 
+  it('owns the type roles, the colour roles and the surfaces', () => {
+    for (const token of [
+      '--text-page-title', '--text-section-heading', '--text-card-title', '--text-body', '--text-small',
+      '--text-nav', '--text-admin-table', '--text-button',
+      '--ink:', '--ink-muted:', '--link:', '--accent:', '--danger:', '--ink-on-dark:',
+      '--surface-page:', '--surface-band:', '--surface-card:', '--surface-panel:', '--surface-admin:', '--surface-invoice:',
+      '--line:', '--line-strong:',
+      '--leading-prose', '--duration-fast', '--ease-standard', '--border-width',
+    ]) {
+      assert.ok(master.includes(token), `master.css is missing ${token}`);
+    }
+    // Tailwind's size names point at master tokens, so text-sm and friends follow this file.
+    for (const size of ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl']) {
+      assert.match(master, new RegExp(`--text-${size}:\\s*var\\(--text-`), `text-${size} must point at a master type token`);
+    }
+  });
+
   it('owns the colour ramps, including bronze-800', () => {
     for (const ramp of ['paper', 'wood', 'stone', 'bronze']) {
       assert.match(master, new RegExp(`--color-${ramp}-50:`), `master.css is missing the ${ramp} ramp`);
@@ -96,7 +128,7 @@ describe('master style file', () => {
     assert.match(read('src/index.css'), /@import "\.\/master\.css";/);
   });
 
-  for (const [name, re] of [['rawColours', RAW_COLOUR], ['buttonSizes', BUTTON_SIZE], ['handBuiltButtons', HAND_BUILT]]) {
+  for (const [name, re] of [['rawColours', RAW_COLOUR], ['paletteColours', PALETTE], ['rawFontSizes', RAW_FONT_SIZE], ['rawFontFamilies', RAW_FONT_FAMILY], ['buttonSizes', BUTTON_SIZE], ['handBuiltButtons', HAND_BUILT]]) {
     it(`${name} outside master.css do not go up (ceiling ${CEILING[name]})`, () => {
       const { total, top } = count(re);
       assert.ok(total <= CEILING[name],

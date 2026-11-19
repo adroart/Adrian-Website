@@ -241,7 +241,7 @@ const PiecePage: React.FC = () => {
 
     if (!art) {
         return (
-            <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+            <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Piece Not Found</h1>
                     <p className="font-sans text-lg text-wood-600 mb-8">The piece you are looking for does not exist or has been moved.</p>
@@ -414,7 +414,7 @@ const PiecePage: React.FC = () => {
                     <div className="max-w-7xl mx-auto px-6 md:px-12 py-3 flex items-center justify-between gap-4">
                         <a
                             href={oracleOrigin}
-                            className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.22em] text-bronze-700 hover:text-bronze-800 transition-colors"
+                            className="inline-flex items-center gap-2 font-label text-label uppercase tracking-[0.22em] text-bronze-700 hover:text-bronze-800 transition-colors"
                         >
                             Return to your reading on Mandala Codes
                         </a>
@@ -538,7 +538,7 @@ const PiecePage: React.FC = () => {
                     </div>
 
                     <div className="mb-8">
-                        <div className="prose prose-stone font-sans text-wood-700 leading-[1.7] md:leading-[1.8] text-base md:text-[17px] max-w-[62ch]">
+                        <div className="prose prose-stone font-sans text-wood-700 leading-prose md:leading-airy text-base md:text-body max-w-[62ch]">
                             <p>{art.description}</p>
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                         </div>
@@ -588,7 +588,7 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
-                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className={`inline-block px-2.5 py-1 text-label font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
                                     <span className="block font-serif text-4xl text-wood-900 font-medium">{art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 {/* Desktop: side by side */}
@@ -626,7 +626,7 @@ const PiecePage: React.FC = () => {
                                     Request to Purchase
                                 </Link>
                                 )}
-                                <p className="text-center font-sans text-[13px] text-wood-600 mt-1 leading-[1.55] max-w-[40ch] mx-auto">
+                                <p className="text-center font-sans text-caption text-wood-600 mt-1 leading-[1.55] max-w-[40ch] mx-auto">
                                     Shipping and lead time will be confirmed for your piece and destination before purchase.
                                 </p>
                             </div>
@@ -636,7 +636,7 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
-                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
+                                    <span className={`inline-block px-2.5 py-1 text-label font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
                                     <span className="block font-serif text-4xl text-wood-900 font-medium">From {art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 {/* Desktop: side by side */}
@@ -658,7 +658,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     Commission This Piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-sans text-[13px] text-wood-600 mt-1 leading-[1.55] max-w-[40ch] mx-auto">
+                                <p className="text-center font-sans text-caption text-wood-600 mt-1 leading-[1.55] max-w-[40ch] mx-auto">
                                     Shipping and lead time will be confirmed for your piece and destination before purchase.
                                 </p>
                             </div>
@@ -678,7 +678,7 @@ const PiecePage: React.FC = () => {
                                 </div>
 
                                 {art.series && seriesLink && seriesData && (
-                                    <p className="font-sans text-base text-wood-600 leading-[1.7]">
+                                    <p className="font-sans text-base text-wood-600 leading-prose">
                                         Part of the{' '}
                                         <Link to={seriesLink} className="text-bronze-600 hover:underline">
                                             {art.series} series
@@ -694,7 +694,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     Inquire about a similar piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
+                                <p className="text-center font-label text-label uppercase tracking-[0.2em] text-wood-600 font-semibold">
                                     Each piece is made by hand in the studio
                                 </p>
                             </div>
@@ -709,12 +709,12 @@ const PiecePage: React.FC = () => {
 
                     {/* Category label */}
                     <div className="mt-8 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
+                        <span className="font-label text-label uppercase tracking-[0.2em] text-wood-600 font-semibold">
                             {art.category}
                         </span>
                         <Link
                             to={isMultidimensional ? '/creations/multidimensional-art' : `/creations?category=${encodeURIComponent(art.category)}`}
-                            className="inline-flex items-center gap-1 font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold hover:text-bronze-600 transition-colors"
+                            className="inline-flex items-center gap-1 font-label text-label uppercase tracking-[0.15em] text-bronze-600 font-semibold hover:text-bronze-600 transition-colors"
                         >
                             Browse all <ArrowRight size={11} />
                         </Link>
@@ -725,7 +725,7 @@ const PiecePage: React.FC = () => {
             {/* Sticky Bottom Bar (Mobile) */}
             {(art.availability === 'SOLD' || editionClosed) ? (
                 <div className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)] transition-transform duration-300 ${purchaseVisible ? 'translate-y-full' : 'translate-y-0'}`}>
-                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-avail-sold font-semibold">
+                    <span className="font-label text-label uppercase tracking-[0.2em] text-avail-sold font-semibold">
                         This piece has found its home
                     </span>
                     <Link
