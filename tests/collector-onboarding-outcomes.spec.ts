@@ -79,7 +79,12 @@ async function bindAndReachProfile(page: Page, stopAtPrivateRead = false, shareN
       }
       return true;
     })).toBe(true);
-    await page.screenshot({ path: placementScreenshot, scale: 'css', animations: 'disabled' });
+    await expect.poll(() => page.locator('.collector-root').evaluate(root =>
+      root.getAnimations({ subtree: true }).filter(animation =>
+        animation.playState === 'running' && animation.effect?.getComputedTiming().iterations !== Infinity,
+      ).length,
+    )).toBe(0);
+    await page.screenshot({ path: placementScreenshot, scale: 'css' });
   }
   await page.getByRole('button', { name: 'Continue' }).click();
   if (stopAtPrivateRead) return;
