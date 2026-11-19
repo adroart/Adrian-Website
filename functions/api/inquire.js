@@ -12,6 +12,8 @@
  */
 
 import { rateLimit, clientIp } from './_lib/ratelimit.js';
+import { findStaticArtwork } from './_lib/artworkCatalog.js';
+import { companionCardUrl, ulCardNumber } from '../../utils/universalLanguage.ts';
 
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
@@ -47,9 +49,10 @@ function escapeHtml(str) {
 
 function buildEmailHtml(data) {
   const { name, email, commissionType, vision, budget, timeline, referral,
-          inquiryType, pieceTitle, purchaseSize, purchaseAddOns, purchaseAvailability, purchasePrice } = data;
+          inquiryType, pieceId, pieceTitle, mandalaCard, purchaseSize, purchaseAddOns, purchaseAvailability, purchasePrice, location } = data;
 
   const isPurchase = inquiryType === 'purchase';
+  const source = mandalaCard == null ? undefined : `Mandala Codes · Card ${mandalaCard}`;
 
   if (isPurchase) {
     const rows = [
@@ -57,10 +60,15 @@ function buildEmailHtml(data) {
       ['Email', email],
       ['Piece', pieceTitle || '—'],
     ];
+    if (pieceId) rows.push(['Artwork ID', pieceId]);
+    if (source) rows.push(['Source', source]);
     if (purchaseSize) rows.push(['Size', purchaseSize]);
     if (purchaseAddOns && purchaseAddOns.length) rows.push(['Add-ons', purchaseAddOns.join(', ')]);
     if (purchaseAvailability) rows.push(['Availability', purchaseAvailability]);
     if (purchasePrice) rows.push(['Price', purchasePrice]);
+    if (typeof location === 'string' && location.trim()) {
+      rows.push(['Shipping destination', location.trim().slice(0, 180)]);
+    }
 
     const tableRows = rows
       .map(
@@ -87,6 +95,8 @@ function buildEmailHtml(data) {
     ['Email', email],
     ['Commission Type', commissionType],
   ];
+  if (pieceId) rows.push(['Reference artwork', pieceTitle], ['Reference artwork ID', pieceId]);
+  if (source) rows.push(['Source', source]);
   if (budget) rows.push(['Budget', budget]);
   if (timeline) rows.push(['Timeline', timeline]);
   if (referral) rows.push(['How they found you', referral]);
@@ -166,6 +176,14 @@ export async function onRequestPost(context) {
     );
   }
 
+  // Cross-site links can identify a public listing, not a physical edition.
+  // Treat source as optional context and only include the artwork's exact card.
+  const artwork = findStaticArtwork(body.pieceId);
+  const pieceTitle = artwork?.title ?? (typeof body.pieceTitle === 'string' ? body.pieceTitle : '');
+  const mandalaCard = artwork && body.source === 'mandalacodes' && companionCardUrl(artwork)
+    && body.cardNumber === ulCardNumber(artwork.coverImage) ? body.cardNumber : undefined;
+  const delivery = { ...body, pieceId: artwork?.id, pieceTitle, mandalaCard };
+
   const toEmail = env.INQUIRY_TO_EMAIL || DEFAULT_TO;
   const fromEmail = env.RESEND_FROM_EMAIL || DEFAULT_FROM;
 
@@ -180,9 +198,9 @@ export async function onRequestPost(context) {
       to: [toEmail],
       reply_to: email,
       subject: isPurchase
-        ? `Purchase Request from ${name} — ${body.pieceTitle || 'Piece'}`
+        ? `Purchase Request from ${name} — ${pieceTitle || 'Piece'}`
         : `Commission Inquiry from ${name} (${commissionType})`,
-      html: buildEmailHtml(body),
+      html: buildEmailHtml(delivery),
     }),
   });
 

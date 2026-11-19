@@ -126,6 +126,7 @@ const PiecePage: React.FC = () => {
     const art = useMemo(() => resolvePiece(FULL_ARCHIVE, id), [id]);
     const cardUrl = art ? companionCardUrl(art) : null;
     const oracleOrigin = art ? contextualCardReturn(art, location.search, navState?.oracleOrigin) : null;
+    const mandalaCard = art && oracleOrigin ? ulCardNumber(art.coverImage) ?? undefined : undefined;
 
     // An id URL is a working URL, not the canonical one. Send it to the slug so the
     // address bar, the share sheet and the analytics all agree on one address per piece.
@@ -570,7 +571,7 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    state={{ piece: art.title, pieceId: art.id }}
+                                    state={{ piece: art.title, pieceId: art.id, mandalaCard }}
                                     className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission a similar piece <ArrowRight size={14} />
@@ -579,7 +580,7 @@ const PiecePage: React.FC = () => {
 
                         /* --- Unified configurator: pieces with size variants --- */
                         ) : hasVariants ? (
-                            <PieceConfigurator key={art.id} art={art} initialSize={preferredSize} />
+                            <PieceConfigurator key={art.id} art={art} initialSize={preferredSize} mandalaCard={mandalaCard} />
 
                         /* --- Ready to ship (simple, no variants): Add to Cart --- */
                         ) : art.availability === 'READY_TO_SHIP' ? (
@@ -614,6 +615,7 @@ const PiecePage: React.FC = () => {
                                     state={{
                                         piece: art.title,
                                         pieceId: art.id,
+                                mandalaCard,
 
                                         mode: 'purchase',
                                         price: art.price != null ? formatPrice(art.price) : '',
@@ -647,6 +649,7 @@ const PiecePage: React.FC = () => {
                                     state={{
                                         piece: art.title,
                                         pieceId: art.id,
+                                mandalaCard,
 
                                         mode: 'purchase',
                                         price: art.price != null ? `From ${formatPrice(art.price)}` : '',
@@ -687,7 +690,7 @@ const PiecePage: React.FC = () => {
 
                                 <Link
                                     to="/inquire"
-                                    state={{ piece: art.title, pieceId: art.id }}
+                                    state={{ piece: art.title, pieceId: art.id, mandalaCard }}
                                     className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Inquire about a similar piece <ArrowRight size={14} />
@@ -728,7 +731,7 @@ const PiecePage: React.FC = () => {
                     </span>
                     <Link
                         to="/inquire"
-                        state={{ piece: art.title, pieceId: art.id }}
+                        state={{ piece: art.title, pieceId: art.id, mandalaCard }}
                         className="min-h-[44px] px-6 py-3 border border-wood-900 text-wood-900 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
                     >
                         Inquire
@@ -769,6 +772,7 @@ const PiecePage: React.FC = () => {
                             state={{
                                 piece: art.title,
                                 pieceId: art.id,
+                                mandalaCard,
 
                                 mode: 'purchase',
                                 price: art.price != null ? formatPrice(art.price) : '',

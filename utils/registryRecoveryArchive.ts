@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 11 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 12 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -176,7 +176,13 @@ export const REGISTRY_RECOVERY_V10_TABLES = [
   'collector_shine_removals',
 ] as const;
 
-export const REGISTRY_RECOVERY_TABLES = [...REGISTRY_RECOVERY_V10_TABLES] as const;
+/** The exact schema-v11 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V11_TABLES = [...REGISTRY_RECOVERY_V10_TABLES] as const;
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V11_TABLES,
+  'collector_reflections',
+  'collector_place_milestones',
+] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
   ...REGISTRY_RECOVERY_TABLES,
@@ -432,6 +438,8 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'sender_notice_provider_idempotency_key', 'sender_notice_sent_at',
     'created_at', 'expires_at', 'accepted_at', 'cancelled_at', 'updated_at',
   ],
+  collector_reflections: ['id', 'invitation_id', 'keeper_piece_id', 'author_user_id', 'body', 'steward_version', 'successor_access', 'created_at', 'offered_at', 'published_at'],
+  collector_place_milestones: ['id', 'keeper_piece_id', 'author_user_id', 'place_id', 'grain', 'year', 'visibility', 'steward_version', 'successor_access', 'created_at'],
   collector_shine_removals: ['id', 'content_id', 'keeper_piece_id', 'removed_reason', 'removed_by_user_id', 'idempotency_key', 'removed_at'],
   collector_historical_dream_publications: ['id', 'dream_id', 'keeper_piece_id', 'author_user_id', 'idempotency_key', 'published_at'],
   claim_silence_windows: [
@@ -457,7 +465,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
   /** Authenticated original format carried forward by an earlier upgrade. */
   sourceSchemaVersion?: number;
   exportedAt: string;
@@ -487,7 +495,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -638,6 +646,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 8) return REGISTRY_RECOVERY_V8_TABLES;
   if (schemaVersion === 9) return REGISTRY_RECOVERY_V9_TABLES;
   if (schemaVersion === 10) return REGISTRY_RECOVERY_V10_TABLES;
+  if (schemaVersion === 11) return REGISTRY_RECOVERY_V11_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -716,7 +725,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -881,6 +890,7 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         collector_dream_tier_changes: [],
       } : {}),
       ...(payload.schemaVersion < 10 ? { caretaker_passing_requests: [], claim_silence_windows: [], claim_silence_reminders: [], claim_silence_deliveries: [], collector_historical_dream_publications: [], collector_shine_removals: [] } : {}),
+      ...(payload.schemaVersion < 12 ? { collector_reflections: [], collector_place_milestones: [] } : {}),
       ...(payload.schemaVersion < 11 ? {
         piece_records: ((payload.tables as { piece_records?: RecoveryRow[] }).piece_records ?? [])
           .map((row) => ({ ...row, legacy_sections: 0 })),
@@ -905,7 +915,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -928,16 +938,16 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
 }
 
 export async function encryptPrivateRecoveryPayload(
-  payload: PrivateRecoveryPayload,
+  payload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
   configuration: PrivateRecoveryKey,
-): Promise<PrivateRecoveryArchive> {
+): Promise<SupportedPrivateRecoveryArchive> {
   validatePrivateRecoveryPayload(payload);
-  if (payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION) {
+  if (payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION && payload.schemaVersion !== 11) {
     throw new Error('recovery_payload_unsupported');
   }
   const plaintext = new TextEncoder().encode(canonicalRecoveryJson(payload));
   const tables: PrivateRecoveryManifestTable[] = [];
-  for (const name of REGISTRY_RECOVERY_TABLES) {
+  for (const name of recoveryTables(payload.schemaVersion)) {
     tables.push({
       name,
       count: payload.tables[name].length,
@@ -952,7 +962,7 @@ export async function encryptPrivateRecoveryPayload(
     keyId: configuration.keyId,
     nonce: bytesToBase64(nonce),
     manifest: {
-      schemaVersion: PRIVATE_RECOVERY_SCHEMA_VERSION,
+      schemaVersion: payload.schemaVersion,
       exportedAt: payload.exportedAt,
       payloadSha256: await sha256(plaintext),
       tables,
@@ -2268,6 +2278,7 @@ function buildRegistryRestoreSqlInternal(
   ]);
   statements.push(...CONTRIBUTOR_RESTORE_TRIGGER_SQL);
   statements.push(...CONTRIBUTOR_OPERATIONAL_TRIGGER_SQL);
+  insertTables(['collector_reflections', 'collector_place_milestones']);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);
