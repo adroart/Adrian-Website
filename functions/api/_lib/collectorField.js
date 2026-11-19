@@ -73,6 +73,7 @@ function identityProjection(row, consent) {
     status,
     ordinal,
     city,
+    ...(city && cleanText(consent?.placed_by) ? { placedBy: cleanText(consent.placed_by).slice(0, 200) } : {}),
     brightness: isRegistered
       ? COLLECTOR_FIELD_RESTING_BRIGHTNESS
       : COLLECTOR_FIELD_DIM_BRIGHTNESS,

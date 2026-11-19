@@ -346,6 +346,30 @@ describe('canonical collector field projection', () => {
       assert.equal(response.headers.get('Cache-Control'), 'no-store');
       assert.equal(writes.length, 0);
       assert.doesNotMatch(JSON.stringify(body), /Private studio|Private birthplace|private-adult|private-other|keeper|email|auth|birth|template|cipher|nonce/i);
+      database.exec(`
+        INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+        VALUES ('auth-adult', 'Synthetic Keeper', 'synthetic@example.test', 1, 0, 0);
+        INSERT INTO collector_person_privacy (user_id, share_name, policy_version, updated_at)
+        VALUES (1, 0, 'collector-privacy-v1', '2026-08-09T03:00:00.000Z');
+      `);
+      const readIdentity = async () => {
+        const response = await atlasRequest({
+          request: new Request('https://adrianrasmussen.com/api/atlas'),
+          env: { DB: d1(database, []) },
+        });
+        assert.equal(response.status, 200);
+        const result = await response.json() as any;
+        assert.doesNotMatch(JSON.stringify(result), /synthetic@example|auth-adult|Private studio|Private birthplace/);
+        return result.state.lights.find((artwork: any) => artwork.artworkId === 'UL-100').identity[0];
+      };
+      assert.equal((await readIdentity()).placedBy, undefined);
+      database.exec('UPDATE collector_person_privacy SET share_name = 1 WHERE user_id = 1');
+      assert.equal((await readIdentity()).placedBy, 'Synthetic Keeper');
+      database.exec('UPDATE collector_piece_privacy SET share_city = 0, city_id = NULL');
+      assert.equal((await readIdentity()).placedBy, undefined);
+      database.exec("UPDATE collector_piece_privacy SET share_city = 1, city_id = 'denpasar-id'");
+      database.exec('UPDATE collector_person_privacy SET share_name = 0 WHERE user_id = 1');
+      assert.equal((await readIdentity()).placedBy, undefined);
     } finally {
       database.close();
     }

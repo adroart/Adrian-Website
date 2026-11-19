@@ -341,7 +341,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
   const invitationSignInCompleted = useRef(false);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [lamps, setLamps] = useState<boolean[]>([...SHOW_LAMPS_DEFAULT]);
-  const lampsEdited = useRef(false);
+  const lampsEdited = useRef(new Set<number>());
   const gatheringInFlight = useRef(false);
   const [gatheringBusy, setGatheringBusy] = useState(false);
   const [gatheringPrivate, setGatheringPrivate] = useState(false);
@@ -563,11 +563,12 @@ const AccountJourney: React.FC<WiredJourneyProps & {
     [account.userId, keeperPieceId, isYours],
   );
   useEffect(() => {
-    if (privacy.status !== 'ready' || lampsEdited.current) return;
+    if (privacy.status !== 'ready') return;
     const saved = privacy.data;
     if (!saved?.ring3 || !saved?.ring4) return;
-    setLamps([true, true, saved.ring4.shareName, saved.ring4.shareFace,
-      saved.ring3.shareDerivedChart, saved.ring4.shareBusiness, saved.ring4.shareMission]);
+    const choices = [saved.ring4.shareIntention, saved.ring2.shareCity, saved.ring4.shareName, saved.ring4.shareFace,
+      saved.ring3.shareDerivedChart, saved.ring4.shareBusiness, saved.ring4.shareMission];
+    setLamps(current => choices.map((value, index) => lampsEdited.current.has(index) ? current[index] : value));
   }, [privacy]);
 
   const birthMonthIndex = useMemo(() => {
@@ -777,8 +778,11 @@ const AccountJourney: React.FC<WiredJourneyProps & {
       }
     }
     const cityText = (typed[G.fieldCity] ?? '').trim().toLowerCase();
-    let piece;
-    if (cityText) {
+    let piece: { keeperPieceId: string; shareCity: boolean; cityId: string | null } = {
+      keeperPieceId, shareCity: false, cityId: null,
+    };
+    if (chosen[1] && !cityText) return { kind: 'rejected', stage: 'privacy' };
+    if (chosen[1]) {
       try {
         const cities = await getCollectorCuratedCities();
         if (!mounted.current) return { kind: 'cancelled' };
@@ -1238,7 +1242,10 @@ const AccountJourney: React.FC<WiredJourneyProps & {
          required, so the first reachable gathering screen has nothing behind
          it to correct. §7, 2026-08-20: that screen is now lives, not born. */
       if (key === 'lives') screen.back = undefined;
-      if (key === 'light47' && gatheringPrivate) screen.body = PRIVACY_PENDING;
+      if (key === 'light47') {
+        if (gatheringPrivate) screen.body = PRIVACY_PENDING;
+        else if (!lamps[1]) screen.body = 'Your artwork is registered. Its location stays off the grid until you choose to place it.';
+      }
 
       /* the ritual's one-press answers become real actions: the demo rows
          walk straight to ritualfamily, the wired rows submit first. Matched
@@ -1311,7 +1318,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
       }
       return screen;
     },
-    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing, gatheringPrivate],
+    [swap, familyLive, person, removeArmed, resendInviteNote, activePassing, gatheringPrivate, lamps],
   );
 
   /* ---------------- navigation ---------------- */
@@ -1332,7 +1339,7 @@ const AccountJourney: React.FC<WiredJourneyProps & {
       if ((from === 'who2' || from === 'shows') && key === 'light47') {
         gatheringInFlight.current = true;
         setGatheringBusy(true);
-        void submitGathering(from === 'who2' ? lamps.map((v, i) => i < 2 ? true : v) : lamps, from === 'who2')
+        void submitGathering(lamps, from === 'who2')
           .then(result => {
             if (!mounted.current || result.kind === 'cancelled') return;
             if (result.kind === 'saved') {
@@ -1620,7 +1627,12 @@ const AccountJourney: React.FC<WiredJourneyProps & {
             setTyped(t => ({ ...t, [label]: value }));
           }}
           lampsValue={lamps}
-          onLamps={next => { lampsEdited.current = true; setLamps(next); }}
+          onLamps={next => {
+          next.forEach((value, index) => {
+            if (value !== lamps[index]) lampsEdited.current.add(index);
+          });
+          setLamps(next);
+        }}
         />
         </fieldset>
       );
