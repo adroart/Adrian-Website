@@ -21,6 +21,7 @@ import { Body, Brass, Eyebrow, Field, Flag, Ground, Ledger, Note, Plus, RoomBody
 import { Drawing } from './drawings';
 import { ResonantGrid } from './ResonantGrid';
 import { Garden } from './garden';
+import { RecordEntries } from './RecordEntries';
 import type { FamilyPerson, PieceLive } from './live';
 import type { CurrentKeeperPriceEntry } from './api';
 import { formatLineageEventLabel } from '../../utils/publicLineage';
@@ -1230,6 +1231,7 @@ const LiveHistoryRoom: React.FC<{ live: PieceLive; onChrome?: OnChrome }> = ({ l
                 )}
               </>
             )}
+            <RecordEntries publicCode={live.identity.publicCode} tab={tab === 0 ? 'places' : 'writing'} />
           </RoomBody>
         </>
       )}
