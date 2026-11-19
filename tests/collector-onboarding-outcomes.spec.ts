@@ -72,7 +72,15 @@ async function bindAndReachProfile(page: Page, stopAtPrivateRead = false, shareN
   const placement = page.getByRole('checkbox', { name: 'Place this artwork on the grid' });
   await expect(placement).not.toBeChecked();
   if (placeOnGrid) await placement.check();
-  if (placementScreenshot) await page.screenshot({ path: placementScreenshot, scale: 'css' });
+  if (placementScreenshot) {
+    await expect.poll(() => placement.evaluate(element => {
+      for (let node: Element | null = element; node; node = node.parentElement) {
+        if (Number(getComputedStyle(node).opacity) < 0.99) return false;
+      }
+      return true;
+    })).toBe(true);
+    await page.screenshot({ path: placementScreenshot, scale: 'css', animations: 'disabled' });
+  }
   await page.getByRole('button', { name: 'Continue' }).click();
   if (stopAtPrivateRead) return;
   await page.getByLabel('Date').fill('12/06/1990');
