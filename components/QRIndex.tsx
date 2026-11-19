@@ -107,7 +107,7 @@ const QRIndex: React.FC = () => {
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-4 font-semibold">
+                    <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 block mb-4 font-semibold">
                         Private Registry
                     </span>
                     <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-2">
@@ -120,7 +120,7 @@ const QRIndex: React.FC = () => {
 
                 {/* Rules */}
                 <div className="mb-12 p-6 border border-wood-100 bg-paper-100/50">
-                    <h2 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
+                    <h2 className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                         Rules
                     </h2>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-2 font-sans text-sm text-wood-600">
@@ -141,7 +141,7 @@ const QRIndex: React.FC = () => {
 
                 {/* Routing */}
                 <div className="mb-12 p-6 border border-wood-100 bg-paper-100/50">
-                    <h2 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
+                    <h2 className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold mb-4">
                         Routing
                     </h2>
                     <div className="space-y-2 font-sans text-sm text-wood-600">
@@ -219,7 +219,7 @@ const QRIndex: React.FC = () => {
                                                 <code className="text-bronze-700 text-xs">{entry.code}</code>
                                             </Td>
                                             <Td>
-                                                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500">
+                                                <span className="font-label text-micro uppercase tracking-[0.15em] text-wood-500">
                                                     {TYPE_LABELS[entry.type]}
                                                 </span>
                                             </Td>
@@ -250,7 +250,7 @@ function FilterButton({ active, onClick, label }: { active: boolean; onClick: ()
     return (
         <button
             onClick={onClick}
-            className={`font-label text-[11px] uppercase tracking-[0.15em] px-4 py-2 transition-colors font-semibold ${
+            className={`font-label text-label uppercase tracking-[0.15em] px-4 py-2 transition-colors font-semibold ${
                 active
                     ? 'bg-wood-900 text-paper-50'
                     : 'bg-paper-100 text-wood-600 hover:bg-paper-200'
@@ -263,7 +263,7 @@ function FilterButton({ active, onClick, label }: { active: boolean; onClick: ()
 
 function Th({ children }: { children: React.ReactNode }) {
     return (
-        <th className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500 font-semibold px-4 py-3">
+        <th className="font-label text-micro uppercase tracking-[0.15em] text-wood-500 font-semibold px-4 py-3">
             {children}
         </th>
     );

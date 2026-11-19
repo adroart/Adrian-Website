@@ -54,20 +54,20 @@ export const PieceConstellation: React.FC<{
         <div className="h-2 w-2 rounded-full bg-bronze-500" />
         <div className="h-px w-12 bg-bronze-300" />
       </div>
-      <p className="font-label text-[12px] font-semibold uppercase tracking-[0.12em] text-bronze-600">
+      <p className="font-label text-label-lg font-semibold uppercase tracking-[0.12em] text-bronze-600">
         The collector field
       </p>
       <h3 id="piece-field-title" className="mt-3 font-serif text-2xl text-wood-900">
         {artwork.title} is one light among the whole body of work.
       </h3>
-      <p className="mb-8 mt-4 font-sans text-base leading-[1.8] text-wood-600" role="status">
+      <p className="mb-8 mt-4 font-sans text-base leading-airy text-wood-600" role="status">
         {state.status === 'unavailable'
           ? 'The field could not be reached right now. This artwork record remains available here.'
           : fieldCopy(state.identity, artwork.title)}
       </p>
       <a
         href="/atlas"
-        className="inline-flex min-h-11 items-center border-b border-bronze-300 font-label text-[12px] font-semibold uppercase tracking-[0.12em] text-bronze-700 transition-colors hover:text-bronze-900"
+        className="inline-flex min-h-11 items-center border-b border-bronze-300 font-label text-label-lg font-semibold uppercase tracking-[0.12em] text-bronze-700 transition-colors hover:text-bronze-900"
       >
         Browse the whole field
       </a>

@@ -55,7 +55,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     if (this.state.hasError) {
       return (
         <div style={{ padding: '40px', fontFamily: 'monospace', color: '#7f1d1d', background: '#fef2f2', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>Something went wrong</h1>
+          <h1 style={{ fontSize: 'var(--text-title)', marginBottom: '20px' }}>Something went wrong</h1>
           <p style={{marginBottom: '20px'}}>This part of the studio could not open.</p>
           <button
             type="button"

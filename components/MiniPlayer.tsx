@@ -44,7 +44,7 @@ const MiniPlayer: React.FC = () => {
                         <div className="font-serif text-base text-paper-50 truncate group-hover:text-bronze-400 transition-colors leading-tight">
                             {currentTrack.title}
                         </div>
-                        <div className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-0.5">
+                        <div className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mt-0.5">
                             Adrian Rasmussen
                         </div>
                     </div>
@@ -91,7 +91,7 @@ const MiniPlayer: React.FC = () => {
                         </button>
                     </div>
                     <div className="hidden sm:flex items-center gap-2 w-full">
-                        <span className="font-label text-[10px] text-wood-500 font-semibold tabular-nums">
+                        <span className="font-label text-micro text-wood-500 font-semibold tabular-nums">
                             {formatTime(currentTime)}
                         </span>
                         <div className="flex-1 h-[2px] bg-wood-700 relative overflow-hidden">
@@ -100,7 +100,7 @@ const MiniPlayer: React.FC = () => {
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
-                        <span className="font-label text-[10px] text-wood-500 font-semibold tabular-nums">
+                        <span className="font-label text-micro text-wood-500 font-semibold tabular-nums">
                             {currentTrack.duration ?? formatTime(duration)}
                         </span>
                     </div>
@@ -110,7 +110,7 @@ const MiniPlayer: React.FC = () => {
                 <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
                     <Link
                         to={`/poetry/${currentTrack.slug}`}
-                        className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-bronze-400 font-semibold transition-colors hidden md:inline"
+                        className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 hover:text-bronze-400 font-semibold transition-colors hidden md:inline"
                     >
                         Expand
                     </Link>

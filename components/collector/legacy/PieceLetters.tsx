@@ -37,7 +37,7 @@ const styles = `
   .piece-letters__intro,
   .piece-letters__state {
     color: #5d5145;
-    font-family: "Cormorant Garamond", Georgia, serif;
+    font-family: var(--font-display);
     font-size: 1.125rem;
     line-height: 1.65;
   }
@@ -78,7 +78,7 @@ const styles = `
   .piece-letters__body {
     margin: 0;
     color: #342a21;
-    font-family: "Cormorant Garamond", Georgia, serif;
+    font-family: var(--font-display);
     font-size: 1.15rem;
     line-height: 1.7;
   }

@@ -83,11 +83,11 @@ const AppInner: React.FC = () => {
 };
 
 const KeystaticShell: React.FC = () => (
-  <div className="flex min-h-screen flex-col bg-paper-50">
+  <div className="flex min-h-screen flex-col bg-surface-page">
     <div className="z-50 flex flex-shrink-0 items-center border-b border-wood-200 bg-paper-50 px-6 py-3">
       <Link
         to="/admin"
-        className="font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-bronze-600 transition-colors hover:text-bronze-800"
+        className="font-label text-label font-semibold uppercase tracking-[0.2em] text-bronze-600 transition-colors hover:text-bronze-800"
       >
         Return to Admin
       </Link>
@@ -132,7 +132,7 @@ const SiteShell: React.FC = () => {
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
-    <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
+    <div className="min-h-screen bg-surface-page text-ink selection:bg-bronze-200 transition-colors duration-500">
       {!isAdmin && !isChromeless && <GenerativeBackground pathname={location.pathname} theme={theme} />}
       {!isWelcome && !isAdmin && !isChromeless && <Navigation theme={theme} />}
 

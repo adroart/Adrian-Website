@@ -20,7 +20,7 @@ const AccountDashboard: React.FC = () => {
           to="/oracle/profile"
           className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors"
         >
-          <div className="font-label text-[10px] uppercase tracking-[0.28em] text-bronze-600 mb-3">
+          <div className="font-label text-micro uppercase tracking-[0.28em] text-bronze-600 mb-3">
             Hologenetic Profile
           </div>
           <div className="font-display text-xl text-wood-900 mb-1">
@@ -36,7 +36,7 @@ const AccountDashboard: React.FC = () => {
           to="/account/orders"
           className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors"
         >
-          <div className="font-label text-[10px] uppercase tracking-[0.28em] text-bronze-600 mb-3">
+          <div className="font-label text-micro uppercase tracking-[0.28em] text-bronze-600 mb-3">
             Orders
           </div>
           <div className="font-display text-xl text-wood-900 mb-1">
@@ -51,7 +51,7 @@ const AccountDashboard: React.FC = () => {
           to="/account/collections"
           className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors sm:col-span-2"
         >
-          <div className="font-label text-[10px] uppercase tracking-[0.28em] text-bronze-600 mb-3">
+          <div className="font-label text-micro uppercase tracking-[0.28em] text-bronze-600 mb-3">
             Collections
           </div>
           <div className="font-display text-xl text-wood-900 mb-1">
@@ -67,7 +67,7 @@ const AccountDashboard: React.FC = () => {
             to="/account/contributor-access"
             className="block p-6 border border-wood-200 rounded hover:border-bronze-500/60 transition-colors sm:col-span-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
           >
-            <div className="font-label text-[11px] uppercase tracking-[0.28em] text-bronze-600 mb-3">
+            <div className="font-label text-label uppercase tracking-[0.28em] text-bronze-600 mb-3">
               Contributor access
             </div>
             <div className="font-display text-xl text-wood-900 mb-1">

@@ -43,13 +43,12 @@ import {
 type RegistrySensitiveState = Omit<SensitivePlateState, 'stepUpSecret'>;
 
 const inputClass =
-  'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+  'input placeholder:text-wood-400';
 const labelClass =
-  'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
-const buttonClass =
-  'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
-const quietButtonClass =
-  'min-h-11 font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
+  'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+// Buttons come from src/master.css. Do not rebuild them from utilities.
+const buttonClass = 'btn btn-primary';
+const quietButtonClass = 'btn btn-outline';
 
 const emptySensitiveState: RegistrySensitiveState = {
   issuanceKey: null,
@@ -418,7 +417,7 @@ const AdminPieces: React.FC = () => {
   return (
     <AdminPage width="medium">
         <div className="max-w-5xl mx-auto">
-          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+          <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
             Artwork Registry
           </p>
           <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate registry</h1>
@@ -430,7 +429,7 @@ const AdminPieces: React.FC = () => {
 
           {recovered && (
             <section className="border border-bronze-500 bg-bronze-200/20 p-6 mb-10" aria-labelledby="recovered-package-title">
-              <p id="recovered-package-title" className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 font-semibold mb-2">
+              <p id="recovered-package-title" className="font-label text-label uppercase tracking-[0.16em] text-bronze-700 font-semibold mb-2">
                 Private fabrication package
               </p>
               <div className="grid md:grid-cols-[1fr_auto] gap-6 items-start">
@@ -448,11 +447,11 @@ const AdminPieces: React.FC = () => {
                     <div><dt className="font-semibold">Underside SHA-256</dt><dd className="break-all">{recovered.undersideSha256}</dd></div>
                   </dl>
                 </div>
-                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-600 border border-wood-300 px-3 py-2">
+                <span className="font-label text-micro uppercase tracking-[0.15em] text-wood-600 border border-wood-300 px-3 py-2">
                   Backup {recovered.backupStatus || 'pending'}
                 </span>
               </div>
-              {packageSuccess && <p className="font-sans text-sm text-green-800 mt-5" role="status">{packageSuccess}</p>}
+              {packageSuccess && <p className="font-sans text-sm text-success mt-5" role="status">{packageSuccess}</p>}
               {recovered.warning && <p className="font-sans text-sm text-amber-800 mt-2">{recovered.warning}</p>}
               <div className="flex flex-wrap gap-3 mt-5">
                 {projectPlateDownloads(recovered).map((download) => (
@@ -482,7 +481,7 @@ const AdminPieces: React.FC = () => {
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mb-4" role="status">{driveStatus}</p>}
             {recordsStatus && (
-              <p className={`font-sans text-sm mb-4 ${recordsFailed ? 'text-red-700' : 'text-wood-600'}`} role={recordsFailed ? 'alert' : 'status'}>
+              <p className={`font-sans text-sm mb-4 ${recordsFailed ? 'text-danger' : 'text-wood-600'}`} role={recordsFailed ? 'alert' : 'status'}>
                 {recordsStatus}
               </p>
             )}
@@ -494,11 +493,11 @@ const AdminPieces: React.FC = () => {
                 {registryUnlocked && <button type="button" className={quietButtonClass} disabled={unlockBusy} onClick={() => void lockRegistry()}>Lock registry</button>}
               </div>
               <p className="font-sans text-xs text-wood-500 mt-2">{registryUnlocked ? 'Private registry unlocked for this signed-in administrator.' : 'The secret is submitted once, cleared immediately, and never attached to later requests.'}</p>
-              {unlockError && <p className="font-sans text-sm text-red-700 mt-2" role="alert">{unlockError}</p>}
+              {unlockError && <p className="font-sans text-sm text-danger mt-2" role="alert">{unlockError}</p>}
               {sensitive.revealedOwnershipCode && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state</button>}
             </form>
             {listError ? (
-              <div className="border border-red-300 bg-paper-50 p-6"><p className="font-sans text-sm text-red-700" role="alert">{listError}</p></div>
+              <div className="border border-danger-line bg-paper-50 p-6"><p className="font-sans text-sm text-danger" role="alert">{listError}</p></div>
             ) : listLoading && rows.length === 0 ? (
               <div className="border border-wood-200 bg-paper-50 p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : rows.length === 0 ? (
@@ -554,11 +553,11 @@ const AdminPieces: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    {rowSuccess[row.id] && <p className="font-sans text-sm text-green-800 mt-3" role="status">{rowSuccess[row.id]}</p>}
-                    {rowError[row.id] && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{rowError[row.id]}</p>}
+                    {rowSuccess[row.id] && <p className="font-sans text-sm text-success mt-3" role="status">{rowSuccess[row.id]}</p>}
+                    {rowError[row.id] && <p className="font-sans text-sm text-danger mt-3" role="alert">{rowError[row.id]}</p>}
                     {sensitive.revealedOwnershipCode && sensitive.revealedForPieceId === row.id && (
                       <div className="border border-bronze-400 bg-paper-50 p-4 mt-4">
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-700 mb-2">Audited Ownership Code</p>
+                        <p className="font-label text-micro uppercase tracking-[0.15em] text-bronze-700 mb-2">Audited Ownership Code</p>
                         <p className="font-title text-xl tracking-[0.14em] break-all text-wood-900">{sensitive.revealedOwnershipCode}</p>
                         {sensitive.revealedUndersideSvg && <button type="button" className={`${quietButtonClass} mt-3`} onClick={() => downloadText(`${row.publicCode}-underside-private.svg`, 'image/svg+xml', sensitive.revealedUndersideSvg || '')}>Download regenerated underside</button>}
                         <button type="button" className={`${quietButtonClass} mt-3 ml-2`} onClick={() => setSensitive((current) => ({ ...current, revealedForPieceId: null, revealedOwnershipCode: null, revealedUndersideSvg: null }))}>Hide revealed code</button>

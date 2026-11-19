@@ -45,11 +45,11 @@ const AtlasPage: React.FC = () => {
   }, []);
 
   return (
-    <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+    <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6">
       <div className="max-w-3xl mx-auto animate-fade-in">
         <h1 className="font-serif text-5xl text-wood-900 mb-8 font-medium">Atlas</h1>
 
-        <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light max-w-[62ch]">
+        <p className="font-serif text-xl text-wood-700 leading-prose font-light max-w-[62ch]">
           Every piece that leaves the studio can come to rest on a shared map, marked by the place it now calls home.
         </p>
 

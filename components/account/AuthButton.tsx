@@ -69,7 +69,7 @@ const authButtonStyles = `
   .ar-auth-button { position: relative; display: inline-flex; align-items: center; }
   .ar-auth-button__signin {
     font-family: var(--font-label);
-    font-size: 11px;
+    font-size: var(--text-label);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     /* Inherit the header's own text colour. Hardcoding --color-wood-800 put dark
@@ -97,7 +97,7 @@ const authButtonStyles = `
   }
   .ar-auth-menu__email {
     font-family: var(--font-display);
-    font-size: 13px;
+    font-size: var(--text-caption);
     color: var(--color-wood-500);
     padding: 6px 8px;
     margin: 0 0 4px;
@@ -111,7 +111,7 @@ const authButtonStyles = `
     width: 100%;
     text-align: left;
     font-family: var(--font-label);
-    font-size: 11px;
+    font-size: var(--text-label);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-wood-700);

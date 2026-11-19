@@ -223,7 +223,7 @@ const CartDrawer: React.FC = () => {
                             Cart
                         </span>
                         {totalItems > 0 && (
-                            <span className="font-label text-[11px] bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
+                            <span className="font-label text-label bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
                                 {totalItems}
                             </span>
                         )}
@@ -232,7 +232,7 @@ const CartDrawer: React.FC = () => {
                         onClick={closeCart}
                         className="p-4 -mr-4 hover:bg-wood-100 rounded-full transition-colors group flex items-center gap-2"
                     >
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold hidden sm:inline">Close</span>
+                        <span className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold hidden sm:inline">Close</span>
                         <X size={22} className="text-wood-900 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
@@ -271,7 +271,7 @@ const CartDrawer: React.FC = () => {
                                         <h3 className="font-sans text-base text-wood-900 leading-snug mb-1 font-medium">
                                             {product.title}
                                         </h3>
-                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold mb-3">
+                                        <p className="font-label text-label uppercase tracking-[0.2em] text-wood-600 font-semibold mb-3">
                                             {product.isReadyToShip ? (
                                                 <span className="text-avail-ready">Ready to ship</span>
                                             ) : (
@@ -284,7 +284,7 @@ const CartDrawer: React.FC = () => {
 
                                         <div className="flex items-center justify-between">
                                             {getMaxQuantity(product) === 1 ? (
-                                                <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600 font-semibold">
+                                                <span className="font-label text-label uppercase tracking-[0.15em] text-wood-600 font-semibold">
                                                     One of one
                                                 </span>
                                             ) : (
@@ -337,12 +337,12 @@ const CartDrawer: React.FC = () => {
                                 <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 font-semibold">Subtotal</span>
                                 <span className="font-label text-xl text-wood-900 font-semibold">{formatPrice(totalPrice)}</span>
                             </div>
-                            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold px-1 mb-5">
+                            <p className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold px-1 mb-5">
                                 Shipping calculated at checkout
                             </p>
 
                             {error && (
-                                <p className="font-label text-[11px] text-red-600 uppercase tracking-[0.2em] font-semibold px-1 mb-4">
+                                <p className="font-label text-label text-danger uppercase tracking-[0.2em] font-semibold px-1 mb-4">
                                     {error}
                                 </p>
                             )}
@@ -361,7 +361,7 @@ const CartDrawer: React.FC = () => {
 
                             <button
                                 onClick={closeCart}
-                                className="w-full mt-3 py-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
+                                className="w-full mt-3 py-2 font-label text-label uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
                             >
                                 Continue browsing
                             </button>

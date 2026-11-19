@@ -90,10 +90,10 @@ const PoetryTrack: React.FC = () => {
 
     if (!track) {
         if (!tracksLoaded) {
-            return <section className="min-h-screen bg-paper-50" />;
+            return <section className="min-h-screen bg-surface-page" />;
         }
         return (
-            <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6">
+            <section className="min-h-screen bg-surface-page pt-32 pb-32 px-6">
                 <div className="max-w-2xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Poem not found</h1>
                     <Link
@@ -111,7 +111,7 @@ const PoetryTrack: React.FC = () => {
     const activeStanza = hasTimestamps ? findActiveStanza(track.poem, time) : -1;
 
     return (
-        <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+        <article className="min-h-screen bg-surface-page pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-[640px] mx-auto">
                 {/* Top: cover seal + title + dedication + audio strip */}
                 <header className="text-center mb-16">
@@ -165,10 +165,10 @@ const PoetryTrack: React.FC = () => {
                                 </div>
                             )}
                             <div className="flex justify-between mt-1">
-                                <span className="font-label text-[10px] text-wood-400 font-semibold tabular-nums">
+                                <span className="font-label text-micro text-wood-400 font-semibold tabular-nums">
                                     {formatTime(time)}
                                 </span>
-                                <span className="font-label text-[10px] text-wood-400 font-semibold tabular-nums">
+                                <span className="font-label text-micro text-wood-400 font-semibold tabular-nums">
                                     {track.duration ?? formatTime(dur)}
                                 </span>
                             </div>
@@ -190,7 +190,7 @@ const PoetryTrack: React.FC = () => {
                             const isClickable = typeof stanza.startSeconds === 'number';
                             const isCurrent = hasTimestamps && i === activeStanza;
                             const baseClasses = 'block w-full text-left font-serif leading-[1.85] whitespace-pre-line transition-colors duration-300';
-                            const sizeClasses = 'text-[1.375rem] md:text-[1.5rem]';
+                            const sizeClasses = 'text-subhead md:text-title';
                             const colorClasses = isCurrent
                                 ? 'text-wood-900 font-medium'
                                 : hasTimestamps
@@ -224,14 +224,14 @@ const PoetryTrack: React.FC = () => {
 
                 {/* Themes */}
                 {track.themes && track.themes.length > 0 && (
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold text-center mb-10">
+                    <p className="font-label text-label uppercase tracking-[0.2em] text-wood-400 font-semibold text-center mb-10">
                         {track.themes.join(' · ')}
                     </p>
                 )}
 
                 {/* AI note */}
                 {track.aiNote && (
-                    <p className="font-sans text-[11px] text-wood-400 text-center mb-12 max-w-md mx-auto leading-relaxed">
+                    <p className="font-sans text-label text-wood-400 text-center mb-12 max-w-md mx-auto leading-relaxed">
                         {track.aiNote}
                     </p>
                 )}
@@ -242,7 +242,7 @@ const PoetryTrack: React.FC = () => {
                         <div>
                             {prevTrack && (
                                 <Link to={`/poetry/${prevTrack.slug}`} className="group block">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-1">
+                                    <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-1">
                                         ← {prevTrack.title}
                                     </span>
                                     <span className="font-serif italic text-wood-500 text-base group-hover:text-wood-900 transition-colors leading-snug block">
@@ -254,7 +254,7 @@ const PoetryTrack: React.FC = () => {
                         <div className="text-right">
                             {nextTrack && (
                                 <Link to={`/poetry/${nextTrack.slug}`} className="group block">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-1">
+                                    <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-1">
                                         {nextTrack.title} →
                                     </span>
                                     <span className="font-serif italic text-wood-500 text-base group-hover:text-wood-900 transition-colors leading-snug block">
@@ -270,7 +270,7 @@ const PoetryTrack: React.FC = () => {
                 <div className="text-center mt-12">
                     <Link
                         to="/poetry"
-                        className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors"
+                        className="inline-flex items-center gap-2 font-label text-label uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors"
                     >
                         <ArrowLeft size={12} /> Back to all poems
                     </Link>

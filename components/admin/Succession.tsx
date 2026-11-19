@@ -54,13 +54,13 @@ const { Body, Brass, Field, Ledger, Note, Quiet, State } = adminUI;
 void Ledger; void Note; void State;
 
 const handbookProseClass = [
-  'font-serif text-[16px] leading-relaxed text-wood-700 max-w-[42rem]',
+  'font-serif text-body leading-relaxed text-wood-700 max-w-[42rem]',
   '[&_h1]:font-title [&_h1]:text-3xl [&_h1]:text-wood-900 [&_h1]:mb-4',
   '[&_h2]:font-title [&_h2]:text-2xl [&_h2]:text-wood-900 [&_h2]:mt-10 [&_h2]:mb-2',
   '[&_h3]:italic [&_h3]:text-wood-800 [&_h3]:mt-7 [&_h3]:mb-2',
   '[&_p]:mb-4', '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4', '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4',
   '[&_li]:mb-1.5', '[&_strong]:font-semibold [&_strong]:text-wood-900',
-  '[&_code]:font-mono [&_code]:text-[14px] [&_code]:bg-wood-100 [&_code]:px-1 [&_code]:break-all',
+  '[&_code]:font-mono [&_code]:text-meta [&_code]:bg-wood-100 [&_code]:px-1 [&_code]:break-all',
   '[&_pre]:bg-wood-100 [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:mb-4 [&_pre_code]:bg-transparent [&_pre_code]:break-normal',
 ].join(' ');
 

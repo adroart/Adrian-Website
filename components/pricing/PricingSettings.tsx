@@ -21,7 +21,7 @@ const Section: React.FC<{ title: string; hint?: string; children: React.ReactNod
   hint,
   children,
 }) => (
-  <section className="bg-white border border-wood-200 px-5 py-5 md:px-6 md:py-6">
+  <section className="bg-surface-card border border-wood-200 px-5 py-5 md:px-6 md:py-6">
     <h3 className="font-serif text-xl text-wood-900 font-medium mb-1">{title}</h3>
     {hint && <p className="font-sans text-sm text-wood-500 leading-relaxed mb-4">{hint}</p>}
     {!hint && <div className="mb-4" />}
@@ -83,7 +83,7 @@ const PricingSettings: React.FC<Props> = ({ config, onChange, onReset }) => {
                   className={`font-sans text-sm px-3 py-2 border transition-colors capitalize ${
                     config.measurementUnit === u
                       ? 'border-bronze-500 bg-bronze-50 text-wood-900'
-                      : 'border-wood-200 bg-white text-wood-500 hover:border-bronze-300'
+                      : 'border-wood-200 bg-surface-card text-wood-500 hover:border-bronze-300'
                   }`}
                 >
                   {u === 'imperial' ? 'Inches' : 'Centimeters'}
@@ -258,7 +258,7 @@ const PricingSettings: React.FC<Props> = ({ config, onChange, onReset }) => {
         <button
           type="button"
           onClick={onReset}
-          className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
+          className="font-label text-label uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
         >
           Reset all values to defaults
         </button>

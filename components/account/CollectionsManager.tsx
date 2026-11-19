@@ -47,7 +47,7 @@ const CollectionsManagerInner: React.FC = () => {
         />
         <button
           type="button"
-          className="font-label text-[11px] uppercase tracking-[0.22em] px-4 py-2 bg-bronze-600 text-paper-50 rounded disabled:opacity-50"
+          className="font-label text-label uppercase tracking-[0.22em] px-4 py-2 bg-bronze-600 text-paper-50 rounded disabled:opacity-50"
           onClick={async () => {
             if (newName.trim()) {
               await createCollection(newName.trim());
@@ -104,7 +104,7 @@ const CollectionsManagerInner: React.FC = () => {
                 )}
                 <button
                   type="button"
-                  className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 hover:text-wood-900"
+                  className="font-label text-micro uppercase tracking-[0.18em] text-wood-500 hover:text-wood-900"
                   onClick={async () => {
                     if (window.confirm(`Delete the collection "${c.name}"?`)) {
                       await deleteCollection(c.id);
@@ -136,7 +136,7 @@ const CollectionsManagerInner: React.FC = () => {
                         )}
                         <button
                           type="button"
-                          className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500 hover:text-wood-900 flex-shrink-0"
+                          className="font-label text-micro uppercase tracking-[0.16em] text-wood-500 hover:text-wood-900 flex-shrink-0"
                           onClick={() => removeItem(c.id, item)}
                         >
                           Remove

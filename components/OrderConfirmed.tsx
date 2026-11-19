@@ -20,7 +20,7 @@ const OrderConfirmed: React.FC = () => {
   }, []);
 
   return (
-    <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
+    <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
       <div className="max-w-2xl text-center">
         <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 block mb-8 font-semibold">
           Order Received
@@ -31,10 +31,10 @@ const OrderConfirmed: React.FC = () => {
         <p className="font-serif text-xl md:text-2xl text-wood-600 mb-6 leading-[1.6] font-light">
           Your piece is being prepared with the same care it was created with. You'll receive an email confirmation shortly.
         </p>
-        <p className="font-sans text-base text-wood-600 mb-6 leading-[1.7] max-w-xl mx-auto">
+        <p className="font-sans text-base text-wood-600 mb-6 leading-prose max-w-xl mx-auto">
           Shipping is handled separately based on your destination. You'll receive shipping details and a separate invoice within 48 hours.
         </p>
-        <p className="font-sans text-base text-wood-500 mb-12 leading-[1.7]">
+        <p className="font-sans text-base text-wood-500 mb-12 leading-prose">
           If you have any questions about your order, reach out at{' '}
           <a
             href="mailto:hello@adrianrasmussen.com"
