@@ -1,13 +1,5 @@
 /* Day and Night share a gallery layout and adapt the exhibition surfaces. */
 .public-gallery {
-    --color-paper-50: #f5f1e9;
-    --color-paper-100: #eee6d8;
-    --gallery-ink: #262321;
-    --gallery-muted: #625748;
-    --gallery-accent: #725339;
-    --gallery-mat: #eee6d8;
-    --gallery-rule: #d6cbbc;
-    --gallery-primary-text: #f5f1e9;
     background: var(--color-paper-50);
     color: var(--gallery-ink);
     color-scheme: light;
@@ -15,14 +7,6 @@
     padding-block: calc(var(--nav-height) + 1rem) clamp(2.75rem, 6vw, 6rem);
 }
 .dark .public-gallery {
-    --color-paper-50: #292520;
-    --color-paper-100: #332e28;
-    --gallery-ink: #f5f1e9;
-    --gallery-muted: #d6c9b8;
-    --gallery-accent: #e1c197;
-    --gallery-mat: #211d19;
-    --gallery-rule: #51483e;
-    --gallery-primary-text: #211d19;
     color-scheme: dark;
 }
 .public-gallery a:focus-visible,

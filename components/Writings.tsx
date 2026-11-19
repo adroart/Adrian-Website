@@ -72,10 +72,10 @@ const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[]; storySlug: 
     };
 
     return (
-        <div className="mb-16 border border-wood-200 bg-white">
+        <div className="mb-16 border border-wood-200 bg-surface-card">
             {/* Player */}
             <div className="px-8 pt-8 pb-8">
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-5">Listen</p>
+                <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-5">Listen</p>
                 <p className="font-serif text-2xl text-wood-900 font-medium leading-snug mb-8">{track.title}</p>
                 <div className="flex items-center gap-5">
                     <button
@@ -99,14 +99,14 @@ const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[]; storySlug: 
                             <div className="h-full bg-bronze-400 rounded transition-[width] duration-100" style={{ width: `${progress}%` }} />
                         </div>
                         <div className="flex justify-between">
-                            <span className="font-label text-[11px] text-wood-700 font-semibold tabular-nums">{formatTime(time)}</span>
-                            {track.duration && <span className="font-label text-[11px] text-wood-700 font-semibold">{track.duration}</span>}
+                            <span className="font-label text-label text-wood-700 font-semibold tabular-nums">{formatTime(time)}</span>
+                            {track.duration && <span className="font-label text-label text-wood-700 font-semibold">{track.duration}</span>}
                         </div>
                     </div>
                     <a
                         href={track.url}
                         download
-                        className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 hover:text-bronze-600 transition-colors font-semibold flex-shrink-0"
+                        className="font-label text-label uppercase tracking-[0.15em] text-wood-700 hover:text-bronze-600 transition-colors font-semibold flex-shrink-0"
                         aria-label={`Download ${track.title}`}
                     >
                         ↓ Download
@@ -117,9 +117,9 @@ const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[]; storySlug: 
             {/* Lyrics */}
             {lyrics && lyrics.length > 0 && (
                 <div className="border-t border-wood-100 px-8 pt-8 pb-10 space-y-5">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold mb-2">Lyrics</p>
+                    <p className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold mb-2">Lyrics</p>
                     {lyrics.map((stanza, i) => (
-                        <p key={i} className="font-serif text-[1.0625rem] text-wood-700 leading-[1.85] whitespace-pre-line">
+                        <p key={i} className="font-serif text-body text-wood-700 leading-[1.85] whitespace-pre-line">
                             {stanza}
                         </p>
                     ))}
@@ -184,7 +184,7 @@ export const WritingArticle: React.FC = () => {
 
     if (!story) {
         return (
-            <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+            <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Writing Not Found</h1>
                     <p className="font-sans text-lg text-wood-600 mb-8">The piece you're looking for doesn't exist or has been moved.</p>
@@ -228,7 +228,7 @@ export const WritingArticle: React.FC = () => {
     const relatedArtworks = FULL_ARCHIVE.filter(a => a.relatedStorySlug === story.slug);
 
     return (
-        <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+        <article className="min-h-screen bg-surface-page pt-32 pb-32 px-6 animate-fade-in">
             {/* #11 Reading progress bar */}
             <div
                 className="fixed top-0 left-0 h-[2px] bg-bronze-400 z-50 transition-[width] duration-150"
@@ -249,7 +249,7 @@ export const WritingArticle: React.FC = () => {
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={() => navigator.share({ title: story.title, url: window.location.href })}
-                            className="flex items-center gap-2 font-label text-[12px] uppercase tracking-[0.1em] text-wood-700 hover:text-wood-900 transition-colors font-semibold p-2"
+                            className="flex items-center gap-2 font-label text-label-lg uppercase tracking-[0.1em] text-wood-700 hover:text-wood-900 transition-colors font-semibold p-2"
                             aria-label="Share this writing"
                         >
                             <Share2 size={14} /> Share
@@ -258,7 +258,7 @@ export const WritingArticle: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-16">
-                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-6 font-semibold">
+                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-label text-label uppercase tracking-[0.2em] text-bronze-600 mb-6 font-semibold">
                         {story.category}
                     </span>
                     <h1 className="font-serif text-4xl md:text-6xl text-wood-900 leading-[1.1] mb-6 font-medium">
@@ -269,7 +269,7 @@ export const WritingArticle: React.FC = () => {
                             {story.subtitle}
                         </p>
                     )}
-                    <div className="flex items-center justify-center gap-4 font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold">
+                    <div className="flex items-center justify-center gap-4 font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold">
                         <span>{story.date}</span>
                         <span className="text-wood-200">·</span>
                         <span>{story.readMinutes} min read</span>
@@ -337,7 +337,7 @@ export const WritingArticle: React.FC = () => {
                                         <h4 className="font-sans text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {art.title}
                                         </h4>
-                                        <p className="font-label text-[11px] text-wood-700 uppercase tracking-[0.2em] mt-1 font-semibold">
+                                        <p className="font-label text-label text-wood-700 uppercase tracking-[0.2em] mt-1 font-semibold">
                                             {art.series ?? art.category}
                                         </p>
                                     </div>
@@ -357,7 +357,7 @@ export const WritingArticle: React.FC = () => {
                             >
                                 <ArrowLeft size={14} className="flex-shrink-0 text-wood-700 group-hover:text-bronze-600 transition-colors" />
                                 <div className="min-w-0">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 block font-semibold">Previous</span>
+                                    <span className="font-label text-label uppercase tracking-[0.2em] text-wood-700 block font-semibold">Previous</span>
                                     <span className="font-sans text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{prevStory.title}</span>
                                 </div>
                             </Link>
@@ -368,7 +368,7 @@ export const WritingArticle: React.FC = () => {
                                 className="group flex items-center gap-3 py-3 text-right min-w-0 flex-1 justify-end"
                             >
                                 <div className="min-w-0">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 block font-semibold">Next</span>
+                                    <span className="font-label text-label uppercase tracking-[0.2em] text-wood-700 block font-semibold">Next</span>
                                     <span className="font-sans text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{nextStory.title}</span>
                                 </div>
                                 <ArrowRight size={14} className="flex-shrink-0 text-wood-700 group-hover:text-bronze-600 transition-colors" />
@@ -389,9 +389,9 @@ export const WritingArticle: React.FC = () => {
                                 <Link
                                     key={next.id}
                                     to={`/writings/${next.slug}`}
-                                    className="group bg-white p-6 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm"
+                                    className="group bg-surface-card p-6 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm"
                                 >
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-2 font-semibold">
+                                    <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 block mb-2 font-semibold">
                                         {next.category}
                                     </span>
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
@@ -410,7 +410,7 @@ export const WritingArticle: React.FC = () => {
                 <div className="mt-12 text-center">
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 transition-colors font-semibold py-2"
+                        className="inline-flex items-center gap-2 font-label text-label uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 transition-colors font-semibold py-2"
                     >
                         <ArrowUp size={14} /> Return to Top
                     </button>
@@ -487,7 +487,7 @@ const Writings: React.FC = () => {
     }, []);
 
     return (
-        <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+        <section className="min-h-screen bg-surface-page pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-5xl mx-auto">
 
                 {/* #1 Header with subtitle/epigraph */}
@@ -542,7 +542,7 @@ const Writings: React.FC = () => {
                                     <Link
                                         key={story.id}
                                         to={`/writings/${story.slug}`}
-                                        className="stagger-in group block overflow-hidden border border-wood-200 hover:border-bronze-300 bg-white transition-all duration-300 hover:shadow-md"
+                                        className="stagger-in group block overflow-hidden border border-wood-200 hover:border-bronze-300 bg-surface-card transition-all duration-300 hover:shadow-md"
                                         style={{
                                             borderTopWidth: '2px',
                                             borderTopColor: CATEGORY_ACCENT[story.category],
@@ -576,11 +576,11 @@ const Writings: React.FC = () => {
                                                 </p>
                                                 {/* Inline tag list - text and color only, no badges per house rules */}
                                                 {story.tags.length > 0 && (
-                                                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold mb-5">
+                                                    <p className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold mb-5">
                                                         {story.tags.slice(0, 3).join(' · ')}
                                                     </p>
                                                 )}
-                                                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold inline-flex items-center gap-2 group-hover:text-bronze-700 transition-colors">
+                                                <span className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold inline-flex items-center gap-2 group-hover:text-bronze-700 transition-colors">
                                                     Read <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
                                                 </span>
                                             </div>

@@ -139,7 +139,7 @@ const CollectionCard: React.FC<{
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
-                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
+                <span className="font-label text-label-lg uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-600 ml-2">· Active filter</span>}
                 </span>
@@ -485,11 +485,7 @@ const Creations: React.FC = () => {
                             type="button"
                             onClick={toggleAvailable}
                             aria-pressed={showAvailableOnly}
-                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
-                                showAvailableOnly
-                                    ? 'text-paper-50 bg-wood-900 border-wood-900'
-                                    : 'text-wood-700 border-wood-300 hover:border-wood-700 hover:text-wood-900'
-                            }`}
+                            className="chip"
                         >
                             {showAvailableOnly
                                 ? `Available (${availableCount})`
@@ -585,7 +581,7 @@ const Creations: React.FC = () => {
                         {remaining > 0 && (
                             <div className="flex flex-col items-center gap-3 pt-14">
                                 <p
-                                    className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-700 font-semibold"
+                                    className="font-label text-label uppercase tracking-[0.2em] text-wood-700 font-semibold"
                                     aria-live="polite"
                                 >
                                     Showing {displayedPieces.length} of {filteredArchive.length}
@@ -593,7 +589,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border border-wood-700 hover:border-bronze-600 px-8 py-3 transition-colors"
+                                    className="btn btn-outline"
                                 >
                                     Show {Math.min(PAGE_SIZE, remaining)} more
                                 </button>
@@ -620,7 +616,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setQuery('')}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors"
+                                    className="btn btn-outline"
                                 >
                                     Clear search
                                 </button>
@@ -629,7 +625,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setActiveCollection(null)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="btn btn-outline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Clear collection filter
                                 </button>
@@ -638,7 +634,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowAvailableOnly(false)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-600 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="btn btn-outline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Show all availability
                                 </button>
@@ -646,7 +642,7 @@ const Creations: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => handleCategoryChange(null)}
-                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-700 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                className="btn btn-outline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                             >
                                 Back to all categories
                             </button>

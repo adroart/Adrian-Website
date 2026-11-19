@@ -66,14 +66,14 @@ const SaveOrderPrompt: React.FC<Props> = ({ sessionId }) => {
           border-radius: 4px;
         }
         .save-order-prompt__copy {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 16px;
+          font-family: var(--font-display);
+          font-size: var(--text-body);
           color: var(--color-wood-800);
           margin: 0 0 12px;
         }
         .save-order-prompt__cta {
           font-family: var(--font-label);
-          font-size: 11px;
+          font-size: var(--text-label);
           letter-spacing: 0.22em;
           text-transform: uppercase;
           color: var(--color-paper-50);

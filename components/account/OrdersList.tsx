@@ -55,7 +55,7 @@ const OrdersListInner: React.FC = () => {
         <p className="font-serif text-wood-700 mb-4">You haven't placed any orders yet.</p>
         <a
           href="/shop"
-          className="font-label text-[11px] uppercase tracking-[0.22em] text-bronze-600 hover:text-bronze-700"
+          className="font-label text-label uppercase tracking-[0.22em] text-bronze-600 hover:text-bronze-700"
         >
           Visit the shop
         </a>
@@ -73,7 +73,7 @@ const OrdersListInner: React.FC = () => {
                 year: 'numeric', month: 'long', day: 'numeric',
               })}
             </div>
-            <div className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">
+            <div className="font-label text-micro uppercase tracking-[0.22em] text-bronze-600">
               {o.status}
             </div>
           </div>
@@ -96,7 +96,7 @@ const OrdersListInner: React.FC = () => {
             </div>
             <a
               href={`https://dashboard.stripe.com/payments/${o.stripeSessionId}`}
-              className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600 hover:text-bronze-700"
+              className="font-label text-micro uppercase tracking-[0.22em] text-bronze-600 hover:text-bronze-700"
               target="_blank"
               rel="noopener noreferrer"
             >

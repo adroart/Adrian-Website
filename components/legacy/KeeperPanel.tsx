@@ -208,7 +208,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
       {isSignedIn && currentStatusError && (
         <div className="max-w-md mx-auto text-center" role="status" aria-live="polite">
           <p className="font-sans text-sm text-wood-600 mb-5">Stewardship could not be checked right now.</p>
-          <button type="button" onClick={() => void loadStatus()} className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 border-b border-bronze-300 pb-1">
+          <button type="button" onClick={() => void loadStatus()} className="font-label text-label uppercase tracking-[0.15em] text-bronze-700 border-b border-bronze-300 pb-1">
             Try again
           </button>
         </div>
@@ -216,7 +216,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
 
       {keptByOther && (
         <div className="max-w-md mx-auto">
-          <p className="text-center font-serif text-[16px] text-wood-600 leading-[1.9] mb-8">
+          <p className="text-center font-serif text-body text-wood-600 leading-[1.9] mb-8">
             This piece already has a steward. You can submit a stewardship request for manual review.
           </p>
           <OwnershipCodeForm
@@ -237,7 +237,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
           </p>
           <Link
             to="/account/contributor-access"
-            className="inline-flex min-h-11 items-center rounded-full px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center rounded-full px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
           >
             Open contributor access
           </Link>
@@ -246,7 +246,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
 
       {youKeep && (
         <div className="max-w-xl mx-auto">
-          <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
+          <p className="text-center font-label text-micro uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
             You are the current steward
           </p>
           <DisplayLocation
@@ -260,15 +260,15 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
           )}
           {currentStatus?.stewardHistory && currentStatus.stewardHistory.length > 0 && (
             <div className="mt-14 border-t border-wood-200 pt-10" aria-labelledby="steward-history-heading">
-              <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-3">Private to the steward</p>
+              <p className="font-label text-micro uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-3">Private to the steward</p>
               <h3 id="steward-history-heading" className="font-serif text-2xl text-wood-900 mb-6">From the creator</h3>
               <div className="space-y-6">
                 {currentStatus.stewardHistory.map((entry, index) => (
                   <article key={`${entry.entryType}-${entry.title}-${index}`} className="border-l border-bronze-300 pl-5">
-                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600 mb-2">{entry.entryType.replaceAll('_', ' ')}{entry.occurredAt ? ` · ${entry.occurredAt}` : ''}</p>
+                    <p className="font-label text-micro uppercase tracking-[0.18em] text-bronze-600 mb-2">{entry.entryType.replaceAll('_', ' ')}{entry.occurredAt ? ` · ${entry.occurredAt}` : ''}</p>
                     <h4 className="font-serif text-xl text-wood-900">{entry.title}</h4>
                     {entry.role && <p className="font-sans text-xs text-wood-500 mt-1">{entry.role}</p>}
-                    {entry.detail && <p className="font-serif text-[16px] leading-[1.8] text-wood-700 mt-3">{entry.detail}</p>}
+                    {entry.detail && <p className="font-serif text-body leading-airy text-wood-700 mt-3">{entry.detail}</p>}
                   </article>
                 ))}
               </div>
@@ -376,10 +376,10 @@ function OwnershipCodeForm({
       <h3 id={titleId} className="font-serif text-2xl text-wood-900 mb-3">
         {requesting ? 'Request stewardship' : `Register ${title}`}
       </h3>
-      <p id={helpId} className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
+      <p id={helpId} className="font-sans text-meta text-wood-500 leading-airy mb-8">
         Enter the Ownership Code engraved on the underside of the art. It is not the public QR number.
       </p>
-      <label htmlFor={inputId} className="block font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
+      <label htmlFor={inputId} className="block font-label text-micro uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
         Ownership Code
       </label>
       <input
@@ -391,11 +391,11 @@ function OwnershipCodeForm({
         autoComplete="off"
         aria-describedby={`${helpId} ${outcomeId}`}
         aria-invalid={Boolean(error)}
-        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-label text-[16px] tracking-[0.2em] text-center text-wood-800 uppercase focus:outline-none focus:border-bronze-400 transition-colors"
+        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-label text-body tracking-[0.2em] text-center text-wood-800 uppercase focus:outline-none focus:border-bronze-400 transition-colors"
       />
       {requesting && (
         <div className="mt-6 text-left">
-          <label htmlFor={noteId} className="block font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
+          <label htmlFor={noteId} className="block font-label text-micro uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
             Evidence note (optional)
           </label>
           <textarea
@@ -410,23 +410,23 @@ function OwnershipCodeForm({
         </div>
       )}
       <div id={outcomeId} className="mt-4 min-h-5" aria-live="polite">
-        {error && <p role="alert" className="font-sans text-[13px] text-bronze-700 leading-[1.7]">{error}</p>}
+        {error && <p role="alert" className="font-sans text-caption text-bronze-700 leading-prose">{error}</p>}
         {pending && (
           <div role="status" className="border border-bronze-300 bg-paper-100 p-4 text-left">
-            <p className="font-sans text-[13px] text-wood-700 leading-[1.7]">{pending.message}</p>
+            <p className="font-sans text-caption text-wood-700 leading-prose">{pending.message}</p>
           </div>
         )}
       </div>
       <div className="flex items-center justify-center gap-6 mt-8">
         {onCancel && (
-          <button type="button" onClick={onCancel} className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold hover:text-wood-600 transition-colors">
+          <button type="button" onClick={onCancel} className="font-label text-label uppercase tracking-[0.15em] text-wood-400 font-semibold hover:text-wood-600 transition-colors">
             Not now
           </button>
         )}
         <button
           type="submit"
           disabled={busy || !code.trim()}
-          className="px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
+          className="px-8 py-4 bg-wood-900 text-paper-50 font-label text-label uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
         >
           {busy ? 'Submitting' : requesting ? 'Request stewardship' : 'Register'}
         </button>
@@ -679,7 +679,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
               if (current) clearContributorInvitationToken(current);
               return null;
             })}
-            className="mt-4 min-h-11 rounded-full px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+            className="mt-4 min-h-11 rounded-full px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
           >
             Dismiss invitation
           </button>
@@ -689,7 +689,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
       {!secret && (
         <form onSubmit={invite} className="space-y-5" aria-label="Invite an artwork contributor">
           <div>
-            <label htmlFor="contributor-email" className="block font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 mb-2">Verified account email</label>
+            <label htmlFor="contributor-email" className="block font-label text-label uppercase tracking-[0.16em] text-wood-600 mb-2">Verified account email</label>
             <input
               id="contributor-email"
               type="email"
@@ -702,7 +702,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
             />
           </div>
           <div>
-            <label htmlFor="contributor-expiry" className="block font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 mb-2">Invitation expires</label>
+            <label htmlFor="contributor-expiry" className="block font-label text-label uppercase tracking-[0.16em] text-wood-600 mb-2">Invitation expires</label>
             <input
               id="contributor-expiry"
               type="datetime-local"
@@ -719,7 +719,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
           <button
             type="submit"
             disabled={Boolean(busy) || !email.trim() || !expiresAt}
-            className="min-h-11 rounded-full bg-wood-900 px-6 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-paper-50 hover:bg-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
+            className="min-h-11 rounded-full bg-wood-900 px-6 py-3 font-label text-label uppercase tracking-[0.16em] text-paper-50 hover:bg-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
           >
             {busy === 'invite' ? 'Creating invitation' : 'Create invitation'}
           </button>
@@ -738,7 +738,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
             type="button"
             onClick={() => void load()}
             disabled={state === 'loading' || Boolean(busy)}
-            className="min-h-11 rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
+            className="min-h-11 rounded-full px-4 py-2 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45"
           >
             Refresh
           </button>
@@ -747,7 +747,7 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
         {state === 'error' && (
           <div>
             <p role="alert" className="font-serif text-base leading-7 text-bronze-800">{error}</p>
-            <button type="button" onClick={() => void load()} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2">Try again</button>
+            <button type="button" onClick={() => void load()} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-label uppercase tracking-[0.16em] text-bronze-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2">Try again</button>
           </div>
         )}
         {state === 'ready' && pending.length === 0 && active.length === 0 && (
@@ -762,11 +762,11 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
                 {revokeId === invitation.invitationId ? (
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <p className="w-full font-serif text-base text-wood-700">Revoke this exact pending invitation?</p>
-                    <button ref={revokeConfirm} type="button" onClick={() => void revoke()} disabled={Boolean(busy)} className="min-h-11 rounded-full bg-wood-900 px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-paper-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">{busy === 'revoke' ? 'Revoking' : error ? 'Retry revocation' : 'Confirm revoke'}</button>
-                    <button type="button" onClick={cancelRevoke} disabled={Boolean(busy)} className="min-h-11 rounded-full px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Cancel</button>
+                    <button ref={revokeConfirm} type="button" onClick={() => void revoke()} disabled={Boolean(busy)} className="min-h-11 rounded-full bg-wood-900 px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-paper-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">{busy === 'revoke' ? 'Revoking' : error ? 'Retry revocation' : 'Confirm revoke'}</button>
+                    <button type="button" onClick={cancelRevoke} disabled={Boolean(busy)} className="min-h-11 rounded-full px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-wood-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Cancel</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={(event) => chooseRevoke({ keeperPieceId, invitationId: invitation.invitationId }, event.currentTarget)} disabled={Boolean(busy)} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Revoke pending invitation</button>
+                  <button type="button" onClick={(event) => chooseRevoke({ keeperPieceId, invitationId: invitation.invitationId }, event.currentTarget)} disabled={Boolean(busy)} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Revoke pending invitation</button>
                 )}
               </li>
             ))}
@@ -777,11 +777,11 @@ function ContributorManagement({ keeperPieceId }: { keeperPieceId: string }) {
                 {revokeId === contributor.accessId ? (
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <p className="w-full font-serif text-base text-wood-700">Remove this exact contributor's access?</p>
-                    <button ref={revokeConfirm} type="button" onClick={() => void revoke()} disabled={Boolean(busy)} className="min-h-11 rounded-full bg-wood-900 px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-paper-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">{busy === 'revoke' ? 'Revoking' : error ? 'Retry revocation' : 'Confirm revoke'}</button>
-                    <button type="button" onClick={cancelRevoke} disabled={Boolean(busy)} className="min-h-11 rounded-full px-5 py-3 font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Cancel</button>
+                    <button ref={revokeConfirm} type="button" onClick={() => void revoke()} disabled={Boolean(busy)} className="min-h-11 rounded-full bg-wood-900 px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-paper-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">{busy === 'revoke' ? 'Revoking' : error ? 'Retry revocation' : 'Confirm revoke'}</button>
+                    <button type="button" onClick={cancelRevoke} disabled={Boolean(busy)} className="min-h-11 rounded-full px-5 py-3 font-label text-label uppercase tracking-[0.16em] text-wood-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Cancel</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={(event) => chooseRevoke({ keeperPieceId, accessId: contributor.accessId }, event.currentTarget)} disabled={Boolean(busy)} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Revoke contributor access</button>
+                  <button type="button" onClick={(event) => chooseRevoke({ keeperPieceId, accessId: contributor.accessId }, event.currentTarget)} disabled={Boolean(busy)} className="mt-3 min-h-11 rounded-full px-4 py-2 font-label text-label uppercase tracking-[0.16em] text-bronze-700 hover:text-wood-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 disabled:opacity-45">Revoke contributor access</button>
                 )}
               </li>
             ))}
@@ -850,11 +850,11 @@ function DisplayLocation({
 
   return (
     <div className="text-center">
-      <p id="display-location-label" className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
+      <p id="display-location-label" className="font-label text-micro uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
         Where it lives now
       </p>
       {!editing ? (
-        <button type="button" onClick={() => setEditing(true)} aria-describedby="display-location-label" className="font-serif text-[17px] text-wood-700 italic border-b border-transparent hover:border-bronze-300 transition-colors">
+        <button type="button" onClick={() => setEditing(true)} aria-describedby="display-location-label" className="font-serif text-body text-wood-700 italic border-b border-transparent hover:border-bronze-300 transition-colors">
           {current || 'Add where this piece currently rests'}
         </button>
       ) : (
@@ -866,16 +866,16 @@ function DisplayLocation({
             onChange={(event) => setValue(event.target.value.slice(0, 200))}
             placeholder="A room, a city, a sanctuary"
             aria-describedby="display-location-outcome"
-            className="w-full bg-paper-50 border border-wood-200 px-4 py-2.5 font-serif text-[16px] text-wood-700 text-center focus:outline-none focus:border-bronze-400 transition-colors"
+            className="w-full bg-paper-50 border border-wood-200 px-4 py-2.5 font-serif text-body text-wood-700 text-center focus:outline-none focus:border-bronze-400 transition-colors"
           />
           <p id="display-location-outcome" role={error ? 'alert' : undefined} aria-live="polite" className="font-sans text-xs text-bronze-700 mt-3 min-h-4">
             {error}
           </p>
           <div className="flex items-center justify-center gap-5 mt-4">
-            <button type="button" onClick={() => setEditing(false)} className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
+            <button type="button" onClick={() => setEditing(false)} className="font-label text-micro uppercase tracking-[0.15em] text-wood-400 font-semibold">
               Cancel
             </button>
-            <button type="button" onClick={save} disabled={busy} className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-600 font-semibold border-b border-bronze-300 pb-1 disabled:opacity-40">
+            <button type="button" onClick={save} disabled={busy} className="font-label text-micro uppercase tracking-[0.15em] text-bronze-600 font-semibold border-b border-bronze-300 pb-1 disabled:opacity-40">
               {busy ? 'Saving' : 'Save'}
             </button>
           </div>

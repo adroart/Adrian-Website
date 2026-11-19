@@ -12,9 +12,10 @@ import {
   type InvitationCreateResult,
 } from '../../utils/artworkInvitations';
 
-const inputClass = 'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
-const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
-const buttonClass = 'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors';
+const inputClass = 'input placeholder:text-wood-400';
+const labelClass = 'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+// Buttons come from src/master.css. Do not rebuild them from utilities.
+const buttonClass = 'btn btn-outline';
 
 export function reconcileInvitationAttemptForKeeper(
   current: InvitationCreateAttempt | null,
@@ -181,7 +182,7 @@ export const ArtworkInvitations: React.FC = () => {
                     {row.intendedRecipientEmail} · {row.status} · expires {new Date(row.expiresAt).toLocaleDateString()}
                   </p>
                   {linkedInvitation?.invitationId === row.invitationId && (
-                    <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 mt-2">
+                    <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 mt-2">
                       Selected for this registered piece
                     </p>
                   )}

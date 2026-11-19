@@ -61,7 +61,7 @@ const ResetPassword: React.FC = () => {
   return (
     <section className="relative mx-auto flex min-h-[70vh] w-full max-w-xl items-center px-6 py-24">
       <div className="w-full border border-wood-200 bg-paper-50 p-8 text-wood-900 shadow-xl sm:p-12">
-        <p className="font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-bronze-600">
+        <p className="font-label text-label font-semibold uppercase tracking-[0.2em] text-bronze-600">
           Adrian Rasmussen Art
         </p>
         <h1 className="mt-3 font-display text-4xl font-medium">Reset your password</h1>
@@ -73,7 +73,7 @@ const ResetPassword: React.FC = () => {
             </p>
             <form className="mt-8 space-y-6" onSubmit={requestCode}>
               <div>
-                <label htmlFor="reset-email" className="mb-2 block font-label text-[11px] font-semibold uppercase tracking-[0.15em] text-wood-500">
+                <label htmlFor="reset-email" className="mb-2 block font-label text-label font-semibold uppercase tracking-[0.15em] text-wood-500">
                   Email
                 </label>
                 <input
@@ -84,10 +84,10 @@ const ResetPassword: React.FC = () => {
                   required
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full border border-wood-300 bg-white px-4 py-3 font-sans text-base text-wood-900"
+                  className="w-full border border-wood-300 bg-surface-card px-4 py-3 font-sans text-base text-wood-900"
                 />
               </div>
-              <button type="submit" disabled={busy || !email.trim()} className="w-full bg-wood-900 px-4 py-3 font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-paper-50 disabled:opacity-50">
+              <button type="submit" disabled={busy || !email.trim()} className="w-full bg-wood-900 px-4 py-3 font-label text-label font-semibold uppercase tracking-[0.2em] text-paper-50 disabled:opacity-50">
                 {busy ? 'Sending...' : 'Send reset code'}
               </button>
             </form>
@@ -101,7 +101,7 @@ const ResetPassword: React.FC = () => {
             </p>
             <form className="mt-8 space-y-6" onSubmit={replacePassword}>
               <div>
-                <label htmlFor="reset-code" className="mb-2 block font-label text-[11px] font-semibold uppercase tracking-[0.15em] text-wood-500">
+                <label htmlFor="reset-code" className="mb-2 block font-label text-label font-semibold uppercase tracking-[0.15em] text-wood-500">
                   Six-digit code
                 </label>
                 <input
@@ -113,11 +113,11 @@ const ResetPassword: React.FC = () => {
                   pattern="[0-9]{6}"
                   value={otp}
                   onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full border border-wood-300 bg-white px-4 py-3 text-center font-sans text-base tracking-[0.3em] text-wood-900"
+                  className="w-full border border-wood-300 bg-surface-card px-4 py-3 text-center font-sans text-base tracking-[0.3em] text-wood-900"
                 />
               </div>
               <div>
-                <label htmlFor="reset-password" className="mb-2 block font-label text-[11px] font-semibold uppercase tracking-[0.15em] text-wood-500">
+                <label htmlFor="reset-password" className="mb-2 block font-label text-label font-semibold uppercase tracking-[0.15em] text-wood-500">
                   New password
                 </label>
                 <input
@@ -128,14 +128,14 @@ const ResetPassword: React.FC = () => {
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full border border-wood-300 bg-white px-4 py-3 font-sans text-base text-wood-900"
+                  className="w-full border border-wood-300 bg-surface-card px-4 py-3 font-sans text-base text-wood-900"
                 />
                 <p className="mt-2 font-sans text-xs text-wood-500">At least 8 characters.</p>
               </div>
-              <button type="submit" disabled={busy || otp.length !== 6 || password.length < 8} className="w-full bg-wood-900 px-4 py-3 font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-paper-50 disabled:opacity-50">
+              <button type="submit" disabled={busy || otp.length !== 6 || password.length < 8} className="w-full bg-wood-900 px-4 py-3 font-label text-label font-semibold uppercase tracking-[0.2em] text-paper-50 disabled:opacity-50">
                 {busy ? 'Resetting...' : 'Set new password'}
               </button>
-              <button type="button" onClick={() => setStep('request')} className="w-full bg-transparent py-2 font-label text-[11px] font-semibold uppercase tracking-[0.15em] text-bronze-600">
+              <button type="button" onClick={() => setStep('request')} className="w-full bg-transparent py-2 font-label text-label font-semibold uppercase tracking-[0.15em] text-bronze-600">
                 Request a new code
               </button>
             </form>
@@ -147,20 +147,20 @@ const ResetPassword: React.FC = () => {
             <p className="mt-4 font-body text-wood-600">
               Your password has been reset. You can return and sign in with the new password.
             </p>
-            <Link to={returnTo} className="mt-8 block w-full bg-wood-900 px-4 py-3 text-center font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-paper-50">
+            <Link to={returnTo} className="mt-8 block w-full bg-wood-900 px-4 py-3 text-center font-label text-label font-semibold uppercase tracking-[0.2em] text-paper-50">
               Return to the site
             </Link>
           </div>
         )}
 
         {error && (
-          <p role="alert" aria-live="assertive" className="mt-6 border border-red-300 bg-red-50 px-4 py-3 font-sans text-sm text-red-800">
+          <p role="alert" aria-live="assertive" className="mt-6 border border-danger-line bg-danger-soft px-4 py-3 font-sans text-sm text-danger">
             {error}
           </p>
         )}
 
         {step !== 'complete' && (
-          <Link to={returnTo} className="mt-8 block text-center font-label text-[11px] font-semibold uppercase tracking-[0.15em] text-bronze-600">
+          <Link to={returnTo} className="mt-8 block text-center font-label text-label font-semibold uppercase tracking-[0.15em] text-bronze-600">
             Cancel
           </Link>
         )}

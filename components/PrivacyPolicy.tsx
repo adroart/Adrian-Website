@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const PrivacyPolicy: React.FC = () => {
   return (
-    <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+    <section className="bg-surface-page min-h-screen pt-32 pb-32 px-6">
       <div className="max-w-3xl mx-auto animate-fade-in">
         <h1 className="font-serif text-5xl text-wood-900 mb-12 font-medium">Privacy Policy</h1>
 

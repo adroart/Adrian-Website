@@ -76,7 +76,7 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
         )}
         <div className="flex-1 min-w-0">
           <p className="font-sans text-sm text-wood-900 font-medium truncate">{file.key}</p>
-          <p className="font-label text-[11px] text-wood-400 font-semibold mt-0.5">
+          <p className="font-label text-label text-wood-400 font-semibold mt-0.5">
             {formatSize(file.size)} · {formatDate(file.uploaded)}
           </p>
         </div>
@@ -84,28 +84,28 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
           {isAudio && (
             <Link
               to={poetryCreatePath(file.url)}
-              className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 hover:text-bronze-900 font-semibold transition-colors"
+              className="font-label text-label uppercase tracking-[0.15em] text-bronze-700 hover:text-bronze-900 font-semibold transition-colors"
             >
               Use in poem
             </Link>
           )}
           <button
             onClick={copy}
-            className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+            className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
           >
             {copied ? 'Copied' : 'Copy URL'}
           </button>
           <a
             href={file.url}
             download
-            className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+            className="font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
           >
             Download
           </a>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold transition-colors ${
+            className={`font-label text-label uppercase tracking-[0.15em] font-semibold transition-colors ${
               confirmDelete ? 'text-[#e0a08a] hover:text-[#e0a08a]' : 'text-wood-300 hover:text-[#e0a08a]'
             }`}
           >
@@ -198,7 +198,7 @@ const AdminFileUpload: React.FC = () => {
             <h2 className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-6">Upload</h2>
             <div className="space-y-5">
               <div>
-                <label className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">File</label>
+                <label className="font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">File</label>
                 <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-wood-300 hover:border-bronze-400 transition-colors cursor-pointer py-8 px-4 text-center">
                   <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" />
                   {file ? (
@@ -206,13 +206,13 @@ const AdminFileUpload: React.FC = () => {
                   ) : (
                     <>
                       <span className="font-sans text-sm text-wood-500 mb-1">Drop a file here or click to browse</span>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">MP3, WAV, OGG, M4A</span>
+                      <span className="font-label text-label uppercase tracking-[0.15em] text-wood-400 font-semibold">MP3, WAV, OGG, M4A</span>
                     </>
                   )}
                 </label>
               </div>
               <div>
-                <label className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">Filename in bucket</label>
+                <label className="font-label text-label uppercase tracking-[0.15em] text-wood-500 font-semibold block mb-2">Filename in bucket</label>
                 <input
                   type="text"
                   value={filename}
@@ -221,15 +221,15 @@ const AdminFileUpload: React.FC = () => {
                   className="w-full border border-wood-300 bg-paper-50 px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400"
                 />
               </div>
-              {uploadError && <p className="font-sans text-sm text-red-600">{uploadError}</p>}
+              {uploadError && <p className="font-sans text-sm text-danger">{uploadError}</p>}
               {uploadResult && (
                 <div className="bg-wood-50 border border-wood-200 p-4">
-                  <p className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold mb-2">Uploaded. Copy this URL:</p>
+                  <p className="font-label text-label uppercase tracking-[0.15em] text-bronze-600 font-semibold mb-2">Uploaded. Copy this URL:</p>
                   <div className="flex items-center gap-3">
                     <code className="font-mono text-xs text-wood-800 break-all flex-1">{uploadResult.url}</code>
                     <button
                       onClick={() => { navigator.clipboard.writeText(uploadResult.url); }}
-                      className="flex-shrink-0 font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
+                      className="flex-shrink-0 font-label text-label uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"
                     >
                       Copy
                     </button>
@@ -239,7 +239,7 @@ const AdminFileUpload: React.FC = () => {
               <button
                 onClick={handleUpload}
                 disabled={!file || !filename || uploading}
-                className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+                className="btn btn-primary btn-block"
               >
                 {uploading ? 'Uploading...' : 'Upload'}
               </button>

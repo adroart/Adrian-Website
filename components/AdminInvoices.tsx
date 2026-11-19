@@ -57,9 +57,9 @@ const EMPTY_PRESET = {
   isActive: true,
 };
 
-const inputClass = 'w-full border border-wood-300 bg-paper-50 px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
+const inputClass = 'input placeholder:text-wood-400';
 const textareaClass = `${inputClass} min-h-[96px] resize-y leading-relaxed`;
-const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
+const labelClass = 'font-label text-label uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const PAYMENT_METHOD_ORDER: Record<string, number> = { wise: 1, crypto: 2, bank: 3 };
 
 function sortPaymentPresets(presets: PaymentPreset[]): PaymentPreset[] {
@@ -567,7 +567,7 @@ const AdminInvoices: React.FC = () => {
         <div className="mx-auto max-w-7xl">
           <div className="studio-sales-invoice-header flex flex-col gap-3 border-b border-wood-200 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
+              <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
                 Admin
               </p>
               <h1 className="font-title text-4xl md:text-5xl text-wood-900">
@@ -616,7 +616,7 @@ const AdminInvoices: React.FC = () => {
                       Save reusable accounts and links. Selected options become buttons on the customer invoice.
                     </p>
                   </div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold">
+                  <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold">
                     {selectedPresets.length} selected
                   </p>
                 </div>
@@ -649,7 +649,7 @@ const AdminInvoices: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => deletePreset(preset.id)}
-                                  className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-400 hover:text-[#e0a08a]"
+                                  className="font-label text-label uppercase tracking-[0.12em] text-wood-400 hover:text-[#e0a08a]"
                                 >
                                   Remove
                                 </button>
@@ -660,9 +660,9 @@ const AdminInvoices: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => togglePaymentPreset(preset.id)}
-                                className={`mt-4 w-full border px-3 py-2 font-label text-[11px] uppercase tracking-[0.12em] ${
+                                className={`mt-4 w-full border px-3 py-2 font-label text-label uppercase tracking-[0.12em] ${
                                   selected
-                                    ? 'border-bronze-600 bg-bronze-600 text-white dark:text-paper-50'
+                                    ? 'border-bronze-600 bg-bronze-600 text-ink-on-dark dark:text-paper-50'
                                     : 'border-wood-300 bg-paper-50 text-wood-700 hover:border-bronze-500'
                                 }`}
                               >
@@ -804,7 +804,7 @@ const AdminInvoices: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => removeLineItem(index)}
-                          className="self-end border border-wood-300 bg-paper-50 px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-[#e0a08a] hover:text-[#e0a08a]"
+                          className="self-end border border-wood-300 bg-paper-50 px-3 py-2.5 font-label text-label uppercase tracking-[0.12em] text-wood-600 hover:border-[#e0a08a] hover:text-[#e0a08a]"
                         >
                           Remove
                         </button>
@@ -830,7 +830,7 @@ const AdminInvoices: React.FC = () => {
                                   onChange={e => updateVariant(index, vi, { amountCents: parseMoneyToCents(e.target.value) })}
                                   placeholder="0.00"
                                 />
-                                <button type="button" onClick={() => removeVariant(index, vi)} className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-500 hover:text-[#e0a08a]">Remove</button>
+                                <button type="button" onClick={() => removeVariant(index, vi)} className="font-label text-micro uppercase tracking-[0.12em] text-wood-500 hover:text-[#e0a08a]">Remove</button>
                               </div>
                             ))}
                           </div>
@@ -838,7 +838,7 @@ const AdminInvoices: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => addVariant(index)}
-                          className="font-label text-[10px] uppercase tracking-[0.12em] text-bronze-700 hover:text-bronze-800 underline underline-offset-4"
+                          className="font-label text-micro uppercase tracking-[0.12em] text-bronze-700 hover:text-bronze-800 underline underline-offset-4"
                         >
                           + Add size option
                         </button>
@@ -873,7 +873,7 @@ const AdminInvoices: React.FC = () => {
                       onClick={() => setTermMode(mode)}
                       className={`border px-4 py-3 text-left font-sans text-sm ${
                         termMode === mode
-                          ? 'border-bronze-600 bg-bronze-600 text-white dark:text-paper-50'
+                          ? 'border-bronze-600 bg-bronze-600 text-ink-on-dark dark:text-paper-50'
                           : 'border-wood-200 bg-paper-50 text-wood-700 hover:border-bronze-400'
                       }`}
                     >
@@ -908,7 +908,7 @@ const AdminInvoices: React.FC = () => {
                     >
                       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                         <div>
-                          <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold">
+                          <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold">
                             Step {index + 1} · {step.dueTiming || 'Due'}
                           </p>
                           <h3 className="font-serif text-xl text-wood-900">{step.label}</h3>
@@ -943,7 +943,7 @@ const AdminInvoices: React.FC = () => {
 
             <aside className="space-y-6">
               <section className="sticky top-6 border border-wood-200 bg-paper-50 p-5">
-                <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
+                <p className="font-label text-label uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
                   Current step
                 </p>
                 <h2 className="font-serif text-2xl text-wood-900">{currentStep?.label || 'Invoice total'}</h2>
@@ -951,31 +951,31 @@ const AdminInvoices: React.FC = () => {
                   {currentStep?.description || 'Set an amount and choose payment terms.'}
                 </p>
                 <div className="mt-5 border-t border-wood-100 pt-5">
-                  <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold">Total due today</p>
+                  <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold">Total due today</p>
                   <p className="font-serif text-4xl text-wood-900">{formatMoney(dueTodayCents, draft.currency)}</p>
                 </div>
                 <div className="mt-5 border-t border-wood-100 pt-5">
-                  <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Payment buttons</p>
+                  <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Payment buttons</p>
                   <div className="space-y-2">
                     {selectedPresets.length ? selectedPresets.map(preset => (
                       <div key={preset.id} className="border border-wood-200 bg-paper-50 px-3 py-2 font-sans text-sm text-wood-800">
                         {preset.label}
                       </div>
                     )) : (
-                      <p className="font-sans text-sm text-red-700">Select at least one payment option.</p>
+                      <p className="font-sans text-sm text-danger">Select at least one payment option.</p>
                     )}
                   </div>
                 </div>
                 {savedInvoice?.publicUrlPath && (
                   <div className="mt-5 border-t border-wood-100 pt-5">
-                    <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Public link</p>
+                    <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Public link</p>
                     <a className="block break-all font-sans text-sm text-bronze-800 underline" href={savedInvoice.publicUrlPath} target="_blank" rel="noreferrer">
                       {publicInvoiceUrl(savedInvoice.publicUrlPath)}
                     </a>
                     <button
                       type="button"
                       onClick={copyInvoiceLink}
-                      className="mt-3 w-full border border-wood-300 px-3 py-2 font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500"
+                      className="mt-3 w-full border border-wood-300 px-3 py-2 font-label text-label uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500"
                     >
                       Copy link
                     </button>
@@ -986,7 +986,7 @@ const AdminInvoices: React.FC = () => {
               <section className="border border-wood-200 bg-paper-50 p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-serif text-2xl text-wood-900">Recent</h2>
-                  <button type="button" onClick={load} className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700">
+                  <button type="button" onClick={load} className="font-label text-label uppercase tracking-[0.12em] text-bronze-700">
                     Refresh
                   </button>
                 </div>
@@ -1003,8 +1003,8 @@ const AdminInvoices: React.FC = () => {
                           editingId === invoice.id ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'
                         }`}
                       >
-                        <button type="button" onClick={() => editInvoice(invoice)} className="w-full text-left hover:opacity-80">
-                          <span className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
+                        <button type="button" onClick={() => editInvoice(invoice)} className="studio-sales-row w-full hover:opacity-80">
+                          <span className="block font-label text-label uppercase tracking-[0.12em] text-wood-500">
                             {invoice.invoiceNumber} · {invoice.status}
                           </span>
                           <span className="block font-serif text-lg text-wood-900">{invoice.clientName}</span>
@@ -1020,7 +1020,7 @@ const AdminInvoices: React.FC = () => {
                             type="button"
                             onClick={() => markPaid(invoice)}
                             disabled={paymentBusyId === invoice.id}
-                            className="mt-2 border border-wood-300 bg-paper-50 px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 hover:border-green-600 hover:text-green-700"
+                            className="mt-2 border border-wood-300 bg-paper-50 px-3 py-1.5 font-label text-micro uppercase tracking-[0.12em] text-wood-700 hover:border-success-line hover:text-success"
                           >
                             {paymentBusyId === invoice.id ? 'Recording…' : '✓ Record payment'}
                           </button>

@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   const solidDark = 'bg-stone-950/95 backdrop-blur-xl border-b border-stone-800';
   const solidLight = 'bg-paper-50/95 backdrop-blur-xl border-b border-wood-200';
-  const glassDark = 'bg-stone-950/85 backdrop-blur-xl border-b border-white/10 shadow-sm';
+  const glassDark = 'bg-stone-950/85 backdrop-blur-xl border-b border-ink-on-dark/10 shadow-sm';
   const glassLight = 'bg-paper-50/90 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
   const navTop = 'top-0';
@@ -135,7 +135,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`group relative text-xs uppercase tracking-[0.2em] font-label py-3 transition-all duration-300 flex items-center gap-1 font-semibold ${
+                className={`group relative text-nav uppercase tracking-[0.2em] font-label py-3 transition-all duration-300 flex items-center gap-1 font-semibold ${
                   isNavActive(item.path)
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
@@ -153,7 +153,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             <AuthButton />
             <button
               onClick={toggleDarkMode}
-              className={`px-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${textPrimary}`}
+              className={`px-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity font-label text-label uppercase tracking-[0.2em] font-semibold ${textPrimary}`}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDarkMode ? 'Day' : 'Night'}
@@ -170,7 +170,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                 <path d="M16 10a4 4 0 0 1-8 0" />
               </svg>
               {totalItems > 0 && (
-                <span className={`absolute -top-0.5 -right-0.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-label font-semibold leading-none ${isDark ? 'bg-bronze-400 text-stone-950' : 'bg-bronze-600 text-paper-50'}`}>
+                <span className={`absolute -top-0.5 -right-0.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-micro font-label font-semibold leading-none ${isDark ? 'bg-bronze-400 text-stone-950' : 'bg-bronze-600 text-paper-50'}`}>
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}

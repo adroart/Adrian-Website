@@ -70,7 +70,7 @@ export const IntentionRitual: React.FC<{ pieceId: string; editionNumber?: number
   const journals = intentions.filter((i) => i.kind === 'journal' && i.state === 'open');
 
   if (loading) {
-    return <p className="font-sans text-[13px] text-wood-400 text-center py-6">Listening.</p>;
+    return <p className="font-sans text-caption text-wood-400 text-center py-6">Listening.</p>;
   }
 
   return (
@@ -102,7 +102,7 @@ export const IntentionRitual: React.FC<{ pieceId: string; editionNumber?: number
       {/* ── Journaling (anytime) ── */}
       <section>
         <SectionLabel>Journal</SectionLabel>
-        <p className="font-sans text-[13px] text-wood-500 leading-[1.8] mb-5 text-center max-w-md mx-auto">
+        <p className="font-sans text-caption text-wood-500 leading-airy mb-5 text-center max-w-md mx-auto">
           A reflection you may write anytime. It does not lock. It simply stays with the piece.
         </p>
         <ComposeJournal
@@ -115,10 +115,10 @@ export const IntentionRitual: React.FC<{ pieceId: string; editionNumber?: number
           <div className="mt-8 space-y-5 max-w-md mx-auto">
             {journals.map((j) => (
               <article key={j.id} className="border-l border-bronze-200 pl-4">
-                <p className="font-serif text-[15px] text-wood-600 leading-[1.8] whitespace-pre-line">
+                <p className="font-serif text-meta text-wood-600 leading-airy whitespace-pre-line">
                   {j.body}
                 </p>
-                <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-300 font-semibold mt-2">
+                <p className="font-label text-micro uppercase tracking-[0.15em] text-wood-300 font-semibold mt-2">
                   {formatDate(j.createdAt)}
                 </p>
               </article>
@@ -128,7 +128,7 @@ export const IntentionRitual: React.FC<{ pieceId: string; editionNumber?: number
       </section>
 
       {error && (
-        <p className="font-sans text-[13px] text-bronze-700 text-center">{error}</p>
+        <p className="font-sans text-caption text-bronze-700 text-center">{error}</p>
       )}
     </div>
   );
@@ -139,10 +139,10 @@ export const IntentionRitual: React.FC<{ pieceId: string; editionNumber?: number
 function LockedIntention({ intention }: { intention: IntentionView }) {
   return (
     <div className="max-w-md mx-auto text-center animate-fade-in">
-      <p className="font-serif text-lg md:text-xl text-wood-700 italic leading-[1.7] mb-4 whitespace-pre-line">
+      <p className="font-serif text-lg md:text-xl text-wood-700 italic leading-prose mb-4 whitespace-pre-line">
         {intention.body}
       </p>
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">
+      <p className="font-label text-micro uppercase tracking-[0.2em] text-bronze-600 font-semibold">
         Set for {intention.setsForYear} · It holds until next year
       </p>
     </div>
@@ -172,7 +172,7 @@ function ComposeMotivation({
 
   if (!windowOpen) {
     return (
-      <p className="font-sans text-[14px] text-wood-500 leading-[1.8] text-center max-w-md mx-auto">
+      <p className="font-sans text-meta text-wood-500 leading-airy text-center max-w-md mx-auto">
         The yearly intention is set in the days around your birthday. When that window opens, this
         is where you will fuse it into the piece. Your journaling stays open anytime.
       </p>
@@ -204,7 +204,7 @@ function ComposeMotivation({
 
   return (
     <div className="max-w-md mx-auto">
-      <p className="font-serif text-[16px] text-wood-600 leading-[1.8] text-center mb-6">
+      <p className="font-serif text-body text-wood-600 leading-airy text-center mb-6">
         What do you set into motion this year?
       </p>
       <textarea
@@ -212,16 +212,16 @@ function ComposeMotivation({
         onChange={(e) => setText(e.target.value.slice(0, INTENTION_MAX))}
         rows={4}
         placeholder="Write it as you mean it."
-        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-serif text-[16px] text-wood-700 leading-[1.7] focus:outline-none focus:border-bronze-400 transition-colors resize-none"
+        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-serif text-body text-wood-700 leading-prose focus:outline-none focus:border-bronze-400 transition-colors resize-none"
       />
       <div className="flex items-center justify-between mt-4">
-        <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-300 font-semibold tabular-nums">
+        <span className="font-label text-micro uppercase tracking-[0.15em] text-wood-300 font-semibold tabular-nums">
           {text.trim().length} · {INTENTION_MAX}
         </span>
         <button
           onClick={submit}
           disabled={busy || !text.trim()}
-          className="px-7 py-3 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
+          className="px-7 py-3 bg-wood-900 text-paper-50 font-label text-label uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
         >
           {busy ? 'Composing' : 'Compose'}
         </button>
@@ -280,20 +280,20 @@ function ConfirmStep({
 
   return (
     <div className="max-w-md mx-auto text-center animate-fade-in">
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-6">
+      <p className="font-label text-micro uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-6">
         See it as the field will see it
       </p>
-      <p className="font-serif text-lg md:text-xl text-wood-700 italic leading-[1.7] mb-8 whitespace-pre-line">
+      <p className="font-serif text-lg md:text-xl text-wood-700 italic leading-prose mb-8 whitespace-pre-line">
         {intention.body}
       </p>
       <button
         onClick={confirm}
         disabled={busy || !ready}
-        className="px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
+        className="px-8 py-4 bg-wood-900 text-paper-50 font-label text-label uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
       >
         {busy ? 'Setting' : ready ? 'Set it for the year' : 'Take a breath'}
       </button>
-      <p className="font-sans text-[12px] text-wood-400 leading-[1.7] mt-5">
+      <p className="font-sans text-label-lg text-wood-400 leading-prose mt-5">
         Once set, it holds until next year. Until you confirm, nothing is fixed.
       </p>
     </div>
@@ -347,13 +347,13 @@ function ComposeJournal({
         onChange={(e) => setText(e.target.value.slice(0, INTENTION_MAX))}
         rows={3}
         placeholder="A note to the piece."
-        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-serif text-[15px] text-wood-700 leading-[1.7] focus:outline-none focus:border-bronze-400 transition-colors resize-none"
+        className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-serif text-meta text-wood-700 leading-prose focus:outline-none focus:border-bronze-400 transition-colors resize-none"
       />
       <div className="flex justify-end mt-3">
         <button
           onClick={submit}
           disabled={busy || !text.trim()}
-          className="px-6 py-2.5 border border-wood-300 text-wood-600 font-label text-[11px] uppercase tracking-[0.15em] font-semibold hover:border-bronze-400 hover:text-bronze-700 transition-colors disabled:opacity-40"
+          className="px-6 py-2.5 border border-wood-300 text-wood-600 font-label text-label uppercase tracking-[0.15em] font-semibold hover:border-bronze-400 hover:text-bronze-700 transition-colors disabled:opacity-40"
         >
           {busy ? 'Saving' : 'Keep this'}
         </button>
@@ -368,7 +368,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-center gap-4 mb-6">
       <div className="h-px w-8 bg-bronze-300" />
-      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold">
+      <p className="font-label text-micro uppercase tracking-[0.25em] text-bronze-600 font-semibold">
         {children}
       </p>
       <div className="h-px w-8 bg-bronze-300" />
