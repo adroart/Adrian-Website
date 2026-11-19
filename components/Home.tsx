@@ -100,7 +100,7 @@ const Home: React.FC = () => {
             <section className="py-14 md:py-24 px-6">
                 <div className="max-w-3xl mx-auto">
 
-                    <blockquote className="font-serif text-[26px] md:text-3xl lg:text-4xl text-wood-800 leading-[1.35] font-light border-none pl-0 text-center text-balance">
+                    <blockquote className="font-serif text-heading md:text-3xl lg:text-4xl text-wood-800 leading-[1.35] font-light border-none pl-0 text-center text-balance">
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
 
@@ -158,7 +158,7 @@ const Home: React.FC = () => {
                     <div className="md:col-span-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
                         <div>
                             <span className="font-label text-label uppercase tracking-[0.26em] text-bronze-600 font-semibold block mb-6 md:mb-7">The Work</span>
-                            <h2 className="font-display font-light text-4xl md:text-5xl lg:text-[3.4rem] leading-[1.1] tracking-[-0.012em] text-wood-900 text-balance">
+                            <h2 className="font-display font-light text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-[-0.012em] text-wood-900 text-balance">
                                 I create across many forms.
                             </h2>
                         </div>
