@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useCollections, type CollectionItemKind } from '../../lib/collections/context';
 import { useAccount } from '../../lib/account/useAccount';
 import { Bookmark } from 'lucide-react';
@@ -32,9 +32,12 @@ interface Props {
  */
 const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save to collection', variant = 'button' }) => {
   const account = useAccount();
-  const { collections, createCollection, addItem } = useCollections();
+  const { collections, createCollection, addItem, isLoading, loadFailed, reload } = useCollections();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const pending = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!account.available) return null;
 
@@ -61,18 +64,35 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
     );
   }
 
-  const handleAdd = async (collectionId: number) => {
-    await addItem(collectionId, { kind, ref: itemRef });
-    setOpen(false);
+  const save = async (getCollectionId: () => Promise<number>) => {
+    if (pending.current || isLoading || loadFailed) return;
+    pending.current = true;
+    setSaving(true);
+    setError(null);
+    let collectionId: number | undefined;
+    try {
+      collectionId = await getCollectionId();
+      await addItem(collectionId, { kind, ref: itemRef });
+      setOpen(false);
+    } catch {
+      setError(collectionId === undefined
+        ? 'Could not create the collection. Try again.'
+        : 'Could not save this item. Choose the collection to try again.');
+    } finally {
+      pending.current = false;
+      setSaving(false);
+    }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     const name = newName.trim();
-    if (!name) return;
-    const created = await createCollection(name);
-    if (created) await addItem(created.id, { kind, ref: itemRef });
-    setNewName('');
-    setOpen(false);
+    if (!name || saving || isLoading || loadFailed) return;
+    void save(async () => {
+      const created = await createCollection(name);
+      if (!created) throw new Error('collection creation unavailable');
+      setNewName('');
+      return created.id;
+    });
   };
 
   // Signed in: the collection chooser.
@@ -90,8 +110,16 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
       </button>
       {open && (
         <div className="stc__menu">
-          {collections.length === 0 ? (
-            <p className="stc__menu-empty">No collections yet. Create your first one below.</p>
+          {error && <p role="alert" className="stc__menu-empty">{error}</p>}
+          {loadFailed && (
+            <p role="alert" className="stc__menu-empty">
+              Could not load your collections. <button type="button" className="underline" onClick={reload}>Try again</button>
+            </p>
+          )}
+          {isLoading ? (
+            <p className="stc__menu-empty">Loading…</p>
+          ) : collections.length === 0 ? (
+            !loadFailed && <p className="stc__menu-empty">No collections yet. Create your first one below.</p>
           ) : (
             <ul className="stc__menu-list">
               {collections.map((c) => (
@@ -99,7 +127,8 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
                   <button
                     type="button"
                     className="stc__menu-item"
-                    onClick={() => handleAdd(c.id)}
+                    disabled={saving || loadFailed}
+                    onClick={() => void save(async () => c.id)}
                   >
                     {c.name}
                   </button>
@@ -111,6 +140,9 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
             <input
               type="text"
               value={newName}
+              maxLength={80}
+              aria-label="New collection name"
+              disabled={saving}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
               placeholder="New collection name"
@@ -120,7 +152,7 @@ const SaveToCollectionButton: React.FC<Props> = ({ kind, itemRef, label = 'Save 
               type="button"
               className="stc__create-btn"
               onClick={handleCreate}
-              disabled={!newName.trim()}
+              disabled={saving || isLoading || loadFailed || !newName.trim()}
             >
               Save
             </button>
@@ -188,7 +220,7 @@ const stcStyles = `
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    z-index: 15;
+    z-index: 60;
     width: 240px;
     background: var(--color-paper-50);
     border: 1px solid color-mix(in oklab, var(--color-wood-600) 22%, transparent);
@@ -225,6 +257,7 @@ const stcStyles = `
   }
   .stc__input {
     flex: 1;
+    min-width: 0;
     font-family: var(--font-display);
     font-size: var(--text-meta);
     padding: 6px 8px;

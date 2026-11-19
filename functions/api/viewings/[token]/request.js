@@ -6,7 +6,7 @@
  * Marks the viewing 'requested' and creates a DRAFT invoice pre-filled with the
  * chosen pieces as line items (amount 0, for Adrian to price). Meaning ≠ money:
  * the viewing never carried a price; the invoice is where money enters. Returns
- * the new invoice's admin path so Adrian can open, price, and send it.
+ * a receipt before Adrian prices and shares the invoice.
  *
  * Public (no admin gate) — the client triggers it — but it only reads the
  * viewing's own stored pieces and writes a zero-value draft, so there is no
@@ -50,9 +50,12 @@ export async function onRequestPost({ env, params, request }) {
   try {
     body = await request.json();
   } catch {
+    if (request.body) return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
     body = {};
   }
-  const requestedIds = Array.isArray(body.pieceIds) ? body.pieceIds.map(String) : [];
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+  }
 
   const row = await env.DB.prepare('SELECT * FROM viewings WHERE public_token=?1').bind(token).first();
   if (!row) return jsonResponse({ ok: false, error: 'not_found' }, 404);
@@ -60,12 +63,7 @@ export async function onRequestPost({ env, params, request }) {
   // Idempotency: if this viewing was already turned into a request/invoice,
   // return that result instead of creating a duplicate draft and re-emailing.
   if (row.invoice_token || row.status === 'requested') {
-    return jsonResponse({
-      ok: true,
-      alreadyRequested: true,
-      invoiceAdminPath: '/admin/invoices',
-      invoiceToken: row.invoice_token || null,
-    });
+    return jsonResponse({ ok: true, alreadyRequested: true });
   }
 
   let data = {};
@@ -74,10 +72,15 @@ export async function onRequestPost({ env, params, request }) {
   } catch {
     data = {};
   }
-  const pieces = Array.isArray(data.pieces) ? data.pieces : [];
-  const chosen = requestedIds.length
-    ? pieces.filter((p) => requestedIds.includes(p.id))
-    : pieces.filter((p) => p.recommended);
+  const pieces = Array.isArray(data?.pieces)
+    ? data.pieces.filter((piece) => typeof piece?.id === 'string' && piece.id.trim())
+    : [];
+  // Omitting pieceIds requests the saved recommendations. An explicit empty
+  // or stale selection must leave the viewing available for correction.
+  const explicit = Object.hasOwn(body, 'pieceIds');
+  const requestedIds = new Set(Array.isArray(body.pieceIds) ? body.pieceIds : []);
+  const chosen = pieces.filter((piece) => explicit ? requestedIds.has(piece.id) : piece.recommended);
+  if (!chosen.length) return jsonResponse({ ok: false, error: 'no_valid_pieces' }, 400);
 
   // Build a draft invoice: each chosen piece a line item, priced at 0 for Adrian.
   const lineItems = chosen.map((p) => ({
@@ -160,10 +163,7 @@ export async function onRequestPost({ env, params, request }) {
       'SELECT status, invoice_token FROM viewings WHERE id = ?1',
     ).bind(row.id).first();
     if (existing?.invoice_token && existing.status === 'requested') {
-      return jsonResponse({
-        ok: true, alreadyRequested: true, invoiceAdminPath: '/admin/invoices',
-        invoiceToken: existing.invoice_token,
-      });
+      return jsonResponse({ ok: true, alreadyRequested: true });
     }
     return jsonResponse({ ok: false, error: 'request_write_failed' }, 503);
   }
@@ -199,10 +199,5 @@ export async function onRequestPost({ env, params, request }) {
     }
   }
 
-  return jsonResponse({
-    ok: true,
-    requested: chosen.length,
-    invoiceAdminPath: '/admin/invoices',
-    invoiceToken: newInvoiceToken,
-  });
+  return jsonResponse({ ok: true, requested: chosen.length });
 }

@@ -26,6 +26,7 @@ export interface Collection {
 interface CollectionsContextValue {
   collections: Collection[];
   isLoading: boolean;
+  loadFailed: boolean;
   /** True only when accounts are configured. SaveToCollectionButton uses this
    * to short-circuit and trigger the account sign-in flow. */
   available: boolean;
@@ -40,6 +41,7 @@ interface CollectionsContextValue {
 const stub: CollectionsContextValue = {
   collections: [],
   isLoading: false,
+  loadFailed: false,
   available: false,
   reload: async () => undefined,
   createCollection: async () => null,
@@ -52,111 +54,123 @@ const stub: CollectionsContextValue = {
 const CollectionsContext = createContext<CollectionsContextValue>(stub);
 
 export const CollectionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const account = useAccount();
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [isLoading, setLoading] = useState(false);
-  const loadedFor = useRef<string | null>(null);
+  const { available, isLoaded, isSignedIn, userId, fetchAuthed } = useAccount();
+  const owner = available && isSignedIn ? userId : null;
+  // A distinct scope also rejects an old response after signing out and back in.
+  const scope = useMemo(() => ({ owner }), [owner]);
+  const currentOwner = useRef(scope);
+  currentOwner.current = scope;
+  const operationQueue = useMemo(() => ({ current: Promise.resolve() as Promise<void> }), [scope]);
+  const enqueue = useCallback(<T,>(action: () => Promise<T>): Promise<T> => {
+    const result = operationQueue.current.then(action);
+    operationQueue.current = result.then(() => undefined, () => undefined);
+    return result;
+  }, [operationQueue]);
+  const newestLoad = useRef(0);
+  const [snapshot, setSnapshot] = useState<{
+    owner: string; scope: typeof scope; collections: Collection[]; loading: boolean; failed: boolean;
+  } | null>(null);
+  const current = owner && snapshot?.scope === scope ? snapshot : null;
+  const collections = current?.collections ?? stub.collections;
+  const isLoading = !!owner && (current?.loading ?? true);
+  const loadFailed = current?.failed ?? false;
 
-  const reload = useCallback(async () => {
-    if (!account.available || !account.isSignedIn) {
-      setCollections([]);
-      return;
-    }
-    setLoading(true);
+  const reload = useCallback(() => enqueue(async () => {
+    if (!owner || currentOwner.current !== scope) return;
+    const requestId = ++newestLoad.current;
+    setSnapshot((previous) => ({
+      owner,
+      scope,
+      collections: previous?.scope === scope ? previous.collections : [],
+      loading: true,
+      failed: false,
+    }));
     try {
-      const res = await account.fetchAuthed('/api/collections/list');
-      const data = res.ok ? await res.json() : [];
-      setCollections(Array.isArray(data) ? data : []);
+      const res = await fetchAuthed('/api/collections/list');
+      if (!res.ok) throw new Error('collections load failed');
+      const data: unknown = await res.json();
+      if (!Array.isArray(data)) throw new Error('unexpected collections response');
+      if (currentOwner.current === scope && requestId === newestLoad.current) {
+        setSnapshot({ owner, scope, collections: data, loading: false, failed: false });
+      }
     } catch {
-      setCollections([]);
-    } finally {
-      setLoading(false);
+      if (currentOwner.current === scope && requestId === newestLoad.current) {
+        setSnapshot((previous) => previous?.scope === scope
+          ? { ...previous, loading: false, failed: true }
+          : previous);
+      }
     }
-  }, [account]);
+  }), [owner, scope, fetchAuthed, enqueue]);
 
   useEffect(() => {
-    if (!account.isLoaded) return;
-    const tag = account.isSignedIn ? account.userId : 'guest';
-    if (loadedFor.current === tag) return;
-    loadedFor.current = tag;
-    reload();
-  }, [account.isLoaded, account.isSignedIn, account.userId, reload]);
+    if (isLoaded) void reload();
+  }, [isLoaded, reload]);
 
-  const createCollection = useCallback(async (name: string) => {
-    if (!account.available || !account.isSignedIn) return null;
-    const res = await account.fetchAuthed('/api/collections/create', {
+  const updateCollections = useCallback((update: (items: Collection[]) => Collection[]) => {
+    if (currentOwner.current !== scope) return;
+    setSnapshot((previous) => previous && previous.scope === scope
+      ? { ...previous, collections: update(previous.collections) }
+      : previous);
+  }, [scope]);
+
+  const post = useCallback(async (endpoint: string, body: object) => {
+    if (!owner || currentOwner.current !== scope) throw new Error('account unavailable');
+    const res = await fetchAuthed(`/api/collections/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) return null;
-    const created = (await res.json()) as Collection;
-    setCollections((c) => [...c, created]);
+    if (!res.ok) throw new Error('collection change failed');
+    const data = await res.json();
+    if (currentOwner.current !== scope) throw new Error('account changed');
+    return data;
+  }, [owner, scope, fetchAuthed]);
+
+  const createCollection = useCallback((name: string) => enqueue(async () => {
+    const created = await post('create', { name }) as Collection;
+    if (!Number.isInteger(created?.id) || typeof created.name !== 'string' || !Array.isArray(created.items)) {
+      throw new Error('unexpected collection response');
+    }
+    updateCollections((collections) => [...collections, created]);
     return created;
-  }, [account]);
+  }), [post, updateCollections, enqueue]);
+
+  const change = useCallback((endpoint: string, body: object, update: (items: Collection[]) => Collection[]) => enqueue(async () => {
+    const data = await post(endpoint, body);
+    if (data?.ok !== true) throw new Error('collection change failed');
+    updateCollections(update);
+  }), [post, updateCollections, enqueue]);
 
   const renameCollection = useCallback(async (id: number, name: string) => {
-    if (!account.available || !account.isSignedIn) return;
-    await account.fetchAuthed('/api/collections/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, name }),
-    });
-    setCollections((c) => c.map((col) => (col.id === id ? { ...col, name } : col)));
-  }, [account]);
+    await change('update', { id, name }, (collections) =>
+      collections.map((collection) => collection.id === id ? { ...collection, name } : collection));
+  }, [change]);
 
   const deleteCollection = useCallback(async (id: number) => {
-    if (!account.available || !account.isSignedIn) return;
-    await account.fetchAuthed('/api/collections/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    setCollections((c) => c.filter((col) => col.id !== id));
-  }, [account]);
+    await change('delete', { id }, (collections) => collections.filter((collection) => collection.id !== id));
+  }, [change]);
 
   const addItem = useCallback(async (collectionId: number, item: CollectionItem) => {
-    if (!account.available || !account.isSignedIn) return;
-    await account.fetchAuthed('/api/collections/add-item', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collectionId, ...item }),
-    });
-    setCollections((c) =>
-      c.map((col) =>
-        col.id === collectionId
-          ? {
-              ...col,
-              items: col.items.some((i) => i.kind === item.kind && i.ref === item.ref)
-                ? col.items
-                : [...col.items, item],
-            }
-          : col,
-      ),
-    );
-  }, [account]);
+    await change('add-item', { collectionId, ...item }, (collections) =>
+      collections.map((collection) => collection.id === collectionId
+        && !collection.items.some((saved) => saved.kind === item.kind && saved.ref === item.ref)
+        ? { ...collection, items: [...collection.items, item] }
+        : collection));
+  }, [change]);
 
   const removeItem = useCallback(async (collectionId: number, item: CollectionItem) => {
-    if (!account.available || !account.isSignedIn) return;
-    await account.fetchAuthed('/api/collections/remove-item', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collectionId, ...item }),
-    });
-    setCollections((c) =>
-      c.map((col) =>
-        col.id === collectionId
-          ? { ...col, items: col.items.filter((i) => !(i.kind === item.kind && i.ref === item.ref)) }
-          : col,
-      ),
-    );
-  }, [account]);
+    await change('remove-item', { collectionId, ...item }, (collections) =>
+      collections.map((collection) => collection.id === collectionId
+        ? { ...collection, items: collection.items.filter((saved) => saved.kind !== item.kind || saved.ref !== item.ref) }
+        : collection));
+  }, [change]);
 
   const value = useMemo<CollectionsContextValue>(
     () => ({
       collections,
       isLoading,
-      available: account.available,
+      loadFailed,
+      available,
       reload,
       createCollection,
       renameCollection,
@@ -167,7 +181,8 @@ export const CollectionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     [
       collections,
       isLoading,
-      account.available,
+      loadFailed,
+      available,
       reload,
       createCollection,
       renameCollection,

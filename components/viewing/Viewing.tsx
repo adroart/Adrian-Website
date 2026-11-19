@@ -13,8 +13,7 @@
  * only (★ recommended, ✓ selected). Mobile-first; motion is a whisper.
  *
  * Data source today: baked-in SAMPLE_VIEWING. Later: GET /api/viewings/:token.
- * "Request these pieces" is stubbed — it will hand the selection to the invoice
- * flow (/admin/invoices) once the Curation Desk + delivery API are built.
+ * "Request these pieces" sends the selection to the Studio for pricing and invoicing.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -180,13 +179,16 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
   const [trayOpen, setTrayOpen] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    setRequestError(null);
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
 
   const byId = useMemo(() => new Map(data.pieces.map((p) => [p.id, p])), [data.pieces]);
   const chosen = [...selected].map((id) => byId.get(id)).filter(Boolean) as ViewingPiece[];
@@ -201,21 +203,32 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
   }, [data.pieces]);
 
   const requestPieces = async () => {
-    if (requesting || requested) return;
+    if (requesting || requested || !chosen.length) return;
     // No token (sample / desk preview): nothing to persist, just confirm.
     if (!token || token === 'sample' || dataProp) {
       setRequested(true);
       return;
     }
     setRequesting(true);
+    setRequestError(null);
     try {
       const res = await fetch(`/api/viewings/${encodeURIComponent(token)}/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pieceIds: [...selected] }),
+        body: JSON.stringify({ pieceIds: chosen.map((piece) => piece.id) }),
       });
       const d = await res.json().catch(() => ({}));
-      if (res.ok && d?.ok) setRequested(true);
+      if (res.ok && d?.ok) {
+        setRequested(true);
+      } else if (d?.error === 'no_valid_pieces') {
+        setRequestError('These pieces are no longer available in this viewing. Refresh and select again.');
+      } else if (res.status === 429) {
+        setRequestError('Too many attempts. Please try again in an hour.');
+      } else {
+        setRequestError('Your request could not be sent. Try again.');
+      }
+    } catch {
+      setRequestError('Your request could not be sent. Try again.');
     } finally {
       setRequesting(false);
     }
@@ -368,6 +381,9 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
               </button>
             </div>
 
+            {requestError && (
+              <p role="alert" className="max-w-3xl mx-auto px-6 pb-3 text-sm text-wood-800">{requestError}</p>
+            )}
             {trayOpen && (
               <div className="max-w-3xl mx-auto px-6 pb-4 border-t border-wood-200">
                 <ul className="divide-y divide-wood-200">

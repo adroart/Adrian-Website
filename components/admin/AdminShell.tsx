@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from '../../lib/account/authClient';
-import { ADMIN_NAVIGATION } from './AdminNavigation';
+import { ADMIN_NAVIGATION, studioNavigationArea } from './AdminNavigation';
 import { CeremonyStyles } from '../ceremony/styles';
 import { adminUI } from './AdminPage';
 
@@ -12,6 +12,25 @@ type LocationLike = { pathname: string; search: string; hash: string };
 
 export function adminReturnDestination(location: LocationLike): string {
   return `${location.pathname}${location.search}${location.hash}`;
+}
+
+function studioReturnLink(state: unknown): { href: string; label: string; state?: { artworkListReturnPath: string } } | undefined {
+  if (!state || typeof state !== 'object') return;
+  if ('artworkReturnPath' in state && typeof state.artworkReturnPath === 'string'
+    && /^\/admin\/artworks\/[A-Za-z0-9_-]+(?:\?[^#\s]*)?$/.test(state.artworkReturnPath)) {
+    const listPath = 'artworkListReturnPath' in state && typeof state.artworkListReturnPath === 'string'
+      && /^\/admin\/artworks(?:\?[^#\s]*)?$/.test(state.artworkListReturnPath)
+      ? state.artworkListReturnPath : undefined;
+    return {
+      href: state.artworkReturnPath,
+      label: 'Back to artwork',
+      ...(listPath ? { state: { artworkListReturnPath: listPath } } : {}),
+    };
+  }
+  if ('saleReturnPath' in state && typeof state.saleReturnPath === 'string'
+    && /^\/admin\/collector-sales\?[^#\s]+$/.test(state.saleReturnPath)) {
+    return { href: state.saleReturnPath, label: 'Back to verified sale' };
+  }
 }
 
 const AdminForbidden: React.FC<{ onSignOut: () => Promise<void> }> = ({ onSignOut }) => (
@@ -35,6 +54,8 @@ const AdminShell: React.FC = () => {
   const sidebarRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const activeArea = studioNavigationArea(location.pathname);
+  const returnLink = studioReturnLink(location.state);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -142,17 +163,23 @@ const AdminShell: React.FC = () => {
           <span>Studio</span>
         </Link>
         <nav aria-label="Admin navigation">
-          {ADMIN_NAVIGATION.map(group => (
-            <div key={group.label} className="admin-nav-group">
-              <p>{group.label}</p>
-              {group.items.map(item => (
-                <NavLink key={item.href} to={item.href} end={item.end}>
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
-          ))}
+          <div className="admin-nav-links">
+            {ADMIN_NAVIGATION.map(item => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={activeArea === item.href ? 'active' : undefined}
+                aria-current={activeArea === item.href ? location.pathname === item.href ? 'page' : 'location' : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </nav>
+        <NavLink end to="/admin/tools" className="admin-tools-link" onClick={() => setMenuOpen(false)}>
+          Studio tools
+        </NavLink>
         <div className="admin-account">
           <span title={admin.email}>{admin.email}</span>
           <Link to="/">View site</Link>
@@ -161,6 +188,11 @@ const AdminShell: React.FC = () => {
       </aside>
       <main className="admin-main collector-root" id="admin-main-content" data-marks="0">
         <Ground cut="run" light="l" pad="0">
+          {returnLink && (
+            <div className="admin-record-return">
+              <Link to={returnLink.href} state={returnLink.state}>{returnLink.label}</Link>
+            </div>
+          )}
           <Outlet />
         </Ground>
       </main>

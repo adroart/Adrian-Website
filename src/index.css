@@ -685,7 +685,7 @@ html, body {
   text-transform: uppercase;
 }
 
-.admin-nav-group a {
+.admin-nav-links a {
   display: block;
   min-height: 30px;
   padding: 5px var(--space-3);
@@ -697,11 +697,11 @@ html, body {
   transition: color 160ms ease, border-color 160ms ease;
 }
 
-.admin-nav-group a:hover {
+.admin-nav-links a:hover {
   color: var(--admin-accent);
 }
 
-.admin-nav-group a.active {
+.admin-nav-links a.active {
   border-left-color: var(--admin-accent);
   color: var(--admin-ink);
 }
@@ -2063,5 +2063,258 @@ textarea.maintenance-input { resize: vertical; }
   .reveal-block .pg-3,
   .reveal-block .pg-4 {
     opacity: 1 !important;
+  }
+}
+
+/* Studio destinations use the shared navigation type and colour defaults. */
+.admin-tools-link {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--control-h);
+  margin-left: var(--space-6);
+  color: var(--admin-ink-quiet);
+  font-family: var(--font-body);
+  font-size: var(--text-admin-nav);
+  text-underline-offset: 0.2em;
+}
+.admin-tools-link:hover,
+.admin-tools-link.active { color: var(--admin-accent); text-decoration: underline; }
+.admin-record-return { padding: var(--space-3) clamp(1rem, 4vw, 3.5rem) 0; }
+.admin-record-return a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  color: var(--admin-accent);
+  font: var(--text-body) var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* The exact artwork record groups each status with its destination. */
+.studio-record {
+  --record-ink: var(--admin-ink);
+  --record-muted: var(--admin-ink-quiet);
+  --record-brass: var(--admin-accent);
+  --record-ground: var(--admin-ground);
+  --record-hairline: rgb(var(--admin-ink-rgb) / 14%);
+  --record-edge: rgb(var(--admin-ink-rgb) / 26%);
+  max-width: 73rem;
+  color: var(--record-ink);
+}
+
+.studio-record-header {
+  padding-bottom: 1.2rem;
+}
+
+.studio-record-header-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.studio-record h1,
+.studio-record h2 {
+  margin: 0;
+  color: var(--record-ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.studio-record h1 {
+  font-size: var(--text-page-title);
+  line-height: 1.05;
+}
+
+.studio-record h2 {
+  font-size: var(--text-section-heading);
+  line-height: 1.1;
+}
+
+.studio-record-facts {
+  margin: 0.4rem 0 0;
+  font: 600 var(--text-body)/1.4 var(--font-label);
+  color: var(--record-muted);
+  overflow-wrap: anywhere;
+}
+
+.studio-record .studio-record-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  width: fit-content;
+  color: var(--record-brass);
+  font: 600 var(--text-button)/1.2 var(--font-label);
+}
+
+.studio-record .studio-record-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: var(--control-h);
+  max-width: 100%;
+  padding: var(--space-1) var(--control-px);
+  border: 1px solid var(--record-edge);
+  border-radius: var(--radius-none);
+  color: var(--record-ink);
+  background: rgb(var(--admin-ink-rgb) / 6%);
+  font: 600 var(--text-button)/1.18 var(--font-label);
+  text-align: center;
+  text-decoration: none;
+}
+
+.studio-record .studio-record-action:hover {
+  background: rgb(var(--admin-ink-rgb) / 11%);
+  border-color: var(--record-muted);
+}
+
+.studio-record .studio-record-primary {
+  background: var(--record-brass);
+  border-color: var(--record-brass);
+  color: var(--record-ground);
+}
+
+.studio-record .studio-record-primary:hover {
+  background: var(--admin-accent-hover);
+  border-color: var(--admin-accent-hover);
+}
+
+.studio-record :is(.studio-record-back, .studio-record-action):focus-visible {
+  outline: 2px solid var(--record-brass);
+  outline-offset: 2px;
+}
+
+.studio-record-section {
+  display: grid;
+  grid-template-columns: clamp(10rem, 14vw, 13rem) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 0.35rem 1.25rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--record-hairline);
+}
+
+.studio-record-summary {
+  grid-column: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.studio-record-status {
+  margin: 0;
+  font: 600 var(--text-body)/1.35 var(--font-label);
+}
+
+.studio-record-note {
+  max-width: 66ch;
+  margin: 0.22rem 0 0;
+  color: var(--record-muted);
+  font: 400 var(--text-small)/1.45 var(--font-body);
+}
+
+.studio-record-section-actions {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.studio-record-history {
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--record-hairline);
+}
+
+.studio-record-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+}
+
+.studio-record-events {
+  padding: 0;
+  margin: 0.3rem 0 0;
+  list-style: none;
+}
+
+.studio-record-events li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.16rem 1rem;
+  padding: 0.42rem 0;
+  font: 400 var(--text-small)/1.4 var(--font-body);
+}
+
+.studio-record-events time {
+  color: var(--record-muted);
+  font: 500 var(--text-small)/1.4 var(--font-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.studio-record-message {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--record-hairline);
+  color: var(--record-muted);
+}
+
+.studio-record-message .studio-record-action {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 69.99rem) {
+  .studio-record-section {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    align-items: start;
+  }
+
+  .studio-record-section h2 {
+    grid-column: 1 / -1;
+  }
+
+  .studio-record-summary {
+    grid-column: 1;
+  }
+
+  .studio-record-section-actions {
+    grid-column: 2;
+    max-width: 12rem;
+  }
+}
+
+@media (max-width: 37rem) {
+  .studio-record-header {
+    padding-bottom: 0.8rem;
+  }
+
+  .admin-page:has(> .studio-record) {
+    padding-block: 0.85rem 2rem;
+  }
+
+  .studio-record-section {
+    grid-template-columns: minmax(0, 1fr) fit-content(46%);
+    align-items: start;
+    column-gap: 0.65rem;
+    padding: 0.66rem 0;
+  }
+
+  .studio-record-section-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .studio-record-section-actions > a {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .studio-record-events li {
+    flex-wrap: wrap;
   }
 }

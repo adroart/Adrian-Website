@@ -13,10 +13,10 @@ export async function onRequest(context) {
 
   const auth = await requireUser(request, env);
   if (auth instanceof Response) return auth;
-  if (!env.DB) return jsonResponse([], { status: 200 }, request, env);
+  if (!env.DB) return jsonResponse({ error: 'db_not_configured' }, { status: 503 }, request, env);
 
   const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
-  if (!user) return jsonResponse([], { status: 200 }, request, env);
+  if (!user) return jsonResponse({ error: 'user_not_synced' }, { status: 409 }, request, env);
 
   const { results: cols } = await env.DB
     .prepare('SELECT id, name, created_at FROM collections WHERE user_id = ?1 ORDER BY created_at')

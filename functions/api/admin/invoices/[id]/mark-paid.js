@@ -1,7 +1,7 @@
 import { jsonResponse, requireAdminIdentity, requireDb } from '../../../_lib/admin.js';
-import { serializeInvoiceRow } from '../../../_lib/invoices.js';
+import { serializeStudioInvoiceRow } from '../../../_lib/invoices.js';
 
-const FIELDS = new Set(['paidCents', 'totalCents', 'idempotencyKey']);
+const FIELDS = new Set(['paidCents', 'totalCents', 'idempotencyKey', 'expectedCurrency', 'expectedTotalCents']);
 
 async function digest(value) {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
@@ -66,33 +66,61 @@ export async function onRequestPost({ request, env, params }) {
   if (totalCents !== null && (!Number.isSafeInteger(totalCents) || totalCents <= 0)) {
     return jsonResponse({ ok: false, error: 'invalid_total_cents' }, 400);
   }
+  const expectedCurrency = body.expectedCurrency ?? null;
+  const expectedTotalCents = body.expectedTotalCents ?? null;
+  if ((expectedCurrency !== null && (typeof expectedCurrency !== 'string' || !/^[A-Z]{3}$/.test(expectedCurrency)))
+      || (expectedTotalCents !== null && (!Number.isSafeInteger(expectedTotalCents) || expectedTotalCents <= 0))) {
+    return jsonResponse({ ok: false, error: 'invalid_input' }, 400);
+  }
   const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
   if (idempotencyKey.length < 8 || idempotencyKey.length > 128) {
     return jsonResponse({ ok: false, error: 'idempotency_key_required' }, 400);
   }
 
-  const requestDigest = await digest({ invoiceId: id, paidCents: body.paidCents, totalCents });
+  const requestDigest = await digest({
+    invoiceId: id, paidCents: body.paidCents, totalCents,
+    ...(expectedCurrency === null ? {} : { expectedCurrency }),
+    ...(expectedTotalCents === null ? {} : { expectedTotalCents }),
+  });
   try {
     const existing = await replay(env, idempotencyKey, requestDigest, id);
     if (existing) {
       if (existing.conflict) return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
-      return jsonResponse({ ok: true, replayed: true, invoice: serializeInvoiceRow(existing.row) });
+      return jsonResponse({ ok: true, replayed: true, invoice: serializeStudioInvoiceRow(existing.row) });
     }
 
-    await env.DB.prepare(
+    const inserted = await env.DB.prepare(
       `INSERT INTO invoice_payment_events
          (id, invoice_id, idempotency_key, request_digest, paid_cents,
           requested_total_cents, administrator_user_id, administrator_email, created_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, unixepoch())`,
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, unixepoch()
+         FROM invoices
+        WHERE id = ?2 AND (?9 IS NULL OR currency = ?9) AND (?10 IS NULL OR total_cents = ?10)
+          AND (source_quote_id IS NULL OR (
+            (?6 IS NULL OR total_cents = ?6)
+            AND (json_array_length(payment_options_json) > 0 OR payment_snapshot_json <> '{}')
+          ))
+       RETURNING id`,
     ).bind(`payment-${crypto.randomUUID()}`, id, idempotencyKey, requestDigest,
-      body.paidCents, totalCents, authorization.userId, authorization.email).run();
+      body.paidCents, totalCents, authorization.userId, authorization.email, expectedCurrency, expectedTotalCents).first();
+    if (!inserted) {
+      const raced = await replay(env, idempotencyKey, requestDigest, id);
+      if (raced) {
+        if (raced.conflict) return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+        return jsonResponse({ ok: true, replayed: true, invoice: serializeStudioInvoiceRow(raced.row) });
+      }
+      const current = await invoice(env, id);
+      return current
+        ? jsonResponse({ ok: false, error: 'invoice_changed_or_locked' }, 409)
+        : jsonResponse({ ok: false, error: 'not_found' }, 404);
+    }
     const row = await invoice(env, id);
-    return jsonResponse({ ok: true, replayed: false, invoice: serializeInvoiceRow(row) });
+    return jsonResponse({ ok: true, replayed: false, invoice: serializeStudioInvoiceRow(row) });
   } catch (error) {
     const raced = await replay(env, idempotencyKey, requestDigest, id).catch(() => null);
     if (raced) {
       if (raced.conflict) return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
-      return jsonResponse({ ok: true, replayed: true, invoice: serializeInvoiceRow(raced.row) });
+      return jsonResponse({ ok: true, replayed: true, invoice: serializeStudioInvoiceRow(raced.row) });
     }
     const [code, status] = paymentError(error);
     if (code === 'idempotency_race') return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);

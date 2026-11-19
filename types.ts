@@ -167,6 +167,13 @@ export interface Track {
   aiNote?: string;           // optional honest credit line shown subtly at the page bottom
 }
 
+export type StoryBodyNode = string | {
+  tag: 'p' | 'h2' | 'h3' | 'blockquote' | 'ul' | 'ol' | 'li' | 'strong' | 'em' | 'a' | 'br';
+  children: StoryBodyNode[];
+  href?: string;
+  start?: number;
+};
+
 export interface Story {
   id: string;
   slug: string;
@@ -176,6 +183,7 @@ export interface Story {
   category: StoryCategory; // Updated from 'type'
   excerpt: string;
   content: string[];
+  formattedContent?: StoryBodyNode[];
   image?: string;
   readMinutes: number;
   tags: string[];

@@ -47,7 +47,7 @@ export default config({
 
         image: fields.text({
           label: 'Cover image',
-          description: 'Cloudinary public ID (e.g. "Ye-ming-zhu_sfkatw").',
+          description: 'Media image key (e.g. "adrian-website/creations/light-codes/suni").',
           validation: { isRequired: false },
         }),
 
@@ -90,16 +90,18 @@ export default config({
           { label: 'Audio tracks', itemLabel: props => props.fields.title.value || 'Track' }
         ),
 
-        body: fields.document({
+        body: fields.markdoc({
           label: 'Content',
-          formatting: {
-            inlineMarks: { bold: true, italic: true },
-            blockTypes: { blockquote: true },
-            headingLevels: [2, 3],
-            listTypes: { unordered: true, ordered: true },
-            softBreaks: true,
+          extension: 'md',
+          options: {
+            bold: true,
+            italic: true,
+            blockquote: true,
+            heading: [2, 3],
+            unorderedList: true,
+            orderedList: true,
+            link: true,
           },
-          links: true,
         }),
       },
     }),

@@ -13,6 +13,7 @@ import type {
 } from './invoices/invoiceTypes';
 import {
   PAYMENT_TERM_LABELS,
+  amountDueAtMilestone,
   buildPaymentSchedule,
   centsToInput,
   formatMoney,
@@ -22,6 +23,15 @@ import {
   parseMoneyToCents,
   publicInvoiceUrl,
 } from './invoices/invoiceUtils';
+
+function ReviewSaleLink({ invoice }: { invoice: Invoice }) {
+  if (invoice.status !== 'paid' || invoice.totalCents <= 0
+    || invoice.amountPaidCents !== invoice.totalCents || !invoice.paidAt) return null;
+  return <Link to={`/admin/collector-sales/invoices/${invoice.id}`}
+    className="studio-sales-secondary mt-2">
+    Review sale
+  </Link>;
+}
 
 const EMPTY_LINE_ITEM: InvoiceLineItem = {
   description: 'Commissioned artwork',
@@ -88,6 +98,10 @@ const errorCopy: Record<string, string> = {
   job_description_required: 'Add the description of the job.',
   job_title_required: 'Add a job title.',
   client_name_required: 'Add the client name.',
+  payment_required: 'Use Record payment to mark an invoice paid.',
+  invoice_changed_or_locked: 'This invoice changed or its payment terms are locked. Reload the saved invoice before continuing.',
+  accepted_quote_locked: 'This invoice uses the agreed artwork price and configuration. Start a new quote for a different agreement.',
+  invoice_not_ready_to_share: 'Refresh the invoice and check that its saved amount, schedule, and payment options are complete.',
 };
 
 function niceError(error: unknown): string {
@@ -95,9 +109,19 @@ function niceError(error: unknown): string {
   return errorCopy[key] || key || 'Something went wrong.';
 }
 
+async function copyLink(url: string): Promise<boolean> {
+  if (!url || !navigator.clipboard) return false;
+  try {
+    await navigator.clipboard.writeText(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function invoiceToDraft(invoice: Invoice): InvoiceDraft {
   return {
-    status: invoice.status === 'void' ? 'draft' : invoice.status,
+    status: invoice.status,
     clientName: invoice.clientName,
     clientEmail: invoice.clientEmail,
     clientLocation: invoice.clientLocation,
@@ -108,9 +132,9 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
     paymentSchedule: invoice.paymentSchedule,
     currentStepIndex: invoice.currentStepIndex,
     shippingText: invoice.shippingText,
-    paymentPresetIds: invoice.paymentPresetIds,
+    paymentPresetIds: invoice.paymentPresetIds.length ? invoice.paymentPresetIds : invoice.paymentPresetId ? [invoice.paymentPresetId] : [],
     notes: invoice.notes,
-    offerPaymentChoice: invoice.offerPaymentChoice,
+    offerPaymentChoice: Boolean(invoice.offerPaymentChoice),
   };
 }
 
@@ -137,12 +161,31 @@ const AdminInvoices: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [presetSaving, setPresetSaving] = useState(false);
   const [paymentBusyId, setPaymentBusyId] = useState<number | null>(null);
-  const paymentAttemptRef = useRef<Record<number, { key: string; paidCents: number }>>({});
+  const paymentAttemptRef = useRef<Record<number, {
+    key: string; paidCents: number; expectedCurrency: string; expectedTotalCents: number;
+  }>>({});
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
-  const totalCents = useMemo(() => lineItemsTotal(draft.lineItems), [draft.lineItems]);
-  const currentStep = draft.paymentSchedule[draft.currentStepIndex] || draft.paymentSchedule[0];
-  const dueTodayCents = currentStep?.amountCents || totalCents;
+  const paidCents = savedInvoice?.amountPaidCents ?? 0;
+  const paymentLocked = paidCents > 0;
+  const sourceQuote = savedInvoice?.sourceQuote;
+  const lineTotal = lineItemsTotal(draft.lineItems);
+  const totalCents = savedInvoice && (paymentLocked || lineTotal === savedInvoice.subtotalCents)
+    ? savedInvoice.totalCents : lineTotal;
+  const paymentSchedule = savedInvoice && (paymentLocked || (
+    termMode === inferPaymentTermMode(savedInvoice.paymentSchedule) && totalCents === savedInvoice.totalCents
+    && savedInvoice.paymentSchedule.length > 0
+  )) ? savedInvoice.paymentSchedule : buildPaymentSchedule(totalCents, termMode);
+  const stepIndex = Math.min(draft.currentStepIndex, Math.max(0, paymentSchedule.length - 1));
+  const currentStep = paymentSchedule[stepIndex];
+  const dueTodayCents = currentStep?.amountCents ?? totalCents;
+  const milestoneDue = paymentLocked ? amountDueAtMilestone(totalCents, paidCents, paymentSchedule, stepIndex) : dueTodayCents;
+  const editingDraft = { ...draft, paymentSchedule, currentStepIndex: stepIndex };
+  const dirty = !!savedInvoice && JSON.stringify(editingDraft) !== JSON.stringify(invoiceToDraft(savedInvoice));
+  const busy = saving || paymentBusyId !== null;
+  const enoughToShare = !!savedInvoice && savedInvoice.totalCents > 0 && savedInvoice.paymentSchedule.length > 0
+    && (!sourceQuote || savedInvoice.paymentOptions.length > 0);
+  const shareReady = !!savedInvoice && enoughToShare && savedInvoice.status !== 'void' && !dirty && !busy;
 
   const selectedPresets = useMemo(
     () => presets.filter(preset => draft.paymentPresetIds.includes(preset.id)),
@@ -162,7 +205,7 @@ const AdminInvoices: React.FC = () => {
       setInvoices(invoiceData.invoices || []);
       if (!draft.paymentPresetIds.length) {
         const presetIds = nextPresets.map(preset => preset.id);
-        if (presetIds.length) setDraft(prev => ({ ...prev, paymentPresetIds: presetIds }));
+        if (presetIds.length) setDraft(prev => prev.paymentPresetIds.length ? prev : { ...prev, paymentPresetIds: presetIds });
       }
     } catch (error) {
       setMessage({ type: 'err', text: niceError(error) });
@@ -204,49 +247,6 @@ const AdminInvoices: React.FC = () => {
       });
     return () => controller.abort();
   }, [linkedInvoiceId]);
-
-  // Prefill from the pricing calculator's "Draft an invoice from this quote"
-  // hand-off (sessionStorage key 'pricing:invoice-draft'). One-shot: consume
-  // and clear, then let Adrian fill in the client details.
-  useEffect(() => {
-    let raw: string | null = null;
-    try {
-      raw = window.sessionStorage.getItem('pricing:invoice-draft');
-      if (raw) window.sessionStorage.removeItem('pricing:invoice-draft');
-    } catch {
-      raw = null;
-    }
-    if (!raw) return;
-    try {
-      const h = JSON.parse(raw) as { jobTitle?: string; description?: string; amountCents?: number };
-      setDraft(prev => ({
-        ...prev,
-        jobTitle: prev.jobTitle || h.jobTitle || 'Commissioned wooden sculpture',
-        lineItems: [
-          {
-            ...prev.lineItems[0],
-            description: h.description || prev.lineItems[0]?.description || '',
-            amountCents: Number(h.amountCents) || 0,
-          },
-          ...prev.lineItems.slice(1),
-        ],
-      }));
-      setMessage({ type: 'ok', text: 'Started from a pricing quote. Add the client details to finish.' });
-    } catch {
-      /* malformed hand-off — ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    setDraft(prev => {
-      const schedule = buildPaymentSchedule(totalCents, termMode);
-      return {
-        ...prev,
-        paymentSchedule: schedule,
-        currentStepIndex: Math.min(prev.currentStepIndex, Math.max(0, schedule.length - 1)),
-      };
-    });
-  }, [termMode, totalCents]);
 
   const updateDraft = <K extends keyof InvoiceDraft>(field: K, value: InvoiceDraft[K]) => {
     setDraft(prev => ({ ...prev, [field]: value }));
@@ -360,7 +360,7 @@ const AdminInvoices: React.FC = () => {
         ...prev.map(preset => data.preset.isDefault ? { ...preset, isDefault: false } : preset),
         data.preset,
       ]));
-      setDraft(prev => ({
+      if (!paymentLocked) setDraft(prev => ({
         ...prev,
         paymentPresetIds: data.preset.isDefault || prev.paymentPresetIds.length === 0
           ? [...new Set([...prev.paymentPresetIds, data.preset.id])]
@@ -379,7 +379,7 @@ const AdminInvoices: React.FC = () => {
     try {
       await fetch(`/api/admin/payment-presets/${id}`, { method: 'DELETE' }).then(res => readJson(res));
       setPresets(prev => prev.filter(preset => preset.id !== id));
-      setDraft(prev => ({ ...prev, paymentPresetIds: prev.paymentPresetIds.filter(item => item !== id) }));
+      if (!paymentLocked) setDraft(prev => ({ ...prev, paymentPresetIds: prev.paymentPresetIds.filter(item => item !== id) }));
     } catch (error) {
       setMessage({ type: 'err', text: niceError(error) });
     }
@@ -433,6 +433,7 @@ const AdminInvoices: React.FC = () => {
 
   const markPaid = async (invoice: Invoice) => {
     if (paymentBusyId === invoice.id) return;
+    if (busy || (savedInvoice?.id === invoice.id && dirty)) return;
     const paidSoFar = invoice.amountPaidCents || 0;
     const balance = invoice.totalCents - paidSoFar;
     let attempt = paymentAttemptRef.current[invoice.id];
@@ -446,14 +447,19 @@ const AdminInvoices: React.FC = () => {
         String((balance / 100).toFixed(2)),
       );
       if (entered === null) return;
-      const normalized = entered.trim().replace(/^[^0-9]*/, '');
+      const normalized = entered.trim();
       if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
         setMessage({ type: 'err', text: 'Enter a valid payment amount with no more than two decimal places.' });
         return;
       }
       const paidCents = Math.round(Number(normalized) * 100);
-      if (!Number.isSafeInteger(paidCents) || paidCents <= 0) return;
-      attempt = { key: crypto.randomUUID(), paidCents };
+      if (!Number.isSafeInteger(paidCents) || paidCents <= 0) {
+        setMessage({ type: 'err', text: 'Enter a positive payment amount.' });
+        return;
+      }
+      attempt = {
+        key: crypto.randomUUID(), paidCents, expectedCurrency: invoice.currency, expectedTotalCents: invoice.totalCents,
+      };
       paymentAttemptRef.current[invoice.id] = attempt;
     }
     setPaymentBusyId(invoice.id);
@@ -461,16 +467,21 @@ const AdminInvoices: React.FC = () => {
       const response = await fetch(`/api/admin/invoices/${invoice.id}/mark-paid`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paidCents: attempt.paidCents, idempotencyKey: attempt.key }),
+        body: JSON.stringify({
+          paidCents: attempt.paidCents, idempotencyKey: attempt.key,
+          expectedCurrency: attempt.expectedCurrency, expectedTotalCents: attempt.expectedTotalCents,
+        }),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        delete paymentAttemptRef.current[invoice.id];
+        if (response.status < 500) delete paymentAttemptRef.current[invoice.id];
         throw new Error(body?.error || `request_failed_${response.status}`);
       }
       const data = await readJson<{ ok: boolean; invoice: Invoice }>(response);
       delete paymentAttemptRef.current[invoice.id];
       setInvoices(prev => prev.map(inv => (inv.id === data.invoice.id ? data.invoice : inv)));
+      setSavedInvoice(previous => previous?.id === data.invoice.id ? data.invoice : previous);
+      if (editingId === data.invoice.id) setDraft(invoiceToDraft(data.invoice));
       const newBalance = data.invoice.totalCents - (data.invoice.amountPaidCents || 0);
       setMessage({
         type: 'ok',
@@ -489,6 +500,7 @@ const AdminInvoices: React.FC = () => {
   };
 
   const saveInvoice = async () => {
+    if (busy || savedInvoice?.status === 'void') return;
     if (!draft.clientName.trim() || !draft.jobTitle.trim() || !draft.jobDescription.trim()) {
       setMessage({ type: 'err', text: 'Client name, job title, and description are required.' });
       return;
@@ -502,8 +514,7 @@ const AdminInvoices: React.FC = () => {
     setMessage(null);
     try {
       const payload = {
-        ...draft,
-        status: draft.status === 'void' ? 'draft' : draft.status,
+        ...editingDraft,
         currency: draft.currency.toUpperCase(),
         paymentPresetId: draft.paymentPresetIds[0] ?? null,
         totalCents,
@@ -518,6 +529,8 @@ const AdminInvoices: React.FC = () => {
       }).then(res => readJson<{ ok: boolean; invoice: Invoice }>(res));
 
       setSavedInvoice(data.invoice);
+      setDraft(invoiceToDraft(data.invoice));
+      setTermMode(inferPaymentTermMode(data.invoice.paymentSchedule));
       setEditingId(data.invoice.id);
       setInvoices(prev => {
         const without = prev.filter(invoice => invoice.id !== data.invoice.id);
@@ -532,21 +545,21 @@ const AdminInvoices: React.FC = () => {
   };
 
   const sendInvoice = async () => {
-    if (!savedInvoice?.id) {
-      await saveInvoice();
-      return;
-    }
+    if (!savedInvoice || !shareReady) return;
 
     setSaving(true);
     setMessage(null);
     try {
-      const data = await fetch(`/api/admin/invoices/${savedInvoice.id}/send`, { method: 'POST' })
+      const version = savedInvoice.updatedAt ? Date.parse(savedInvoice.updatedAt) / 1000 : null;
+      const headers = version ? { 'If-Match': `"${version}:${savedInvoice.amountPaidCents ?? 0}"` } : undefined;
+      const data = await fetch(`/api/admin/invoices/${savedInvoice.id}/send`, { method: 'POST', headers })
         .then(res => readJson<{ ok: boolean; invoice: Invoice; publicUrlPath: string }>(res));
       setSavedInvoice(data.invoice);
+      setDraft(invoiceToDraft(data.invoice));
       setInvoices(prev => prev.map(invoice => invoice.id === data.invoice.id ? data.invoice : invoice));
       const url = publicInvoiceUrl(data.publicUrlPath || data.invoice.publicUrlPath);
-      if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
-      setMessage({ type: 'ok', text: url ? `Public invoice link copied: ${url}` : 'Invoice marked as sent.' });
+      const copied = await copyLink(url);
+      setMessage({ type: 'ok', text: copied ? 'Buyer link copied. Send it to the buyer when ready.' : 'Marked as sent. Copy the buyer link below to send it manually.' });
     } catch (error) {
       setMessage({ type: 'err', text: niceError(error) });
     } finally {
@@ -555,10 +568,8 @@ const AdminInvoices: React.FC = () => {
   };
 
   const copyInvoiceLink = async () => {
-    if (!savedInvoice?.publicUrlPath) return;
-    const url = publicInvoiceUrl(savedInvoice.publicUrlPath);
-    if (navigator.clipboard) await navigator.clipboard.writeText(url);
-    setMessage({ type: 'ok', text: `Copied: ${url}` });
+    if (!savedInvoice?.publicUrlPath || !shareReady || !savedInvoice.sentAt) return;
+    await sendInvoice();
   };
 
   return (
@@ -578,6 +589,7 @@ const AdminInvoices: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
+                disabled={busy}
                 className="border border-wood-300 bg-paper-50 px-4 py-2.5 font-label text-xs uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500 hover:text-bronze-800"
               >
                 New invoice
@@ -585,7 +597,7 @@ const AdminInvoices: React.FC = () => {
               <button
                 type="button"
                 onClick={saveInvoice}
-                disabled={saving}
+                disabled={busy || savedInvoice?.status === 'void'}
                 className="studio-sales-primary"
               >
                 {saving ? 'Saving...' : 'Save'}
@@ -593,7 +605,7 @@ const AdminInvoices: React.FC = () => {
               <button
                 type="button"
                 onClick={sendInvoice}
-                disabled={saving}
+                disabled={!shareReady}
                 className="studio-sales-secondary"
               >
                 Send / copy link
@@ -601,13 +613,31 @@ const AdminInvoices: React.FC = () => {
             </div>
           </div>
 
+          {(!savedInvoice || dirty) && <p className="mb-5 font-sans text-sm text-wood-700">
+            {savedInvoice ? 'Save your changes before sharing the buyer link.' : 'Save the invoice first to preview it or share a buyer link.'}
+          </p>}
+          {sourceQuote && <section className="mb-5 border border-wood-200 bg-paper-50 p-4" aria-label="Accepted quote">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-xl text-wood-900">Accepted quote</h2>
+                <p className="font-sans text-sm text-wood-700">{sourceQuote.referenceName || sourceQuote.name} · {formatMoney(sourceQuote.amountCents, sourceQuote.currency)} · {PAYMENT_TERM_LABELS[sourceQuote.termMode]}</p>
+              </div>
+              <Link className="font-label text-sm text-bronze-800 underline" to={`/admin/pricing?quoteId=${sourceQuote.id}`}>Open source quote</Link>
+            </div>
+            {(sourceQuote.conversation || sourceQuote.conversationUrl) && <p className="mt-2 break-words font-sans text-sm text-wood-700">
+              Original conversation (private): {sourceQuote.conversationUrl
+                ? <a className="text-bronze-800 underline" href={sourceQuote.conversationUrl} target="_blank" rel="noopener noreferrer">Open in original channel</a>
+                : sourceQuote.conversation}
+            </p>}
+          </section>}
           {message && <div className="mb-6"><AdminAlert
             tone={message.type === 'ok' ? 'success' : 'error'}
             live={message.type === 'err'}
           >{message.text}</AdminAlert></div>}
 
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-8">
+            <fieldset disabled={busy || savedInvoice?.status === 'void'} className="min-w-0 space-y-8 border-0 p-0">
+              <legend className="sr-only">Invoice editor</legend>
               <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 flex flex-col gap-2 border-b border-wood-100 pb-5 md:flex-row md:items-end md:justify-between">
                   <div>
@@ -627,7 +657,7 @@ const AdminInvoices: React.FC = () => {
                       <p className="font-sans text-sm text-wood-600">Loading payment options...</p>
                     ) : presets.length === 0 ? (
                       <p className="font-sans text-sm text-wood-600">
-                        No payment options yet. Add Wise, crypto, or bank transfer here.
+                        No payment options yet. Add Wise, PayPal, crypto, or bank transfer here.
                       </p>
                     ) : (
                       <div className="studio-sales-payment-list grid gap-3">
@@ -638,6 +668,7 @@ const AdminInvoices: React.FC = () => {
                               <div className="studio-sales-preset-heading mb-3 flex items-start justify-between gap-3">
                                 <button
                                   type="button"
+                                  disabled={paymentLocked}
                                   onClick={() => togglePaymentPreset(preset.id)}
                                   className="studio-sales-preset-title"
                                 >
@@ -659,6 +690,7 @@ const AdminInvoices: React.FC = () => {
                               </p>
                               <button
                                 type="button"
+                                disabled={paymentLocked}
                                 onClick={() => togglePaymentPreset(preset.id)}
                                 className={`mt-4 w-full border px-3 py-2 font-label text-label uppercase tracking-[0.12em] ${
                                   selected
@@ -691,6 +723,7 @@ const AdminInvoices: React.FC = () => {
                             <option value="wise">Wise</option>
                             <option value="crypto">Crypto</option>
                             <option value="bank">Bank</option>
+                            <option value="paypal">PayPal</option>
                           </select>
                         </label>
                         <label>
@@ -708,7 +741,7 @@ const AdminInvoices: React.FC = () => {
                       </label>
                       <label>
                         <span className={labelClass}>Link</span>
-                        <input className={inputClass} value={presetForm.url} onChange={e => setPresetForm(prev => ({ ...prev, url: e.target.value }))} placeholder="https://..." />
+                        <input className={inputClass} value={presetForm.url} onChange={e => setPresetForm(prev => ({ ...prev, url: e.target.value }))} placeholder={presetForm.method === 'paypal' ? 'https://paypal.me/…' : 'https://...'} />
                       </label>
                       <label className="flex items-center gap-3 font-sans text-sm text-wood-700">
                         <input type="checkbox" checked={presetForm.isDefault} onChange={e => setPresetForm(prev => ({ ...prev, isDefault: e.target.checked }))} />
@@ -749,28 +782,56 @@ const AdminInvoices: React.FC = () => {
                   </label>
                   <label>
                     <span className={labelClass}>Currency</span>
-                    <input className={inputClass} value={draft.currency} onChange={e => updateDraft('currency', e.target.value.toUpperCase().slice(0, 3))} placeholder="USD" />
+                    <input disabled={paymentLocked || !!sourceQuote} className={inputClass} value={draft.currency} onChange={e => updateDraft('currency', e.target.value.toUpperCase().slice(0, 3))} placeholder="USD" />
                   </label>
                   <label className="md:col-span-2">
                     <span className={labelClass}>Job title</span>
-                    <input className={inputClass} value={draft.jobTitle} onChange={e => updateDraft('jobTitle', e.target.value)} placeholder="Commissioned wooden sculpture" />
+                    <input disabled={!!sourceQuote} className={inputClass} value={draft.jobTitle} onChange={e => updateDraft('jobTitle', e.target.value)} placeholder="Commissioned wooden sculpture" />
                   </label>
                   <label className="md:col-span-2">
                     <span className={labelClass}>Description</span>
-                    <textarea className={`${textareaClass} min-h-[140px]`} value={draft.jobDescription} onChange={e => updateDraft('jobDescription', e.target.value)} placeholder="Describe the full scope of the job, materials, dimensions, finish, packing, shipping coordination, or anything the client should understand." />
+                    <textarea disabled={!!sourceQuote} className={`${textareaClass} min-h-[140px]`} value={draft.jobDescription} onChange={e => updateDraft('jobDescription', e.target.value)} placeholder="Describe the full scope of the job, materials, dimensions, finish, packing, shipping coordination, or anything the client should understand." />
                   </label>
                 </div>
               </section>
 
               <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
+                <fieldset disabled={paymentLocked} className="min-w-0 border-0 p-0">
+                <legend className="sr-only">Quoted line items</legend>
                 <div className="mb-6 flex flex-col gap-3 border-b border-wood-100 pb-5 md:flex-row md:items-end md:justify-between">
                   <div>
                     <h2 className="font-serif text-2xl text-wood-900">Line items</h2>
-                    <p className="font-sans text-sm text-wood-600">Add the quoted amount for the work.</p>
+                    <p className="font-sans text-sm text-wood-600">{sourceQuote
+                      ? 'The accepted artwork amount is fixed. Add the agreed shipping charge separately.'
+                      : 'Add the quoted amount for the work.'}</p>
                   </div>
                   <p className="font-serif text-2xl text-wood-900">{formatMoney(totalCents, draft.currency)}</p>
                 </div>
 
+                {sourceQuote ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap justify-between gap-3 border-b border-wood-200 pb-3">
+                      <div>
+                        <p className="font-sans font-semibold text-wood-900">{sourceQuote.name}</p>
+                        <p className="font-sans text-sm text-wood-700">{sourceQuote.configuration}</p>
+                      </div>
+                      <p className="font-serif text-xl text-wood-900">{formatMoney(sourceQuote.amountCents, sourceQuote.currency)}</p>
+                    </div>
+                    <label className="block max-w-xs">
+                      <span className={labelClass}>Agreed shipping amount ({sourceQuote.currency})</span>
+                      <input className={inputClass} type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00"
+                        value={amountEdits[1] ?? (draft.lineItems[1]?.amountCents ? centsToInput(draft.lineItems[1].amountCents) : '')}
+                        onBlur={() => onAmountBlur(1)}
+                        onChange={e => {
+                          const amount = parseMoneyToCents(e.target.value);
+                          setAmountEdits(values => ({ ...values, 1: e.target.value }));
+                          setDraft(previous => ({ ...previous, lineItems: amount
+                            ? [previous.lineItems[0], { description: 'Shipping', terms: '', amountCents: amount }]
+                            : previous.lineItems.slice(0, 1) }));
+                        }} />
+                    </label>
+                  </div>
+                ) : <>
                 <div className="space-y-4">
                   {draft.lineItems.map((item, index) => {
                     const hasVariants = !!(item.variants && item.variants.length > 0);
@@ -855,13 +916,17 @@ const AdminInvoices: React.FC = () => {
                 >
                   Add line item
                 </button>
+                </>}
+                </fieldset>
               </section>
 
               <section className="bg-paper-50 border border-wood-200 p-5 md:p-7">
                 <div className="mb-6 border-b border-wood-100 pb-5">
                   <h2 className="font-serif text-2xl text-wood-900">Payment schedule</h2>
                   <p className="font-sans text-sm text-wood-600">
-                    Choose the structure, then mark the current step so the invoice shows what is due today.
+                    {paymentLocked
+                      ? 'The artwork, amount, currency, and payment terms are fixed after a payment. Select the milestone that is now due.'
+                      : 'Choose the structure, then mark the current step so the invoice shows what is due today.'}
                   </p>
                 </div>
 
@@ -870,6 +935,7 @@ const AdminInvoices: React.FC = () => {
                     <button
                       key={mode}
                       type="button"
+                      disabled={paymentLocked || !!sourceQuote}
                       onClick={() => setTermMode(mode)}
                       className={`border px-4 py-3 text-left font-sans text-sm ${
                         termMode === mode
@@ -885,6 +951,7 @@ const AdminInvoices: React.FC = () => {
                 <label className="mt-4 flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
+                    disabled={paymentLocked || !!sourceQuote}
                     checked={!!draft.offerPaymentChoice}
                     onChange={e => updateDraft('offerPaymentChoice', e.target.checked)}
                     className="accent-bronze-600 w-4 h-4"
@@ -895,13 +962,13 @@ const AdminInvoices: React.FC = () => {
                 </label>
 
                 <div className="mt-6 space-y-3">
-                  {draft.paymentSchedule.map((step, index) => (
+                  {paymentSchedule.map((step, index) => (
                     <button
                       key={`${step.label}-${index}`}
                       type="button"
                       onClick={() => updateDraft('currentStepIndex', index)}
                       className={`w-full border p-4 text-left ${
-                        draft.currentStepIndex === index
+                        stepIndex === index
                           ? 'border-bronze-600 bg-bronze-50'
                           : 'border-wood-200 bg-paper-50 hover:border-bronze-400'
                       }`}
@@ -925,21 +992,17 @@ const AdminInvoices: React.FC = () => {
                     <span className={labelClass}>Shipping text</span>
                     <input className={inputClass} value={draft.shippingText} onChange={e => updateDraft('shippingText', e.target.value)} />
                   </label>
-                  <label>
+                  <div>
                     <span className={labelClass}>Status</span>
-                    <select className={inputClass} value={draft.status} onChange={e => updateDraft('status', e.target.value as InvoiceDraft['status'])}>
-                      <option value="draft">Draft</option>
-                      <option value="sent">Sent</option>
-                      <option value="paid">Paid</option>
-                    </select>
-                  </label>
+                    <p className="font-sans text-sm capitalize text-wood-900">{draft.status}</p>
+                  </div>
                   <label className="md:col-span-2">
                     <span className={labelClass}>Notes</span>
                     <textarea className={textareaClass} value={draft.notes} onChange={e => updateDraft('notes', e.target.value)} placeholder="Optional terms, validity dates, packing notes, or client-specific notes." />
                   </label>
                 </div>
               </section>
-            </div>
+            </fieldset>
 
             <aside className="space-y-6">
               <section className="sticky top-6 border border-wood-200 bg-paper-50 p-5">
@@ -952,7 +1015,7 @@ const AdminInvoices: React.FC = () => {
                 </p>
                 <div className="mt-5 border-t border-wood-100 pt-5">
                   <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold">Total due today</p>
-                  <p className="font-serif text-4xl text-wood-900">{formatMoney(dueTodayCents, draft.currency)}</p>
+                  <p className="font-serif text-4xl text-wood-900">{milestoneDue === null ? 'Confirm payment terms' : formatMoney(milestoneDue, draft.currency)}</p>
                 </div>
                 <div className="mt-5 border-t border-wood-100 pt-5">
                   <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Payment buttons</p>
@@ -966,25 +1029,24 @@ const AdminInvoices: React.FC = () => {
                     )}
                   </div>
                 </div>
-                {savedInvoice?.status === 'paid' && savedInvoice.totalCents > 0
-                  && savedInvoice.amountPaidCents === savedInvoice.totalCents && (
-                  <div className="mt-5 border-t border-wood-100 pt-5">
-                    <Link className="studio-sales-secondary" to={`/admin/collector-sales/invoices/${savedInvoice.id}`}>Review sale</Link>
-                  </div>
-                )}
+                {savedInvoice && <ReviewSaleLink invoice={savedInvoice} />}
                 {savedInvoice?.publicUrlPath && (
                   <div className="mt-5 border-t border-wood-100 pt-5">
-                    <p className="font-label text-label uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">Public link</p>
-                    <a className="block break-all font-sans text-sm text-bronze-800 underline" href={savedInvoice.publicUrlPath} target="_blank" rel="noreferrer">
-                      {publicInvoiceUrl(savedInvoice.publicUrlPath)}
+                    <a className="block font-sans text-sm text-bronze-800 underline" href={`${savedInvoice.publicUrlPath}?studio-preview=${savedInvoice.id}`} target="_blank" rel="noreferrer">
+                      Preview saved invoice
                     </a>
-                    <button
-                      type="button"
-                      onClick={copyInvoiceLink}
-                      className="mt-3 w-full border border-wood-300 px-3 py-2 font-label text-label uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500"
-                    >
-                      Copy link
-                    </button>
+                    {shareReady && savedInvoice.sentAt && (
+                      <>
+                        <span className="mt-2 block break-all font-sans text-sm text-wood-700">{publicInvoiceUrl(savedInvoice.publicUrlPath)}</span>
+                        <button
+                          type="button"
+                          onClick={copyInvoiceLink}
+                          className="mt-3 w-full border border-wood-300 px-3 py-2 font-label text-label uppercase tracking-[0.12em] text-wood-700 hover:border-bronze-500"
+                        >
+                          Copy buyer link
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </section>
@@ -1009,7 +1071,7 @@ const AdminInvoices: React.FC = () => {
                           editingId === invoice.id ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'
                         }`}
                       >
-                        <button type="button" onClick={() => editInvoice(invoice)} className="studio-sales-row w-full hover:opacity-80">
+                        <button type="button" disabled={busy} onClick={() => editInvoice(invoice)} className="studio-sales-row w-full hover:opacity-80">
                           <span className="block font-label text-label uppercase tracking-[0.12em] text-wood-500">
                             {invoice.invoiceNumber} · {invoice.status}
                           </span>
@@ -1021,14 +1083,16 @@ const AdminInvoices: React.FC = () => {
                             )}
                           </span>
                         </button>
-                        {invoice.status !== 'paid' && invoice.status !== 'void' && (
+                        <ReviewSaleLink invoice={invoice} />
+                        {invoice.status !== 'paid' && invoice.status !== 'void' && invoice.totalCents > (invoice.amountPaidCents || 0)
+                          && (!invoice.sourceQuote || invoice.paymentOptions.length > 0) && (
                           <button
                             type="button"
                             onClick={() => markPaid(invoice)}
-                            disabled={paymentBusyId === invoice.id}
+                            disabled={busy || (savedInvoice?.id === invoice.id && dirty)}
                             className="mt-2 border border-wood-300 bg-paper-50 px-3 py-1.5 font-label text-micro uppercase tracking-[0.12em] text-wood-700 hover:border-success-line hover:text-success"
                           >
-                            {paymentBusyId === invoice.id ? 'Recording…' : '✓ Record payment'}
+                            {paymentBusyId === invoice.id ? 'Recording…' : 'Record payment'}
                           </button>
                         )}
                       </div>
@@ -1039,7 +1103,7 @@ const AdminInvoices: React.FC = () => {
             </aside>
           </div>
         </div>
-      </div>
+    </div>
     </AdminPage>
   );
 };

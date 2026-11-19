@@ -61,6 +61,20 @@ export interface InvoicePaymentOption {
   url: string;
 }
 
+export interface StudioInvoiceQuote {
+  id: number;
+  name: string;
+  referenceName: string;
+  artworkId: string;
+  configuration: string;
+  amountCents: number;
+  currency: string;
+  termMode: PaymentTermMode;
+  conversation: string;
+  conversationUrl: string;
+  acceptedAt: string;
+}
+
 export interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -96,6 +110,8 @@ export interface Invoice {
   updatedAt?: string | null;
   sentAt?: string | null;
   paidAt?: string | null;
+  /** Studio APIs only. The buyer invoice never has this field. */
+  sourceQuote?: StudioInvoiceQuote;
 }
 
 export interface InvoiceDraft {

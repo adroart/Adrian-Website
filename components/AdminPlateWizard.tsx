@@ -65,9 +65,17 @@ function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
 
 const AdminPlateWizard: React.FC = () => {
   const [searchParams] = useSearchParams();
+  return <PlateWizard key={searchParams.toString()} searchParams={searchParams} />;
+};
+
+function PlateWizard({ searchParams }: { searchParams: URLSearchParams }) {
   const navigate = useNavigate();
   const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
   const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const proofOnly = searchParams.has('proof');
+  const proofValues = searchParams.getAll('proof');
+  const validProofLink = !!linkedKeeperPieceId && proofValues.length === 1 && proofValues[0] === 'identity'
+    && [...searchParams.keys()].every(key => key === 'keeperPieceId' || key === 'proof');
   const appliedDeepLinkRef = useRef('');
   // Access + data
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
@@ -193,11 +201,28 @@ const AdminPlateWizard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!linkedKeeperPieceId || loading || appliedDeepLinkRef.current === linkedKeeperPieceId) return;
+    if (proofOnly && !validProofLink) {
+      setDeepLinkNote('This identity proof link does not identify one registered piece.');
+      return;
+    }
+    if (!linkedKeeperPieceId || loading || loadError || appliedDeepLinkRef.current === linkedKeeperPieceId) return;
     appliedDeepLinkRef.current = linkedKeeperPieceId;
     const row = rows.find((candidate) => candidate.id === linkedKeeperPieceId);
     if (!row) {
       setDeepLinkNote('The linked piece was not found in the registry.');
+      return;
+    }
+    if (proofOnly) {
+      if (row.registrationStatus !== 'registered' || !row.publicCode
+        || !['legacy', 'generated', 'active'].includes(row.plateStatus)) {
+        setDeepLinkNote('Identity recovery proof is unavailable for this piece.');
+        return;
+      }
+      resetSensitive();
+      setRecoveryKind('identity');
+      setPieceId(row.id);
+      setStageIndex(plateWizardStageIndex('recovery'));
+      setStarted(true);
       return;
     }
     if (!plateWizardStageForPiece(snapshotOf(row))) {
@@ -205,7 +230,7 @@ const AdminPlateWizard: React.FC = () => {
       return;
     }
     openPiece(row);
-  }, [linkedKeeperPieceId, loading, navigate, rows]);
+  }, [linkedKeeperPieceId, loadError, loading, navigate, proofOnly, resetSensitive, rows, validProofLink]);
 
   const downloadLedger = async () => {
     setStepError('');
@@ -259,7 +284,7 @@ const AdminPlateWizard: React.FC = () => {
   };
 
   const runRowAction = async (action: 'backup' | 'package' | 'prepare-plate' | 'verify-recovery') => {
-    if (!piece) return;
+    if (!piece || (proofOnly && action !== 'verify-recovery')) return;
     setBusy(action);
     setStepError('');
     setStepNote('');
@@ -279,7 +304,9 @@ const AdminPlateWizard: React.FC = () => {
         setStepNote('Fabrication package recovered. Re-download the files below.');
       } else if (action === 'verify-recovery') {
         await refreshPiece();
-        setStepNote(`Copied-file recovery passed with key version ${data.keyVersion}. The persisted proof is current and both fabrication hashes match.`);
+        setStepNote(recoveryKind === 'identity'
+          ? 'The archived identity copy was verified. Identity recovery proof is current.'
+          : `Copied-file recovery passed with key version ${data.keyVersion}. The persisted proof is current and both fabrication hashes match.`);
       } else {
         await refreshPiece();
         setStepNote('Encrypted online backup verified.');
@@ -426,12 +453,14 @@ const AdminPlateWizard: React.FC = () => {
         <p className="font-label text-label uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
           Artwork Registry · Guided
         </p>
-        <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate wizard</h1>
+        <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">{proofOnly ? 'Identity recovery proof' : 'Plate wizard'}</h1>
         <p className="font-serif text-wood-600 leading-relaxed mb-8 max-w-2xl">
-          Fabrication only. This walks a registered artwork through its optional physical plate,
-          in the exact runbook order, and will not let a step be skipped before its safeguard is met.
-          It drives the same permanent registry as the{' '}
-          <Link to="/admin/pieces" className="text-bronze-700 underline underline-offset-4">full plate desk</Link>.
+          {proofOnly
+            ? 'Verify the archived identity copy for this exact piece.'
+            : <>Fabrication only. This walks a registered artwork through its optional physical plate,
+              in the exact runbook order, and will not let a step be skipped before its safeguard is met.
+              It drives the same permanent registry as the{' '}
+              <Link to="/admin/pieces" className="text-bronze-700 underline underline-offset-4">full plate desk</Link>.</>}
         </p>
 
         {/* ACCESS GATE */}
@@ -449,6 +478,10 @@ const AdminPlateWizard: React.FC = () => {
             </form>
             {unlockError && <p className="font-sans text-sm text-danger mt-3" role="alert">{unlockError}</p>}
           </section>
+        ) : proofOnly && !started ? (
+          <p className="font-sans text-sm text-wood-700" role={deepLinkNote || loadError ? 'alert' : 'status'}>
+            {deepLinkNote || loadError || 'Loading the exact piece…'}
+          </p>
         ) : !started ? (
           /* CHOOSE */
           <section aria-labelledby="choose-title">
@@ -506,26 +539,27 @@ const AdminPlateWizard: React.FC = () => {
         ) : (
           /* RUN */
           <section aria-labelledby="run-title">
-            <ol className="admin-stage-list" aria-label="Plate stages">
+            {!proofOnly && <ol className="admin-stage-list" aria-label="Plate stages">
               {PLATE_WIZARD_STAGES.map((item, index) => (
                 <li key={item.key} className={index < stageIndex ? 'is-complete' : index === stageIndex ? 'is-current' : ''} aria-current={index === stageIndex ? 'step' : undefined}>
                   <span>{index + 1}</span>{item.title}
                 </li>
               ))}
-            </ol>
+            </ol>}
 
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
-                <h2 id="run-title" className="font-title text-xl text-wood-900">{stage.title}</h2>
-                <p className="font-serif text-sm text-wood-600 mt-1">{stage.summary}</p>
+                <h2 id="run-title" className="font-title text-xl text-wood-900">{proofOnly ? 'Prove the identity copy' : stage.title}</h2>
+                {!proofOnly && <p className="font-serif text-sm text-wood-600 mt-1">{stage.summary}</p>}
               </div>
-              <button type="button" className={quietButtonClass} onClick={goToChoose}>Leave wizard</button>
+              {!proofOnly && <button type="button" className={quietButtonClass} onClick={goToChoose}>Leave wizard</button>}
             </div>
 
             {piece && (
               <p className="font-sans text-xs text-wood-500 mb-4">
-                {titleFor(piece.pieceId)} · {piece.pieceId} · edition {piece.editionNumber}
-                {piece.publicCode ? ` · ${piece.publicCode}` : ''} · plate {piece.plateStatus} · backup {piece.backupStatus || 'pending'}
+                {titleFor(piece.pieceId)} · {piece.pieceId} · {piece.editionNumber ? `edition ${piece.editionNumber}` : 'unique work'}
+                {piece.publicCode ? ` · ${piece.publicCode}` : ''}
+                {!proofOnly && ` · plate ${piece.plateStatus} · backup ${piece.backupStatus || 'pending'}`}
               </p>
             )}
 
@@ -579,9 +613,11 @@ const AdminPlateWizard: React.FC = () => {
               {stage.key === 'recovery' && (
                 <div>
                   <p className="font-serif text-sm text-wood-600 mb-4">
-                    Two encrypted copies have to prove themselves here, and they are different files. The identity copy is the one a collector's claim is refused without. The plate copy is the one no metal may be cut without. Download a copy, archive it outside this website, then choose that archived file below. The server decrypts it in memory, checks every hash, and persists proof tied to this exact software build and backup digest. It returns no Ownership Code or fabrication file.
+                    {proofOnly
+                      ? 'Download the encrypted identity copy, archive it outside the website, then choose the archived file to verify recovery.'
+                      : "Two encrypted copies have to prove themselves here, and they are different files. The identity copy is the one a collector's claim is refused without. The plate copy is the one no metal may be cut without. Download a copy, archive it outside this website, then choose that archived file below. The server decrypts it in memory, checks every hash, and persists proof tied to this exact software build and backup digest. It returns no Ownership Code or fabrication file."}
                   </p>
-                  <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Which copy to prove">
+                  {!proofOnly && <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Which copy to prove">
                     {(['identity', 'plate'] as const).map((kind) => (
                       <button
                         key={kind}
@@ -602,7 +638,7 @@ const AdminPlateWizard: React.FC = () => {
                         {(kind === 'identity' ? piece?.identityRecoveryQualification : piece?.recoveryQualification)?.status === 'current' ? '· proved' : '· not proved'}
                       </button>
                     ))}
-                  </div>
+                  </div>}
                   <div className="flex flex-wrap gap-3">
                     <button type="button" className={quietButtonClass} disabled={Boolean(busy)} onClick={() => void downloadEncryptedBackupCopy()}>{busy === 'download-backup' ? 'Downloading…' : `Download the ${recoveryKind === 'identity' ? 'identity' : 'plate'} copy`}</button>
                     <label className={`${quietButtonClass} inline-flex items-center cursor-pointer`}>
@@ -615,7 +651,7 @@ const AdminPlateWizard: React.FC = () => {
                   {activeQualification?.status === 'current' && <p className="font-sans text-sm text-success mt-3" role="status">This copy's proof is current.</p>}
                   {activeQualification?.status === 'stale' && <p className="font-sans text-sm text-danger mt-3" role="alert">This copy's proof is stale because the backup or one of its required versions changed. Download and verify a fresh archived file.</p>}
                   {(!activeQualification || activeQualification.status === 'missing') && <p className="font-sans text-sm text-wood-600 mt-3">{recoveryKind === 'identity' ? 'No identity proof yet. Every collector claim on this piece is refused until there is one.' : 'No plate proof yet. Activation remains blocked.'}</p>}
-                  {piece?.identityRecoveryQualification?.status === 'current' && piece?.recoveryQualification?.status === 'current' && <p className="font-sans text-sm text-success mt-3" role="status">Both copies are proved. You can continue.</p>}
+                  {!proofOnly && piece?.identityRecoveryQualification?.status === 'current' && piece?.recoveryQualification?.status === 'current' && <p className="font-sans text-sm text-success mt-3" role="status">Both copies are proved. You can continue.</p>}
                 </div>
               )}
 
@@ -649,18 +685,18 @@ const AdminPlateWizard: React.FC = () => {
             </div>
 
             {/* NAV */}
-            <div className="flex items-center justify-between gap-3 mt-6">
+            {!proofOnly && <div className="flex items-center justify-between gap-3 mt-6">
               <button type="button" className={quietButtonClass} onClick={goBack} disabled={stageIndex === 0}>Back</button>
               {stage.key !== 'activate' && (
                 <button type="button" className={buttonClass} onClick={goNext} disabled={!canAdvance}>Next step</button>
               )}
-            </div>
+            </div>}
             {driveStatus && <p className="font-sans text-xs text-wood-500 mt-3" role="status">{driveStatus}</p>}
           </section>
         )}
       </div>
     </AdminPage>
   );
-};
+}
 
 export default AdminPlateWizard;

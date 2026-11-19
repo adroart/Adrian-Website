@@ -25,14 +25,10 @@ type AdminOverview = {
   recentCollectors: RecentItem[];
 };
 
-// Registration comes first because it is the act that creates the artwork's
-// permanent identity. The plate is optional and can only be made for a work
-// that already has one, so it follows rather than leads.
 const START_NEW = [
-  { label: 'Register an artwork', description: 'Give a work its permanent identity', href: '/admin/register' },
-  { label: 'Issue a plate', description: 'The optional plate, for a work already registered', href: '/admin/pieces/wizard' },
-  { label: 'Create invoice', description: 'Price and send new work', href: '/admin/invoices?mode=create' },
-  { label: 'Build a viewing', description: 'Prepare a collector presentation', href: '/admin/viewings?mode=create' },
+  { label: 'Register an artwork', href: '/admin/register' },
+  { label: 'Create invoice', href: '/admin/invoices?mode=create' },
+  { label: 'Build a viewing', href: '/admin/viewings?mode=create' },
 ];
 
 function isOverview(value: unknown): value is AdminOverview {
@@ -48,14 +44,14 @@ const stateText = (value: string) => value.replaceAll('_', ' ');
 
 const RecentList: React.FC<{ items: RecentItem[]; empty: string }> = ({ items, empty }) => (
   items.length === 0
-    ? <p className="font-sans text-sm text-wood-600">{empty}</p>
+    ? <p className="font-body text-sm text-wood-600">{empty}</p>
     : (
       <div className="border-t border-wood-200">
         {items.map(item => (
           <Link
             to={item.href}
             key={`${item.href}:${item.title}`}
-            className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-wood-200 py-3 font-sans text-sm text-wood-800 transition-colors hover:bg-paper-100"
+            className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-wood-200 py-3 font-body text-sm text-wood-800 transition-colors hover:bg-paper-100"
           >
             <span className="min-w-0">{item.title}</span>
             <span className="text-xs text-wood-500">{item.signal}</span>
@@ -69,6 +65,7 @@ const AdminDashboard: React.FC = () => {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const loadOverview = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -92,22 +89,18 @@ const AdminDashboard: React.FC = () => {
     const controller = new AbortController();
     void loadOverview(controller.signal);
     return () => controller.abort();
-  }, [loadOverview]);
+  }, [loadOverview, retryCount]);
 
   return (
     <AdminPage width="medium">
-      <AdminPageHeader
-        eyebrow="Private studio"
-        title="Studio overview"
-        description="The exact work waiting for you, followed by the relationships you touched most recently."
-      />
+      <AdminPageHeader title="Studio overview" />
 
-      <AdminSection title="Work that needs you" description="One next step for each item in the private studio ledger.">
+      <AdminSection title="Work that needs you">
         {loading && <p className="admin-dashboard-loading" role="status">Checking the studio…</p>}
         {failed && (
           <AdminAlert tone="warning" live>
             <p>The complete work queue could not be checked. Nothing has been marked clear.</p>
-            <button type="button" onClick={() => void loadOverview()}>Try again</button>
+            <button type="button" onClick={() => setRetryCount(count => count + 1)}>Try again</button>
           </AdminAlert>
         )}
         {!loading && !failed && overview?.queue.items.length === 0 && (
@@ -126,17 +119,27 @@ const AdminDashboard: React.FC = () => {
               >
                 <span className="min-w-0">
                   <strong className="block font-serif text-lg text-wood-900">{item.title}</strong>
-                  <span className="block font-sans text-xs text-wood-600">
+                  <span className="block font-body text-xs text-wood-600">
                     {stateText(item.state)} · {item.signal}
                   </span>
                 </span>
-                <span className="font-sans text-micro font-semibold uppercase tracking-[0.12em] text-wood-500">
+                <span className="font-body text-micro font-semibold uppercase tracking-[0.12em] text-wood-500">
                   {item.actionLabel}
                 </span>
               </Link>
             ))}
           </div>
         )}
+      </AdminSection>
+
+      <AdminSection title="Start new">
+        <div className="flex flex-wrap gap-x-5 gap-y-1">
+          {START_NEW.map(action => (
+            <Link to={action.href} key={action.label} className="inline-flex min-h-[var(--control-h)] items-center font-body text-sm font-semibold text-bronze-700 underline underline-offset-4 hover:text-bronze-900">
+              {action.label}
+            </Link>
+          ))}
+        </div>
       </AdminSection>
 
       {!loading && !failed && overview && (
@@ -150,16 +153,6 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <AdminSection title="Start new" description="Begin the small set of workflows you create most often.">
-        <div className="admin-quick-actions">
-          {START_NEW.map(action => (
-            <Link to={action.href} key={action.label} className="admin-action-card">
-              <strong>{action.label}</strong>
-              <span>{action.description}</span>
-            </Link>
-          ))}
-        </div>
-      </AdminSection>
     </AdminPage>
   );
 };

@@ -54,14 +54,17 @@ describe('artwork plate deep links', () => {
     for (const plate of [
       { state: 'legacy' as const, recoveryState: 'not_required' as const },
       { state: 'active' as const, recoveryState: 'current' as const },
-      { state: 'active' as const, recoveryState: 'identity_stale' as const },
-      { state: 'superseded' as const, recoveryState: 'not_required' as const },
+            { state: 'superseded' as const, recoveryState: 'not_required' as const },
     ]) {
       assert.deepEqual(artworkPlateDestination('kp-exact', plate), {
         href: '/admin/pieces?keeperPieceId=kp-exact',
-        label: 'Open exact piece in plate registry',
+        label: 'Open plate registry',
       });
     }
+    assert.deepEqual(
+      artworkPlateDestination('kp-proof', { state: 'active', recoveryState: 'identity_stale', wizardStage: null }),
+      { href: '/admin/pieces/wizard?keeperPieceId=kp-proof&proof=identity', label: 'Verify identity recovery' },
+    );
     assert.equal(artworkPlateDestination(null, null), null);
     assert.match(wizard, /navigate\(`\/admin\/pieces\?\$\{new URLSearchParams\(\{ keeperPieceId: row\.id \}\)\}`/);
   });

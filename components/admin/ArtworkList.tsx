@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   searchMaintenance,
   MaintenanceRequestError,
   type MaintenanceListItem,
-  type MaintenanceSearchFilters,
 } from '../../utils/adminRegistryMaintenance';
-import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection } from './AdminPage';
+import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader } from './AdminPage';
+import './ArtworkList.css';
 
 // Every screen here reads the same private piece registry that Maintenance
 // already searches (GET /api/admin/maintenance, via the Maintenance client
@@ -15,7 +15,6 @@ import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection }
 // code, artwork ID, title, or edition number, so this page calls it
 // directly rather than building a second search against the same rows.
 
-type Tab = 'artworks' | 'search';
 type LoadStatus = 'loading' | 'ready' | 'error';
 
 type SearchDraft = {
@@ -26,15 +25,33 @@ type SearchDraft = {
 };
 
 const EMPTY_DRAFT: SearchDraft = { publicCode: '', artworkId: '', title: '', editionNumber: '' };
+const SEARCH_FIELDS = [
+  { key: 'title', label: 'Title' },
+  { key: 'publicCode', label: 'Public code' },
+  { key: 'artworkId', label: 'Artwork ID' },
+  { key: 'editionNumber', label: 'Edition number' },
+] as const;
+const ARTWORK_LIST_PATH = '/admin/artworks';
+const EDITION_ERROR = 'Edition number must be a whole number from 0 to 9999.';
 
-// Buttons come from src/master.css. Do not rebuild them from utilities.
-const tabButtonClass = (active: boolean) => (active ? 'tab is-active' : 'tab');
+type SearchResults = {
+  status: LoadStatus;
+  results: MaintenanceListItem[];
+  error: string;
+};
 
-const linkClass = 'font-sans text-base font-semibold text-bronze-700 underline decoration-bronze-300 underline-offset-4 hover:text-bronze-900';
-const inputClass = 'w-full rounded border border-wood-300 bg-paper-50 px-3 py-2 font-sans text-base text-wood-900';
-const labelClass = 'block font-sans text-sm font-semibold text-wood-700';
-const primaryButtonClass = 'btn btn-primary';
-const quietButtonClass = 'btn btn-ghost';
+const LOADING_RESULTS: SearchResults = { status: 'loading', results: [], error: '' };
+
+function searchDraftFromQuery(query: string): SearchDraft {
+  const params = new URLSearchParams(query);
+  const draft = { ...EMPTY_DRAFT };
+  for (const { key } of SEARCH_FIELDS) draft[key] = params.get(key)?.trim() ?? '';
+  return draft;
+}
+
+function validEdition(value: string): boolean {
+  return !value || (/^\d+$/.test(value) && Number(value) <= 9999);
+}
 
 function messageFor(error: unknown, fallback: string): string {
   if (error instanceof MaintenanceRequestError) {
@@ -59,241 +76,167 @@ function workspaceHref(item: MaintenanceListItem): string {
   return `/admin/artworks/${encodeURIComponent(item.artworkId)}?${params.toString()}`;
 }
 
-const ResultRow: React.FC<{ item: MaintenanceListItem }> = ({ item }) => (
-  <li className="border-t border-wood-200 py-4 first:border-t-0">
-    <Link className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between" to={workspaceHref(item)}>
-      <span>
-        <span className="font-serif text-lg text-wood-900">{item.title}</span>
-        <span className="ml-2 font-sans text-sm text-wood-600">
-          {item.artworkId} &middot; {displayEdition(item.editionNumber)}
-        </span>
+const ResultRow: React.FC<{ item: MaintenanceListItem; returnPath: string }> = ({ item, returnPath }) => (
+  <li className="studio-artworks-row">
+    <Link
+      to={workspaceHref(item)}
+      state={{ artworkListReturnPath: returnPath }}
+      className="studio-artworks-record"
+      aria-label={`Open record for ${item.title}, ${item.artworkId}, ${displayEdition(item.editionNumber)}, ${item.publicCode || 'no public code'}`}
+    >
+      <span className="studio-artworks-identity">
+        <span className="studio-artworks-title">{item.title}</span>
+        <span className="studio-artworks-meta">{item.artworkId} &middot; {displayEdition(item.editionNumber)}</span>
       </span>
-      <span className="font-sans text-sm text-wood-600">
+      <span className="studio-artworks-meta studio-artworks-plate">
         {item.publicCode || 'No public code'} &middot; {stateLabel(item.plateStatus)}
       </span>
+      <span className="btn btn-outline studio-artworks-button studio-artworks-open">Open record</span>
     </Link>
   </li>
 );
 
-const ResultList: React.FC<{
-  status: LoadStatus;
-  errorMessage: string;
-  results: MaintenanceListItem[];
+const ResultList: React.FC<SearchResults & {
+  returnPath: string;
   emptyTitle: string;
   emptyDescription: string;
   loadingLabel: string;
-}> = ({ status, errorMessage, results, emptyTitle, emptyDescription, loadingLabel }) => {
+}> = ({ status, error, results, returnPath, emptyTitle, emptyDescription, loadingLabel }) => {
   if (status === 'loading') return <AdminAlert tone="info" live>{loadingLabel}</AdminAlert>;
-  if (status === 'error') return <AdminAlert tone="error" live>{errorMessage}</AdminAlert>;
+  if (status === 'error') return <AdminAlert tone="error" live>{error}</AdminAlert>;
   if (!results.length) return <AdminEmptyState title={emptyTitle} description={emptyDescription} />;
   return (
-    <ul className="min-w-0">
-      {results.map(item => <ResultRow key={item.id} item={item} />)}
+    <ul className="studio-artworks-results">
+      {results.map(item => <ResultRow key={item.id} item={item} returnPath={returnPath} />)}
     </ul>
   );
 };
 
 const ArtworkList: React.FC = () => {
-  const [tab, setTab] = useState<Tab>('artworks');
-
-  const [listResults, setListResults] = useState<MaintenanceListItem[]>([]);
-  const [listStatus, setListStatus] = useState<LoadStatus>('loading');
-  const [listError, setListError] = useState('');
-
-  const [searchDraft, setSearchDraft] = useState<SearchDraft>(EMPTY_DRAFT);
-  const [searchResults, setSearchResults] = useState<MaintenanceListItem[]>([]);
-  const [searchStatus, setSearchStatus] = useState<LoadStatus | 'idle'>('idle');
-  const [searchError, setSearchError] = useState('');
+  const { search, key: locationKey } = useLocation();
+  const navigate = useNavigate();
+  const submittedDraft = useMemo(() => searchDraftFromQuery(search), [search]);
+  const returnPath = ARTWORK_LIST_PATH + search;
+  const filtered = Object.values(submittedDraft).some(Boolean);
+  const [searchDraft, setSearchDraft] = useState(submittedDraft);
+  const [loaded, setLoaded] = useState<(SearchResults & { locationKey: string }) | null>(null);
   const [draftError, setDraftError] = useState('');
-  const searchAbortRef = useRef<AbortController | null>(null);
+  const titleFieldRef = useRef<HTMLInputElement | null>(null);
+  const visibleResults = loaded?.locationKey === locationKey ? loaded : LOADING_RESULTS;
 
   useEffect(() => {
-    const controller = new AbortController();
-    setListStatus('loading');
-    setListError('');
-    void searchMaintenance({}, controller.signal)
-      .then((results) => {
-        if (controller.signal.aborted) return;
-        setListResults(results);
-        setListStatus('ready');
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted
-          || (error instanceof DOMException && error.name === 'AbortError')) return;
-        setListError(messageFor(error, 'Artworks could not be loaded. Reload this page to try again.'));
-        setListStatus('error');
-      });
-    return () => controller.abort();
-  }, []);
+    setSearchDraft(submittedDraft);
+    setDraftError('');
+  }, [submittedDraft]);
 
-  const runSearch = useCallback((filters: MaintenanceSearchFilters, signal: AbortSignal) => {
-    setSearchStatus('loading');
-    setSearchError('');
+  useEffect(() => {
+    const { editionNumber, ...textFilters } = submittedDraft;
+    if (!validEdition(editionNumber)) {
+      setLoaded({ locationKey, status: 'error', results: [], error: EDITION_ERROR });
+      return;
+    }
+    const controller = new AbortController();
+    const { signal } = controller;
+    const filters = { ...textFilters, ...(editionNumber ? { editionNumber: Number(editionNumber) } : {}) };
     void searchMaintenance(filters, signal)
       .then((results) => {
-        if (signal.aborted) return;
-        setSearchResults(results);
-        setSearchStatus('ready');
+        if (!signal.aborted) setLoaded({ locationKey, status: 'ready', results, error: '' });
       })
       .catch((error: unknown) => {
         if (signal.aborted || (error instanceof DOMException && error.name === 'AbortError')) return;
-        setSearchError(messageFor(error, 'The search could not be completed. Try again.'));
-        setSearchStatus('error');
+        const fallback = filtered
+          ? 'The search could not be completed. Try again.'
+          : 'Artworks could not be loaded. Reload this page to try again.';
+        setLoaded({ locationKey, status: 'error', results: [], error: messageFor(error, fallback) });
       });
-  }, []);
-
-  useEffect(() => () => searchAbortRef.current?.abort(), []);
+    return () => controller.abort();
+  }, [filtered, locationKey, submittedDraft]);
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    const edition = searchDraft.editionNumber.trim();
-    if (edition && (!/^\d+$/.test(edition) || Number(edition) > 9999)) {
-      setDraftError('Edition number must be a whole number from 0 to 9999.');
+    const params = new URLSearchParams();
+    for (const { key } of SEARCH_FIELDS) {
+      const value = searchDraft[key].trim();
+      if (value) params.set(key, value);
+    }
+    if (!validEdition(params.get('editionNumber') ?? '')) {
+      setDraftError(EDITION_ERROR);
       return;
     }
+    if (!params.size) {
+      clearSearch();
+      return;
+    }
+    const query = `?${params.toString()}`;
     setDraftError('');
-    const filters: MaintenanceSearchFilters = {
-      publicCode: searchDraft.publicCode,
-      artworkId: searchDraft.artworkId,
-      title: searchDraft.title,
-      ...(edition ? { editionNumber: Number(edition) } : {}),
-    };
-    searchAbortRef.current?.abort();
-    const controller = new AbortController();
-    searchAbortRef.current = controller;
-    runSearch(filters, controller.signal);
+    navigate(ARTWORK_LIST_PATH + query, { replace: query === search });
   };
 
   const clearSearch = () => {
-    searchAbortRef.current?.abort();
     setSearchDraft(EMPTY_DRAFT);
-    setSearchResults([]);
-    setSearchStatus('idle');
-    setSearchError('');
     setDraftError('');
+    if (search) navigate(ARTWORK_LIST_PATH);
   };
+
+  const canClear = filtered || Object.values(searchDraft).some(Boolean);
 
   return (
     <AdminPage width="wide">
-      <AdminPageHeader
-        eyebrow="Artwork"
-        title="Artworks"
-        description="Every registered piece, opening to its own workspace."
-      />
+      <div className="studio-artworks">
+        <AdminPageHeader
+          title="Artworks"
+          actions={<>
+            <Link className="btn btn-primary studio-artworks-button" to="/admin/register">Register artwork</Link>
+            <Link className="btn btn-outline btn btn-ghost studio-artworks-button" to="/admin/tools">Artwork tools</Link>
+          </>}
+        />
 
-      <div role="tablist" aria-label="Artwork views" className="mb-6 flex gap-8 border-b border-wood-200">
-        <button
-          type="button"
-          role="tab"
-          id="artwork-list-tab-artworks"
-          aria-selected={tab === 'artworks'}
-          aria-controls="artwork-list-panel-artworks"
-          className={tabButtonClass(tab === 'artworks')}
-          onClick={() => setTab('artworks')}
-        >
-          Artworks
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="artwork-list-tab-search"
-          aria-selected={tab === 'search'}
-          aria-controls="artwork-list-panel-search"
-          className={tabButtonClass(tab === 'search')}
-          onClick={() => setTab('search')}
-        >
-          Search
-        </button>
-      </div>
-
-      {tab === 'artworks' && (
-        <div id="artwork-list-panel-artworks" role="tabpanel" aria-labelledby="artwork-list-tab-artworks">
-          <AdminSection title="Registered artworks" description="Every piece with a registered identity, most recently active first.">
-            <ResultList
-              status={listStatus}
-              errorMessage={listError}
-              results={listResults}
-              emptyTitle="No artworks registered yet"
-              emptyDescription="Register an artwork to see it here."
-              loadingLabel="Loading artworks."
-            />
-          </AdminSection>
-        </div>
-      )}
-
-      {tab === 'search' && (
-        <div id="artwork-list-panel-search" role="tabpanel" aria-labelledby="artwork-list-tab-search">
-          <AdminSection title="Find an artwork" description="Search by public code, artwork ID, title, or edition number.">
-            <form className="mb-6 grid gap-4 sm:grid-cols-2" onSubmit={submitSearch} aria-label="Search artworks">
-              <label htmlFor="artwork-list-public-code">
-                <span className={labelClass}>Public code</span>
+        <section aria-labelledby="studio-artworks-find">
+          <h2 className="studio-artworks-heading" id="studio-artworks-find">Find artwork</h2>
+          <form className="studio-artworks-search" role="search" onSubmit={submitSearch} aria-labelledby="studio-artworks-find">
+            {SEARCH_FIELDS.map(({ key, label }) => (
+              <div className="studio-artworks-field" key={key}>
+                <label htmlFor={`artwork-list-${key}`}>{label}</label>
                 <input
-                  id="artwork-list-public-code"
-                  className={inputClass}
-                  value={searchDraft.publicCode}
-                  onChange={event => setSearchDraft(draft => ({ ...draft, publicCode: event.target.value }))}
+                  id={`artwork-list-${key}`}
+                  className="input studio-artworks-input"
+                  ref={key === 'title' ? titleFieldRef : undefined}
+                  value={searchDraft[key]}
+                  onChange={event => setSearchDraft(draft => ({ ...draft, [key]: event.target.value }))}
+                  inputMode={key === 'editionNumber' ? 'numeric' : undefined}
                   autoComplete="off"
                 />
-              </label>
-              <label htmlFor="artwork-list-artwork-id">
-                <span className={labelClass}>Artwork ID</span>
-                <input
-                  id="artwork-list-artwork-id"
-                  className={inputClass}
-                  value={searchDraft.artworkId}
-                  onChange={event => setSearchDraft(draft => ({ ...draft, artworkId: event.target.value }))}
-                  autoComplete="off"
-                />
-              </label>
-              <label htmlFor="artwork-list-title">
-                <span className={labelClass}>Title</span>
-                <input
-                  id="artwork-list-title"
-                  className={inputClass}
-                  value={searchDraft.title}
-                  onChange={event => setSearchDraft(draft => ({ ...draft, title: event.target.value }))}
-                  autoComplete="off"
-                />
-              </label>
-              <label htmlFor="artwork-list-edition">
-                <span className={labelClass}>Edition number</span>
-                <input
-                  id="artwork-list-edition"
-                  className={inputClass}
-                  inputMode="numeric"
-                  value={searchDraft.editionNumber}
-                  onChange={event => setSearchDraft(draft => ({ ...draft, editionNumber: event.target.value }))}
-                  autoComplete="off"
-                />
-              </label>
-              <div className="flex items-center gap-4 sm:col-span-2">
-                <button type="submit" className={primaryButtonClass} disabled={searchStatus === 'loading'}>Search</button>
-                <button type="button" className={quietButtonClass} onClick={clearSearch}>Clear</button>
               </div>
-            </form>
+            ))}
+            <div className="studio-artworks-search-actions">
+              <button type="submit" className="btn btn-outline studio-artworks-button" disabled={filtered && visibleResults.status === 'loading'}>Search</button>
+              {canClear && (
+                <button type="button" className="btn btn-ghost studio-artworks-button" onClick={() => {
+                  clearSearch();
+                  titleFieldRef.current?.focus();
+                }}>Clear</button>
+              )}
+            </div>
+          </form>
+          {draftError && <AdminAlert tone="error" live>{draftError}</AdminAlert>}
+        </section>
 
-            {draftError && <AdminAlert tone="error" live>{draftError}</AdminAlert>}
-
-            {searchStatus === 'idle' && !draftError && (
-              <AdminEmptyState title="Enter search criteria" description="Search by public code, artwork ID, title, or edition number to find a specific piece." />
-            )}
-            {searchStatus !== 'idle' && (
-              <ResultList
-                status={searchStatus}
-                errorMessage={searchError}
-                results={searchResults}
-                emptyTitle="No matching artworks"
-                emptyDescription="Adjust the search criteria and try again."
-                loadingLabel="Searching artworks."
-              />
-            )}
-          </AdminSection>
-
-          <p className="mt-4">
-            <Link className={linkClass} to="/admin/maintenance">Open full Maintenance detail for a piece</Link>
+        <section className="studio-artworks-list" aria-labelledby="studio-artworks-list-heading">
+          <h2 className="studio-artworks-heading" id="studio-artworks-list-heading">
+            {filtered ? 'Search results' : 'Registered artworks'}
+          </h2>
+          <p role="status" className="sr-only">
+            {filtered && visibleResults.status === 'ready' && `${visibleResults.results.length} ${visibleResults.results.length === 1 ? 'artwork' : 'artworks'} found`}
           </p>
-        </div>
-      )}
+          <ResultList
+            {...visibleResults}
+            returnPath={returnPath}
+            emptyTitle={filtered ? 'No matching artworks' : 'No artworks registered yet'}
+            emptyDescription={filtered ? 'Adjust the search criteria and try again.' : 'Register an artwork to see it here.'}
+            loadingLabel={filtered ? 'Searching artworks.' : 'Loading artworks.'}
+          />
+        </section>
+      </div>
     </AdminPage>
   );
 };

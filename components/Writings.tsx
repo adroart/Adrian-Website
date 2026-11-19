@@ -10,6 +10,7 @@ import BackToTop from './shared/BackToTop';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { usePlayer, formatTime } from '../PlayerContext';
 import { piecePath } from '../utils/pieceSlug';
+import { StoryBody, storyLinksArtwork } from './shared/StoryBody';
 
 // Build a synthetic Track from a Story's AudioTrack entry so it can play through the global PlayerContext.
 function trackFromAudio(audio: AudioTrack, lyrics: string[] | undefined, storySlug: string): Track {
@@ -224,8 +225,7 @@ export const WritingArticle: React.FC = () => {
         ...(story.readMinutes && { timeRequired: `PT${story.readMinutes}M` }),
     };
 
-    // Pieces linked to this story via relatedStorySlug
-    const relatedArtworks = FULL_ARCHIVE.filter(a => a.relatedStorySlug === story.slug);
+    const relatedArtworks = FULL_ARCHIVE.filter(artwork => storyLinksArtwork(story, artwork));
 
     return (
         <article className="min-h-screen bg-surface-page pt-32 pb-32 px-6 animate-fade-in">
@@ -290,24 +290,7 @@ export const WritingArticle: React.FC = () => {
 
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
                 <div className="article-prose prose prose-lg md:prose-xl font-sans text-wood-900 leading-[1.85] tracking-[0.01em] mx-auto max-w-[68ch]">
-                    {story.content.map((p, i) => (
-                        <React.Fragment key={i}>
-                            {/* #15 Subtle divider every 4 paragraphs in long articles */}
-                            {i > 0 && i % 4 === 0 && story.content.length > 6 && (
-                                <div className="flex justify-center py-4 not-prose">
-                                    <span className="text-bronze-600 tracking-[0.5em] text-xs select-none" aria-hidden="true">···</span>
-                                </div>
-                            )}
-                            {/* #13 Pull quotes for paragraphs starting with "> " */}
-                            {p.startsWith('> ') ? (
-                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif leading-relaxed whitespace-pre-line">
-                                    {p.slice(2)}
-                                </blockquote>
-                            ) : (
-                                <p className="mb-6">{p}</p>
-                            )}
-                        </React.Fragment>
-                    ))}
+                    <StoryBody story={story} />
                 </div>
 
                 {/* Music: player + lyrics combined - after the story */}

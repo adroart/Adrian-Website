@@ -43,6 +43,9 @@ export function serializeQuoteRow(row) {
     suggestedRetail: Number(row.suggested_retail) || 0,
     quote: Number(row.quote) || 0,
     actualPrice: row.actual_price == null ? null : Number(row.actual_price),
+    configuration: row.configuration || '',
+    artworkId: row.artwork_id || '',
+    invoiceId: Number(row.invoice_id) || null,
   };
 }
 
@@ -54,6 +57,8 @@ export function normalizeQuoteInput(body) {
     suggestedRetail: toMoney(body.suggestedRetail),
     quote: toMoney(body.quote),
     actualPrice: body.actualPrice == null ? null : toMoney(body.actualPrice),
+    configuration: typeof body.configuration === 'string' ? body.configuration.trim().slice(0, 360) : '',
+    artworkId: typeof body.artworkId === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(body.artworkId) ? body.artworkId : '',
   };
 }
 

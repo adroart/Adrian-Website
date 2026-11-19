@@ -29,6 +29,7 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const isAudio = /\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(file.key);
@@ -49,38 +50,49 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
   const handleDelete = async () => {
     if (!confirmDelete) { setConfirmDelete(true); return; }
     setDeleting(true);
-    await fetch(`/api/delete-file?key=${encodeURIComponent(file.key)}`, { method: 'DELETE' });
-    onDelete(file.key);
+    setDeleteError('');
+    try {
+      const response = await fetch(`/api/delete-file?key=${encodeURIComponent(file.key)}`, { method: 'DELETE' });
+      if (!response.ok || !(await response.json())?.ok) throw new Error('Delete failed');
+      onDelete(file.key);
+    } catch {
+      setDeleteError('Delete failed. This file is still listed.');
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <div className="bg-paper-50 border border-wood-200 px-5 py-4">
-      <div className="flex items-center gap-4">
-        {isAudio && (
-          <button
-            onClick={togglePlay}
-            aria-label={playing ? 'Pause' : 'Play'}
-            className="w-8 h-8 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
-          >
-            {playing ? (
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
-                <rect x="0" y="0" width="3" height="12" rx="1" />
-                <rect x="7" y="0" width="3" height="12" rx="1" />
-              </svg>
-            ) : (
-              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
-                <path d="M1 1l8 5-8 5V1z" />
-              </svg>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-[1_1_10rem] items-center gap-3">
+          {isAudio && (
+            <button
+              onClick={togglePlay}
+              aria-label={playing ? 'Pause' : 'Play'}
+              className="w-8 h-8 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
+            >
+              {playing ? (
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
+                  <rect x="0" y="0" width="3" height="12" rx="1" />
+                  <rect x="7" y="0" width="3" height="12" rx="1" />
+                </svg>
+              ) : (
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
+                  <path d="M1 1l8 5-8 5V1z" />
+                </svg>
             )}
           </button>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="font-sans text-sm text-wood-900 font-medium truncate">{file.key}</p>
-          <p className="font-label text-label text-wood-400 font-semibold mt-0.5">
-            {formatSize(file.size)} · {formatDate(file.uploaded)}
-          </p>
+          )}
+          <div className="min-w-0">
+            <p className="font-sans text-sm text-wood-900 font-medium truncate">{file.key}</p>
+            <p className="font-label text-label text-wood-600 font-semibold mt-0.5">
+              {formatSize(file.size)} · {formatDate(file.uploaded)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {isAudio && (
             <Link
               to={poetryCreatePath(file.url)}
@@ -106,13 +118,14 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
             onClick={handleDelete}
             disabled={deleting}
             className={`font-label text-label uppercase tracking-[0.15em] font-semibold transition-colors ${
-              confirmDelete ? 'text-[#e0a08a] hover:text-[#e0a08a]' : 'text-wood-300 hover:text-[#e0a08a]'
+              confirmDelete ? 'text-danger hover:text-danger' : 'text-wood-600 hover:text-danger'
             }`}
           >
             {deleting ? 'Deleting...' : confirmDelete ? 'Confirm' : 'Delete'}
           </button>
         </div>
       </div>
+      {deleteError && <p role="alert" className="mt-2 font-sans text-sm text-danger">{deleteError}</p>}
       {isAudio && (
         <audio
           ref={audioRef}

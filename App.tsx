@@ -30,6 +30,7 @@ const AdminShell = lazy(() => import('./components/admin/AdminShell'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const StudioArea = lazy(() => import('./components/admin/StudioArea'));
 const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const AdminPieces = lazy(() => import('./components/AdminPieces'));
@@ -86,10 +87,10 @@ const KeystaticShell: React.FC = () => (
   <div className="flex min-h-screen flex-col bg-surface-page">
     <div className="z-50 flex flex-shrink-0 items-center border-b border-wood-200 bg-paper-50 px-6 py-3">
       <Link
-        to="/admin"
+        to="/admin/publishing"
         className="font-label text-label font-semibold uppercase tracking-[0.2em] text-bronze-600 transition-colors hover:text-bronze-800"
       >
-        Return to Admin
+        Back to Publishing
       </Link>
     </div>
     <div className="flex-1">
@@ -178,6 +179,9 @@ const SiteShell: React.FC = () => {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminShell />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="sales" element={<StudioArea area="sales" />} />
+              <Route path="publishing" element={<StudioArea area="publishing" />} />
+              <Route path="tools" element={<StudioArea area="tools" />} />
               <Route path="files" element={<AdminFileUpload />} />
               <Route path="poetry" element={<AdminPoetry />} />
               <Route path="book" element={<AdminBookEditor />} />
@@ -260,7 +264,7 @@ const App: React.FC = () => (
  *  deep links keep working. */
 const RegistrationsRedirect: React.FC = () => {
   const location = useLocation();
-  return <Navigate to={`/admin/register${location.search}`} replace />;
+  return <Navigate to={`/admin/register${location.search}`} state={location.state} replace />;
 };
 
 /** The atlas record and globe live on mandalacodes.com; /atlas itself is now

@@ -5,30 +5,28 @@ import { describe, it } from 'node:test';
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 describe('admin studio shell', () => {
-  it('groups every admin tool in one persistent navigation', async () => {
+  it('keeps four destinations in the primary navigation', async () => {
     const { ADMIN_NAVIGATION } = await import('../components/admin/AdminNavigation.ts');
     assert.deepEqual(
-      ADMIN_NAVIGATION.map(group => [group.label, group.items.map(item => item.label)]),
+      ADMIN_NAVIGATION.map(({ label, href }) => [label, href]),
       [
-        ['Home', ['Studio overview']],
-        ['Artwork', ['Register an artwork', 'Artworks']],
-        ['Continuity', ['Succession']],
-        ['Publishing', ['Stories', 'Poetry', 'Media']],
-        // Where the collector journey is looked at while it is being built.
-        // The address lives on a permanent branch and nowhere else, so this
-        // entry is the only place it is written down.
-        ['Workshop', ['Screen development system']],
-        ['Sales', ['Verified sales', 'Atlas pending sales', 'Private viewings', 'Pricing', 'Invoices']],
+        ['Studio overview', '/admin'],
+        ['Sales', '/admin/sales'],
+        ['Artwork', '/admin/artworks'],
+        ['Publishing', '/admin/publishing'],
       ],
     );
   });
 
-  it('keeps the Workshop group present so the permanent-branch address is never silently dropped', async () => {
-    const { ADMIN_NAVIGATION } = await import('../components/admin/AdminNavigation.ts');
-    const workshop = ADMIN_NAVIGATION.find(group => group.label === 'Workshop');
-    assert.ok(workshop, 'Workshop group must exist in the admin navigation');
-    assert.deepEqual(workshop?.items.map(item => item.label), ['Screen development system']);
-    assert.deepEqual(workshop?.items.map(item => item.href), ['/admin/screens']);
+  it('keeps the book, continuity, and workshop tools accessible', async () => {
+    const { STUDIO_AREAS, studioNavigationArea } = await import('../components/admin/AdminNavigation.ts');
+    const workshop = STUDIO_AREAS.tools.sections.find(section => section.title === 'Workshop');
+    assert.deepEqual(workshop?.items.map(item => item.href), ['/admin/screens', '/admin/rehearsal']);
+    assert.ok(STUDIO_AREAS.tools.sections.some(section => section.items.some(item => item.href === '/admin/succession')));
+    assert.ok(STUDIO_AREAS.publishing.sections.some(section => section.items.some(item => item.href === '/admin/book')));
+    assert.equal(studioNavigationArea('/admin/collector-sales/invoices/22'), '/admin/sales');
+    assert.equal(studioNavigationArea('/admin/artworks/UL-100'), '/admin/artworks');
+    assert.equal(studioNavigationArea('/admin/book'), '/admin/publishing');
   });
 
   it('uses one nested authenticated shell instead of wrapping every tool', () => {
@@ -81,7 +79,7 @@ describe('admin studio shell', () => {
     assert.match(dashboard, /Recent artworks/);
     assert.match(dashboard, /Recent collectors or reconnections/);
     assert.match(dashboard, /Start new/);
-    assert.match(dashboard, /Issue a plate/);
+    assert.doesNotMatch(dashboard, /Issue a plate/);
     assert.match(dashboard, /Create invoice/);
     assert.match(dashboard, /Build a viewing/);
     assert.ok(dashboard.indexOf('Work that needs you') < dashboard.indexOf('Start new'));
